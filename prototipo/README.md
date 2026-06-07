@@ -26,6 +26,30 @@ Asistente IA y Configuración** (con el selector de condición fiscal RI/Monotri
 La navegación entre módulos funciona (es presentación pura); los botones de
 acción no ejecutan nada todavía.
 
+## Mostrarlo a un cliente fuera de tu red
+
+Dos caminos:
+
+### A) Un solo archivo portable (no necesita internet)
+La maqueta no depende de nada externo. Generá un único `.html` con todo adentro:
+
+```bash
+node build-standalone.js
+```
+
+Eso crea **`nexosoft-maqueta.html`**. Mandalo por WhatsApp / email / Google
+Drive, o pasalo por cable a la tablet, y abrilo en el navegador. Funciona offline.
+
+> Si antes colocás tu `assets/logo.png`, queda **embebido** dentro del archivo.
+
+### B) Subirlo a un servidor (link público)
+
+- **tiiny.host** — subís `nexosoft-maqueta.html` y te da un link al instante.
+- **Netlify Drop** (`app.netlify.com/drop`) — arrastrás la carpeta `prototipo/`.
+- **GitHub Pages / Vercel / Cloudflare Pages** — para algo más permanente.
+
+Cualquiera te da una URL que el cliente abre desde la tablet, en cualquier red.
+
 ## Tu logo
 
 La maqueta usa un logo provisorio dibujado en código. Para ver el **logo real**:

@@ -8,6 +8,9 @@ build/
 out/
 *.tsbuildinfo
 
+# Maqueta: archivo portable generado por prototipo/build-standalone.js
+prototipo/nexosoft-maqueta.html
+
 # Turborepo
 .turbo/
 
