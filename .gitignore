@@ -1,0 +1,56 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Turborepo
+.turbo/
+
+# Rust / Tauri
+target/
+apps/pos-desktop/src-tauri/target/
+apps/pos-desktop/src-tauri/gen/
+
+# Entorno y secretos (NUNCA versionar)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.cer
+*.pfx
+*.p12
+/secrets/
+/certs/
+
+# Bases de datos locales
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+
+# Cobertura / tests
+coverage/
+.vitest/
+
+# Editores / SO
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

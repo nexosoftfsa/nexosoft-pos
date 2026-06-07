@@ -1,0 +1,27 @@
+{
+  "name": "@nexosoft/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Componentes UI compartidos (accesibles, alto contraste, optimizados para teclado).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "react": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
