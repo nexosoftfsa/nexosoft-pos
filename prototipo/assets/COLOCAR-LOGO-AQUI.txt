@@ -1,6 +1,0 @@
-Colocá acá tu logo como  logo.png  (preferentemente cuadrado, ~512x512).
-
-La maqueta lo toma automáticamente al recargar. Si no está, muestra un
-logo provisorio dibujado en código.
-
-Podés borrar este archivo cuando agregues el logo.
