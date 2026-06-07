@@ -76,7 +76,16 @@ Entidades principales (nombres en español, ver CLAUDE.md):
 - **ItemComprobante**: `articuloId`, `cantidad`, `precioUnitario`, `descuento`,
   `alicuotaIva`, `subtotal`.
 - **Pago**: `formaDePago` (`efectivo` | `tarjeta` | `billetera` |
-  `cuentaCorriente`), `monto`, `recargo`, y a nivel venta el `vuelto`.
+  `cuentaCorriente`), `monto`, `recargo`, y a nivel venta el `vuelto`. El cobro
+  electrónico (tarjeta/billetera) se realiza vía `PasarelaDePago`
+  (`@nexosoft/pagos`, MercadoPago Point/QR — ADR-0010).
+
+### Configuración del comercio (emisor)
+- **ConfiguracionFiscal**: `condicionIvaEmisor` (`ResponsableInscripto` |
+  `Monotributo` | …), `cuit`, `puntoDeVenta`. Define qué comprobantes se emiten y
+  si el IVA se discrimina. El tipo se resuelve con la función pura
+  `resolverTipoComprobante(emisor, receptor)` (ADR-0012): RI → A (a RI) / B (a
+  Consumidor Final/Monotributo); Monotributo → C.
 
 ### Caja y tesorería
 - **SesionDeCaja** (turno): `apertura`, `cierre`, `cajero`, `montoInicial`.
@@ -91,7 +100,8 @@ Entidades principales (nombres en español, ver CLAUDE.md):
 ### Seguridad y multi-sucursal
 - **Usuario**, **Rol** (`Administrador` | `Supervisor` | `Cajero`), **Permiso**
   (configurable).
-- **Sucursal**, **Terminal** (punto de venta físico).
+- **Sucursal**, **Terminal** (punto de venta físico). **MVP: una sola sucursal**
+  (ADR-0005); el modelo ya incluye `sucursal_id` para crecer a multi-sucursal.
 - **RegistroAuditoria**: quién, qué, cuándo, sobre qué entidad.
 
 ### Sincronización

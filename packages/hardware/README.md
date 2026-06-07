@@ -12,10 +12,11 @@ través de la capa nativa de Tauri (ADR-0009).
 | `Balanza`    | protocolo por marca/modelo (serial)   | peso fijo/simulado|
 | `Lector`     | HID (teclado) o serial                | inyecta códigos   |
 
-> Los modelos concretos de **balanza** e **impresora** a soportar primero
-> dependen de tu respuesta en Fase 0. El diseño por puertos permite agregar
-> drivers sin tocar el POS.
+> **Definido (2026-06-07):** se priorizan **impresoras térmicas ESC/POS**. La
+> **balanza** queda como puerto (interfaz + mock) **sin driver concreto** hasta
+> definir marca/modelo; agregarlo después no toca el POS.
 
 ## Estado
 
 🔜 Fase 1: `Impresora` ESC/POS (la más crítica para el ticket) + mocks y tests.
+`Balanza` y `Lector` quedan como puertos; el driver de balanza se difiere.

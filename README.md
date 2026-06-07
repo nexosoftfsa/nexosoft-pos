@@ -46,6 +46,7 @@ decisiones en [docs/adr/](docs/adr/).
 ├── packages/
 │   ├── domain/          # Tipos y lógica de negocio compartida
 │   ├── fiscal/          # Integración ARCA aislada (+ mock)
+│   ├── pagos/           # Pasarela de pago aislada: MercadoPago (+ mock)
 │   ├── sync/            # Sincronización offline-first
 │   ├── hardware/        # Periféricos (ESC/POS, balanza, lector) (+ mocks)
 │   └── ui/              # Componentes UI compartidos

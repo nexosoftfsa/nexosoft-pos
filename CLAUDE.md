@@ -55,12 +55,20 @@ obligatoria antes de tocar código.
 - **Auditoría** obligatoria de operaciones sensibles: caja, cambios de precio,
   permisos, anulaciones.
 
-## 6. ARCA aislado
+## 6. Integraciones externas aisladas (ARCA, pagos, LLM)
 
-- Toda la integración fiscal vive en `@nexosoft/fiscal` detrás de la interfaz
-  `ServicioFiscal`. El resto del sistema **no** conoce SOAP/WSFEv1.
-- Reintentos **idempotentes**; el `MockServicioFiscal` permite desarrollar y
-  testear sin red. Ver [ADR-0008](docs/adr/0008-servicio-fiscal-arca-aislado.md).
+Toda integración externa va detrás de una **interfaz (puerto) + mock funcional**;
+el resto del sistema depende del contrato, nunca de la implementación.
+
+- **ARCA** (`@nexosoft/fiscal`, `ServicioFiscal`): WSAA/WSFEv1; reintentos
+  idempotentes; `MockServicioFiscal` para desarrollar sin red. Ver
+  [ADR-0008](docs/adr/0008-servicio-fiscal-arca-aislado.md).
+- **Pagos** (`@nexosoft/pagos`, `PasarelaDePago`): MercadoPago (Point + QR) +
+  `MockPasarela`. El cobro electrónico es online; offline se registra la forma de
+  pago y se concilia. Ver [ADR-0010](docs/adr/0010-pasarela-de-pago-mercadopago.md).
+- **LLM** (`ProveedorLLM`): Google **Gemini** + mock, con guardrails en el
+  text-to-SQL (solo lectura, allowlist de tablas). Ver
+  [ADR-0011](docs/adr/0011-proveedor-llm-gemini.md).
 
 ## 7. Estilo de código
 

@@ -1,6 +1,6 @@
 # ADR-0005: Estrategia de sincronización offline-first
 
-- **Estado:** Propuesta (a confirmar con la respuesta sobre multi-sucursal)
+- **Estado:** Aceptada (MVP de **una sola sucursal** — confirmado 2026-06-07)
 - **Fecha:** 2026-06-07
 
 ## Contexto
