@@ -311,3 +311,20 @@ tbody tr.clickable{cursor:pointer}
   .login__form{padding:30px 22px}
   .modal__row{grid-template-columns:1fr}
 }
+
+/* ---- Componentes demo (cliente, descuento, recibo, logout) ---- */
+.linkbtn{color:var(--teal);font-weight:700;font-size:12.5px;padding:2px 6px;background:none}
+.linkbtn:hover{text-decoration:underline}
+.ticket-cli{padding:8px 16px 2px}
+.cli-pick{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:1.5px dashed var(--line);
+  border-radius:10px;font-weight:600;font-size:13px;background:var(--surface-2)}
+.cli-pick:hover{border-color:var(--teal)}
+.cli-pick .muted{margin-left:auto;font-weight:700;color:var(--teal)}
+.logout-btn{width:36px;height:36px;border-radius:10px;color:#7fa6c4;display:grid;place-items:center;flex:0 0 auto}
+.logout-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.receipt{font-family:"Courier New",ui-monospace,monospace;font-size:12.5px;line-height:1.55;background:#fff;
+  border:1px solid var(--line);border-radius:10px;padding:14px 16px;max-width:300px;margin:0 auto;color:#222}
+.receipt hr{border:none;border-top:1px dashed #bbb;margin:8px 0}
+.receipt .r-row{display:flex;justify-content:space-between;gap:10px}
+.receipt .r-c{text-align:center}
+.receipt .r-b{font-weight:700}
