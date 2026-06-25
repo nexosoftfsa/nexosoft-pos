@@ -24,6 +24,16 @@ transpila quien lo importa.
 | `ventas/pago.ts`                | `FormaDePago`, `Pago` y `calcularCobro`: **pago combinado**, vuelto (solo efectivo) y saldo pendiente.                                                                                                  |
 | `esquemas/esquemas.ts`          | Esquemas `zod` para validar la forma cruda de los datos en los bordes (IPC / API).                                                                                                                      |
 
+## Contenido (Fase 1.2 — catálogo y precios)
+
+| Módulo                         | Qué expone                                                                                                                                    |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `catalogo/unidad-de-medida.ts` | `UnidadDeMedida` (unidad / fraccionado / peso) y `permiteCantidadFraccionada`.                                                                |
+| `catalogo/articulo.ts`         | `Articulo` (costo **neto**) + `crearArticulo` / `desactivarArticulo` con validaciones.                                                        |
+| `catalogo/lista-de-precios.ts` | `ListaDePrecios` (minorista/mayorista/personalizada), `PrecioArticulo` (manual o por margen).                                                 |
+| `catalogo/precios.ts`          | `calcularPrecioVenta`, `calcularMargen`, `resolverPrecioArticulo` y `redondearAMultiploDe`. Costeo **por régimen** RI/Monotributo (ADR-0014). |
+| `catalogo/promocion.ts`        | `Combo` (+ `ahorroCombo`) y `Promocion` (`%`, monto fijo, lleva/paga NxM) con evaluadores puros y vigencia.                                   |
+
 ## Reglas clave
 
 - **Dinero exacto**: todo importe es `Money`. Nunca `number`/`float`.
@@ -31,6 +41,8 @@ transpila quien lo importa.
   muestra); C (Monotributo) no tiene IVA. Ver `calcularComprobante` y ADR-0013.
 - **Invariante**: `netoGravado + iva = total` siempre se cumple.
 - **Vuelto**: solo se entrega en efectivo; nunca más del efectivo recibido.
+- **Costeo por régimen**: el precio se deriva del costo neto + margen según RI o
+  Monotributo (el IVA de compra es crédito o costo, respectivamente). Ver ADR-0014.
 
 ## Comandos
 
@@ -40,5 +52,5 @@ pnpm --filter @nexosoft/domain typecheck   # tsc --noEmit
 pnpm --filter @nexosoft/domain lint        # eslint
 ```
 
-> Estado: **Fase 1.1 implementada** (69 tests). Próximo: catálogo y precios (1.2),
-> stock (1.3) y venta/POS offline (1.4).
+> Estado: **Fases 1.1 y 1.2 implementadas** (109 tests). Próximo: stock (1.3) y
+> venta/POS offline (1.4).
