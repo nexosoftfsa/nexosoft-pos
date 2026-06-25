@@ -5,260 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0E2C49" />
 <title>NexoSoft — Maqueta</title>
-<style>
-  :root{
-    --navy:#0E2C49; --navy-700:#143a5e; --navy-800:#0b2238;
-    --teal:#1C97B0; --teal-400:#2FB4CE; --teal-soft:#e6f4f8;
-    --bg:#EEF2F6; --surface:#ffffff; --surface-2:#f7f9fb;
-    --line:#e3e9f0; --text:#0E2C49; --muted:#64788f;
-    --ok:#1FA971; --ok-soft:#e6f7ef; --warn:#E6A100; --warn-soft:#fdf3dc;
-    --danger:#E5484D; --danger-soft:#fdecec;
-    --grad:linear-gradient(135deg,var(--navy) 0%, var(--teal) 100%);
-    --shadow:0 1px 2px rgba(14,44,73,.06), 0 8px 24px rgba(14,44,73,.08);
-    --radius:16px; --radius-sm:11px;
-    --sidebar:248px;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;
-    font-size:15px;line-height:1.45;overflow:hidden}
-  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-  ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-thumb{background:#cfd9e3;border-radius:8px}
-
-  /* ---------- Marca / logo ---------- */
-  .logo{display:inline-flex;align-items:center;gap:12px}
-  .logo__mark{position:relative;flex:0 0 auto;display:grid;place-items:center;border-radius:14px;
-    background:var(--grad);color:#fff;font-weight:800;letter-spacing:.5px;box-shadow:var(--shadow)}
-  .logo__img{display:none;border-radius:14px;object-fit:contain;background:#fff}
-  .logo__text{display:flex;flex-direction:column;line-height:1}
-  .logo__name{font-weight:800;letter-spacing:.5px}
-  .logo__name b{color:var(--teal-400)}
-  .logo__tag{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:5px}
-  .logo.has-logo .logo__img{display:block}
-  .logo.has-logo .logo__mark,.logo.has-logo .logo__text{display:none}
-
-  /* ---------- Login ---------- */
-  #login{position:fixed;inset:0;z-index:50;display:grid;grid-template-columns:1.1fr .9fr;grid-template-rows:1fr}
-  .login__brand{background:var(--grad);color:#fff;display:flex;flex-direction:column;justify-content:center;
-    align-items:flex-start;padding:8vw;gap:22px;position:relative;overflow:hidden}
-  .login__brand::after{content:"";position:absolute;right:-120px;bottom:-120px;width:380px;height:380px;
-    border-radius:50%;background:rgba(255,255,255,.07)}
-  .login__brand::before{content:"";position:absolute;right:60px;top:-90px;width:220px;height:220px;
-    border-radius:50%;background:rgba(255,255,255,.06)}
-  .login__brand .logo__mark{width:108px;height:108px;font-size:46px;background:rgba(255,255,255,.12);
-    backdrop-filter:blur(2px);box-shadow:none}
-  .login__brand .logo__img{width:260px;height:auto;background:#fff;padding:18px;border-radius:20px;box-shadow:var(--shadow)}
-  .login__form .logo__img{width:160px;height:auto}
-  .login__title{font-size:34px;font-weight:800;margin:0;line-height:1.15}
-  .login__sub{font-size:16px;opacity:.9;max-width:30ch;margin:0}
-  .login__tag{letter-spacing:4px;text-transform:uppercase;font-size:12px;opacity:.85}
-  .login__form{background:var(--surface);display:flex;flex-direction:column;justify-content:center;
-    padding:7vw;gap:18px}
-  .login__form h2{margin:0;font-size:22px}
-  .field{display:flex;flex-direction:column;gap:7px}
-  .field label{font-size:13px;color:var(--muted);font-weight:600}
-  .input{height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 16px;font-size:16px;
-    background:var(--surface-2)}
-  .input:focus{outline:none;border-color:var(--teal);background:#fff}
-  .btn{height:54px;border-radius:12px;font-size:16px;font-weight:700;display:inline-flex;align-items:center;
-    justify-content:center;gap:10px;padding:0 22px;transition:transform .05s ease, filter .15s ease}
-  .btn:active{transform:translateY(1px)}
-  .btn--primary{background:var(--grad);color:#fff;box-shadow:var(--shadow)}
-  .btn--primary:hover{filter:brightness(1.05)}
-  .btn--ghost{background:var(--surface-2);border:1.5px solid var(--line);color:var(--text)}
-  .btn--block{width:100%}
-  .login__hint{font-size:12.5px;color:var(--muted);text-align:center}
-
-  /* ---------- App shell ---------- */
-  #app{display:none;height:100%;grid-template-columns:var(--sidebar) 1fr;grid-template-rows:100%}
-  .sidebar{background:var(--navy);color:#cdd9e6;display:flex;flex-direction:column;min-height:0}
-  .sidebar__brand{padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
-  .sidebar__brand .logo__mark{width:42px;height:42px;font-size:18px}
-  .sidebar__brand .logo{justify-content:center}
-  .sidebar__brand{padding:16px 18px}
-  .sidebar__brand .logo__img{width:150px;height:auto;max-height:104px;background:#fff;padding:8px 12px;border-radius:12px}
-  .sidebar__brand .logo__name{color:#fff;font-size:16px}
-  .sidebar__brand .logo__tag{color:#7fa6c4}
-  .nav{flex:1;overflow-y:auto;padding:8px 10px 12px;display:flex;flex-direction:column;gap:2px}
-  .nav__sec{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#5f82a0;
-    padding:8px 12px 4px}
-  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:11px;
-    color:#bcccdd;font-weight:600;font-size:14.5px;text-align:left;width:100%;position:relative}
-  .nav-item svg{width:21px;height:21px;flex:0 0 auto;stroke:currentColor}
-  .nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
-  .nav-item--active{background:rgba(47,180,206,.16);color:#fff}
-  .nav-item--active::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:4px;
-    border-radius:0 4px 4px 0;background:var(--teal-400)}
-  .nav-item .badge{margin-left:auto}
-  .sidebar__user{padding:14px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:11px}
-  .avatar{width:38px;height:38px;border-radius:11px;background:var(--grad);color:#fff;display:grid;
-    place-items:center;font-weight:700;font-size:14px;flex:0 0 auto}
-  .sidebar__user .u-name{color:#fff;font-size:13.5px;font-weight:700}
-  .sidebar__user .u-role{color:#7fa6c4;font-size:11.5px}
-
-  /* ---------- Main ---------- */
-  .main{min-width:0;display:flex;flex-direction:column;min-height:0}
-  .topbar{height:68px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;
-    align-items:center;gap:16px;padding:0 22px;flex:0 0 auto}
-  .topbar h1{font-size:19px;margin:0;font-weight:800}
-  .topbar .crumb{color:var(--muted);font-size:12.5px;font-weight:600}
-  .topbar .spacer{flex:1}
-  .searchbar{display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1.5px solid var(--line);
-    border-radius:11px;height:42px;padding:0 13px;min-width:230px;color:var(--muted)}
-  .searchbar input{border:none;background:none;outline:none;font-size:14px;width:100%;color:var(--text)}
-  .chip{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border-radius:999px;
-    font-size:12.5px;font-weight:700;background:var(--surface-2);border:1px solid var(--line)}
-  .chip .dot{width:8px;height:8px;border-radius:50%}
-  .chip--ok{background:var(--ok-soft);color:#13794f;border-color:#bfe9d4}
-  .chip--ok .dot{background:var(--ok)}
-  .chip--warn{background:var(--warn-soft);color:#946800;border-color:#f1dca2}
-  .chip--warn .dot{background:var(--warn)}
-  .chip--muted{color:var(--muted)}
-  .clock{font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
-
-  .content{flex:1;overflow-y:auto;padding:22px;min-height:0}
-  .screen{display:none;animation:fade .18s ease}
-  .screen--active{display:block}
-  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-
-  /* ---------- UI atoms ---------- */
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-  .card__pad{padding:18px}
-  .card__head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
-  .card__head h3{margin:0;font-size:15.5px}
-  .card__head .spacer{flex:1}
-  .grid{display:grid;gap:18px}
-  .muted{color:var(--muted)}
-  .section-title{font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);
-    font-weight:700;margin:4px 2px 12px}
-  .badge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:8px;
-    font-size:11.5px;font-weight:700}
-  .badge--ok{background:var(--ok-soft);color:#13794f}
-  .badge--warn{background:var(--warn-soft);color:#946800}
-  .badge--danger{background:var(--danger-soft);color:#b4262b}
-  .badge--info{background:var(--teal-soft);color:#0d6e85}
-  .badge--n{background:#eef2f6;color:var(--muted)}
-  .pill-btn{height:40px;padding:0 16px;border-radius:11px;font-weight:700;font-size:14px;
-    background:var(--surface-2);border:1.5px solid var(--line)}
-  .pill-btn:hover{border-color:var(--teal);color:var(--teal)}
-  .pill-btn--primary{background:var(--grad);color:#fff;border:none;box-shadow:var(--shadow)}
-  .pill-btn--primary:hover{filter:brightness(1.06);color:#fff}
-
-  table{width:100%;border-collapse:collapse}
-  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:left;
-    padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700}
-  td{padding:13px 16px;border-bottom:1px solid var(--line);font-size:14px}
-  tr:last-child td{border-bottom:none}
-  tbody tr:hover{background:var(--surface-2)}
-  .num{text-align:right;font-variant-numeric:tabular-nums}
-  .strong{font-weight:700}
-
-  /* KPI */
-  .kpis{grid-template-columns:repeat(4,1fr)}
-  .kpi{padding:18px}
-  .kpi__label{font-size:12.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:8px}
-  .kpi__ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--teal-soft);color:var(--teal)}
-  .kpi__val{font-size:27px;font-weight:800;margin-top:10px;letter-spacing:-.5px}
-  .kpi__delta{font-size:12.5px;font-weight:700;margin-top:4px}
-  .up{color:var(--ok)} .down{color:var(--danger)}
-
-  /* chart bars */
-  .bars{display:flex;align-items:flex-end;gap:10px;height:170px;padding:8px 4px 0}
-  .bar{flex:1;background:var(--teal-soft);border-radius:8px 8px 0 0;position:relative;min-height:6px}
-  .bar span{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
-  .bar i{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted);font-style:normal}
-  .bar.b{background:var(--grad)}
-  .donut{width:160px;height:160px;border-radius:50%;
-    background:conic-gradient(var(--navy) 0 46%, var(--teal) 46% 73%, var(--teal-400) 73% 88%, #cdd9e6 88% 100%);
-    display:grid;place-items:center;margin:0 auto}
-  .donut::after{content:"";width:96px;height:96px;background:var(--surface);border-radius:50%}
-  .legend{display:flex;flex-direction:column;gap:10px;justify-content:center}
-  .legend div{display:flex;align-items:center;gap:9px;font-size:13.5px}
-  .legend i{width:12px;height:12px;border-radius:4px;display:inline-block}
-
-  /* ---------- POS ---------- */
-  .pos{display:grid;grid-template-columns:1fr 400px;gap:18px;height:100%}
-  .pos__left{display:flex;flex-direction:column;gap:16px;min-height:0}
-  .pos__search{display:flex;gap:10px}
-  .pos__search .searchbar{flex:1;height:54px;font-size:16px;min-width:0}
-  .pos__cats{display:flex;gap:9px;flex-wrap:wrap}
-  .cat{height:38px;padding:0 16px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);
-    font-weight:700;font-size:13.5px}
-  .cat--on{background:var(--navy);color:#fff;border-color:var(--navy)}
-  .prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:13px;overflow-y:auto;
-    padding-right:4px;align-content:start}
-  .prod{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;
-    display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow);min-height:120px}
-  .prod:hover{border-color:var(--teal)}
-  .prod__emoji{font-size:26px}
-  .prod__name{font-weight:700;font-size:13.5px;line-height:1.25}
-  .prod__meta{font-size:11.5px;color:var(--muted)}
-  .prod__price{margin-top:auto;font-weight:800;font-size:16px;color:var(--navy)}
-  .ticket{display:flex;flex-direction:column;min-height:0}
-  .ticket__items{flex:1;overflow-y:auto;padding:6px 0}
-  .ti{display:flex;gap:12px;padding:11px 18px;border-bottom:1px dashed var(--line);align-items:center}
-  .ti__q{width:34px;height:34px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);
-    display:grid;place-items:center;font-weight:800;font-size:13px;flex:0 0 auto}
-  .ti__name{font-weight:600;font-size:13.5px}
-  .ti__unit{font-size:11.5px;color:var(--muted)}
-  .ti__price{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
-  .ticket__totals{padding:14px 18px;border-top:1px solid var(--line);background:var(--surface-2)}
-  .trow{display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--muted)}
-  .trow.total{font-size:25px;font-weight:800;color:var(--text);padding-top:8px;margin-top:4px;border-top:1px solid var(--line)}
-  .pays{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 18px 4px}
-  .pay{height:50px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-weight:700;
-    font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:8px}
-  .pay:hover{border-color:var(--teal);color:var(--teal)}
-  .pay--on{background:var(--teal-soft);border-color:var(--teal);color:#0d6e85}
-  .ticket__pay{padding:8px 18px 18px}
-
-  .kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:6px;
-    background:#fff;border:1px solid var(--line);box-shadow:0 1px 0 var(--line);font-size:11px;font-weight:700;color:var(--muted)}
-
-  .empty{display:grid;place-items:center;gap:10px;padding:60px 20px;color:var(--muted);text-align:center}
-  .empty svg{width:46px;height:46px;stroke:#b8c6d4}
-
-  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-  .toolbar .spacer{flex:1}
-
-  /* config */
-  .seg{display:inline-flex;background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;padding:4px}
-  .seg button{height:40px;padding:0 18px;border-radius:9px;font-weight:700;font-size:14px;color:var(--muted)}
-  .seg button.on{background:#fff;color:var(--navy);box-shadow:var(--shadow)}
-  .conf-grid{grid-template-columns:1fr 1fr}
-  .kv{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)}
-  .kv:last-child{border-bottom:none}
-  .kv span{color:var(--muted)}
-  .switch{width:46px;height:27px;border-radius:999px;background:var(--teal);position:relative}
-  .switch::after{content:"";position:absolute;top:3px;left:22px;width:21px;height:21px;border-radius:50%;background:#fff}
-  .switch.off{background:#cdd9e6}
-  .switch.off::after{left:3px}
-
-  /* IA */
-  .ia{grid-template-columns:1.3fr 1fr}
-  .chat{display:flex;flex-direction:column;height:440px}
-  .chat__body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
-  .msg{max-width:78%;padding:12px 15px;border-radius:14px;font-size:14px}
-  .msg--ia{background:var(--surface-2);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
-  .msg--me{background:var(--grad);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
-  .chat__in{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line)}
-  .drop{border:2px dashed #c7d4e0;border-radius:14px;padding:30px;text-align:center;color:var(--muted)}
-  .drop svg{width:40px;height:40px;stroke:var(--teal);margin-bottom:8px}
-
-  .ribbon{position:fixed;bottom:14px;right:14px;z-index:40;background:var(--navy);color:#fff;font-size:12px;
-    font-weight:700;padding:9px 14px;border-radius:999px;box-shadow:var(--shadow);opacity:.92}
-  .ribbon b{color:var(--teal-400)}
-
-  @media (max-width:980px){
-    .kpis{grid-template-columns:repeat(2,1fr)}
-    .pos{grid-template-columns:1fr}
-    .conf-grid,.ia{grid-template-columns:1fr}
-    #login{grid-template-columns:1fr}
-    .login__brand{display:none}
-  }
-</style>
+<link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
@@ -286,13 +33,12 @@
     <div class="field"><label>Usuario</label><input class="input" value="cajero1" /></div>
     <div class="field"><label>Contraseña</label><input class="input" type="password" value="123456" /></div>
     <button class="btn btn--primary btn--block" onclick="entrar()">Ingresar</button>
-    <p class="login__hint">Maqueta de demostración · sin funcionalidad real</p>
+    <p class="login__hint">Maqueta interactiva de demostración</p>
   </div>
 </section>
 
 <!-- ============ APP ============ -->
 <div id="app">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar__brand">
       <div class="logo">
@@ -309,7 +55,7 @@
       <button class="nav-item" data-target="pos" data-title="Punto de Venta" data-crumb="Operación · Caja 1">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.4 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L22 7H6"/></svg>
         Punto de Venta <span class="badge badge--info">F12</span></button>
-      <button class="nav-item" data-target="caja" data-title="Caja y Tesorería" data-crumb="Turno abierto">
+      <button class="nav-item" data-target="caja" data-title="Caja y Tesorería" data-crumb="Turno de caja">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.5"/></svg>Caja y Tesorería</button>
 
       <div class="nav__sec">Gestión</div>
@@ -317,7 +63,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20.6 13.4 12 22l-9-9V3h10z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>Catálogo y Precios</button>
       <button class="nav-item" data-target="stock" data-title="Stock e Inventario" data-crumb="Existencias">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg>
-        Stock e Inventario <span class="badge badge--warn">3</span></button>
+        Stock e Inventario</button>
       <button class="nav-item" data-target="ctacte" data-title="Cuentas Corrientes" data-crumb="Clientes y proveedores">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg>Cuentas Corrientes</button>
 
@@ -337,68 +83,60 @@
       <div><div class="u-name">Rodrigo M.</div><div class="u-role">Administrador</div></div>
     </div>
   </aside>
+  <div class="nav-backdrop" onclick="closeNav()"></div>
 
-  <!-- Main -->
   <div class="main">
     <header class="topbar">
+      <button class="hamburger" onclick="toggleNav()" aria-label="Menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
       <div>
         <h1 id="pageTitle">Inicio</h1>
         <div class="crumb" id="pageCrumb">Panel general</div>
       </div>
       <div class="spacer"></div>
-      <div class="searchbar" style="max-width:280px">
+      <div class="searchbar topbar__search" style="max-width:260px">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input placeholder="Buscar producto, cliente, comprobante…" />
+        <input placeholder="Buscar…" />
       </div>
-      <span class="chip chip--ok"><span class="dot"></span> En línea</span>
-      <span class="chip chip--warn"><span class="dot"></span> 2 CAE pend.</span>
-      <span class="chip" style="background:var(--navy);color:#fff;border:none">Vista previa</span>
-      <span class="chip chip--muted clock" id="clock">--:--</span>
+      <div class="topbar__status">
+        <span class="chip chip--ok"><span class="dot"></span> En línea</span>
+        <span class="chip chip--warn"><span class="dot"></span> 2 CAE pend.</span>
+        <span class="chip chip--preview">Vista previa</span>
+        <span class="chip chip--muted clock" id="clock">--:--</span>
+      </div>
     </header>
 
-    <div class="content">
+    <div class="content" id="content">
 
       <!-- ===== INICIO ===== -->
       <section class="screen screen--active" id="inicio">
         <div class="grid kpis" style="margin-bottom:18px">
           <div class="card kpi"><div class="kpi__label"><span class="kpi__ico">$</span> Ventas del día</div>
-            <div class="kpi__val">$ 842.350</div><div class="kpi__delta up">▲ 12% vs ayer</div></div>
+            <div class="kpi__val" id="kpiVentas">$ 0</div><div class="kpi__delta up">▲ 12% vs ayer</div></div>
           <div class="card kpi"><div class="kpi__label"><span class="kpi__ico">🧾</span> Comprobantes</div>
-            <div class="kpi__val">128</div><div class="kpi__delta up">▲ 8 tickets</div></div>
+            <div class="kpi__val" id="kpiComp">0</div><div class="kpi__delta up">en el turno</div></div>
           <div class="card kpi"><div class="kpi__label"><span class="kpi__ico">📈</span> Ticket promedio</div>
-            <div class="kpi__val">$ 6.580</div><div class="kpi__delta down">▼ 3%</div></div>
+            <div class="kpi__val" id="kpiTicket">$ 0</div><div class="kpi__delta muted">por comprobante</div></div>
           <div class="card kpi"><div class="kpi__label"><span class="kpi__ico">💰</span> Margen estimado</div>
-            <div class="kpi__val">31,4%</div><div class="kpi__delta up">▲ 1,2 pts</div></div>
+            <div class="kpi__val" id="kpiMargen">—</div><div class="kpi__delta up">sobre ventas</div></div>
         </div>
         <div class="grid" style="grid-template-columns:1.6fr 1fr;align-items:start">
           <div class="card">
             <div class="card__head"><h3>Ventas por hora</h3><div class="spacer"></div><span class="muted">Hoy</span></div>
             <div class="card__pad">
               <div class="bars">
-                <div class="bar" style="height:30%"><i>9</i></div>
-                <div class="bar" style="height:48%"><i>10</i></div>
-                <div class="bar" style="height:65%"><i>11</i></div>
-                <div class="bar b" style="height:92%"><span>pico</span><i>12</i></div>
-                <div class="bar" style="height:70%"><i>13</i></div>
-                <div class="bar" style="height:40%"><i>14</i></div>
-                <div class="bar" style="height:55%"><i>15</i></div>
-                <div class="bar" style="height:78%"><i>16</i></div>
-                <div class="bar" style="height:88%"><i>17</i></div>
-                <div class="bar" style="height:60%"><i>18</i></div>
+                <div class="bar" style="height:30%"><i>9</i></div><div class="bar" style="height:48%"><i>10</i></div>
+                <div class="bar" style="height:65%"><i>11</i></div><div class="bar b" style="height:92%"><span>pico</span><i>12</i></div>
+                <div class="bar" style="height:70%"><i>13</i></div><div class="bar" style="height:40%"><i>14</i></div>
+                <div class="bar" style="height:55%"><i>15</i></div><div class="bar" style="height:78%"><i>16</i></div>
+                <div class="bar" style="height:88%"><i>17</i></div><div class="bar" style="height:60%"><i>18</i></div>
               </div>
             </div>
           </div>
           <div class="card">
             <div class="card__head"><h3>Más vendidos</h3></div>
-            <table>
-              <tbody>
-                <tr><td>🥤 Coca-Cola 2.25L</td><td class="num strong">84</td></tr>
-                <tr><td>🍞 Pan lactal Bimbo</td><td class="num strong">71</td></tr>
-                <tr><td>🧉 Yerba Playadito 1kg</td><td class="num strong">63</td></tr>
-                <tr><td>🥛 Leche La Serenísima</td><td class="num strong">58</td></tr>
-                <tr><td>🧀 Queso cremoso (kg)</td><td class="num strong">41</td></tr>
-              </tbody>
-            </table>
+            <div class="tablewrap"><table><tbody id="masVendidos"></tbody></table></div>
           </div>
         </div>
         <div class="section-title" style="margin-top:22px">Accesos rápidos</div>
@@ -421,54 +159,34 @@
           <div class="pos__left">
             <div class="pos__search">
               <div class="searchbar"><span class="kbd">F2</span>
-                <input placeholder="Código de barras, código interno o descripción…" /></div>
-              <button class="pill-btn">⚖️ Balanza</button>
+                <input id="posSearch" oninput="renderPOS()" placeholder="Código de barras, código interno o descripción…" /></div>
+              <button class="pill-btn" onclick="demo('Balanza: leería el peso del producto (demo)')">⚖️ Balanza</button>
             </div>
-            <div class="pos__cats">
-              <button class="cat cat--on">Todos</button>
-              <button class="cat">Bebidas</button>
-              <button class="cat">Almacén</button>
-              <button class="cat">Lácteos</button>
-              <button class="cat">Fiambrería</button>
-              <button class="cat">Limpieza</button>
-              <button class="cat">Panadería</button>
-            </div>
-            <div class="prods">
-              <button class="prod"><div class="prod__emoji">🥤</div><div class="prod__name">Coca-Cola 2.25L</div><div class="prod__meta">Cód. 7790895</div><div class="prod__price">$ 2.450</div></button>
-              <button class="prod"><div class="prod__emoji">🧉</div><div class="prod__name">Yerba Playadito 1kg</div><div class="prod__meta">Cód. 7791234</div><div class="prod__price">$ 3.900</div></button>
-              <button class="prod"><div class="prod__emoji">🥛</div><div class="prod__name">Leche La Serenísima 1L</div><div class="prod__meta">Cód. 7790045</div><div class="prod__price">$ 1.380</div></button>
-              <button class="prod"><div class="prod__emoji">🍞</div><div class="prod__name">Pan lactal Bimbo</div><div class="prod__meta">Cód. 7790078</div><div class="prod__price">$ 2.100</div></button>
-              <button class="prod"><div class="prod__emoji">🧀</div><div class="prod__name">Queso cremoso</div><div class="prod__meta">x kg · balanza</div><div class="prod__price">$ 8.900/kg</div></button>
-              <button class="prod"><div class="prod__emoji">☕</div><div class="prod__name">Café La Virginia 250g</div><div class="prod__meta">Cód. 7790512</div><div class="prod__price">$ 4.250</div></button>
-              <button class="prod"><div class="prod__emoji">🍝</div><div class="prod__name">Fideos Matarazzo 500g</div><div class="prod__meta">Cód. 7790311</div><div class="prod__price">$ 1.150</div></button>
-              <button class="prod"><div class="prod__emoji">🧼</div><div class="prod__name">Jabón en polvo Skip</div><div class="prod__meta">Cód. 7790990</div><div class="prod__price">$ 5.600</div></button>
-              <button class="prod"><div class="prod__emoji">🥩</div><div class="prod__name">Carne picada (kg)</div><div class="prod__meta">x kg · balanza</div><div class="prod__price">$ 6.500/kg</div></button>
-              <button class="prod"><div class="prod__emoji">🍺</div><div class="prod__name">Cerveza Quilmes 1L</div><div class="prod__meta">Cód. 7790777</div><div class="prod__price">$ 2.300</div></button>
-            </div>
+            <div class="pos__cats" id="posCats"></div>
+            <div class="prods" id="posProducts"></div>
           </div>
 
           <div class="card ticket">
             <div class="card__head"><h3>Ticket actual</h3><div class="spacer"></div><span class="badge badge--n">Caja 1 · Cajero1</span></div>
-            <div class="ticket__items">
-              <div class="ti"><div class="ti__q">2</div><div><div class="ti__name">Coca-Cola 2.25L</div><div class="ti__unit">$ 2.450 c/u</div></div><div class="ti__price">$ 4.900</div></div>
-              <div class="ti"><div class="ti__q">1</div><div><div class="ti__name">Yerba Playadito 1kg</div><div class="ti__unit">$ 3.900 c/u</div></div><div class="ti__price">$ 3.900</div></div>
-              <div class="ti"><div class="ti__q">3</div><div><div class="ti__name">Leche La Serenísima 1L</div><div class="ti__unit">$ 1.380 c/u</div></div><div class="ti__price">$ 4.140</div></div>
-              <div class="ti"><div class="ti__q">0,650</div><div><div class="ti__name">Queso cremoso</div><div class="ti__unit">$ 8.900/kg · balanza</div></div><div class="ti__price">$ 5.785</div></div>
-            </div>
+            <div class="ticket__items" id="posItems"></div>
             <div class="ticket__totals">
-              <div class="trow"><span>Subtotal</span><span>$ 18.725</span></div>
-              <div class="trow"><span>IVA 21%</span><span>$ 3.249</span></div>
-              <div class="trow"><span>Descuento</span><span>– $ 0</span></div>
-              <div class="trow total"><span>TOTAL</span><span>$ 18.725</span></div>
+              <div class="trow"><span>Comprobante</span><span id="posTipo">Factura B</span></div>
+              <div class="trow"><span>Subtotal (neto)</span><span id="posSub">$ 0</span></div>
+              <div class="trow"><span>IVA 21%</span><span id="posIva">$ 0</span></div>
+              <div class="trow total"><span>TOTAL</span><span id="posTotal">$ 0</span></div>
             </div>
-            <div class="pays">
-              <button class="pay pay--on">💵 Efectivo</button>
-              <button class="pay">💳 Tarjeta</button>
-              <button class="pay">📱 MercadoPago QR</button>
-              <button class="pay">🧾 Cuenta Cte.</button>
+            <div class="pays" id="posPays">
+              <button class="pay pay--on" data-pago="efectivo" onclick="selectPago('efectivo')">💵 Efectivo</button>
+              <button class="pay" data-pago="tarjeta" onclick="selectPago('tarjeta')">💳 Tarjeta</button>
+              <button class="pay" data-pago="mp" onclick="selectPago('mp')">📱 MercadoPago QR</button>
+              <button class="pay" data-pago="ctacte" onclick="selectPago('ctacte')">🧾 Cuenta Cte.</button>
+            </div>
+            <div class="efectivo-box" id="posEfectivo" style="display:none">
+              <input id="posPaga" class="input" type="number" placeholder="¿Con cuánto paga? $" oninput="posVuelto()" style="flex:1" />
+              <span id="posVuelto" class="strong" style="color:var(--ok);white-space:nowrap"></span>
             </div>
             <div class="ticket__pay">
-              <button class="btn btn--primary btn--block" style="height:62px;font-size:19px">COBRAR · $ 18.725 <span class="kbd" style="color:#0E2C49">F12</span></button>
+              <button id="posCobrar" class="btn btn--primary btn--block" style="height:62px;font-size:19px" onclick="cobrar()">COBRAR</button>
             </div>
           </div>
         </div>
@@ -477,55 +195,37 @@
       <!-- ===== CATÁLOGO ===== -->
       <section class="screen" id="catalogo">
         <div class="toolbar">
-          <span class="seg"><button class="on">Minorista</button><button>Mayorista</button></span>
-          <button class="pill-btn">Rubro: Todos ▾</button>
-          <button class="pill-btn">Proveedor ▾</button>
+          <span class="seg" id="catSeg"><button class="on" onclick="setLista('minorista')">Minorista</button><button onclick="setLista('mayorista')">Mayorista</button></span>
+          <select id="catRubro" class="input" style="width:auto;height:40px" onchange="renderCatalogo()"></select>
+          <div class="searchbar" style="max-width:230px"><input id="catSearch" oninput="renderCatalogo()" placeholder="Buscar artículo…" /></div>
           <div class="spacer"></div>
-          <button class="pill-btn">Actualización masiva</button>
-          <button class="pill-btn pill-btn--primary">+ Nuevo artículo</button>
+          <button class="pill-btn" onclick="demo('Actualización masiva por rubro/proveedor (demo)')">Actualización masiva</button>
+          <button class="pill-btn pill-btn--primary" onclick="openProductModal()">+ Nuevo artículo</button>
         </div>
-        <div class="card">
-          <table>
-            <thead><tr><th>Código</th><th>Descripción</th><th>Rubro</th><th class="num">Costo</th>
-              <th class="num">Utilidad</th><th class="num">P. Minorista</th><th class="num">Stock</th><th></th></tr></thead>
-            <tbody>
-              <tr><td>7790895</td><td class="strong">Coca-Cola 2.25L</td><td>Bebidas</td><td class="num">$ 1.620</td><td class="num">+51%</td><td class="num strong">$ 2.450</td><td class="num">48</td><td><span class="badge badge--ok">Activo</span></td></tr>
-              <tr><td>7791234</td><td class="strong">Yerba Playadito 1kg</td><td>Almacén</td><td class="num">$ 2.730</td><td class="num">+43%</td><td class="num strong">$ 3.900</td><td class="num">22</td><td><span class="badge badge--ok">Activo</span></td></tr>
-              <tr><td>7790045</td><td class="strong">Leche La Serenísima 1L</td><td>Lácteos</td><td class="num">$ 980</td><td class="num">+41%</td><td class="num strong">$ 1.380</td><td class="num">9</td><td><span class="badge badge--warn">Stock bajo</span></td></tr>
-              <tr><td>—</td><td class="strong">Queso cremoso (kg)</td><td>Fiambrería</td><td class="num">$ 6.100</td><td class="num">+46%</td><td class="num strong">$ 8.900</td><td class="num">7,4</td><td><span class="badge badge--info">Fraccionado</span></td></tr>
-              <tr><td>7790512</td><td class="strong">Café La Virginia 250g</td><td>Almacén</td><td class="num">$ 2.900</td><td class="num">+47%</td><td class="num strong">$ 4.250</td><td class="num">31</td><td><span class="badge badge--ok">Activo</span></td></tr>
-              <tr><td>7790990</td><td class="strong">Jabón en polvo Skip 800g</td><td>Limpieza</td><td class="num">$ 3.850</td><td class="num">+45%</td><td class="num strong">$ 5.600</td><td class="num">14</td><td><span class="badge badge--ok">Activo</span></td></tr>
-              <tr><td>7790311</td><td class="strong">Fideos Matarazzo 500g</td><td>Almacén</td><td class="num">$ 760</td><td class="num">+51%</td><td class="num strong">$ 1.150</td><td class="num">0</td><td><span class="badge badge--danger">Sin stock</span></td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>Código</th><th>Descripción</th><th>Rubro</th><th class="num">Costo</th>
+            <th class="num">Utilidad</th><th class="num" id="catPrecioLabel">P. Minorista</th><th class="num">Stock</th><th>Estado</th></tr></thead>
+          <tbody id="catalogoBody"></tbody>
+        </table></div></div>
       </section>
 
       <!-- ===== STOCK ===== -->
       <section class="screen" id="stock">
         <div class="grid kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">
-          <div class="card kpi"><div class="kpi__label">Artículos activos</div><div class="kpi__val">1.284</div></div>
-          <div class="card kpi"><div class="kpi__label">Bajo mínimo</div><div class="kpi__val" style="color:var(--warn)">23</div></div>
-          <div class="card kpi"><div class="kpi__label">Vencen ≤ 30 días</div><div class="kpi__val" style="color:var(--danger)">11</div></div>
+          <div class="card kpi"><div class="kpi__label">Artículos activos</div><div class="kpi__val" id="stockActivos">0</div></div>
+          <div class="card kpi"><div class="kpi__label">Bajo mínimo</div><div class="kpi__val" id="stockBajo" style="color:var(--warn)">0</div></div>
+          <div class="card kpi"><div class="kpi__label">Sin stock</div><div class="kpi__val" id="stockSin" style="color:var(--danger)">0</div></div>
         </div>
         <div class="toolbar">
-          <button class="pill-btn">+ Ingreso por compra</button>
-          <button class="pill-btn">Ajuste manual</button>
+          <button class="pill-btn" onclick="ingresoStock()">+ Ingreso por compra</button>
+          <button class="pill-btn" onclick="ajusteStock()">Ajuste manual</button>
           <div class="spacer"></div>
-          <span class="chip chip--warn"><span class="dot"></span> Mostrando alertas</span>
+          <button class="pill-btn" id="stockAlertBtn" onclick="toggleStockAlertas()">Ver sólo alertas</button>
         </div>
-        <div class="card">
-          <table>
-            <thead><tr><th>Artículo</th><th>Depósito</th><th class="num">Stock</th><th class="num">Mínimo</th><th>Lote / Vto.</th><th>Estado</th></tr></thead>
-            <tbody>
-              <tr><td class="strong">Leche La Serenísima 1L</td><td>Salón</td><td class="num">9</td><td class="num">15</td><td>L-2291 · 28/06</td><td><span class="badge badge--warn">Reponer</span></td></tr>
-              <tr><td class="strong">Fideos Matarazzo 500g</td><td>Salón</td><td class="num">0</td><td class="num">12</td><td>—</td><td><span class="badge badge--danger">Sin stock</span></td></tr>
-              <tr><td class="strong">Yogur Ser pack x4</td><td>Depósito</td><td class="num">6</td><td class="num">10</td><td>L-1180 · 15/06</td><td><span class="badge badge--danger">Vto. próximo</span></td></tr>
-              <tr><td class="strong">Queso cremoso (kg)</td><td>Fiambrería</td><td class="num">7,4</td><td class="num">5</td><td>L-0907 · 12/07</td><td><span class="badge badge--ok">OK</span></td></tr>
-              <tr><td class="strong">Pan lactal Bimbo</td><td>Salón</td><td class="num">5</td><td class="num">8</td><td>L-3320 · 20/06</td><td><span class="badge badge--warn">Reponer</span></td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>Artículo</th><th>Depósito</th><th class="num">Stock</th><th class="num">Mínimo</th><th>Tipo</th><th>Estado</th></tr></thead>
+          <tbody id="stockBody"></tbody>
+        </table></div></div>
       </section>
 
       <!-- ===== CAJA ===== -->
@@ -533,33 +233,27 @@
         <div class="grid" style="grid-template-columns:1fr 1.6fr;align-items:start">
           <div class="card card__pad">
             <div class="section-title" style="margin-top:0">Estado de caja</div>
-            <span class="badge badge--ok">Turno abierto</span>
-            <div class="kpi__val" style="margin:14px 0 2px">$ 312.480</div>
+            <span class="badge badge--ok" id="cajaEstado">Turno abierto</span>
+            <div class="kpi__val" id="cajaSaldo" style="margin:14px 0 2px">$ 0</div>
             <div class="muted">Saldo teórico en caja</div>
             <div style="margin-top:16px">
-              <div class="kv"><span>Apertura</span><b>$ 50.000</b></div>
-              <div class="kv"><span>Ventas efectivo</span><b>$ 268.900</b></div>
-              <div class="kv"><span>Ingresos manuales</span><b>$ 5.000</b></div>
-              <div class="kv"><span>Egresos / pagos</span><b>– $ 11.420</b></div>
+              <div class="kv"><span>Apertura</span><b id="cajaApertura">$ 0</b></div>
+              <div class="kv"><span>Ventas en efectivo</span><b id="cajaVentas">$ 0</b></div>
+              <div class="kv"><span>Ingresos manuales</span><b id="cajaIngresos">$ 0</b></div>
+              <div class="kv"><span>Egresos / pagos</span><b id="cajaEgresos">$ 0</b></div>
             </div>
-            <div style="display:flex;gap:9px;margin-top:16px">
-              <button class="pill-btn">Ingreso</button>
-              <button class="pill-btn">Egreso</button>
-              <button class="pill-btn pill-btn--primary">Arqueo y cierre</button>
+            <div style="display:flex;gap:9px;margin-top:16px;flex-wrap:wrap">
+              <button class="pill-btn" onclick="cajaMov('ingreso')">Ingreso</button>
+              <button class="pill-btn" onclick="cajaMov('egreso')">Egreso</button>
+              <button class="pill-btn pill-btn--primary" id="cajaArqueoBtn" onclick="cajaArqueo()">Arqueo y cierre</button>
             </div>
           </div>
           <div class="card">
-            <div class="card__head"><h3>Movimientos del turno</h3><div class="spacer"></div><span class="muted">Caja 1 · desde 08:30</span></div>
-            <table>
+            <div class="card__head"><h3>Movimientos del turno</h3><div class="spacer"></div><span class="muted">Caja 1</span></div>
+            <div class="tablewrap"><table>
               <thead><tr><th>Hora</th><th>Concepto</th><th>Tipo</th><th class="num">Monto</th></tr></thead>
-              <tbody>
-                <tr><td>08:30</td><td>Apertura de caja</td><td><span class="badge badge--n">Apertura</span></td><td class="num">$ 50.000</td></tr>
-                <tr><td>10:12</td><td>Venta #00128 — Efectivo</td><td><span class="badge badge--ok">Ingreso</span></td><td class="num">$ 18.725</td></tr>
-                <tr><td>11:40</td><td>Pago proveedor — Distribuidora Sur</td><td><span class="badge badge--danger">Egreso</span></td><td class="num">– $ 11.420</td></tr>
-                <tr><td>12:05</td><td>Venta #00131 — Efectivo</td><td><span class="badge badge--ok">Ingreso</span></td><td class="num">$ 7.430</td></tr>
-                <tr><td>13:22</td><td>Ingreso manual — Vuelto inicial</td><td><span class="badge badge--ok">Ingreso</span></td><td class="num">$ 5.000</td></tr>
-              </tbody>
-            </table>
+              <tbody id="cajaMovs"></tbody>
+            </table></div>
           </div>
         </div>
       </section>
@@ -567,70 +261,51 @@
       <!-- ===== CUENTAS CORRIENTES ===== -->
       <section class="screen" id="ctacte">
         <div class="toolbar">
-          <span class="seg"><button class="on">Clientes</button><button>Proveedores</button></span>
+          <span class="seg" id="ctaSeg"><button class="on" onclick="ctaTab('clientes')">Clientes</button><button onclick="ctaTab('proveedores')">Proveedores</button></span>
           <div class="spacer"></div>
-          <button class="pill-btn">Registrar cobro</button>
-          <button class="pill-btn pill-btn--primary">+ Nuevo cliente</button>
+          <button class="pill-btn" onclick="registrarCobro()">Registrar cobro</button>
+          <button class="pill-btn pill-btn--primary" onclick="nuevoCliente()">+ Nuevo cliente</button>
         </div>
-        <div class="card">
-          <table>
-            <thead><tr><th>Cliente</th><th>CUIT / DNI</th><th>Condición IVA</th><th class="num">Saldo</th><th class="num">Límite</th><th>Estado</th></tr></thead>
-            <tbody>
-              <tr><td class="strong">Kiosco El Faro</td><td>30-71122334-5</td><td>Resp. Inscripto</td><td class="num strong" style="color:var(--danger)">$ 142.300</td><td class="num">$ 200.000</td><td><span class="badge badge--ok">Al día</span></td></tr>
-              <tr><td class="strong">Almacén Doña Rosa</td><td>27-28455667-1</td><td>Monotributo</td><td class="num strong" style="color:var(--danger)">$ 89.500</td><td class="num">$ 80.000</td><td><span class="badge badge--danger">Excedido</span></td></tr>
-              <tr><td class="strong">Bar La Esquina</td><td>20-30566778-9</td><td>Resp. Inscripto</td><td class="num strong">$ 0</td><td class="num">$ 150.000</td><td><span class="badge badge--ok">Sin deuda</span></td></tr>
-              <tr><td class="strong">Rotisería Central</td><td>23-31677889-4</td><td>Consumidor Final</td><td class="num strong" style="color:var(--warn)">$ 34.800</td><td class="num">$ 50.000</td><td><span class="badge badge--warn">Por vencer</span></td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>Cliente</th><th>CUIT / DNI</th><th>Condición IVA</th><th class="num">Saldo</th><th class="num">Límite</th><th>Estado</th></tr></thead>
+          <tbody id="ctacteBody"></tbody>
+        </table></div></div>
       </section>
 
       <!-- ===== REPORTES ===== -->
       <section class="screen" id="reportes">
         <div class="toolbar">
-          <button class="pill-btn">📅 Junio 2026 ▾</button>
-          <button class="pill-btn">Por empleado ▾</button>
+          <button class="pill-btn" onclick="demo('Selector de período (demo)')">📅 Junio 2026 ▾</button>
+          <button class="pill-btn" onclick="demo('Filtro por empleado (demo)')">Por empleado ▾</button>
           <div class="spacer"></div>
-          <button class="pill-btn">Exportar Libro IVA</button>
-          <button class="pill-btn">CITI Ventas</button>
+          <button class="pill-btn" onclick="demo('Exportación para Libro IVA (demo)')">Exportar Libro IVA</button>
+          <button class="pill-btn" onclick="demo('Exportación CITI Ventas (demo)')">CITI Ventas</button>
         </div>
         <div class="grid" style="grid-template-columns:1fr 1fr;align-items:start">
           <div class="card">
             <div class="card__head"><h3>Ventas por forma de pago</h3></div>
-            <div class="card__pad" style="display:flex;gap:24px;align-items:center">
-              <div class="donut"></div>
-              <div class="legend">
-                <div><i style="background:var(--navy)"></i> Efectivo · 46%</div>
-                <div><i style="background:var(--teal)"></i> Tarjeta · 27%</div>
-                <div><i style="background:var(--teal-400)"></i> MercadoPago · 15%</div>
-                <div><i style="background:#cdd9e6"></i> Cuenta Cte. · 12%</div>
-              </div>
+            <div class="card__pad" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+              <div class="donut" id="repDonut"></div>
+              <div class="legend" id="repLegend"></div>
             </div>
           </div>
           <div class="card">
             <div class="card__head"><h3>Rentabilidad por rubro</h3></div>
             <div class="card__pad">
               <div class="bars">
-                <div class="bar b" style="height:80%"><i>Bebidas</i></div>
-                <div class="bar b" style="height:64%"><i>Almacén</i></div>
-                <div class="bar b" style="height:92%"><i>Fiamb.</i></div>
-                <div class="bar b" style="height:50%"><i>Lácteos</i></div>
+                <div class="bar b" style="height:80%"><i>Bebidas</i></div><div class="bar b" style="height:64%"><i>Almacén</i></div>
+                <div class="bar b" style="height:92%"><i>Fiamb.</i></div><div class="bar b" style="height:50%"><i>Lácteos</i></div>
                 <div class="bar b" style="height:71%"><i>Limpieza</i></div>
               </div>
             </div>
           </div>
         </div>
         <div class="card" style="margin-top:18px">
-          <div class="card__head"><h3>Resumen diario por comprobante</h3></div>
-          <table>
+          <div class="card__head"><h3>Resumen por comprobante</h3></div>
+          <div class="tablewrap"><table>
             <thead><tr><th>Comprobante</th><th class="num">Cantidad</th><th class="num">Neto</th><th class="num">IVA</th><th class="num">Total</th></tr></thead>
-            <tbody>
-              <tr><td>Factura B</td><td class="num">96</td><td class="num">$ 512.300</td><td class="num">$ 107.583</td><td class="num strong">$ 619.883</td></tr>
-              <tr><td>Factura A</td><td class="num">18</td><td class="num">$ 173.900</td><td class="num">$ 36.519</td><td class="num strong">$ 210.419</td></tr>
-              <tr><td>Factura C</td><td class="num">11</td><td class="num">$ 12.048</td><td class="num">$ 0</td><td class="num strong">$ 12.048</td></tr>
-              <tr><td>Nota de Crédito</td><td class="num">3</td><td class="num">– $ 8.200</td><td class="num">– $ 1.722</td><td class="num strong">– $ 9.922</td></tr>
-            </tbody>
-          </table>
+            <tbody id="repResumen"></tbody>
+          </table></div>
         </div>
       </section>
 
@@ -642,20 +317,20 @@
             <div class="card__pad">
               <div class="field" style="margin-bottom:14px">
                 <label>Condición frente a ARCA (la elige el comerciante)</label>
-                <span class="seg" style="margin-top:4px">
-                  <button class="on">Responsable Inscripto</button><button>Monotributo</button>
+                <span class="seg" id="confSeg" style="margin-top:4px">
+                  <button class="on" onclick="setCondicion('RI')">Responsable Inscripto</button><button onclick="setCondicion('Mono')">Monotributo</button>
                 </span>
               </div>
-              <div class="kv"><span>Razón social</span><b>Supermercado 3 Marías</b></div>
-              <div class="kv"><span>CUIT</span><b>30-71122334-5</b></div>
-              <div class="kv"><span>Punto de venta</span><b>0001</b></div>
-              <div class="kv"><span>Comprobantes</span><b>Factura A · B · NC · ND</b></div>
-              <div class="kv"><span>Discrimina IVA</span><b>Sí</b></div>
+              <div class="kv"><span>Razón social</span><b id="confRazon">—</b></div>
+              <div class="kv"><span>CUIT</span><b id="confCuit">—</b></div>
+              <div class="kv"><span>Punto de venta</span><b id="confPv">—</b></div>
+              <div class="kv"><span>Comprobantes</span><b id="confComprob">—</b></div>
+              <div class="kv"><span>Discrimina IVA</span><b id="confDiscrimina">—</b></div>
             </div>
           </div>
           <div class="card">
-            <div class="card__head"><h3>Usuarios y roles</h3><div class="spacer"></div><button class="pill-btn">+ Usuario</button></div>
-            <table>
+            <div class="card__head"><h3>Usuarios y roles</h3><div class="spacer"></div><button class="pill-btn" onclick="demo('Alta de usuario (demo)')">+ Usuario</button></div>
+            <div class="tablewrap"><table>
               <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th></tr></thead>
               <tbody>
                 <tr><td class="strong">Rodrigo M.</td><td>Administrador</td><td><span class="badge badge--ok">Activo</span></td></tr>
@@ -663,7 +338,7 @@
                 <tr><td class="strong">Cajero 1</td><td>Cajero</td><td><span class="badge badge--ok">Activo</span></td></tr>
                 <tr><td class="strong">Cajero 2</td><td>Cajero</td><td><span class="badge badge--n">Inactivo</span></td></tr>
               </tbody>
-            </table>
+            </table></div>
           </div>
           <div class="card">
             <div class="card__head"><h3>Periféricos</h3></div>
@@ -677,10 +352,10 @@
           <div class="card">
             <div class="card__head"><h3>Sincronización y respaldo</h3></div>
             <div class="card__pad">
-              <div class="kv"><span>Modo offline-first</span><div class="switch"></div></div>
-              <div class="kv"><span>Sincronización automática</span><div class="switch"></div></div>
-              <div class="kv"><span>Backup en la nube</span><div class="switch"></div></div>
-              <div class="kv"><span>Última sincronización</span><b>Hoy 13:58</b></div>
+              <div class="kv"><span>Modo offline-first</span><div class="switch" onclick="toggleSwitch(this,'sync')"></div></div>
+              <div class="kv"><span>Sincronización automática</span><div class="switch" onclick="toggleSwitch(this,'syncAuto')"></div></div>
+              <div class="kv"><span>Backup en la nube</span><div class="switch" onclick="toggleSwitch(this,'backup')"></div></div>
+              <div class="kv"><span>Datos de la demo</span><button class="pill-btn" onclick="resetDemo()">Reiniciar demo</button></div>
             </div>
           </div>
         </div>
@@ -691,21 +366,18 @@
         <div class="grid ia" style="align-items:start">
           <div class="card chat">
             <div class="card__head"><h3>Asistente de métricas</h3><div class="spacer"></div><span class="badge badge--info">IA · Gemini</span></div>
-            <div class="chat__body">
-              <div class="msg msg--me">¿Cuáles fueron los 3 productos más rentables esta semana?</div>
-              <div class="msg msg--ia">Esta semana, los más rentables fueron:<br/>1) <b>Queso cremoso</b> — margen 46%<br/>2) <b>Coca-Cola 2.25L</b> — margen 51%<br/>3) <b>Café La Virginia</b> — margen 47%.<br/><span class="muted">Consulta de solo lectura · validada.</span></div>
-              <div class="msg msg--me">¿Y cómo viene la caja comparada con el mes pasado?</div>
-              <div class="msg msg--ia">Las ventas de junio van <b>+12%</b> contra mayo a igual fecha. El ticket promedio bajó 3%, compensado por más cantidad de tickets.</div>
+            <div class="chat__body" id="iaBody">
+              <div class="msg msg--ia">Hola 👋 Preguntame por tus métricas, por ejemplo: «¿cuánto vendí hoy?» o «¿cuáles son los más vendidos?». <span class="muted">(respuestas simuladas)</span></div>
             </div>
             <div class="chat__in">
-              <div class="searchbar" style="flex:1"><input placeholder="Preguntá por tus métricas…" /></div>
-              <button class="pill-btn pill-btn--primary">Enviar</button>
+              <div class="searchbar" style="flex:1"><input id="iaInput" placeholder="Preguntá por tus métricas…" onkeydown="if(event.key==='Enter')enviarIA()" /></div>
+              <button class="pill-btn pill-btn--primary" onclick="enviarIA()">Enviar</button>
             </div>
           </div>
           <div class="card">
             <div class="card__head"><h3>OCR de facturas de compra</h3></div>
             <div class="card__pad">
-              <div class="drop">
+              <div class="drop" onclick="demo('OCR: la IA leería proveedor, ítems, costos e IVA (demo)')">
                 <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M20 16v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"/></svg>
                 <div class="strong">Arrastrá una factura (PDF o foto)</div>
                 <div class="muted">La IA lee proveedor, ítems, costos e IVA y los carga al stock.</div>
@@ -723,46 +395,21 @@
   </div><!-- /main -->
 </div><!-- /app -->
 
-<!-- El indicador de maqueta vive en la barra superior (chip "Vista previa") -->
+<!-- ============ MODAL ============ -->
+<div class="modal" id="modal">
+  <div class="modal__box">
+    <div class="modal__head"><h3 id="modalTitle">Título</h3><button class="modal__x" onclick="modalCancel()">×</button></div>
+    <div class="modal__body" id="modalBody"></div>
+    <div class="modal__foot">
+      <button class="pill-btn" id="modalCancel" onclick="modalCancel()">Cancelar</button>
+      <button class="pill-btn pill-btn--primary" id="modalConfirm" onclick="modalConfirm()">Guardar</button>
+    </div>
+  </div>
+</div>
 
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast"></div>
 
-<script>
-  // ---- Navegación (solo presentación, sin lógica de negocio) ----
-  function go(id){
-    var nav = document.querySelector('.nav-item[data-target="'+id+'"]');
-    if(nav) nav.click();
-  }
-  document.getElementById('nav').addEventListener('click', function(e){
-    var item = e.target.closest('.nav-item'); if(!item) return;
-    document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('nav-item--active'); });
-    item.classList.add('nav-item--active');
-    var target = item.dataset.target;
-    document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('screen--active', s.id===target); });
-    document.getElementById('pageTitle').textContent = item.dataset.title;
-    document.getElementById('pageCrumb').textContent = item.dataset.crumb;
-    document.querySelector('.content').scrollTop = 0;
-  });
-
-  // ---- Login (solo muestra/oculta) ----
-  function entrar(){
-    document.getElementById('login').style.display='none';
-    document.getElementById('app').style.display='grid';
-  }
-
-  // ---- Reloj (cosmético) ----
-  function tick(){
-    var d=new Date();
-    var t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-    document.getElementById('clock').textContent=t;
-  }
-  tick(); setInterval(tick,1000*20);
-
-  // ---- Logo real: si carga assets/logo.png, oculta el provisorio ----
-  document.querySelectorAll(".logo__img").forEach(function(img){
-    function ok(){ var l=img.closest(".logo"); if(l) l.classList.add("has-logo"); }
-    if(img.complete && img.naturalWidth>0){ ok(); }
-    else { img.addEventListener("load", ok); }
-  });
-</script>
+<script src="app.js"></script>
 </body>
 </html>
