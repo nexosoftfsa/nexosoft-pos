@@ -118,6 +118,18 @@ export class Money {
     return new Money(this.valor.times(aDecimalSeguro(porcentaje)).div(100), this.moneda);
   }
 
+  /**
+   * Proporción (ratio) de este monto respecto de una `base`, como `number`.
+   * Para porcentajes/márgenes de display (NO es dinero): p. ej. 150/100 = 1.5.
+   */
+  proporcionRespectoDe(base: Money): number {
+    this.mismaMoneda(base);
+    if (base.valor.isZero()) {
+      throw new ErrorMoneda("No se puede calcular una proporción sobre base cero.");
+    }
+    return this.valor.div(base.valor).toNumber();
+  }
+
   /** Signo invertido. */
   negado(): Money {
     return new Money(this.valor.neg(), this.moneda);

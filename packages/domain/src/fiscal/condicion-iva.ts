@@ -38,3 +38,12 @@ export const CONDICIONES_EMISOR_VALIDAS: readonly CondicionIva[] = [
   CondicionIva.ResponsableInscripto,
   CondicionIva.Monotributo,
 ];
+
+/**
+ * ¿El emisor cobra y discrimina IVA en sus ventas?
+ * Solo el Responsable Inscripto. El Monotributo no discrimina IVA (y el IVA de
+ * sus compras es un costo, no un crédito) — relevante para la marcación (ADR-0014).
+ */
+export function emisorDiscriminaIva(condicion: CondicionIva): boolean {
+  return condicion === CondicionIva.ResponsableInscripto;
+}

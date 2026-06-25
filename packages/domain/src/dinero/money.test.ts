@@ -137,3 +137,13 @@ describe("Money — serialización", () => {
     expect(Money.desdeCentavos(m.aCentavos()).igualA(m)).toBe(true);
   });
 });
+
+describe("Money — proporción (ratio para márgenes)", () => {
+  it("calcula la proporción respecto de una base", () => {
+    expect(Money.desde("150").proporcionRespectoDe(Money.desde("100"))).toBe(1.5);
+  });
+
+  it("rechaza base cero", () => {
+    expect(() => Money.desde("150").proporcionRespectoDe(Money.cero())).toThrow(ErrorMoneda);
+  });
+});

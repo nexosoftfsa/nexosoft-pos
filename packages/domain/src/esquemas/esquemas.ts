@@ -7,6 +7,8 @@ import { z } from "zod";
 
 import { TODAS_LAS_ALICUOTAS } from "../fiscal/alicuota-iva.js";
 import { CondicionIva } from "../fiscal/condicion-iva.js";
+import { TipoLista } from "../catalogo/lista-de-precios.js";
+import { UnidadDeMedida } from "../catalogo/unidad-de-medida.js";
 import { FormaDePago } from "../ventas/pago.js";
 
 /** Monto como texto decimal (hasta 4 decimales). Preferido para transportar dinero. */
@@ -26,6 +28,10 @@ export const esquemaPorcentaje = z.number().min(0).max(100);
 export const esquemaCondicionIva = z.nativeEnum(CondicionIva);
 
 export const esquemaFormaDePago = z.nativeEnum(FormaDePago);
+
+export const esquemaUnidadDeMedida = z.nativeEnum(UnidadDeMedida);
+
+export const esquemaTipoLista = z.nativeEnum(TipoLista);
 
 const PORCENTAJES_ALICUOTA = TODAS_LAS_ALICUOTAS.map((a) => a.porcentaje);
 
@@ -56,3 +62,17 @@ export const esquemaPagoEntrada = z.object({
 });
 
 export type PagoEntrada = z.infer<typeof esquemaPagoEntrada>;
+
+/** Alta de artículo cruda, tal como llega desde la UI/IPC. */
+export const esquemaArticuloEntrada = z.object({
+  codigoInterno: z.string().min(1, "El código interno es obligatorio."),
+  descripcion: z.string().min(1, "La descripción es obligatoria."),
+  unidadDeMedida: esquemaUnidadDeMedida,
+  costoNeto: esquemaMontoDecimal,
+  alicuotaPorcentaje: esquemaAlicuotaPorcentaje,
+  codigoBarras: z.string().optional(),
+  rubroId: z.string().optional(),
+  proveedorId: z.string().optional(),
+});
+
+export type ArticuloEntrada = z.infer<typeof esquemaArticuloEntrada>;

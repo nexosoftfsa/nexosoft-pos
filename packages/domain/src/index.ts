@@ -7,8 +7,9 @@
  */
 export const DOMAIN_PACKAGE = "@nexosoft/domain";
 
-// Errores de dominio
+// Errores de dominio y utilidades comunes
 export * from "./comun/errores.js";
+export * from "./comun/id.js";
 
 // Dinero (ADR-0007)
 export * from "./dinero/money.js";
@@ -17,6 +18,13 @@ export * from "./dinero/money.js";
 export * from "./fiscal/condicion-iva.js";
 export * from "./fiscal/alicuota-iva.js";
 export * from "./fiscal/tipo-comprobante.js";
+
+// Catálogo: artículos, listas de precios, costeo/marcación y promos (ADR-0014)
+export * from "./catalogo/unidad-de-medida.js";
+export * from "./catalogo/articulo.js";
+export * from "./catalogo/lista-de-precios.js";
+export * from "./catalogo/precios.js";
+export * from "./catalogo/promocion.js";
 
 // Ventas: cálculo de comprobante y cobro (pago combinado, vuelto)
 export * from "./ventas/calculo-comprobante.js";
