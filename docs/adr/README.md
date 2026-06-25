@@ -32,3 +32,4 @@ Consecuencias y Alternativas consideradas.
 | 0013 | [Precios IVA incluido y cálculo de comprobante](0013-precios-iva-incluido-y-calculo-de-comprobante.md) | Aceptada |
 | 0014 | [Costeo y marcación de precios por régimen](0014-costeo-y-marcacion-por-regimen.md)                    | Aceptada |
 | 0015 | [Cantidades exactas y control de stock negativo](0015-cantidades-exactas-y-control-de-stock.md)        | Aceptada |
+| 0016 | [Capa de aplicación con puertos de repositorio](0016-capa-de-aplicacion-y-puertos-de-repositorio.md)   | Aceptada |
