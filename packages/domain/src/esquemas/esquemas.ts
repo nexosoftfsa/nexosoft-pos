@@ -9,6 +9,7 @@ import { TODAS_LAS_ALICUOTAS } from "../fiscal/alicuota-iva.js";
 import { CondicionIva } from "../fiscal/condicion-iva.js";
 import { TipoLista } from "../catalogo/lista-de-precios.js";
 import { UnidadDeMedida } from "../catalogo/unidad-de-medida.js";
+import { TipoMovimiento } from "../stock/movimiento-stock.js";
 import { FormaDePago } from "../ventas/pago.js";
 
 /** Monto como texto decimal (hasta 4 decimales). Preferido para transportar dinero. */
@@ -76,3 +77,17 @@ export const esquemaArticuloEntrada = z.object({
 });
 
 export type ArticuloEntrada = z.infer<typeof esquemaArticuloEntrada>;
+
+export const esquemaTipoMovimiento = z.nativeEnum(TipoMovimiento);
+
+/** Movimiento de stock crudo, tal como llega desde la UI/IPC. */
+export const esquemaMovimientoStockEntrada = z.object({
+  articuloId: z.string().min(1),
+  depositoId: z.string().min(1),
+  tipo: esquemaTipoMovimiento,
+  cantidad: esquemaCantidad,
+  motivo: z.string().optional(),
+  referencia: z.string().optional(),
+});
+
+export type MovimientoStockEntrada = z.infer<typeof esquemaMovimientoStockEntrada>;

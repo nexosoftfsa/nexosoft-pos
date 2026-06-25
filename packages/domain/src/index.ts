@@ -10,6 +10,7 @@ export const DOMAIN_PACKAGE = "@nexosoft/domain";
 // Errores de dominio y utilidades comunes
 export * from "./comun/errores.js";
 export * from "./comun/id.js";
+export * from "./comun/cantidad.js";
 
 // Dinero (ADR-0007)
 export * from "./dinero/money.js";
@@ -25,6 +26,13 @@ export * from "./catalogo/articulo.js";
 export * from "./catalogo/lista-de-precios.js";
 export * from "./catalogo/precios.js";
 export * from "./catalogo/promocion.js";
+
+// Stock: depósitos, existencias, movimientos, lotes/vencimientos y alertas (ADR-0015)
+export * from "./stock/deposito.js";
+export * from "./stock/existencia.js";
+export * from "./stock/movimiento-stock.js";
+export * from "./stock/lote.js";
+export * from "./stock/alerta-stock.js";
 
 // Ventas: cálculo de comprobante y cobro (pago combinado, vuelto)
 export * from "./ventas/calculo-comprobante.js";

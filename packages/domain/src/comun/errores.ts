@@ -41,3 +41,10 @@ export class ErrorPago extends ErrorDominio {
     super(codigo, mensaje);
   }
 }
+
+/** Violación de una regla de stock (stock insuficiente, depósito distinto, etc.). */
+export class ErrorStock extends ErrorDominio {
+  constructor(codigo: string, mensaje: string) {
+    super(codigo, mensaje);
+  }
+}
