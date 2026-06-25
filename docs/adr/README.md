@@ -31,3 +31,4 @@ Consecuencias y Alternativas consideradas.
 | 0012 | [Condición fiscal del emisor configurable](0012-condicion-fiscal-emisor-configurable.md)               | Aceptada |
 | 0013 | [Precios IVA incluido y cálculo de comprobante](0013-precios-iva-incluido-y-calculo-de-comprobante.md) | Aceptada |
 | 0014 | [Costeo y marcación de precios por régimen](0014-costeo-y-marcacion-por-regimen.md)                    | Aceptada |
+| 0015 | [Cantidades exactas y control de stock negativo](0015-cantidades-exactas-y-control-de-stock.md)        | Aceptada |

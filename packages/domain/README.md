@@ -34,6 +34,17 @@ transpila quien lo importa.
 | `catalogo/precios.ts`          | `calcularPrecioVenta`, `calcularMargen`, `resolverPrecioArticulo` y `redondearAMultiploDe`. Costeo **por régimen** RI/Monotributo (ADR-0014). |
 | `catalogo/promocion.ts`        | `Combo` (+ `ahorroCombo`) y `Promocion` (`%`, monto fijo, lleva/paga NxM) con evaluadores puros y vigencia.                                   |
 
+## Contenido (Fase 1.3 — stock)
+
+| Módulo                      | Qué expone                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `comun/cantidad.ts`         | `Cantidad`: value object de cantidades exactas (como `Money`, sin moneda).                                                |
+| `stock/deposito.ts`         | `Deposito` (ubicación de stock) + `crearDeposito`.                                                                        |
+| `stock/existencia.ts`       | `Existencia` (snapshot), `bajoStockMinimo`, `hayStockSuficiente`.                                                         |
+| `stock/movimiento-stock.ts` | `MovimientoDeStock` (compra/venta/ajuste/merma/devolución), `aplicarMovimiento` (bloquea negativo), `calcularExistencia`. |
+| `stock/lote.ts`             | `Lote`, vencimientos (`estaVencido`, `porVencer`), `ordenarFEFO`, `descontarFEFO`.                                        |
+| `stock/alerta-stock.ts`     | `evaluarAlertasStockMinimo` y `evaluarAlertasVencimiento`.                                                                |
+
 ## Reglas clave
 
 - **Dinero exacto**: todo importe es `Money`. Nunca `number`/`float`.
@@ -43,6 +54,8 @@ transpila quien lo importa.
 - **Vuelto**: solo se entrega en efectivo; nunca más del efectivo recibido.
 - **Costeo por régimen**: el precio se deriva del costo neto + margen según RI o
   Monotributo (el IVA de compra es crédito o costo, respectivamente). Ver ADR-0014.
+- **Cantidades exactas**: el stock se mide con `Cantidad` (decimal), nunca `number`.
+  El stock negativo se bloquea por defecto (configurable). Ver ADR-0015.
 
 ## Comandos
 
@@ -52,5 +65,5 @@ pnpm --filter @nexosoft/domain typecheck   # tsc --noEmit
 pnpm --filter @nexosoft/domain lint        # eslint
 ```
 
-> Estado: **Fases 1.1 y 1.2 implementadas** (109 tests). Próximo: stock (1.3) y
-> venta/POS offline (1.4).
+> Estado: **Fases 1.1, 1.2 y 1.3 implementadas** (143 tests). Próximo: venta/POS
+> offline (1.4) — donde aparece SQLite y la persistencia real.
