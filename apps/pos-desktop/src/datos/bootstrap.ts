@@ -18,6 +18,9 @@ import {
   type LectorDeBarras,
 } from "@nexosoft/hardware";
 import { MockPasarelaDePago, type PasarelaDePago } from "@nexosoft/pagos";
+import { AlmacenEnMemoria, MotorDeSincronizacion } from "@nexosoft/sync";
+import { ClienteSyncSimulado } from "../sync/cliente-sync-simulado";
+import type { SyncPos } from "../sync/useSync";
 import {
   ALICUOTAS_IVA,
   Cantidad,
@@ -137,6 +140,7 @@ export interface EntornoPos {
   readonly impresora: ImpresoraTermica;
   readonly lector: LectorDeBarras;
   readonly pasarela: PasarelaDePago;
+  readonly sync: SyncPos;
 }
 
 export function crearEntornoPos(): EntornoPos {
@@ -194,6 +198,14 @@ export function crearEntornoPos(): EntornoPos {
     };
   });
 
+  // Sincronización. En el navegador (dev) la cola vive en memoria y el cliente
+  // está SIMULADO (acepta tras una demora) para ver el ciclo en la UI. En Tauri
+  // se reemplaza por `AlmacenSqlite` (plugin-sql) + `ClienteSyncHttp` (servidor
+  // de sucursal), sin tocar la UI.
+  const almacen = new AlmacenEnMemoria();
+  const motor = new MotorDeSincronizacion(almacen, new ClienteSyncSimulado({ demoraMs: 800 }));
+  const sync: SyncPos = { motor, almacen, terminalId: "caja-1" };
+
   return {
     servicio: new ServicioDeVenta(repos, config),
     facturacion: new ServicioDeFacturacion(repos, config, new MockServicioFiscal()),
@@ -202,5 +214,6 @@ export function crearEntornoPos(): EntornoPos {
     impresora: new MockImpresoraTermica(),
     lector: new MockLectorDeBarras(),
     pasarela: new MockPasarelaDePago(),
+    sync,
   };
 }

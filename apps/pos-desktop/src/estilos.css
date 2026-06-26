@@ -375,6 +375,68 @@ body {
   color: #fff;
 }
 
+/* ----- Indicador de sincronización ----- */
+.sync {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+}
+.sync-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex: none;
+}
+.sync-texto {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+.sync-ok .sync-dot {
+  background: #22c55e;
+}
+.sync-pendiente .sync-dot {
+  background: #f59e0b;
+}
+.sync-trabajando .sync-dot {
+  background: var(--acento);
+  animation: sync-pulso 1s ease-in-out infinite;
+}
+.sync-error .sync-dot {
+  background: var(--peligro);
+}
+.sync-offline {
+  opacity: 0.75;
+}
+.sync-boton {
+  margin-left: 4px;
+  padding: 3px 10px;
+  border: none;
+  border-radius: 999px;
+  background: var(--acento);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sync-boton:hover {
+  background: var(--acento-fuerte);
+}
+@keyframes sync-pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
 @media print {
   body * {
     visibility: hidden;

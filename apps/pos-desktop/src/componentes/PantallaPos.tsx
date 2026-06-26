@@ -15,6 +15,9 @@ import type { IntentoPago } from "@nexosoft/pagos";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { etiquetaComprobante, pesos } from "../formato";
+import { IndicadorSync } from "../sync/IndicadorSync";
+import { construirOperacionVenta, mapearMedioPago } from "../sync/mapeo";
+import { useSync } from "../sync/useSync";
 
 interface ItemCarrito {
   readonly producto: ProductoCatalogo;
@@ -60,6 +63,7 @@ function armarComando(
 
 export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
   const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
+  const sync = useSync(entorno.sync);
 
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [condicionReceptor, setCondicionReceptor] = useState<CondicionIva>(
@@ -244,6 +248,27 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
     try {
       const venta = await servicio.confirmarVenta(armarComando(carrito, condicionReceptor, pagos));
       setUltimaVenta(venta);
+
+      // Encolar la venta para sincronizar con el servidor de sucursal.
+      // No rompe la venta (ya confirmada localmente) si el encolado falla.
+      try {
+        const itemsSync = carrito.map((c) => ({
+          productoId: c.producto.articulo.id,
+          cantidad: c.cantidad,
+          precioUnitario: c.producto.precioFinal.aDecimalString(2),
+        }));
+        const medioPago = mapearMedioPago(pagos[0]?.forma ?? FormaDePago.Efectivo);
+        await sync.encolar(
+          construirOperacionVenta({
+            items: itemsSync,
+            medioPago,
+            terminalId: entorno.sync.terminalId,
+          }),
+        );
+      } catch (e) {
+        console.error("No se pudo encolar la venta para sync:", e);
+      }
+
       setCarrito([]);
       setPagos([]);
       setError(null);
@@ -318,6 +343,7 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
             Responsable Inscripto · Punto de venta {String(config.puntoDeVenta).padStart(4, "0")}
           </span>
         </div>
+        <IndicadorSync estado={sync} />
       </header>
 
       <main className="cuerpo">
