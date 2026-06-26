@@ -82,6 +82,7 @@ export class VentasService {
           tipoComprobante: cae.tipoComprobante,
           sucursalId: usuario.sucursalId,
           usuarioId: usuario.id,
+          terminalId: dto.terminalId ?? null,
           items: { create: itemsData },
         },
         include: { items: true },

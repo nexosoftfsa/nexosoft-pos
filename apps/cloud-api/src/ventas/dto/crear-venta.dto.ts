@@ -52,4 +52,9 @@ export class CrearVentaDto {
   @IsString()
   @IsOptional()
   tipoComprobante?: string;
+
+  /** Caja que originó la venta. El POS lo completa desde 4.6. */
+  @IsString()
+  @IsOptional()
+  terminalId?: string;
 }

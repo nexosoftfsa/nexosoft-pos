@@ -39,6 +39,7 @@ sincronizan al recuperar la red (Fase 4.5).
 | `catalogo`  | `GET/POST /categorias`, `GET/POST/PATCH/DELETE /productos`           |
 | `stock`     | `GET /stock`, `GET /stock/:id`, `POST /stock/movimientos`            |
 | `ventas`    | `POST /ventas` (registrar, idempotente), `GET /ventas` (historial)   |
+| `sync`      | `POST /sync/operaciones` (ingesta de la cola de las terminales)      |
 | `respaldo`  | `POST /respaldo` (crear), `GET /respaldo` (listar) — ver más abajo   |
 | `health`    | `GET /health` (estado + chequeo de DB)                              |
 
@@ -79,6 +80,7 @@ completo tras cada venta (default `false`: en alto volumen es caro). Ver
 | `pnpm prisma:migrate`    | Migraciones de base de datos         |
 | `pnpm typecheck`         | Chequeo de tipos                     |
 | `pnpm test`              | Tests (Vitest)                       |
+| `pnpm verify:e2e`        | E2E real con PostgreSQL embebido (sin Docker) |
 
 ## Estado (Fase 4)
 
@@ -86,6 +88,7 @@ completo tras cada venta (default `false`: en alto volumen es caro). Ver
 - ✅ 4.2 Catálogo + stock
 - ✅ 4.3 Capa de respaldo a nube propia
 - ✅ 4.4 Ventas + libro Excel + respaldo por venta
-- 🔜 4.5 Sync terminal↔servidor · 4.6 Config en el POS
+- ✅ 4.5 Sync terminal↔servidor (cola + ingesta + `terminalId`)
+- 🔜 4.6 Integración de la sync en el POS (cola SQLite, cliente HTTP, UI)
 
-**53 tests verdes**, typecheck limpio.
+**61 tests** (cloud-api) **+ 10** (`@nexosoft/sync`), typecheck limpio, e2e verde.

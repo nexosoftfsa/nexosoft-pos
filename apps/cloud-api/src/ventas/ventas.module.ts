@@ -31,5 +31,6 @@ import { LibroDeVentasExcel } from './libro/libro-de-ventas-excel';
       inject: [ConfigService],
     },
   ],
+  exports: [VentasService],
 })
 export class VentasModule {}

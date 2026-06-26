@@ -1,0 +1,146 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { AlmacenEnMemoria } from "./almacen-en-memoria";
+import { MotorDeSincronizacion } from "./motor-de-sincronizacion";
+import type { ClienteDeSync } from "./cliente-de-sync";
+import type { OperacionSync, ResultadoEnvio } from "./tipos";
+
+function op(operacionId: string): OperacionSync {
+  return {
+    operacionId,
+    tipo: "venta",
+    payload: { total: "100" },
+    terminalId: "t1",
+    creadaEn: "2026-06-26T10:00:00.000Z",
+  };
+}
+
+describe("AlmacenEnMemoria", () => {
+  it("encola una operación como pendiente", async () => {
+    const almacen = new AlmacenEnMemoria();
+    await almacen.encolar(op("op-1"));
+
+    const pendientes = await almacen.pendientes();
+    expect(pendientes).toHaveLength(1);
+    expect(pendientes[0]?.estado).toBe("pendiente");
+    expect(pendientes[0]?.intentos).toBe(0);
+  });
+
+  it("es idempotente: no re-encola un operacionId ya conocido", async () => {
+    const almacen = new AlmacenEnMemoria();
+    await almacen.encolar(op("op-1"));
+    await almacen.marcar("op-1", "completada");
+    await almacen.encolar(op("op-1")); // reintento de encolar
+
+    const todas = await almacen.todas();
+    expect(todas).toHaveLength(1);
+    expect(todas[0]?.estado).toBe("completada"); // no se pisó
+  });
+});
+
+describe("MotorDeSincronizacion", () => {
+  let almacen: AlmacenEnMemoria;
+  let cliente: { enviar: ReturnType<typeof vi.fn> };
+  let motor: MotorDeSincronizacion;
+
+  beforeEach(() => {
+    almacen = new AlmacenEnMemoria();
+    cliente = { enviar: vi.fn() };
+    motor = new MotorDeSincronizacion(almacen, cliente as ClienteDeSync, { maxIntentos: 2 });
+  });
+
+  it("sin pendientes devuelve un resumen vacío", async () => {
+    const resumen = await motor.sincronizar();
+    expect(resumen).toEqual({ enviadas: 0, completadas: 0, fallidas: 0, pendientes: 0 });
+    expect(cliente.enviar).not.toHaveBeenCalled();
+  });
+
+  it("marca completadas las operaciones aceptadas por el servidor", async () => {
+    await motor.encolar(op("op-1"));
+    await motor.encolar(op("op-2"));
+    cliente.enviar.mockResolvedValue({
+      "op-1": { ok: true },
+      "op-2": { ok: true, idRemoto: "v-99" },
+    } satisfies Record<string, ResultadoEnvio>);
+
+    const resumen = await motor.sincronizar();
+
+    expect(resumen).toEqual({ enviadas: 2, completadas: 2, fallidas: 0, pendientes: 0 });
+    expect((await almacen.obtener("op-1"))?.estado).toBe("completada");
+    expect((await almacen.pendientes())).toHaveLength(0);
+  });
+
+  it("deja en pendiente (con intento++) un error reintentable", async () => {
+    await motor.encolar(op("op-1"));
+    cliente.enviar.mockResolvedValue({
+      "op-1": { ok: false, error: "timeout", reintentable: true },
+    } satisfies Record<string, ResultadoEnvio>);
+
+    const resumen = await motor.sincronizar();
+
+    expect(resumen.pendientes).toBe(1);
+    const o = await almacen.obtener("op-1");
+    expect(o?.estado).toBe("pendiente");
+    expect(o?.intentos).toBe(1);
+    expect(o?.ultimoError).toBe("timeout");
+  });
+
+  it("marca fallida al superar maxIntentos", async () => {
+    await motor.encolar(op("op-1"));
+    cliente.enviar.mockResolvedValue({
+      "op-1": { ok: false, error: "timeout", reintentable: true },
+    } satisfies Record<string, ResultadoEnvio>);
+
+    await motor.sincronizar(); // intento 1 -> pendiente
+    await motor.sincronizar(); // intento 2 -> fallida (maxIntentos=2)
+
+    const o = await almacen.obtener("op-1");
+    expect(o?.estado).toBe("fallida");
+    expect(o?.intentos).toBe(2);
+  });
+
+  it("marca fallida de inmediato un error NO reintentable", async () => {
+    await motor.encolar(op("op-1"));
+    cliente.enviar.mockResolvedValue({
+      "op-1": { ok: false, error: "payload inválido", reintentable: false },
+    } satisfies Record<string, ResultadoEnvio>);
+
+    const resumen = await motor.sincronizar();
+
+    expect(resumen.fallidas).toBe(1);
+    expect((await almacen.obtener("op-1"))?.estado).toBe("fallida");
+  });
+
+  it("si el transporte falla (sin red), deja todo pendiente para reintentar", async () => {
+    await motor.encolar(op("op-1"));
+    cliente.enviar.mockRejectedValue(new Error("ECONNREFUSED"));
+
+    const resumen = await motor.sincronizar();
+
+    expect(resumen.pendientes).toBe(1);
+    const o = await almacen.obtener("op-1");
+    expect(o?.estado).toBe("pendiente");
+    expect(o?.ultimoError).toContain("ECONNREFUSED");
+  });
+
+  it("trata como reintentable una operación sin resultado del servidor", async () => {
+    await motor.encolar(op("op-1"));
+    cliente.enviar.mockResolvedValue({}); // el servidor no respondió por op-1
+
+    const resumen = await motor.sincronizar();
+
+    expect(resumen.pendientes).toBe(1);
+    expect((await almacen.obtener("op-1"))?.estado).toBe("pendiente");
+  });
+
+  it("fallidas() lista las operaciones que agotaron reintentos", async () => {
+    await motor.encolar(op("op-1"));
+    cliente.enviar.mockResolvedValue({
+      "op-1": { ok: false, error: "x", reintentable: false },
+    } satisfies Record<string, ResultadoEnvio>);
+    await motor.sincronizar();
+
+    const fallidas = await motor.fallidas();
+    expect(fallidas).toHaveLength(1);
+    expect(fallidas[0]?.operacionId).toBe("op-1");
+  });
+});

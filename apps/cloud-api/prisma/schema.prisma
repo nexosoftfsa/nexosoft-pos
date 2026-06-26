@@ -23,8 +23,25 @@ model Sucursal {
   productos Producto[]
   ventas    Venta[]
   movimientosStock MovimientoStock[]
+  terminales Terminal[]
 
   @@map("sucursales")
+}
+
+// ─── Terminales (cajas) ──────────────────────────────────────────────────────
+
+model Terminal {
+  id         String   @id @default(cuid())
+  nombre     String
+  activa     Boolean  @default(true)
+  creadaEn   DateTime @default(now())
+
+  sucursalId String
+  sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
+
+  ventas     Venta[]
+
+  @@map("terminales")
 }
 
 // ─── Usuarios ────────────────────────────────────────────────────────────────
@@ -171,6 +188,10 @@ model Venta {
 
   usuarioId       String
   usuario         Usuario     @relation(fields: [usuarioId], references: [id])
+
+  /// Caja que originó la venta. Opcional: el POS lo completa desde 4.6.
+  terminalId      String?
+  terminal        Terminal?   @relation(fields: [terminalId], references: [id])
 
   items           ItemVenta[]
   movimientosStock MovimientoStock[]
