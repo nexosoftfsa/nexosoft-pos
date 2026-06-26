@@ -20,6 +20,7 @@
     "@nexosoft/domain": "workspace:*",
     "@nexosoft/fiscal": "workspace:*",
     "@nexosoft/hardware": "workspace:*",
+    "@nexosoft/pagos": "workspace:*",
     "@nexosoft/sync": "workspace:*",
     "@nexosoft/ui": "workspace:*",
     "@tauri-apps/api": "^2.1.1",
