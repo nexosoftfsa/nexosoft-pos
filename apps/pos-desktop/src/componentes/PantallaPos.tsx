@@ -5,6 +5,7 @@ import {
   Cantidad,
   CondicionIva,
   ErrorDominio,
+  EstadoCae,
   FormaDePago,
   Money,
   resolverTipoComprobante,
@@ -156,6 +157,31 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
       setCarrito([]);
       setPagos([]);
       setError(null);
+    } catch (e) {
+      setError(mensajeError(e));
+    }
+  }
+
+  async function autorizarCae() {
+    if (!ultimaVenta) return;
+    setError(null);
+    try {
+      const r = await entorno.facturacion.autorizar(ultimaVenta);
+      setUltimaVenta(r);
+      if (r.estadoCae !== EstadoCae.Autorizada) {
+        setError("ARCA rechazó el comprobante.");
+      }
+    } catch (e) {
+      setError(mensajeError(e));
+    }
+  }
+
+  async function anularConNotaCredito() {
+    if (!ultimaVenta) return;
+    setError(null);
+    try {
+      const nc = await entorno.facturacion.emitirNotaCredito(ultimaVenta);
+      setUltimaVenta(await entorno.facturacion.autorizar(nc));
     } catch (e) {
       setError(mensajeError(e));
     }
@@ -314,7 +340,17 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
               N° {String(ultimaVenta.puntoDeVenta).padStart(4, "0")}-
               {String(ultimaVenta.numero).padStart(8, "0")}
             </div>
-            <div className="ticket-estado">{ultimaVenta.estadoCae}</div>
+            {ultimaVenta.estadoCae === EstadoCae.Autorizada ? (
+              <div className="ticket-cae">
+                <span className="badge-ok">AUTORIZADA</span>
+                <span>CAE {ultimaVenta.cae}</span>
+                {ultimaVenta.vencimientoCae && (
+                  <span>Vto. {ultimaVenta.vencimientoCae.toLocaleDateString("es-AR")}</span>
+                )}
+              </div>
+            ) : (
+              <div className="ticket-estado">{ultimaVenta.estadoCae}</div>
+            )}
             <ul className="ticket-items">
               {ultimaVenta.items.map((it, i) => (
                 <li key={i}>
@@ -337,10 +373,26 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
                 <span>{pesos(ultimaVenta.vuelto)}</span>
               </div>
             )}
+            {error && <div className="error">{error}</div>}
             <div className="ticket-acciones">
+              {ultimaVenta.estadoCae === EstadoCae.PendienteCae && (
+                <button className="primario" onClick={autorizarCae}>
+                  Solicitar CAE
+                </button>
+              )}
+              {ultimaVenta.estadoCae === EstadoCae.Autorizada &&
+                ultimaVenta.tipoComprobante.startsWith("Factura") && (
+                  <button onClick={anularConNotaCredito}>Anular (NC)</button>
+                )}
               <button onClick={() => window.print()}>Imprimir</button>
-              <button className="primario" onClick={() => setUltimaVenta(null)}>
-                Nueva venta
+              <button
+                className="primario"
+                onClick={() => {
+                  setUltimaVenta(null);
+                  setError(null);
+                }}
+              >
+                Cerrar
               </button>
             </div>
           </div>

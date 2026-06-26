@@ -18,6 +18,7 @@
   "dependencies": {
     "@nexosoft/app": "workspace:*",
     "@nexosoft/domain": "workspace:*",
+    "@nexosoft/fiscal": "workspace:*",
     "@nexosoft/hardware": "workspace:*",
     "@nexosoft/sync": "workspace:*",
     "@nexosoft/ui": "workspace:*",

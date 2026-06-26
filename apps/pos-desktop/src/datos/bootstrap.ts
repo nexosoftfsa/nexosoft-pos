@@ -6,9 +6,11 @@
  */
 import {
   crearRepositoriosMemoria,
+  ServicioDeFacturacion,
   ServicioDeVenta,
   type ConfiguracionComercio,
 } from "@nexosoft/app";
+import { MockServicioFiscal } from "@nexosoft/fiscal";
 import {
   ALICUOTAS_IVA,
   Cantidad,
@@ -122,6 +124,7 @@ export interface ProductoCatalogo {
 
 export interface EntornoPos {
   readonly servicio: ServicioDeVenta;
+  readonly facturacion: ServicioDeFacturacion;
   readonly config: ConfiguracionComercio;
   readonly catalogo: readonly ProductoCatalogo[];
 }
@@ -181,5 +184,10 @@ export function crearEntornoPos(): EntornoPos {
     };
   });
 
-  return { servicio: new ServicioDeVenta(repos, config), config, catalogo };
+  return {
+    servicio: new ServicioDeVenta(repos, config),
+    facturacion: new ServicioDeFacturacion(repos, config, new MockServicioFiscal()),
+    config,
+    catalogo,
+  };
 }
