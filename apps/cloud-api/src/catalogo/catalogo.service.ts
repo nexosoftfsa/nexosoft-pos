@@ -69,12 +69,12 @@ export class CatalogoService {
       data: {
         codigo: dto.codigo,
         nombre: dto.nombre,
-        descripcion: dto.descripcion,
+        descripcion: dto.descripcion ?? null,
         precioVenta: dto.precioVenta,
         precioCosto: dto.precioCosto,
         tipoIva: dto.tipoIva ?? 'IVA_21',
         sucursalId,
-        categoriaId: dto.categoriaId,
+        categoriaId: dto.categoriaId ?? null,
       },
       include: { categoria: { select: { id: true, nombre: true } } },
     });

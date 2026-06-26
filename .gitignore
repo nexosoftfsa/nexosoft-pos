@@ -40,6 +40,10 @@ apps/pos-desktop/src-tauri/gen/
 *.db-wal
 *.db-shm
 
+# Respaldos generados (ADR-0020)
+respaldos/
+*.json.gz
+
 # Logs
 *.log
 logs/

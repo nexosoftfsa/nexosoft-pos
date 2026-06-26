@@ -3,7 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { addDays } from 'date-fns';
 import * as argon2 from 'argon2';
@@ -83,15 +83,19 @@ export class AuthService {
   ) {
     const payload: JwtPayload = { sub: usuarioId, email, rol, sucursalId };
 
-    const accessToken = this.jwt.sign(payload, {
-      expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRY') ?? '15m',
-    });
+    // El valor viene de config (string en runtime); la librería lo parsea con `ms`.
+    const accessExpiry = (this.config.get<string>('JWT_ACCESS_EXPIRY') ??
+      '15m') as NonNullable<JwtSignOptions['expiresIn']>;
+    const refreshExpiry = (this.config.get<string>('JWT_REFRESH_EXPIRY') ??
+      '30d') as NonNullable<JwtSignOptions['expiresIn']>;
+
+    const accessToken = this.jwt.sign(payload, { expiresIn: accessExpiry });
 
     const refreshTokenStr = this.jwt.sign(
       { sub: usuarioId },
       {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRY') ?? '30d',
+        expiresIn: refreshExpiry,
       },
     );
 

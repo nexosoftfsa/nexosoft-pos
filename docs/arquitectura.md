@@ -27,6 +27,14 @@ de datos** inicial. Las decisiones puntuales están en los [ADRs](adr/).
 - El **servicio fiscal** está aislado: emisión y CAE pasan por una interfaz
   ([ADR-0008](adr/0008-servicio-fiscal-arca-aislado.md)).
 
+> **Dónde corre el Cloud API.** El mismo binario se despliega como **servidor de
+> sucursal en la LAN** del comercio (una PC/mini-PC), no necesariamente en la
+> nube ([ADR-0019](adr/0019-topologia-servidor-de-sucursal-lan.md)). Varias cajas
+> comparten datos contra ese servidor, y cada caja sigue siendo offline-first. La
+> nube (Railway/Supabase) queda **opcional**, para consolidar multi-sucursal. El
+> servidor respalda su base en la **nube propia del cliente**
+> ([ADR-0020](adr/0020-respaldo-en-nube-propia.md)).
+
 ## 2. Principio rector: offline-first
 
 El flujo de venta **no depende de la red**:
@@ -164,4 +172,5 @@ operacion_sync(operacion_id, tipo, payload, estado, origen, intentos, creado_en)
 ## 6. Decisiones relacionadas
 
 Ver índice de [ADRs](adr/): monorepo, Tauri, SQLite, sincronización, NestJS,
-dinero, ARCA y hardware.
+dinero, ARCA, hardware, **topología de despliegue (ADR-0019)** y **respaldo en
+nube propia (ADR-0020)**.

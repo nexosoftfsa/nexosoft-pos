@@ -1,24 +1,64 @@
 # @nexosoft/cloud-api
 
-Backend cloud multi-sucursal. Recibe la sincronización de los POS, centraliza
-catálogo/precios/stock/cuentas corrientes y orquesta el servicio fiscal ARCA.
+Backend de NexoSoft. Centraliza catálogo, stock y ventas, y respalda los datos.
+Se despliega como **servidor de sucursal en la LAN** del comercio (una PC/mini-PC)
+o, opcionalmente, en la nube para multi-sucursal — el mismo binario sirve para
+ambos (ver [ADR-0019](../../docs/adr/0019-topologia-servidor-de-sucursal-lan.md)).
 
 ## Stack
 
 - **NestJS** (Node + TypeScript), API tipada y modular
-- **PostgreSQL** como base central (multi-sucursal)
+- **PostgreSQL** como base de la sucursal (multi-sucursal desde el schema)
 - **Prisma** como ORM (tipo `Decimal` para dinero — ver ADR-0007)
 - `@nexosoft/domain` (lógica compartida) y `@nexosoft/fiscal` (ARCA aislado)
 
+## Topología
+
+```
+   SUCURSAL (LAN)
+   ┌───────────────────────────────┐
+   │ PC Servidor                   │
+   │  • cloud-api (este paquete)   │
+   │  • PostgreSQL                 │
+   │  • Respaldo → nube propia     │
+   └──────▲──────────▲─────────────┘
+          │ HTTP/LAN │
+      ┌───┴──┐   ┌───┴──┐
+      │ Caja │   │ Caja │  ← POS offline-first (SQLite local)
+      └──────┘   └──────┘
+```
+
+Las cajas son **offline-first**: venden aunque el servidor esté caído y
+sincronizan al recuperar la red (Fase 4.5).
+
+## Módulos
+
+| Módulo      | Endpoints (prefijo `/api/v1`)                                        |
+| ----------- | ------------------------------------------------------------------- |
+| `auth`      | `POST /auth/register · /auth/login · /auth/refresh · /auth/logout`   |
+| `catalogo`  | `GET/POST /categorias`, `GET/POST/PATCH/DELETE /productos`           |
+| `stock`     | `GET /stock`, `GET /stock/:id`, `POST /stock/movimientos`            |
+| `respaldo`  | `POST /respaldo` (crear), `GET /respaldo` (listar) — ver más abajo   |
+| `health`    | `GET /health` (estado + chequeo de DB)                              |
+
+Todos los endpoints (salvo `auth` y `health`) requieren **JWT** y quedan
+automáticamente acotados a la **sucursal** del token.
+
+## Respaldo en nube propia
+
+El servidor genera snapshots consistentes de la base y los deja en una **carpeta
+configurable** (`RESPALDO_RUTA`). Si esa carpeta es la de Google Drive / OneDrive
+Desktop, la nube los sube sola — **sin integrar ninguna API**. También sirve para
+disco externo o NAS. Detalle de diseño en
+[`src/respaldo/README.md`](src/respaldo/README.md) y
+[ADR-0020](../../docs/adr/0020-respaldo-en-nube-propia.md).
+
 ## Prerrequisitos
 
-- PostgreSQL 16+ (local o Docker)
+- PostgreSQL 16+ (en la PC servidor)
 - `corepack enable pnpm`
-- Copiar `.env.example` → `.env` y completar `DATABASE_URL`
-
-> El scaffold de NestJS (`src/`, `nest-cli.json`, `prisma/schema.prisma`) se
-> genera al inicio de la fase correspondiente. En Fase 0 sólo queda declarado el
-> paquete y sus dependencias.
+- Copiar `.env.example` → `.env` y completar `DATABASE_URL`, `JWT_SECRET`,
+  `JWT_REFRESH_SECRET` y, si se quiere respaldo automático, `RESPALDO_*`
 
 ## Scripts
 
@@ -26,10 +66,16 @@ catálogo/precios/stock/cuentas corrientes y orquesta el servicio fiscal ARCA.
 | ------------------------ | ------------------------------------ |
 | `pnpm dev`               | API en modo watch                    |
 | `pnpm build`             | Build de producción                  |
+| `pnpm prisma:generate`   | Genera el cliente Prisma             |
 | `pnpm prisma:migrate`    | Migraciones de base de datos         |
+| `pnpm typecheck`         | Chequeo de tipos                     |
 | `pnpm test`              | Tests (Vitest)                       |
 
-## Estado
+## Estado (Fase 4)
 
-🔜 Se activa en Fase 2 (ARCA) y Fase 3 (Caja/CC). El esqueleto vive desde Fase 1
-para compartir tipos con el POS.
+- ✅ 4.1 Scaffold + auth JWT
+- ✅ 4.2 Catálogo + stock
+- ✅ 4.3 Capa de respaldo a nube propia
+- 🔜 4.4 Ventas · 4.5 Sync terminal↔servidor · 4.6 Config en el POS
+
+**41 tests verdes**, typecheck limpio.

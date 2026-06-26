@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { CatalogoModule } from './catalogo/catalogo.module';
 import { StockModule } from './stock/stock.module';
+import { RespaldoModule } from './respaldo/respaldo.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { StockModule } from './stock/stock.module';
     HealthModule,
     CatalogoModule,
     StockModule,
+    RespaldoModule,
   ],
 })
 export class AppModule {}

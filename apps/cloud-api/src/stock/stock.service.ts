@@ -57,7 +57,7 @@ export class StockService {
       data: {
         tipo: dto.tipo,
         cantidad,
-        motivo: dto.motivo,
+        motivo: dto.motivo ?? null,
         productoId: dto.productoId,
         sucursalId,
       },

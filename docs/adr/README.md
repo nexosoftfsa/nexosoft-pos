@@ -34,3 +34,6 @@ Consecuencias y Alternativas consideradas.
 | 0015 | [Cantidades exactas y control de stock negativo](0015-cantidades-exactas-y-control-de-stock.md)        | Aceptada |
 | 0016 | [Capa de aplicación con puertos de repositorio](0016-capa-de-aplicacion-y-puertos-de-repositorio.md)   | Aceptada |
 | 0017 | [Adaptador SQLite detrás de un ejecutor, testeable sin Tauri](0017-adaptador-sqlite-via-ejecutor.md)   | Aceptada |
+| 0018 | [Abstracción de hardware con puertos y mocks](0018-abstraccion-hardware-puertos-y-mocks.md)            | Aceptada |
+| 0019 | [Topología de despliegue: servidor de sucursal en LAN](0019-topologia-servidor-de-sucursal-lan.md)     | Aceptada |
+| 0020 | [Respaldo en la nube propia del cliente](0020-respaldo-en-nube-propia.md)                              | Aceptada |
