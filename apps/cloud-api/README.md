@@ -38,6 +38,7 @@ sincronizan al recuperar la red (Fase 4.5).
 | `auth`      | `POST /auth/register · /auth/login · /auth/refresh · /auth/logout`   |
 | `catalogo`  | `GET/POST /categorias`, `GET/POST/PATCH/DELETE /productos`           |
 | `stock`     | `GET /stock`, `GET /stock/:id`, `POST /stock/movimientos`            |
+| `ventas`    | `POST /ventas` (registrar, idempotente), `GET /ventas` (historial)   |
 | `respaldo`  | `POST /respaldo` (crear), `GET /respaldo` (listar) — ver más abajo   |
 | `health`    | `GET /health` (estado + chequeo de DB)                              |
 
@@ -52,6 +53,14 @@ Desktop, la nube los sube sola — **sin integrar ninguna API**. También sirve 
 disco externo o NAS. Detalle de diseño en
 [`src/respaldo/README.md`](src/respaldo/README.md) y
 [ADR-0020](../../docs/adr/0020-respaldo-en-nube-propia.md).
+
+## Libro de ventas (Excel) y respaldo por venta
+
+En **cada venta** se actualiza un **Excel** (`RESPALDO_RUTA/ventas.xlsx`, una fila
+por venta) para control del dueño — viaja a la nube propia junto a los snapshots.
+Opcionalmente, con `RESPALDO_EN_CADA_VENTA=true`, se genera además un snapshot
+completo tras cada venta (default `false`: en alto volumen es caro). Ver
+[ADR-0021](../../docs/adr/0021-libro-de-ventas-excel-y-respaldo-en-venta.md).
 
 ## Prerrequisitos
 
@@ -76,6 +85,7 @@ disco externo o NAS. Detalle de diseño en
 - ✅ 4.1 Scaffold + auth JWT
 - ✅ 4.2 Catálogo + stock
 - ✅ 4.3 Capa de respaldo a nube propia
-- 🔜 4.4 Ventas · 4.5 Sync terminal↔servidor · 4.6 Config en el POS
+- ✅ 4.4 Ventas + libro Excel + respaldo por venta
+- 🔜 4.5 Sync terminal↔servidor · 4.6 Config en el POS
 
-**41 tests verdes**, typecheck limpio.
+**53 tests verdes**, typecheck limpio.

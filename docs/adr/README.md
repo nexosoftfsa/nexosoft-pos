@@ -37,3 +37,4 @@ Consecuencias y Alternativas consideradas.
 | 0018 | [Abstracción de hardware con puertos y mocks](0018-abstraccion-hardware-puertos-y-mocks.md)            | Aceptada |
 | 0019 | [Topología de despliegue: servidor de sucursal en LAN](0019-topologia-servidor-de-sucursal-lan.md)     | Aceptada |
 | 0020 | [Respaldo en la nube propia del cliente](0020-respaldo-en-nube-propia.md)                              | Aceptada |
+| 0021 | [Libro de ventas en Excel y respaldo por venta](0021-libro-de-ventas-excel-y-respaldo-en-venta.md)     | Aceptada |
