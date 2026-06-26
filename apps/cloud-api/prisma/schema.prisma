@@ -1,0 +1,195 @@
+// NexoSoft — schema Prisma
+// Multi-sucursal desde el MVP: todas las tablas de negocio llevan sucursalId.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Sucursal ────────────────────────────────────────────────────────────────
+
+model Sucursal {
+  id        String   @id @default(cuid())
+  nombre    String
+  direccion String?
+  activa    Boolean  @default(true)
+  creadaEn  DateTime @default(now())
+
+  usuarios  Usuario[]
+  productos Producto[]
+  ventas    Venta[]
+  movimientosStock MovimientoStock[]
+
+  @@map("sucursales")
+}
+
+// ─── Usuarios ────────────────────────────────────────────────────────────────
+
+enum RolUsuario {
+  ADMIN
+  CAJERO
+  SUPERVISOR
+}
+
+model Usuario {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  nombreDisplay String
+  passwordHash String
+  rol          RolUsuario @default(CAJERO)
+  activo       Boolean    @default(true)
+  creadoEn     DateTime   @default(now())
+
+  sucursalId   String
+  sucursal     Sucursal   @relation(fields: [sucursalId], references: [id])
+
+  refreshTokens RefreshToken[]
+  ventas        Venta[]
+
+  @@map("usuarios")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiraEn  DateTime
+  creadoEn  DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+// ─── Catálogo ─────────────────────────────────────────────────────────────────
+
+enum TipoIva {
+  EXENTO
+  IVA_10_5
+  IVA_21
+  IVA_27
+}
+
+model Categoria {
+  id       String     @id @default(cuid())
+  nombre   String
+  productos Producto[]
+
+  @@map("categorias")
+}
+
+model Producto {
+  id          String    @id @default(cuid())
+  codigo      String    // código de barras o interno
+  nombre      String
+  descripcion String?
+  precioVenta Decimal   @db.Decimal(12, 2)
+  precioCosto Decimal   @db.Decimal(12, 2)
+  tipoIva     TipoIva   @default(IVA_21)
+  activo      Boolean   @default(true)
+  creadoEn    DateTime  @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  sucursalId  String
+  sucursal    Sucursal  @relation(fields: [sucursalId], references: [id])
+
+  categoriaId String?
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id])
+
+  itemsVenta  ItemVenta[]
+  movimientosStock MovimientoStock[]
+
+  @@unique([codigo, sucursalId])
+  @@map("productos")
+}
+
+// ─── Stock ────────────────────────────────────────────────────────────────────
+
+enum TipoMovimiento {
+  ENTRADA
+  SALIDA
+  AJUSTE
+  VENTA
+}
+
+model MovimientoStock {
+  id          String         @id @default(cuid())
+  tipo        TipoMovimiento
+  cantidad    Decimal        @db.Decimal(12, 3)
+  motivo      String?
+  creadoEn    DateTime       @default(now())
+
+  productoId  String
+  producto    Producto       @relation(fields: [productoId], references: [id])
+
+  sucursalId  String
+  sucursal    Sucursal       @relation(fields: [sucursalId], references: [id])
+
+  ventaId     String?
+  venta       Venta?         @relation(fields: [ventaId], references: [id])
+
+  @@map("movimientos_stock")
+}
+
+// ─── Ventas ──────────────────────────────────────────────────────────────────
+
+enum EstadoVenta {
+  PENDIENTE
+  COMPLETADA
+  ANULADA
+}
+
+enum MedioPago {
+  EFECTIVO
+  TARJETA_DEBITO
+  TARJETA_CREDITO
+  MERCADOPAGO_QR
+  CUENTA_CORRIENTE
+}
+
+model Venta {
+  id              String      @id @default(cuid())
+  /// operacionId generado en el POS local — garantiza idempotencia en sync
+  operacionId     String      @unique
+  estado          EstadoVenta @default(PENDIENTE)
+  subtotal        Decimal     @db.Decimal(12, 2)
+  descuento       Decimal     @db.Decimal(12, 2) @default(0)
+  total           Decimal     @db.Decimal(12, 2)
+  medioPago       MedioPago
+  cae             String?
+  caeFechaVto     DateTime?
+  numeroComprobante Int?
+  tipoComprobante String?
+  creadaEn        DateTime    @default(now())
+  sincronizadaEn  DateTime?
+
+  sucursalId      String
+  sucursal        Sucursal    @relation(fields: [sucursalId], references: [id])
+
+  usuarioId       String
+  usuario         Usuario     @relation(fields: [usuarioId], references: [id])
+
+  items           ItemVenta[]
+  movimientosStock MovimientoStock[]
+
+  @@map("ventas")
+}
+
+model ItemVenta {
+  id           String   @id @default(cuid())
+  cantidad     Decimal  @db.Decimal(12, 3)
+  precioUnitario Decimal @db.Decimal(12, 2)
+  descuento    Decimal  @db.Decimal(12, 2) @default(0)
+  subtotal     Decimal  @db.Decimal(12, 2)
+
+  ventaId      String
+  venta        Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+
+  productoId   String
+  producto     Producto @relation(fields: [productoId], references: [id])
+
+  @@map("items_venta")
+}
