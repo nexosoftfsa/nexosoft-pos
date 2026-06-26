@@ -1,26 +1,50 @@
 # @nexosoft/pagos
 
-Cobros electrónicos aislados detrás de la interfaz **`PasarelaDePago`** (puerto).
-El POS no conoce la API de MercadoPago: depende del contrato (ADR-0010).
+Cobros electrónicos aislados detrás del puerto **`PasarelaDePago`**.
+El POS no conoce la API de MercadoPago: solo habla con el contrato. Ver [ADR-0010](../../docs/adr/0010-pasarela-de-pago-mercadopago.md).
 
-## Responsabilidades
+## Puerto `PasarelaDePago`
 
-- `crearIntencionDePago`, `consultarEstado`, `cancelar`, `reembolsar`.
-- Manejo de estados (pendiente / aprobado / rechazado / reverso) e idempotencia
-  por `intencionPagoId`.
+```ts
+iniciarPago(solicitud: SolicitudPago): Promise<IntentoPago>
+consultarEstado(intencionPagoId: string): Promise<IntentoPago>
+cancelar(intencionPagoId: string): Promise<void>
+```
+
+Idempotencia garantizada por `intencionPagoId` (UUID generado por el POS).
 
 ## Implementaciones
 
-| Implementación         | Uso                                                   |
-| ---------------------- | ----------------------------------------------------- |
-| `MercadoPagoPasarela`  | **Point** (terminal) + **QR** (billetera). Online.    |
-| `MockPasarela`         | Desarrollo y tests sin red ni credenciales.           |
+| Clase | Uso |
+|---|---|
+| `MockPasarelaDePago` | Desarrollo y tests sin red ni credenciales |
+| `MercadoPagoPoint` | Esqueleto — requiere SDK + credenciales reales |
 
-> **Offline-first:** sin conexión, la venta se cierra registrando la forma de
-> pago; el cobro electrónico queda **pendiente de conciliación** y se confirma al
-> recuperar conexión. **Point** requiere SDK/hardware de MercadoPago y no se
-> puede probar en este entorno.
+## Mock
 
-## Estado
+```ts
+import { MockPasarelaDePago } from "@nexosoft/pagos";
 
-🔜 Se integra después del POS base. En Fase 0 queda el contrato y la decisión.
+const pasarela = new MockPasarelaDePago();
+pasarela.resultadoSimulado = "aprobado"; // o "rechazado" o "timeout"
+
+const intento = await pasarela.iniciarPago({ intencionPagoId: "uuid", monto, medio: "tarjeta_credito", descripcion: "Compra" });
+const estado = await pasarela.consultarEstado(intento.intencionPagoId);
+// estado.estado === "aprobado"
+```
+
+## Offline-first
+
+Sin conexión la venta se cierra registrando la forma de pago con estado
+`pendiente`. Al recuperar red se concilia contra MercadoPago.
+
+## Tests
+
+```bash
+pnpm --filter @nexosoft/pagos test
+```
+
+## Estado para producción
+
+`MercadoPagoPoint` lanza error hasta que se instale el SDK y se configuren las
+credenciales (`accessToken`). Ver comentarios en `mercadopago-point.ts`.
