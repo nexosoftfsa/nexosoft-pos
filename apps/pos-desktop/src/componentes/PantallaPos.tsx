@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ComandoVenta, PrevisualizacionVenta, VentaConfirmada } from "@nexosoft/app";
 import {
@@ -10,6 +10,8 @@ import {
   Money,
   resolverTipoComprobante,
 } from "@nexosoft/domain";
+import type { DatosTicket } from "@nexosoft/hardware";
+import type { IntentoPago } from "@nexosoft/pagos";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { etiquetaComprobante, pesos } from "../formato";
@@ -28,10 +30,10 @@ const RECEPTORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
   { valor: CondicionIva.ResponsableInscripto, etiqueta: "Responsable Inscripto" },
   { valor: CondicionIva.Monotributo, etiqueta: "Monotributo" },
 ];
-const FORMAS: ReadonlyArray<{ valor: FormaDePago; etiqueta: string }> = [
+const FORMAS: ReadonlyArray<{ valor: FormaDePago; etiqueta: string; electronico?: boolean }> = [
   { valor: FormaDePago.Efectivo, etiqueta: "Efectivo" },
-  { valor: FormaDePago.Tarjeta, etiqueta: "Tarjeta" },
-  { valor: FormaDePago.Billetera, etiqueta: "Billetera (QR)" },
+  { valor: FormaDePago.Tarjeta, etiqueta: "Tarjeta / Point", electronico: true },
+  { valor: FormaDePago.Billetera, etiqueta: "Billetera (QR)", electronico: true },
   { valor: FormaDePago.Transferencia, etiqueta: "Transferencia" },
 ];
 
@@ -57,7 +59,7 @@ function armarComando(
 }
 
 export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
-  const { servicio, config, catalogo } = entorno;
+  const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
 
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [condicionReceptor, setCondicionReceptor] = useState<CondicionIva>(
@@ -69,6 +71,47 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
   const [error, setError] = useState<string | null>(null);
   const [formaPago, setFormaPago] = useState<FormaDePago>(FormaDePago.Efectivo);
   const [montoPago, setMontoPago] = useState<string>("");
+  const [imprimiendo, setImprimiendo] = useState(false);
+  const [pagoElectronico, setPagoElectronico] = useState<IntentoPago | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ----- Lector de barras HID -----
+  // Los lectores HID se comportan como teclado: acumulamos teclas hasta Enter.
+  const bufferLector = useRef("");
+  const buscarPorCodigo = useCallback(
+    (codigo: string) => {
+      const prod = catalogo.find((p) => p.articulo.codigoInterno === codigo);
+      if (prod) agregar(prod);
+      else setError(`Código de barras no encontrado: ${codigo}`);
+    },
+    // agregar se define más abajo, pero es estable porque usa setCarrito funcional
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [catalogo],
+  );
+
+  useEffect(() => {
+    // Suscripción al lector (mock o real vía puerto)
+    const unsub = lector.onEscaneo(buscarPorCodigo);
+
+    // Captura teclado global para lectores HID plug-and-play
+    function onKeyDown(e: KeyboardEvent) {
+      // Ignorar si el foco está en un input (el usuario está escribiendo)
+      if (document.activeElement?.tagName === "INPUT") return;
+      if (e.key === "Enter") {
+        const codigo = bufferLector.current.trim();
+        bufferLector.current = "";
+        if (codigo.length > 0) buscarPorCodigo(codigo);
+      } else if (e.key.length === 1) {
+        bufferLector.current += e.key;
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      unsub();
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [lector, buscarPorCodigo]);
 
   useEffect(() => {
     if (carrito.length === 0) {
@@ -151,6 +194,53 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
 
   async function confirmar() {
     if (carrito.length === 0) return;
+
+    // Si hay un pago electrónico pendiente, iniciarlo antes de confirmar la venta
+    const pagoElec = pagos.find((p) =>
+      FORMAS.find((f) => f.valor === p.forma)?.electronico,
+    );
+    if (pagoElec && preview) {
+      try {
+        const intencionId = crypto.randomUUID();
+        const medio = pagoElec.forma === FormaDePago.Billetera ? "qr" : "point" as const;
+        const intento = await pasarela.iniciarPago({
+          intencionPagoId: intencionId,
+          monto: pagoElec.monto,
+          medio,
+          descripcion: `Venta ${config.razonSocial}`,
+        });
+        setPagoElectronico(intento);
+        // Polling cada 2 s hasta resolución
+        pollingRef.current = setInterval(async () => {
+          try {
+            const estado = await pasarela.consultarEstado(intencionId);
+            setPagoElectronico(estado);
+            if (estado.estado === "aprobado") {
+              clearInterval(pollingRef.current!);
+              pollingRef.current = null;
+              setPagoElectronico(null);
+              await _finalizarVenta();
+            } else if (estado.estado === "rechazado" || estado.estado === "cancelado") {
+              clearInterval(pollingRef.current!);
+              pollingRef.current = null;
+              setPagoElectronico(null);
+              setError(`Pago ${estado.estado}: ${estado.motivoRechazo ?? ""}`);
+            }
+          } catch (e) {
+            setError(mensajeError(e));
+          }
+        }, 2000);
+        return;
+      } catch (e) {
+        setError(mensajeError(e));
+        return;
+      }
+    }
+
+    await _finalizarVenta();
+  }
+
+  async function _finalizarVenta() {
     try {
       const venta = await servicio.confirmarVenta(armarComando(carrito, condicionReceptor, pagos));
       setUltimaVenta(venta);
@@ -159,6 +249,33 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
       setError(null);
     } catch (e) {
       setError(mensajeError(e));
+    }
+  }
+
+  async function cancelarPagoElectronico() {
+    if (!pagoElectronico) return;
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    try {
+      await pasarela.cancelar(pagoElectronico.intencionPagoId);
+    } catch {
+      // idempotente: ignorar
+    }
+    setPagoElectronico(null);
+  }
+
+  async function imprimirTicket(venta: VentaConfirmada) {
+    if (imprimiendo) return;
+    setImprimiendo(true);
+    try {
+      const datos = construirDatosTicket(venta, config, catalogo, pagos);
+      await impresora.imprimirTicket(datos);
+    } catch (e) {
+      setError(`Error al imprimir: ${mensajeError(e)}`);
+    } finally {
+      setImprimiendo(false);
     }
   }
 
@@ -384,7 +501,9 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
                 ultimaVenta.tipoComprobante.startsWith("Factura") && (
                   <button onClick={anularConNotaCredito}>Anular (NC)</button>
                 )}
-              <button onClick={() => window.print()}>Imprimir</button>
+              <button onClick={() => imprimirTicket(ultimaVenta)} disabled={imprimiendo}>
+                {imprimiendo ? "Imprimiendo…" : "Imprimir"}
+              </button>
               <button
                 className="primario"
                 onClick={() => {
@@ -395,6 +514,24 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {pagoElectronico && (
+        <div className="overlay">
+          <div className="ticket">
+            <div className="ticket-titulo">Pago electrónico</div>
+            <div className="ticket-estado">
+              {pagoElectronico.estado === "pendiente"
+                ? "Esperando confirmación en el dispositivo…"
+                : `Estado: ${pagoElectronico.estado}`}
+            </div>
+            {pagoElectronico.estado === "pendiente" && (
+              <div className="ticket-acciones">
+                <button onClick={cancelarPagoElectronico}>Cancelar pago</button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -417,4 +554,42 @@ function Fila({
       <span>{valor}</span>
     </div>
   );
+}
+
+function construirDatosTicket(
+  venta: VentaConfirmada,
+  config: import("@nexosoft/app").ConfiguracionComercio,
+  _catalogo: readonly ProductoCatalogo[],
+  pagosUi: readonly PagoUi[],
+): DatosTicket {
+  return {
+    razonSocial: config.razonSocial,
+    cuit: config.cuit,
+    condicionIvaEmisor: config.condicionIvaEmisor,
+    puntoDeVenta: config.puntoDeVenta,
+    tipoComprobante: venta.tipoComprobante,
+    numero: venta.numero,
+    fecha: new Date(),
+    condicionIvaReceptor: venta.condicionIvaReceptor,
+    lineas: venta.items.map((it, i) => ({
+      descripcion: it.descripcion,
+      cantidad: it.cantidad,
+      precioUnitario: it.precioUnitario,
+      importe: venta.resultado.lineas[i]?.importe ?? it.precioUnitario,
+    })),
+    subtotalesIva: venta.resultado.subtotalesPorAlicuota.map((s) => ({
+      etiqueta: `IVA ${s.alicuota.etiqueta}`,
+      base: s.neto,
+      iva: s.iva,
+    })),
+    descuento: venta.resultado.descuento,
+    total: venta.resultado.total,
+    formasDePago: pagosUi.map((p) => ({
+      etiqueta: FORMAS.find((f) => f.valor === p.forma)?.etiqueta ?? p.forma,
+      monto: p.monto,
+    })),
+    vuelto: venta.vuelto,
+    ...(venta.cae !== undefined ? { cae: venta.cae } : {}),
+    ...(venta.vencimientoCae !== undefined ? { vencimientoCae: venta.vencimientoCae } : {}),
+  };
 }

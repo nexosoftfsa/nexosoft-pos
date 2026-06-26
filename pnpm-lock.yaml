@@ -93,6 +93,9 @@ importers:
       '@nexosoft/hardware':
         specifier: workspace:*
         version: link:../../packages/hardware
+      '@nexosoft/pagos':
+        specifier: workspace:*
+        version: link:../../packages/pagos
       '@nexosoft/sync':
         specifier: workspace:*
         version: link:../../packages/sync

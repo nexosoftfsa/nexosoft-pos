@@ -12,6 +12,13 @@ import {
 } from "@nexosoft/app";
 import { MockServicioFiscal } from "@nexosoft/fiscal";
 import {
+  MockImpresoraTermica,
+  MockLectorDeBarras,
+  type ImpresoraTermica,
+  type LectorDeBarras,
+} from "@nexosoft/hardware";
+import { MockPasarelaDePago, type PasarelaDePago } from "@nexosoft/pagos";
+import {
   ALICUOTAS_IVA,
   Cantidad,
   CondicionIva,
@@ -127,6 +134,9 @@ export interface EntornoPos {
   readonly facturacion: ServicioDeFacturacion;
   readonly config: ConfiguracionComercio;
   readonly catalogo: readonly ProductoCatalogo[];
+  readonly impresora: ImpresoraTermica;
+  readonly lector: LectorDeBarras;
+  readonly pasarela: PasarelaDePago;
 }
 
 export function crearEntornoPos(): EntornoPos {
@@ -189,5 +199,8 @@ export function crearEntornoPos(): EntornoPos {
     facturacion: new ServicioDeFacturacion(repos, config, new MockServicioFiscal()),
     config,
     catalogo,
+    impresora: new MockImpresoraTermica(),
+    lector: new MockLectorDeBarras(),
+    pasarela: new MockPasarelaDePago(),
   };
 }
