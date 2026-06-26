@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@nexosoft/domain": "workspace:*",
+    "@nexosoft/fiscal": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

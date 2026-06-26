@@ -148,6 +148,13 @@ export class RepositorioVentasSqlite implements RepositorioVentas {
     return Number(filas[0]?.n ?? 1);
   }
 
+  async actualizarCae(venta: VentaConfirmada): Promise<void> {
+    await this.db.ejecutar(
+      "UPDATE venta SET estado_cae = ?, cae = ?, vencimiento_cae = ? WHERE id = ?",
+      [venta.estadoCae, venta.cae ?? null, venta.vencimientoCae?.toISOString() ?? null, venta.id],
+    );
+  }
+
   async guardar(v: VentaConfirmada): Promise<void> {
     await this.db.ejecutar(
       `INSERT INTO venta (id, fecha, punto_de_venta, numero, tipo_comprobante, estado_cae, cliente_id, neto_gravado_cent, iva_cent, total_cent, vuelto_cent)

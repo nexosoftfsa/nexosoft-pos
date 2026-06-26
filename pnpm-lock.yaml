@@ -136,6 +136,9 @@ importers:
       '@nexosoft/domain':
         specifier: workspace:*
         version: link:../domain
+      '@nexosoft/fiscal':
+        specifier: workspace:*
+        version: link:../fiscal
       zod:
         specifier: ^3.24.1
         version: 3.25.76

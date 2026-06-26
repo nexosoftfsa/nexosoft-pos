@@ -71,6 +71,10 @@ export class RepositorioVentasMemoria implements RepositorioVentas {
   async guardar(venta: VentaConfirmada): Promise<void> {
     this.ventas.push(venta);
   }
+  async actualizarCae(venta: VentaConfirmada): Promise<void> {
+    const i = this.ventas.findIndex((v) => v.id === venta.id);
+    if (i >= 0) this.ventas[i] = venta;
+  }
   async siguienteNumero(puntoDeVenta: number, tipo: TipoComprobante): Promise<number> {
     const clave = `${puntoDeVenta}::${tipo}`;
     const siguiente = (this.numeradores.get(clave) ?? 0) + 1;

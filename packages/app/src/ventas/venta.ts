@@ -3,9 +3,12 @@
  * dominio (`ResultadoComprobante`); acá se agregan los datos operativos
  * (numeración, estado de CAE, pagos, vuelto).
  */
+import type { ComprobanteAsociado } from "@nexosoft/fiscal";
+
 import type {
   AlicuotaIva,
   Cantidad,
+  CondicionIva,
   EstadoCae,
   Money,
   Pago,
@@ -28,11 +31,17 @@ export interface VentaConfirmada {
   readonly puntoDeVenta: number;
   readonly numero: number;
   readonly tipoComprobante: TipoComprobante;
+  readonly condicionIvaReceptor: CondicionIva;
   readonly estadoCae: EstadoCae;
+  /** CAE otorgado por ARCA (cuando `estadoCae === AUTORIZADA`). */
+  readonly cae?: string;
+  readonly vencimientoCae?: Date;
   readonly clienteId?: string;
   readonly items: readonly ItemVenta[];
   /** Totales calculados por el dominio (subtotales, IVA por alícuota, total). */
   readonly resultado: ResultadoComprobante;
   readonly pagos: readonly Pago[];
   readonly vuelto: Money;
+  /** Solo en Notas de Crédito/Débito: la(s) factura(s) que rectifican. */
+  readonly comprobantesAsociados?: readonly ComprobanteAsociado[];
 }

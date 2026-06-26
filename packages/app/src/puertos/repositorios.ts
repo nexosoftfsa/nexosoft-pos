@@ -36,6 +36,8 @@ export interface RepositorioMovimientos {
 
 export interface RepositorioVentas {
   guardar(venta: VentaConfirmada): Promise<void>;
+  /** Persiste el resultado de la autorización (estado de CAE, CAE y vencimiento). */
+  actualizarCae(venta: VentaConfirmada): Promise<void>;
   /** Próximo número correlativo para un punto de venta y tipo de comprobante. */
   siguienteNumero(puntoDeVenta: number, tipo: TipoComprobante): Promise<number>;
 }

@@ -19,8 +19,10 @@ import {
   UnidadDeMedida,
   type PrecioArticulo,
 } from "@nexosoft/domain";
+import { MockServicioFiscal } from "@nexosoft/fiscal";
 
 import type { ConfiguracionComercio } from "../config/configuracion-comercio.js";
+import { ServicioDeFacturacion } from "../ventas/servicio-facturacion.js";
 import { ServicioDeVenta } from "../ventas/servicio-venta.js";
 import type { EjecutorSql, Fila, ValorSql } from "./ejecutor-sql.js";
 import { crearEsquema } from "./esquema.js";
@@ -92,7 +94,14 @@ async function montar(stock = "10") {
     preciosIncluyenIva: true,
     permitirStockNegativo: false,
   };
-  return { db, ejecutor, repos, servicio: new ServicioDeVenta(repos, config) };
+  return {
+    db,
+    ejecutor,
+    repos,
+    config,
+    servicio: new ServicioDeVenta(repos, config),
+    facturacion: new ServicioDeFacturacion(repos, config, new MockServicioFiscal()),
+  };
 }
 
 const efectivo = (m: string) => ({ forma: FormaDePago.Efectivo, monto: Money.desde(m) });
@@ -142,6 +151,22 @@ describe("Adaptador SQLite — ServicioDeVenta persiste de verdad", () => {
     // Stock 10 → 8, persistido.
     const e = await ctx.repos.existencias.obtener("art", DEP);
     expect(e?.cantidad.aDecimalString(0)).toBe("8");
+  });
+
+  it("autorizar persiste el CAE en la base", async () => {
+    const venta = await ctx.servicio.confirmarVenta({
+      items: [{ articuloId: "art", cantidad: Cantidad.de("1") }],
+      condicionReceptor: CondicionIva.ConsumidorFinal,
+      pagos: [efectivo("1210")],
+    });
+    const autorizada = await ctx.facturacion.autorizar(venta);
+    expect(autorizada.estadoCae).toBe(EstadoCae.Autorizada);
+
+    const filas = await ctx.ejecutor.consultar("SELECT estado_cae, cae FROM venta WHERE id = ?", [
+      venta.id,
+    ]);
+    expect(filas[0]?.estado_cae).toBe("AUTORIZADA");
+    expect(String(filas[0]?.cae)).toMatch(/^\d{14}$/);
   });
 
   it("la numeración correlativa se deriva de la base", async () => {

@@ -120,6 +120,7 @@ export class ServicioDeVenta {
       puntoDeVenta: this.config.puntoDeVenta,
       numero,
       tipoComprobante,
+      condicionIvaReceptor: comando.condicionReceptor,
       estadoCae: requiereCae(tipoComprobante) ? EstadoCae.PendienteCae : EstadoCae.Borrador,
       items,
       resultado,
