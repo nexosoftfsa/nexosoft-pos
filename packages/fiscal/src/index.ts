@@ -1,16 +1,9 @@
 /**
  * @nexosoft/fiscal
- * Integración fiscal ARCA (ex AFIP) AISLADA del resto del sistema (ADR-0008).
- *
- * Expone una interfaz `ServicioFiscal` (puerto) con dos implementaciones:
- *  - ArcaServicioFiscal: WSAA (firma del TA con cert X.509) + WSFEv1 (CAE).
- *  - MockServicioFiscal: simula CAE/errores para desarrollo y tests sin red.
- *
- * Contenido previsto (Fase 2):
- *  - WSAA: login, cacheo y renovación del Ticket de Acceso (TA).
- *  - WSFEv1: solicitud de CAE para Facturas A/B/C, NC/ND.
- *  - Reintentos idempotentes y manejo de estados (pendiente/autorizada/rechazada).
- *
- * Ver ADR-0008 y /docs/arquitectura.md (flujo de CAE diferido).
+ * Integración fiscal ARCA (ex AFIP) AISLADA tras la interfaz `ServicioFiscal`
+ * (ADR-0008). El resto del sistema depende del contrato, no de SOAP/WSFEv1.
  */
-export const FISCAL_PACKAGE = "@nexosoft/fiscal";
+export * from "./servicio-fiscal.js";
+export * from "./solicitud.js";
+export * from "./mock-servicio-fiscal.js";
+export * from "./arca-servicio-fiscal.js";
