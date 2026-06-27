@@ -39,3 +39,4 @@ Consecuencias y Alternativas consideradas.
 | 0020 | [Respaldo en la nube propia del cliente](0020-respaldo-en-nube-propia.md)                              | Aceptada |
 | 0021 | [Libro de ventas en Excel y respaldo por venta](0021-libro-de-ventas-excel-y-respaldo-en-venta.md)     | Aceptada |
 | 0022 | [Adaptador `EjecutorSql` sobre Tauri y reescritura de placeholders](0022-adaptador-ejecutorsql-tauri-y-placeholders.md) | Aceptada |
+| 0023 | [Transacciones en el POS por serialización del acceso a SQLite](0023-transacciones-sqlite-por-serializacion.md) | Aceptada |

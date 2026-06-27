@@ -51,8 +51,40 @@ const cargarConPlugin: CargadorSql = async (ruta) => {
   return mod.default.load(ruta) as Promise<BaseDatosSql>;
 };
 
+/**
+ * Ejecutor "directo": reescribe placeholders y delega en la base SIN serializar.
+ * Es de uso interno y se entrega a `transaccion(fn)` para que las escrituras de
+ * la transacción corran dentro del turno ya reservado en la cola (ver más abajo).
+ */
+class EjecutorDirecto implements EjecutorSql {
+  constructor(private readonly db: BaseDatosSql) {}
+
+  async ejecutar(sql: string, params: readonly ValorSql[] = []): Promise<void> {
+    await this.db.execute(reescribirPlaceholders(sql), params as unknown[]);
+  }
+
+  async consultar<T extends Fila = Fila>(
+    sql: string,
+    params: readonly ValorSql[] = [],
+  ): Promise<T[]> {
+    return this.db.select<T[]>(reescribirPlaceholders(sql), params as unknown[]);
+  }
+}
+
 export class EjecutorSqlTauri implements EjecutorSql {
-  private constructor(private readonly db: BaseDatosSql) {}
+  private readonly directo: EjecutorDirecto;
+  /**
+   * Cola de serialización: encadena TODAS las operaciones (ejecutar/consultar/
+   * transaccion) para que nunca se solapen. Es clave para las transacciones: el
+   * plugin usa un *pool* de conexiones (ver ADR-0023), así que `BEGIN`/`COMMIT`
+   * en llamadas separadas solo son atómicos si garantizamos que nada se intercala
+   * en el medio. Con acceso serializado el pool reusa su única conexión ociosa.
+   */
+  private cola: Promise<unknown> = Promise.resolve();
+
+  private constructor(private readonly db: BaseDatosSql) {
+    this.directo = new EjecutorDirecto(db);
+  }
 
   /**
    * Abre la base, activa las claves foráneas y devuelve el ejecutor listo.
@@ -69,20 +101,57 @@ export class EjecutorSqlTauri implements EjecutorSql {
     return ejecutor;
   }
 
-  async ejecutar(sql: string, params: readonly ValorSql[] = []): Promise<void> {
-    await this.db.execute(reescribirPlaceholders(sql), params as unknown[]);
+  /** Encadena una tarea al final de la cola; los errores de una no frenan la siguiente. */
+  private encolar<T>(tarea: () => Promise<T>): Promise<T> {
+    const resultado = this.cola.then(tarea, tarea);
+    this.cola = resultado.then(
+      () => undefined,
+      () => undefined,
+    );
+    return resultado;
   }
 
-  async consultar<T extends Fila = Fila>(
+  ejecutar(sql: string, params: readonly ValorSql[] = []): Promise<void> {
+    return this.encolar(() => this.directo.ejecutar(sql, params));
+  }
+
+  consultar<T extends Fila = Fila>(
     sql: string,
     params: readonly ValorSql[] = [],
   ): Promise<T[]> {
-    return this.db.select<T[]>(reescribirPlaceholders(sql), params as unknown[]);
+    return this.encolar(() => this.directo.consultar<T>(sql, params));
+  }
+
+  /**
+   * Ejecuta `fn` dentro de una transacción SQLite (`BEGIN`/`COMMIT`, con
+   * `ROLLBACK` si `fn` lanza). Reserva un turno completo en la cola, así ninguna
+   * otra operación se intercala. A `fn` se le pasa un `EjecutorSql` DIRECTO (sin
+   * cola): debe usar ESE para que sus escrituras caigan dentro de la transacción.
+   */
+  transaccion<T>(fn: (ejecutor: EjecutorSql) => Promise<T>): Promise<T> {
+    return this.encolar(async () => {
+      await this.directo.ejecutar("BEGIN");
+      try {
+        const resultado = await fn(this.directo);
+        await this.directo.ejecutar("COMMIT");
+        return resultado;
+      } catch (error) {
+        try {
+          await this.directo.ejecutar("ROLLBACK");
+        } catch {
+          // Si el ROLLBACK falla (p. ej. la conexión ya se cerró) priorizamos
+          // propagar el error original.
+        }
+        throw error;
+      }
+    });
   }
 
   /** Cierra el pool de conexiones (al cerrar la app). */
-  async cerrar(): Promise<void> {
-    await this.db.close();
+  cerrar(): Promise<void> {
+    return this.encolar(async () => {
+      await this.db.close();
+    });
   }
 }
 
