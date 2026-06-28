@@ -41,8 +41,10 @@ import { MockImpresoraTermica, MockLectorDeBarras } from "@nexosoft/hardware";
 import { MockPasarelaDePago } from "@nexosoft/pagos";
 import { AlmacenSqlite, crearTablaSync } from "../sync/almacen-sqlite";
 import { ClienteSyncHttp } from "../sync/cliente-sync-http";
+import { ClienteCatalogoHttp, type ClienteCatalogo } from "../sync/cliente-catalogo-http";
 import { MotorDeSincronizacion } from "@nexosoft/sync";
 import type { SyncPos } from "../sync/useSync";
+import { sincronizarCatalogo } from "./catalogo-pull";
 import {
   CONFIG_DEMO,
   construirSemillaDemo,
@@ -121,27 +123,46 @@ export async function leerConfig(ejecutor: EjecutorSql): Promise<ConfiguracionCo
 }
 
 /**
- * Siembra la base la PRIMERA vez (catálogo + config demo). Idempotente: si ya hay
- * artículos no hace nada. En 5.2b esto se reemplaza por un pull del servidor.
+ * Asegura la config del comercio + depósito + lista por defecto (idempotente).
+ * Es independiente del catálogo: hace falta SIEMPRE (también con pull del servidor).
  */
-export async function sembrarSiVacio(
-  ejecutor: EjecutorSql,
-  repos: RepositoriosSqlite,
-): Promise<void> {
-  const filas = await ejecutor.consultar<{ n: number }>("SELECT COUNT(*) AS n FROM articulo");
-  if (Number(filas[0]?.n ?? 0) > 0) return;
-
-  await guardarConfig(ejecutor, CONFIG_DEMO);
+export async function asegurarMaestros(ejecutor: EjecutorSql): Promise<void> {
+  const filas = await ejecutor.consultar<{ n: number }>("SELECT COUNT(*) AS n FROM comercio_config");
+  if (Number(filas[0]?.n ?? 0) === 0) {
+    await guardarConfig(ejecutor, CONFIG_DEMO);
+  }
   await guardarDeposito(ejecutor, crearDeposito({ id: DEPOSITO, nombre: "Depósito principal" }));
   await guardarLista(
     ejecutor,
     crearListaDePrecios({ id: LISTA, nombre: "Minorista", tipo: TipoLista.Minorista, predeterminada: true }),
   );
+}
 
+/** ¿La base no tiene artículos? (decide aprovisionamiento inicial vs refresco). */
+export async function catalogoVacio(ejecutor: EjecutorSql): Promise<boolean> {
+  const filas = await ejecutor.consultar<{ n: number }>("SELECT COUNT(*) AS n FROM articulo");
+  return Number(filas[0]?.n ?? 0) === 0;
+}
+
+/** Siembra el catálogo demo si no hay artículos. Fallback offline (sin servidor). */
+export async function sembrarCatalogoDemoSiVacio(
+  ejecutor: EjecutorSql,
+  repos: RepositoriosSqlite,
+): Promise<void> {
+  if (!(await catalogoVacio(ejecutor))) return;
   const { articulos, precios, existencias } = construirSemillaDemo();
   for (const a of articulos) await repos.articulos.guardar(a);
   for (const p of precios) await repos.precios.guardar(p);
   for (const e of existencias) await repos.existencias.guardar(e);
+}
+
+/** Siembra demo completa (maestros + catálogo). Fallback offline y uso en tests. */
+export async function sembrarSiVacio(
+  ejecutor: EjecutorSql,
+  repos: RepositoriosSqlite,
+): Promise<void> {
+  await asegurarMaestros(ejecutor);
+  await sembrarCatalogoDemoSiVacio(ejecutor, repos);
 }
 
 /** Lee el catálogo activo desde SQLite y resuelve el precio final de cada artículo. */
@@ -191,10 +212,33 @@ export class ServicioDeVentaTransaccional extends ServicioDeVenta {
 export interface OpcionesEntornoTauri {
   /** Base del cloud-api de la sucursal. Por defecto `http://localhost:3000/api/v1`. */
   readonly baseUrlSync?: string;
-  /** Provee el JWT vigente para la sync (5.3). Por defecto devuelve null. */
+  /** Provee el JWT vigente para la sync y el pull (5.3). Por defecto devuelve null. */
   readonly obtenerToken?: () => string | null;
   /** Identificador de la terminal (5.3). Por defecto `caja-1`. */
   readonly terminalId?: string;
+  /** Cliente de catálogo inyectable (override/test). Por defecto, HTTP. */
+  readonly clienteCatalogo?: ClienteCatalogo;
+}
+
+/**
+ * Pull del catálogo dentro de una transacción (atómico). Offline-first: si no hay
+ * sesión o falla la red, NO rompe el arranque (devuelve false y se sigue con lo
+ * que haya en local). En base vacía aprovisiona el stock desde el servidor.
+ */
+async function intentarPullCatalogo(
+  ejecutor: EjecutorSqlTauri,
+  config: ConfiguracionComercio,
+  cliente: ClienteCatalogo,
+): Promise<boolean> {
+  try {
+    const reemplazarStock = await catalogoVacio(ejecutor);
+    await ejecutor.transaccion((ej) =>
+      sincronizarCatalogo(crearRepositoriosSqlite(ej), cliente, config, { reemplazarStock }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Arma el `EntornoPos` de producción sobre SQLite + sync HTTP. */
@@ -202,16 +246,25 @@ export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}):
   const ejecutor = await EjecutorSqlTauri.abrir();
   await inicializarBaseTauri(ejecutor);
   const repos = crearRepositoriosSqlite(ejecutor);
-  await sembrarSiVacio(ejecutor, repos);
-
+  await asegurarMaestros(ejecutor);
   const config = await leerConfig(ejecutor);
+
+  const obtenerToken = opciones.obtenerToken ?? (() => null);
+  const baseUrl = opciones.baseUrlSync ?? URL_SYNC_DEFECTO;
+  const clienteCatalogo =
+    opciones.clienteCatalogo ?? new ClienteCatalogoHttp(baseUrl, obtenerToken);
+
+  // Con sesión: pull del catálogo del servidor (fuente de verdad). Sin sesión o
+  // sin red: fallback al catálogo demo si la base está vacía.
+  const pulled = obtenerToken() !== null && (await intentarPullCatalogo(ejecutor, config, clienteCatalogo));
+  if (!pulled) {
+    await sembrarCatalogoDemoSiVacio(ejecutor, repos);
+  }
+
   const catalogo = await leerCatalogo(ejecutor, repos, config);
 
   const almacen = new AlmacenSqlite(ejecutor);
-  const cliente = new ClienteSyncHttp(
-    opciones.baseUrlSync ?? URL_SYNC_DEFECTO,
-    opciones.obtenerToken ?? (() => null),
-  );
+  const cliente = new ClienteSyncHttp(baseUrl, obtenerToken);
   const sync: SyncPos = {
     motor: new MotorDeSincronizacion(almacen, cliente),
     almacen,
