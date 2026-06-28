@@ -179,6 +179,121 @@ body {
   padding: 1.5rem;
 }
 
+/* ─── Página / dashboard ───────────────────────────────────────────── */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.rango {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.rango__presets {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.rango__fechas {
+  display: flex;
+  gap: 0.75rem;
+}
+.boton--chico {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+}
+.campo--inline {
+  margin-bottom: 0;
+}
+.campo--inline input {
+  padding: 0.4rem 0.6rem;
+  color-scheme: dark;
+}
+
+/* KPIs */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem;
+}
+.kpi {
+  background: var(--color-panel);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.kpi__etiqueta {
+  font-size: 0.8rem;
+  color: var(--color-texto-tenue);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.kpi__valor {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-texto);
+}
+.kpi__detalle {
+  font-size: 0.8rem;
+  color: var(--color-texto-tenue);
+}
+
+/* Paneles (gráficos / tablas) */
+.paneles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 1.25rem;
+}
+.panel__titulo {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: var(--color-texto);
+}
+
+/* Tablas */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.tabla th,
+.tabla td {
+  padding: 0.55rem 0.5rem;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: left;
+}
+.tabla th {
+  color: var(--color-texto-tenue);
+  font-weight: 600;
+}
+.tabla__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Estados */
+.estado {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-texto-tenue);
+}
+.estado--error {
+  color: var(--color-error);
+}
+
 /* ─── Placeholder ──────────────────────────────────────────────────── */
 .placeholder {
   background: var(--color-panel);

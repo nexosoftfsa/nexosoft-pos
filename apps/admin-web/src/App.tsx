@@ -3,6 +3,8 @@ import { ProveedorSesion } from "./auth/contexto-sesion";
 import { PantallaLogin } from "./componentes/PantallaLogin";
 import { RutaProtegida } from "./componentes/RutaProtegida";
 import { Layout } from "./componentes/Layout";
+import { Resumen } from "./paginas/Resumen";
+import { Ventas } from "./paginas/Ventas";
 import { Placeholder } from "./paginas/Placeholder";
 
 export function App() {
@@ -18,8 +20,8 @@ export function App() {
               </RutaProtegida>
             }
           >
-            <Route index element={<Placeholder titulo="Resumen" fase="Fase 6.3" />} />
-            <Route path="ventas" element={<Placeholder titulo="Ventas" fase="Fase 6.3" />} />
+            <Route index element={<Resumen />} />
+            <Route path="ventas" element={<Ventas />} />
             <Route
               path="productos"
               element={<Placeholder titulo="Productos" fase="Fase 6.4" />}
