@@ -5,9 +5,9 @@ React + Vite + TypeScript. **Solo lectura**: consume los endpoints `/reportes` d
 `cloud-api`. App independiente del POS, pensada para abrirse desde cualquier
 navegador de la LAN del comercio.
 
-> Estado: **Fase 6.3** — scaffold + login + shell (6.2) y **dashboard de ventas**
-> (KPIs, serie diaria, medios de pago, por terminal). Productos/Stock se
-> construyen en 6.4.
+> Estado: **Fase 6.4** — scaffold + login + shell (6.2), **dashboard de ventas**
+> (6.3) y **reportes de productos y stock** (top vendidos + stock bajo). Export y
+> serve estático desde el cloud-api quedan para 6.5.
 
 ## Cómo correrlo
 
@@ -37,8 +37,8 @@ VITE_API_URL=http://192.168.0.10:3000/api/v1 corepack pnpm --filter @nexosoft/ad
   sesión y rol ADMIN/SUPERVISOR — UX; la autorización real la impone el
   `RolesGuard` del backend), `Layout` (barra lateral + header con usuario/logout).
 - **`paginas/`** — `Resumen` (KPIs + gráfico de serie + torta de medios de pago),
-  `Ventas` (tablas por medio de pago y por terminal), `Placeholder` (Productos/Stock
-  hasta 6.4).
+  `Ventas` (tablas por medio de pago y por terminal), `Productos` (top vendidos con
+  rango + Top N), `Stock` (stock bajo con umbral configurable).
 - **`hooks/useReporte.ts`** — carga datos con estado de carga/error y cancela
   resultados obsoletos al cambiar el rango.
 - **`api/reportes.ts`** — funciones tipadas de los endpoints `/reportes`.

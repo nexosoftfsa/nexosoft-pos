@@ -34,6 +34,21 @@ export interface VentasPorTerminal {
   cantidad: number;
 }
 
+export interface TopProducto {
+  productoId: string;
+  nombre: string;
+  codigo: string;
+  /** Cantidad vendida (Decimal como string: puede tener decimales si se vende por peso). */
+  cantidad: string;
+  monto: string;
+}
+
+export interface StockBajo {
+  producto: { id: string; nombre: string; codigo: string };
+  /** Saldo actual de stock (Decimal como string). */
+  saldo: string;
+}
+
 /** Convierte el rango en query params, omitiendo lo que no esté definido. */
 function aQuery(rango: RangoFechas): Record<string, string | undefined> {
   return { desde: rango.desde, hasta: rango.hasta };
@@ -51,4 +66,10 @@ export const reportes = {
 
   porTerminal: (api: ClienteApi, rango: RangoFechas) =>
     api.get<VentasPorTerminal[]>("/reportes/ventas/por-terminal", aQuery(rango)),
+
+  topProductos: (api: ClienteApi, rango: RangoFechas, limite?: number) =>
+    api.get<TopProducto[]>("/reportes/productos/top", { ...aQuery(rango), limite }),
+
+  stockBajo: (api: ClienteApi, umbral?: number) =>
+    api.get<StockBajo[]>("/reportes/stock/bajo", { umbral }),
 };

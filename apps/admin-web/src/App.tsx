@@ -5,7 +5,8 @@ import { RutaProtegida } from "./componentes/RutaProtegida";
 import { Layout } from "./componentes/Layout";
 import { Resumen } from "./paginas/Resumen";
 import { Ventas } from "./paginas/Ventas";
-import { Placeholder } from "./paginas/Placeholder";
+import { Productos } from "./paginas/Productos";
+import { Stock } from "./paginas/Stock";
 
 export function App() {
   return (
@@ -22,11 +23,8 @@ export function App() {
           >
             <Route index element={<Resumen />} />
             <Route path="ventas" element={<Ventas />} />
-            <Route
-              path="productos"
-              element={<Placeholder titulo="Productos" fase="Fase 6.4" />}
-            />
-            <Route path="stock" element={<Placeholder titulo="Stock" fase="Fase 6.4" />} />
+            <Route path="productos" element={<Productos />} />
+            <Route path="stock" element={<Stock />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
