@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { CatalogoModule } from './catalogo/catalogo.module';
 import { StockModule } from './stock/stock.module';
+import { TerminalesModule } from './terminales/terminales.module';
 import { RespaldoModule } from './respaldo/respaldo.module';
 import { VentasModule } from './ventas/ventas.module';
 import { SyncModule } from './sync/sync.module';
@@ -17,6 +18,7 @@ import { SyncModule } from './sync/sync.module';
     HealthModule,
     CatalogoModule,
     StockModule,
+    TerminalesModule,
     RespaldoModule,
     VentasModule,
     SyncModule,
