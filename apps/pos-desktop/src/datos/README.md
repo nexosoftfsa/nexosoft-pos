@@ -18,6 +18,7 @@ UI no cambia entre ellos:
 | `catalogo-pull.ts` | `sincronizarCatalogo`: vuelca el catálogo del servidor en los repos locales (catálogo authoritative; stock que respeta ventas offline). |
 | `sesion-sqlite.ts` | Tabla `sesion` (fila única): persiste tokens + terminal elegida. |
 | `sesion.ts` | `SesionManager`: login, refresh (lee el `exp` del JWT), elegir terminal, `obtenerToken`/`terminalId`. |
+| `ajustes-sqlite.ts` | Tabla `ajuste` (clave/valor) para settings de la terminal; hoy la URL del servidor de sucursal. |
 
 El transporte y mapeo viven en `../sync/`: `cliente-catalogo-http.ts`, `mapeo-catalogo.ts`,
 `cliente-auth-http.ts` (`POST /auth/login`,`/refresh`) y `cliente-terminales-http.ts`
@@ -27,6 +28,4 @@ y ahí el pull y la sync corren con el token real.
 
 ## Pendiente (Fase 5)
 
-- **5.4** — configuración (carpeta de respaldo + datos del comercio; hoy `BASE_URL`
-  del servidor está fija en `App.tsx`).
-- **5.5** — instalador NSIS.
+- **5.5** — instalador NSIS (`tauri build`).
