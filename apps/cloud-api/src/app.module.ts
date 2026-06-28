@@ -9,6 +9,7 @@ import { TerminalesModule } from './terminales/terminales.module';
 import { RespaldoModule } from './respaldo/respaldo.module';
 import { VentasModule } from './ventas/ventas.module';
 import { SyncModule } from './sync/sync.module';
+import { ReportesModule } from './reportes/reportes.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SyncModule } from './sync/sync.module';
     RespaldoModule,
     VentasModule,
     SyncModule,
+    ReportesModule,
   ],
 })
 export class AppModule {}

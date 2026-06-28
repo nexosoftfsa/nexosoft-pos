@@ -1,0 +1,235 @@
+import { Injectable } from '@nestjs/common';
+import { Decimal } from '@prisma/client/runtime/library';
+import { PrismaService } from '../prisma/prisma.service';
+import type { RangoFechasDto } from './dto/rango-fechas.dto';
+
+/** Días hacia atrás que cubre un reporte cuando no se indica rango. */
+const DIAS_POR_DEFECTO = 30;
+/** Solo las ventas COMPLETADA cuentan para los reportes (se excluyen ANULADA/PENDIENTE). */
+const ESTADO_VALIDO = 'COMPLETADA' as const;
+const TOP_POR_DEFECTO = 10;
+const UMBRAL_STOCK_POR_DEFECTO = 5;
+
+/**
+ * Reportes agregados para el panel del dueño. Solo lectura.
+ *
+ * Estrategia de agregación: se traen las ventas/items del rango (con un `select`
+ * acotado) y se agregan en memoria con `Decimal` para mantener dinero exacto,
+ * igual que el resto del backend. Es consistente con `StockService` y simple de
+ * testear; para volúmenes muy grandes convendría mover la agregación a SQL
+ * (`groupBy`/vistas), pero para una sucursal del MVP alcanza de sobra.
+ */
+@Injectable()
+export class ReportesService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /** KPIs del período: total vendido, cantidad de ventas, ticket promedio, descuentos. */
+  async resumenVentas(sucursalId: string, rango: RangoFechasDto) {
+    const { gte, lt } = this.calcularRango(rango);
+    const ventas = await this.prisma.venta.findMany({
+      where: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
+      select: { total: true, descuento: true },
+    });
+
+    const totalVendido = ventas.reduce((a, v) => a.add(v.total), new Decimal(0));
+    const totalDescuentos = ventas.reduce((a, v) => a.add(v.descuento), new Decimal(0));
+    const cantidadVentas = ventas.length;
+    const ticketPromedio =
+      cantidadVentas === 0 ? new Decimal(0) : totalVendido.div(cantidadVentas);
+
+    return {
+      desde: gte.toISOString(),
+      hasta: lt.toISOString(),
+      cantidadVentas,
+      totalVendido: totalVendido.toFixed(2),
+      totalDescuentos: totalDescuentos.toFixed(2),
+      ticketPromedio: ticketPromedio.toFixed(2),
+    };
+  }
+
+  /** Serie temporal diaria (una fila por día con venta) para graficar la evolución. */
+  async serieDiaria(sucursalId: string, rango: RangoFechasDto) {
+    const { gte, lt } = this.calcularRango(rango);
+    const ventas = await this.prisma.venta.findMany({
+      where: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
+      select: { total: true, creadaEn: true },
+      orderBy: { creadaEn: 'asc' },
+    });
+
+    const porDia = new Map<string, { total: Decimal; cantidad: number }>();
+    for (const v of ventas) {
+      const dia = v.creadaEn.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+      const acc = porDia.get(dia) ?? { total: new Decimal(0), cantidad: 0 };
+      acc.total = acc.total.add(v.total);
+      acc.cantidad += 1;
+      porDia.set(dia, acc);
+    }
+
+    return [...porDia.entries()].map(([fecha, { total, cantidad }]) => ({
+      fecha,
+      total: total.toFixed(2),
+      cantidad,
+    }));
+  }
+
+  /** Total y cantidad agrupados por medio de pago (para la torta del dashboard). */
+  async porMedioPago(sucursalId: string, rango: RangoFechasDto) {
+    const { gte, lt } = this.calcularRango(rango);
+    const ventas = await this.prisma.venta.findMany({
+      where: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
+      select: { total: true, medioPago: true },
+    });
+
+    const porMedio = new Map<string, { total: Decimal; cantidad: number }>();
+    for (const v of ventas) {
+      const acc = porMedio.get(v.medioPago) ?? { total: new Decimal(0), cantidad: 0 };
+      acc.total = acc.total.add(v.total);
+      acc.cantidad += 1;
+      porMedio.set(v.medioPago, acc);
+    }
+
+    return [...porMedio.entries()]
+      .map(([medioPago, { total, cantidad }]) => ({
+        medioPago,
+        total: total.toFixed(2),
+        cantidad,
+      }))
+      .sort((a, b) => new Decimal(b.total).cmp(new Decimal(a.total)));
+  }
+
+  /** Total y cantidad por terminal (caja). Las ventas sin terminal se agrupan aparte. */
+  async porTerminal(sucursalId: string, rango: RangoFechasDto) {
+    const { gte, lt } = this.calcularRango(rango);
+    const ventas = await this.prisma.venta.findMany({
+      where: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
+      select: {
+        total: true,
+        terminalId: true,
+        terminal: { select: { nombre: true } },
+      },
+    });
+
+    const porTerminal = new Map<
+      string,
+      { nombre: string; total: Decimal; cantidad: number }
+    >();
+    for (const v of ventas) {
+      const clave = v.terminalId ?? 'sin-terminal';
+      const nombre = v.terminal?.nombre ?? 'Sin terminal';
+      const acc = porTerminal.get(clave) ?? { nombre, total: new Decimal(0), cantidad: 0 };
+      acc.total = acc.total.add(v.total);
+      acc.cantidad += 1;
+      porTerminal.set(clave, acc);
+    }
+
+    return [...porTerminal.entries()]
+      .map(([terminalId, { nombre, total, cantidad }]) => ({
+        terminalId,
+        nombre,
+        total: total.toFixed(2),
+        cantidad,
+      }))
+      .sort((a, b) => new Decimal(b.total).cmp(new Decimal(a.total)));
+  }
+
+  /** Ranking de productos más vendidos del período (por cantidad). */
+  async topProductos(sucursalId: string, rango: RangoFechasDto, limite = TOP_POR_DEFECTO) {
+    const { gte, lt } = this.calcularRango(rango);
+    const items = await this.prisma.itemVenta.findMany({
+      where: {
+        venta: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
+      },
+      select: {
+        cantidad: true,
+        subtotal: true,
+        productoId: true,
+        producto: { select: { nombre: true, codigo: true } },
+      },
+    });
+
+    const porProducto = new Map<
+      string,
+      { nombre: string; codigo: string; cantidad: Decimal; monto: Decimal }
+    >();
+    for (const it of items) {
+      const acc =
+        porProducto.get(it.productoId) ?? {
+          nombre: it.producto.nombre,
+          codigo: it.producto.codigo,
+          cantidad: new Decimal(0),
+          monto: new Decimal(0),
+        };
+      acc.cantidad = acc.cantidad.add(it.cantidad);
+      acc.monto = acc.monto.add(it.subtotal);
+      porProducto.set(it.productoId, acc);
+    }
+
+    return [...porProducto.entries()]
+      .map(([productoId, v]) => ({
+        productoId,
+        nombre: v.nombre,
+        codigo: v.codigo,
+        cantidad: v.cantidad.toString(),
+        monto: v.monto.toFixed(2),
+      }))
+      .sort((a, b) => new Decimal(b.cantidad).cmp(new Decimal(a.cantidad)))
+      .slice(0, limite);
+  }
+
+  /** Productos activos cuyo saldo de stock está en o por debajo del umbral. */
+  async stockBajo(sucursalId: string, umbral = UMBRAL_STOCK_POR_DEFECTO) {
+    const productos = await this.prisma.producto.findMany({
+      where: { sucursalId, activo: true },
+      select: { id: true, nombre: true, codigo: true },
+    });
+
+    const limite = new Decimal(umbral);
+    const bajos: { producto: (typeof productos)[number]; saldo: string }[] = [];
+
+    for (const p of productos) {
+      const movimientos = await this.prisma.movimientoStock.findMany({
+        where: { productoId: p.id, sucursalId },
+        select: { tipo: true, cantidad: true },
+      });
+      const saldo = movimientos.reduce(
+        (acc, m) =>
+          m.tipo === 'ENTRADA' || m.tipo === 'AJUSTE'
+            ? acc.add(m.cantidad)
+            : acc.sub(m.cantidad),
+        new Decimal(0),
+      );
+      if (saldo.lte(limite)) bajos.push({ producto: p, saldo: saldo.toString() });
+    }
+
+    return bajos.sort((a, b) => new Decimal(a.saldo).cmp(new Decimal(b.saldo)));
+  }
+
+  /**
+   * Resuelve el rango efectivo. `desde`/`hasta` vienen como `YYYY-MM-DD` y se
+   * interpretan en UTC; `hasta` es INCLUSIVE (se suma un día para el `lt`).
+   * Sin parámetros: los últimos {@link DIAS_POR_DEFECTO} días hasta hoy inclusive.
+   */
+  private calcularRango(rango: RangoFechasDto): { gte: Date; lt: Date } {
+    const ahora = new Date();
+
+    let gte: Date;
+    if (rango.desde) {
+      gte = new Date(`${rango.desde}T00:00:00.000Z`);
+    } else {
+      gte = new Date(ahora);
+      gte.setUTCHours(0, 0, 0, 0);
+      gte.setUTCDate(gte.getUTCDate() - DIAS_POR_DEFECTO);
+    }
+
+    let lt: Date;
+    if (rango.hasta) {
+      lt = new Date(`${rango.hasta}T00:00:00.000Z`);
+    } else {
+      lt = new Date(ahora);
+      lt.setUTCHours(0, 0, 0, 0);
+    }
+    lt.setUTCDate(lt.getUTCDate() + 1); // hasta inclusive
+
+    return { gte, lt };
+  }
+}
