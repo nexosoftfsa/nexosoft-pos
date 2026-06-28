@@ -16,18 +16,17 @@ UI no cambia entre ellos:
 | `bootstrap.ts` | Fábrica del `EntornoPos` para el navegador (memoria + simulado). Exporta la semilla demo (`construirSemillaDemo`, `CONFIG_DEMO`) que reusa Tauri. |
 | `bootstrap-tauri.ts` | Fábrica del `EntornoPos` de producción: SQLite + sync HTTP. Asegura maestros, hace el pull del catálogo (o siembra demo de fallback), lee config/catálogo y arma `ServicioDeVentaTransaccional`. |
 | `catalogo-pull.ts` | `sincronizarCatalogo`: vuelca el catálogo del servidor en los repos locales (catálogo authoritative; stock que respeta ventas offline). |
+| `sesion-sqlite.ts` | Tabla `sesion` (fila única): persiste tokens + terminal elegida. |
+| `sesion.ts` | `SesionManager`: login, refresh (lee el `exp` del JWT), elegir terminal, `obtenerToken`/`terminalId`. |
 
-El transporte y mapeo del pull viven en `../sync/`: `cliente-catalogo-http.ts`
-(`GET /productos`, `GET /stock`) y `mapeo-catalogo.ts` (producto remoto → dominio).
-`App.tsx` elige el bootstrap con `estaEnTauri()` y muestra estados de carga/error.
-
-> **Nota 5.2b:** el pull está cableado pero **gated por el token** (`obtenerToken`).
-> Hasta el login (5.3) el token es null → corre el fallback demo. Con sesión, el
-> pull aprovisiona la terminal y luego refresca el catálogo en cada arranque.
+El transporte y mapeo viven en `../sync/`: `cliente-catalogo-http.ts`, `mapeo-catalogo.ts`,
+`cliente-auth-http.ts` (`POST /auth/login`,`/refresh`) y `cliente-terminales-http.ts`
+(`GET /terminales`). `App.tsx` elige el bootstrap con `estaEnTauri()`: en el navegador
+es demo en memoria sin login; en Tauri es una máquina de fases **login → terminal → POS**,
+y ahí el pull y la sync corren con el token real.
 
 ## Pendiente (Fase 5)
 
-- **5.3** — login JWT + selección de terminal (habilita el pull; hoy `terminalId`
-  y token son fijos/nulos).
-- **5.4** — configuración (carpeta de respaldo + datos del comercio).
+- **5.4** — configuración (carpeta de respaldo + datos del comercio; hoy `BASE_URL`
+  del servidor está fija en `App.tsx`).
 - **5.5** — instalador NSIS.
