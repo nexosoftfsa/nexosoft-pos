@@ -61,7 +61,15 @@ function armarComando(
   };
 }
 
-export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
+export function PantallaPos({
+  entorno,
+  terminalNombre,
+  onCerrarSesion,
+}: {
+  entorno: EntornoPos;
+  terminalNombre?: string;
+  onCerrarSesion?: () => void;
+}) {
   const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
   const sync = useSync(entorno.sync);
 
@@ -344,6 +352,18 @@ export function PantallaPos({ entorno }: { entorno: EntornoPos }) {
           </span>
         </div>
         <IndicadorSync estado={sync} />
+        {(terminalNombre !== undefined || onCerrarSesion !== undefined) && (
+          <div className="sesion" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {terminalNombre !== undefined && (
+              <span style={{ fontSize: "0.85rem", color: "#475569" }}>🗔 {terminalNombre}</span>
+            )}
+            {onCerrarSesion !== undefined && (
+              <button type="button" className="boton-secundario" onClick={onCerrarSesion}>
+                Salir
+              </button>
+            )}
+          </div>
+        )}
       </header>
 
       <main className="cuerpo">

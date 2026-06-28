@@ -66,6 +66,14 @@ export async function inicializarBaseTauri(ejecutor: EjecutorSql): Promise<void>
   await crearTablaSesion(ejecutor);
 }
 
+/** Abre la base SQLite e inicializa el esquema. La usa el arranque para tener la
+ *  base lista ANTES del login (la sesión se persiste ahí). */
+export async function abrirBaseTauri(): Promise<EjecutorSqlTauri> {
+  const ejecutor = await EjecutorSqlTauri.abrir();
+  await inicializarBaseTauri(ejecutor);
+  return ejecutor;
+}
+
 interface FilaConfig extends Fila {
   cuit: string;
   razon_social: string;
@@ -212,6 +220,8 @@ export class ServicioDeVentaTransaccional extends ServicioDeVenta {
 }
 
 export interface OpcionesEntornoTauri {
+  /** Base SQLite ya abierta (si el arranque la creó para el login). Si no, se abre. */
+  readonly ejecutor?: EjecutorSqlTauri;
   /** Base del cloud-api de la sucursal. Por defecto `http://localhost:3000/api/v1`. */
   readonly baseUrlSync?: string;
   /** Provee el JWT vigente para la sync y el pull (5.3). Por defecto devuelve null. */
@@ -245,8 +255,7 @@ async function intentarPullCatalogo(
 
 /** Arma el `EntornoPos` de producción sobre SQLite + sync HTTP. */
 export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}): Promise<EntornoPos> {
-  const ejecutor = await EjecutorSqlTauri.abrir();
-  await inicializarBaseTauri(ejecutor);
+  const ejecutor = opciones.ejecutor ?? (await abrirBaseTauri());
   const repos = crearRepositoriosSqlite(ejecutor);
   await asegurarMaestros(ejecutor);
   const config = await leerConfig(ejecutor);
