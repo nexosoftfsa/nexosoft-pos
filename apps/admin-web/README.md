@@ -1,0 +1,50 @@
+# @nexosoft/admin-web
+
+**Panel web de reportes** para el dueño/encargado ([ADR-0024](../../docs/adr/0024-panel-web-de-reportes.md)).
+React + Vite + TypeScript. **Solo lectura**: consume los endpoints `/reportes` del
+`cloud-api`. App independiente del POS, pensada para abrirse desde cualquier
+navegador de la LAN del comercio.
+
+> Estado: **Fase 6.2** — scaffold + login + shell de navegación. Las vistas de
+> reportes (KPIs, gráficos, tablas) se construyen en 6.3 (ventas) y 6.4
+> (productos/stock).
+
+## Cómo correrlo
+
+```bash
+# desde la raíz del monorepo
+corepack pnpm --filter @nexosoft/admin-web dev        # http://localhost:5174
+corepack pnpm --filter @nexosoft/admin-web build      # tsc + vite build
+corepack pnpm --filter @nexosoft/admin-web test       # vitest
+```
+
+La URL del backend se toma de `VITE_API_URL` (default
+`http://localhost:3000/api/v1`). Para apuntar al servidor de sucursal:
+
+```bash
+VITE_API_URL=http://192.168.0.10:3000/api/v1 corepack pnpm --filter @nexosoft/admin-web build
+```
+
+## Cómo está armado
+
+- **`api/`** — `config.ts` (URL base), `cliente-http.ts` (`ClienteApi`: GET tipado
+  con Bearer, query string y `ErrorApi` con status), `auth.ts` (`iniciarSesion`).
+- **`auth/`** — `token.ts` (decodifica el JWT para leer `rol/email/sucursalId/exp`;
+  el cloud-api no devuelve el usuario en el login), `almacen-sesion.ts`
+  (persistencia en `localStorage`), `contexto-sesion.tsx` (`ProveedorSesion` +
+  `useSesion`: estado de sesión, login/logout, `ClienteApi` ya configurado).
+- **`componentes/`** — `PantallaLogin` (+ `SinAcceso`), `RutaProtegida` (exige
+  sesión y rol ADMIN/SUPERVISOR — UX; la autorización real la impone el
+  `RolesGuard` del backend), `Layout` (barra lateral + header con usuario/logout).
+- **`paginas/`** — `Placeholder` (marcadores de sección hasta 6.3/6.4).
+
+## Acceso
+
+Solo **ADMIN/SUPERVISOR**. Un usuario sin ese rol ve la pantalla "sin acceso";
+y aunque la sortee, el backend responde **403** (RBAC en el `cloud-api`).
+
+## Tests
+
+`token.spec.ts` (decode de JWT, expiración, gating por rol) y
+`cliente-http.spec.ts` (headers, query string, manejo de errores) — 12 tests.
+La UI se verifica en el navegador con el preview.
