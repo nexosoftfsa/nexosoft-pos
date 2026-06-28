@@ -45,6 +45,7 @@ import { ClienteCatalogoHttp, type ClienteCatalogo } from "../sync/cliente-catal
 import { MotorDeSincronizacion } from "@nexosoft/sync";
 import type { SyncPos } from "../sync/useSync";
 import { sincronizarCatalogo } from "./catalogo-pull";
+import { crearTablaSesion } from "./sesion-sqlite";
 import {
   CONFIG_DEMO,
   construirSemillaDemo,
@@ -58,10 +59,11 @@ import { EjecutorSqlTauri } from "./ejecutor-sql-tauri";
 const URL_SYNC_DEFECTO = "http://localhost:3000/api/v1";
 const TERMINAL_DEFECTO = "caja-1";
 
-/** Crea el esquema del dominio y la tabla de la cola de sync (idempotente). */
+/** Crea el esquema del dominio + la cola de sync + la tabla de sesión (idempotente). */
 export async function inicializarBaseTauri(ejecutor: EjecutorSql): Promise<void> {
   await crearEsquema(ejecutor);
   await crearTablaSync(ejecutor);
+  await crearTablaSesion(ejecutor);
 }
 
 interface FilaConfig extends Fila {
