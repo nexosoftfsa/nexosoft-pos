@@ -3,16 +3,21 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { PantallaPos } from "./componentes/PantallaPos";
 import { PantallaLogin } from "./componentes/PantallaLogin";
 import { PantallaTerminal } from "./componentes/PantallaTerminal";
+import { PantallaConfig, type ValoresConfig } from "./componentes/PantallaConfig";
 import type { EntornoPos } from "./datos/bootstrap";
 import { crearEntornoPos } from "./datos/bootstrap";
-import { abrirBaseTauri, crearEntornoPosTauri } from "./datos/bootstrap-tauri";
+import {
+  abrirBaseTauri,
+  asegurarMaestros,
+  crearEntornoPosTauri,
+  guardarConfig,
+  leerConfig,
+} from "./datos/bootstrap-tauri";
+import { leerServidorUrl, guardarServidorUrl } from "./datos/ajustes-sqlite";
 import { EjecutorSqlTauri, estaEnTauri } from "./datos/ejecutor-sql-tauri";
 import { SesionManager } from "./datos/sesion";
 import { ClienteAuthHttp, type Credenciales } from "./sync/cliente-auth-http";
 import { ClienteTerminalesHttp } from "./sync/cliente-terminales-http";
-
-// Base del servidor de sucursal. En 5.4 pasa a ser configurable (hoy fija).
-const BASE_URL = "http://localhost:3000/api/v1";
 
 /** Aviso a pantalla completa para estados de carga/error. */
 function Aviso({ children }: { children: ReactNode }) {
@@ -48,15 +53,17 @@ function AppNavegador() {
   return <PantallaPos entorno={entorno} />;
 }
 
-type Fase = "cargando" | "login" | "terminal" | "listo" | "error";
+type Fase = "cargando" | "login" | "terminal" | "config" | "listo" | "error";
 
-/** App Tauri: abre SQLite, gestiona la sesión (login + terminal) y monta el POS. */
+/** App Tauri: abre SQLite, gestiona sesión (login + terminal), config y monta el POS. */
 function AppTauri() {
   const ejecutorRef = useRef<EjecutorSqlTauri | null>(null);
   const sesionRef = useRef<SesionManager | null>(null);
+  const baseUrlRef = useRef<string>("");
   const [fase, setFase] = useState<Fase>("cargando");
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
+  const [valoresConfig, setValoresConfig] = useState<ValoresConfig | null>(null);
 
   const fallar = useCallback((e: unknown) => {
     setError(e instanceof Error ? e.message : String(e));
@@ -72,7 +79,7 @@ function AppTauri() {
       await sesion.asegurarTokenVigente();
       const env = await crearEntornoPosTauri({
         ejecutor,
-        baseUrlSync: BASE_URL,
+        baseUrlSync: baseUrlRef.current,
         obtenerToken: () => sesion.obtenerToken(),
         ...(sesion.terminalId !== undefined ? { terminalId: sesion.terminalId } : {}),
       });
@@ -92,24 +99,25 @@ function AppTauri() {
     [construirEntorno],
   );
 
-  useEffect(() => {
-    let activo = true;
-    (async () => {
-      try {
-        const ejecutor = await abrirBaseTauri();
-        const sesion = await SesionManager.cargar(ejecutor, new ClienteAuthHttp(BASE_URL));
-        if (!activo) return;
-        ejecutorRef.current = ejecutor;
-        sesionRef.current = sesion;
-        avanzar(sesion);
-      } catch (e) {
-        if (activo) fallar(e);
-      }
-    })();
-    return () => {
-      activo = false;
-    };
+  /** Abre la base, lee la URL del servidor, carga la sesión y evalúa la fase. */
+  const inicializar = useCallback(async () => {
+    setFase("cargando");
+    try {
+      const ejecutor = ejecutorRef.current ?? (await abrirBaseTauri());
+      ejecutorRef.current = ejecutor;
+      await asegurarMaestros(ejecutor);
+      baseUrlRef.current = await leerServidorUrl(ejecutor);
+      const sesion = await SesionManager.cargar(ejecutor, new ClienteAuthHttp(baseUrlRef.current));
+      sesionRef.current = sesion;
+      avanzar(sesion);
+    } catch (e) {
+      fallar(e);
+    }
   }, [avanzar, fallar]);
+
+  useEffect(() => {
+    void inicializar();
+  }, [inicializar]);
 
   const onLogin = useCallback(
     async (cred: Credenciales) => {
@@ -139,13 +147,58 @@ function AppTauri() {
     setFase("login");
   }, []);
 
+  const onAbrirConfig = useCallback(async () => {
+    const ejecutor = ejecutorRef.current;
+    if (ejecutor === null) return;
+    try {
+      const config = await leerConfig(ejecutor);
+      setValoresConfig({
+        servidorUrl: baseUrlRef.current,
+        razonSocial: config.razonSocial,
+        cuit: config.cuit,
+        condicionIvaEmisor: config.condicionIvaEmisor,
+        puntoDeVenta: config.puntoDeVenta,
+      });
+      setFase("config");
+    } catch (e) {
+      fallar(e);
+    }
+  }, [fallar]);
+
+  const onGuardarConfig = useCallback(
+    async (v: ValoresConfig) => {
+      const ejecutor = ejecutorRef.current;
+      if (ejecutor === null) return;
+      const actual = await leerConfig(ejecutor);
+      await guardarConfig(ejecutor, {
+        ...actual,
+        razonSocial: v.razonSocial,
+        cuit: v.cuit,
+        condicionIvaEmisor: v.condicionIvaEmisor,
+        puntoDeVenta: v.puntoDeVenta,
+      });
+      await guardarServidorUrl(ejecutor, v.servidorUrl);
+      await inicializar(); // re-lee la URL, reconstruye el cliente y reevalúa la fase
+    },
+    [inicializar],
+  );
+
   const listarTerminales = useCallback(
-    () => new ClienteTerminalesHttp(BASE_URL, () => sesionRef.current?.obtenerToken() ?? null).listar(),
+    () => new ClienteTerminalesHttp(baseUrlRef.current, () => sesionRef.current?.obtenerToken() ?? null).listar(),
     [],
   );
 
   if (fase === "error") return <Aviso>No se pudo iniciar el POS: {error}</Aviso>;
-  if (fase === "login") return <PantallaLogin onLogin={onLogin} />;
+  if (fase === "config" && valoresConfig !== null) {
+    return (
+      <PantallaConfig
+        valores={valoresConfig}
+        onGuardar={onGuardarConfig}
+        onCancelar={() => void inicializar()}
+      />
+    );
+  }
+  if (fase === "login") return <PantallaLogin onLogin={onLogin} onConfig={() => void onAbrirConfig()} />;
   if (fase === "terminal") return <PantallaTerminal listar={listarTerminales} onElegir={onElegirTerminal} />;
   if (fase === "listo" && entorno !== null) {
     return (
@@ -155,6 +208,7 @@ function AppTauri() {
           ? { terminalNombre: sesionRef.current.terminalNombre }
           : {})}
         onCerrarSesion={() => void onCerrarSesion()}
+        onAbrirConfig={() => void onAbrirConfig()}
       />
     );
   }

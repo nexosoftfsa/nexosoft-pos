@@ -46,6 +46,7 @@ import { MotorDeSincronizacion } from "@nexosoft/sync";
 import type { SyncPos } from "../sync/useSync";
 import { sincronizarCatalogo } from "./catalogo-pull";
 import { crearTablaSesion } from "./sesion-sqlite";
+import { crearTablaAjustes } from "./ajustes-sqlite";
 import {
   CONFIG_DEMO,
   construirSemillaDemo,
@@ -64,6 +65,7 @@ export async function inicializarBaseTauri(ejecutor: EjecutorSql): Promise<void>
   await crearEsquema(ejecutor);
   await crearTablaSync(ejecutor);
   await crearTablaSesion(ejecutor);
+  await crearTablaAjustes(ejecutor);
 }
 
 /** Abre la base SQLite e inicializa el esquema. La usa el arranque para tener la

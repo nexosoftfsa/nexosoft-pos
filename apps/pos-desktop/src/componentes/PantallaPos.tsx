@@ -61,14 +61,21 @@ function armarComando(
   };
 }
 
+const ETIQUETA_CONDICION: Record<string, string> = {
+  [CondicionIva.ResponsableInscripto]: "Responsable Inscripto",
+  [CondicionIva.Monotributo]: "Monotributo",
+};
+
 export function PantallaPos({
   entorno,
   terminalNombre,
   onCerrarSesion,
+  onAbrirConfig,
 }: {
   entorno: EntornoPos;
   terminalNombre?: string;
   onCerrarSesion?: () => void;
+  onAbrirConfig?: () => void;
 }) {
   const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
   const sync = useSync(entorno.sync);
@@ -348,14 +355,20 @@ export function PantallaPos({
         <div className="comercio">
           <strong>{config.razonSocial}</strong>
           <span>
-            Responsable Inscripto · Punto de venta {String(config.puntoDeVenta).padStart(4, "0")}
+            {ETIQUETA_CONDICION[config.condicionIvaEmisor] ?? config.condicionIvaEmisor} · Punto de
+            venta {String(config.puntoDeVenta).padStart(4, "0")}
           </span>
         </div>
         <IndicadorSync estado={sync} />
-        {(terminalNombre !== undefined || onCerrarSesion !== undefined) && (
+        {(terminalNombre !== undefined || onCerrarSesion !== undefined || onAbrirConfig !== undefined) && (
           <div className="sesion" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             {terminalNombre !== undefined && (
               <span style={{ fontSize: "0.85rem", color: "#475569" }}>🗔 {terminalNombre}</span>
+            )}
+            {onAbrirConfig !== undefined && (
+              <button type="button" className="boton-secundario" onClick={onAbrirConfig} title="Configuración">
+                ⚙
+              </button>
             )}
             {onCerrarSesion !== undefined && (
               <button type="button" className="boton-secundario" onClick={onCerrarSesion}>

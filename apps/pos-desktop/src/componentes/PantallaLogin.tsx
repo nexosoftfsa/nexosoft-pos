@@ -3,7 +3,13 @@ import { useState, type CSSProperties, type FormEvent } from "react";
 import type { Credenciales } from "../sync/cliente-auth-http";
 
 /** Pantalla de inicio de sesión (solo en la app Tauri). */
-export function PantallaLogin({ onLogin }: { onLogin: (c: Credenciales) => Promise<void> }) {
+export function PantallaLogin({
+  onLogin,
+  onConfig,
+}: {
+  onLogin: (c: Credenciales) => Promise<void>;
+  onConfig?: () => void;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +64,12 @@ export function PantallaLogin({ onLogin }: { onLogin: (c: Credenciales) => Promi
         <button type="submit" style={{ ...boton, opacity: deshabilitado ? 0.6 : 1 }} disabled={deshabilitado}>
           {cargando ? "Ingresando…" : "Ingresar"}
         </button>
+
+        {onConfig !== undefined && (
+          <button type="button" style={enlace} onClick={onConfig}>
+            ⚙ Configuración del servidor
+          </button>
+        )}
       </form>
     </div>
   );
@@ -113,4 +125,12 @@ const aviso: CSSProperties = {
   padding: "0.5rem 0.7rem",
   borderRadius: "8px",
   fontSize: "0.85rem",
+};
+const enlace: CSSProperties = {
+  marginTop: "0.2rem",
+  background: "none",
+  border: "none",
+  color: "#2563eb",
+  fontSize: "0.85rem",
+  cursor: "pointer",
 };
