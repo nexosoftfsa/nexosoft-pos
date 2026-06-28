@@ -26,6 +26,12 @@ El transporte y mapeo viven en `../sync/`: `cliente-catalogo-http.ts`, `mapeo-ca
 es demo en memoria sin login; en Tauri es una máquina de fases **login → terminal → POS**,
 y ahí el pull y la sync corren con el token real.
 
-## Pendiente (Fase 5)
+## Construir el instalador (Windows)
 
-- **5.5** — instalador NSIS (`tauri build`).
+```bash
+corepack pnpm --filter @nexosoft/pos-desktop tauri:build
+```
+
+Compila el frontend + Rust (release) y genera el instalador NSIS en
+`src-tauri/target/release/bundle/nsis/NexoSoft POS_<version>_x64-setup.exe`
+(idioma español, instala por usuario sin admin). La primera vez Tauri baja NSIS.

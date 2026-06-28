@@ -94,7 +94,7 @@ corepack pnpm --filter @nexosoft/cloud-api verify:e2e
 | 2    | Fiscal ARCA (CAE) + Notas de Crédito/Débito                          | ✅ |
 | 3    | Tauri nativo + hardware (ESC/POS, lector) + pagos MercadoPago         | ✅ |
 | 4    | Backend NestJS + respaldo nube propia + libro Excel + sync terminal↔servidor | ✅ |
-| 5    | **POS nativo productivo**: adaptadores reales en Tauri (SQLite/HTTP), login, selección de terminal, instalador | 🔜 |
+| 5    | **POS nativo productivo**: adaptadores reales en Tauri (SQLite/HTTP), pull de catálogo, login + terminal, configuración, instalador NSIS | ✅ |
 | —    | Pendientes posteriores: deploy (Railway), funciones de negocio (remitos, presupuestos, combos, lotes/vencimientos, cuenta corriente), panel web de reportes | ⏳ |
 
 ### Qué incluye la Fase 5 (propuesta)
