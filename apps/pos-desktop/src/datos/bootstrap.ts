@@ -37,10 +37,10 @@ import {
   type PrecioArticulo,
 } from "@nexosoft/domain";
 
-const DEPOSITO = "principal";
-const LISTA = "minorista";
+export const DEPOSITO = "principal";
+export const LISTA = "minorista";
 
-interface DefProducto {
+export interface DefProducto {
   readonly id: string;
   readonly codigo: string;
   readonly descripcion: string;
@@ -51,7 +51,7 @@ interface DefProducto {
   readonly stock: string;
 }
 
-const DEFS: readonly DefProducto[] = [
+export const DEFS: readonly DefProducto[] = [
   {
     id: "gaseosa",
     codigo: "7790001",
@@ -143,21 +143,43 @@ export interface EntornoPos {
   readonly sync: SyncPos;
 }
 
-export function crearEntornoPos(): EntornoPos {
+/** Configuración del comercio para la demo (igual en navegador y semilla SQLite). */
+export const CONFIG_DEMO: ConfiguracionComercio = {
+  cuit: "30-71234567-8",
+  razonSocial: "NexoSoft Almacén (demo)",
+  condicionIvaEmisor: CondicionIva.ResponsableInscripto,
+  puntoDeVenta: 1,
+  depositoPorDefectoId: DEPOSITO,
+  listaPredeterminadaId: LISTA,
+  preciosIncluyenIva: true,
+  permitirStockNegativo: false,
+};
+
+/**
+ * Construye el catálogo demo (artículos + precios + existencias) a partir de
+ * `DEFS`. Lo usan tanto el bootstrap en memoria (navegador) como la siembra
+ * inicial de SQLite en Tauri (`bootstrap-tauri.ts`).
+ */
+export function construirSemillaDemo(): {
+  articulos: Articulo[];
+  precios: PrecioArticulo[];
+  existencias: Existencia[];
+} {
   const articulos: Articulo[] = [];
   const precios: PrecioArticulo[] = [];
   const existencias: Existencia[] = [];
 
   for (const d of DEFS) {
-    const articulo = crearArticulo({
-      id: d.id,
-      codigoInterno: d.codigo,
-      descripcion: d.descripcion,
-      unidadDeMedida: UnidadDeMedida.Unidad,
-      costoNeto: Money.desde(d.costo),
-      alicuotaIva: d.alicuota,
-    });
-    articulos.push(articulo);
+    articulos.push(
+      crearArticulo({
+        id: d.id,
+        codigoInterno: d.codigo,
+        descripcion: d.descripcion,
+        unidadDeMedida: UnidadDeMedida.Unidad,
+        costoNeto: Money.desde(d.costo),
+        alicuotaIva: d.alicuota,
+      }),
+    );
     precios.push({
       articuloId: d.id,
       listaId: LISTA,
@@ -172,18 +194,13 @@ export function crearEntornoPos(): EntornoPos {
       }),
     );
   }
+  return { articulos, precios, existencias };
+}
 
+export function crearEntornoPos(): EntornoPos {
+  const { articulos, precios, existencias } = construirSemillaDemo();
   const repos = crearRepositoriosMemoria({ articulos, precios, existencias });
-  const config: ConfiguracionComercio = {
-    cuit: "30-71234567-8",
-    razonSocial: "NexoSoft Almacén (demo)",
-    condicionIvaEmisor: CondicionIva.ResponsableInscripto,
-    puntoDeVenta: 1,
-    depositoPorDefectoId: DEPOSITO,
-    listaPredeterminadaId: LISTA,
-    preciosIncluyenIva: true,
-    permitirStockNegativo: false,
-  };
+  const config = CONFIG_DEMO;
 
   const catalogo: ProductoCatalogo[] = articulos.map((articulo, i) => {
     const precio = precios[i];
