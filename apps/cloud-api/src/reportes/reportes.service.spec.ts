@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { join } from 'node:path';
+import { NotFoundException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { ReportesService } from './reportes.service';
 
@@ -13,6 +15,8 @@ const mockPrisma = {
   movimientoStock: mockMovimiento,
 };
 
+const mockConfig = { get: vi.fn() };
+
 const SUCURSAL = 's1';
 const RANGO = { desde: '2026-06-01', hasta: '2026-06-30' };
 
@@ -21,7 +25,7 @@ describe('ReportesService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new ReportesService(mockPrisma as never);
+    service = new ReportesService(mockPrisma as never, mockConfig as never);
   });
 
   describe('resumenVentas', () => {
@@ -159,6 +163,29 @@ describe('ReportesService', () => {
       const r = await service.stockBajo(SUCURSAL, 5);
 
       expect(r).toEqual([{ producto: { id: 'p1', nombre: 'Coca', codigo: 'C1' }, saldo: '2' }]);
+    });
+  });
+
+  describe('libro de ventas', () => {
+    it('arma la ruta por defecto bajo la carpeta de respaldo', () => {
+      mockConfig.get.mockReturnValue(undefined);
+      expect(service.rutaLibroVentas()).toBe(join('./respaldos', 'ventas.xlsx'));
+    });
+
+    it('respeta LIBRO_VENTAS_ARCHIVO si está configurado', () => {
+      mockConfig.get.mockImplementation((clave: string) =>
+        clave === 'LIBRO_VENTAS_ARCHIVO' ? '/data/libro.xlsx' : undefined,
+      );
+      expect(service.rutaLibroVentas()).toBe('/data/libro.xlsx');
+    });
+
+    it('lanza NotFoundException si el archivo no existe', async () => {
+      mockConfig.get.mockImplementation((clave: string) =>
+        clave === 'LIBRO_VENTAS_ARCHIVO'
+          ? join('ruta', 'inexistente', 'ventas.xlsx')
+          : undefined,
+      );
+      await expect(service.abrirLibroDeVentas()).rejects.toThrow(NotFoundException);
     });
   });
 });

@@ -72,4 +72,7 @@ export const reportes = {
 
   stockBajo: (api: ClienteApi, umbral?: number) =>
     api.get<StockBajo[]>("/reportes/stock/bajo", { umbral }),
+
+  /** Descarga el libro de ventas Excel (Blob) generado por el cloud-api. */
+  libroVentas: (api: ClienteApi) => api.descargarBlob("/reportes/libro-ventas"),
 };

@@ -21,6 +21,7 @@ usuario ADMIN o SUPERVISOR.
 | `GET /ventas/por-terminal` | `desde?`, `hasta?` | `[{ terminalId, nombre, total, cantidad }]` (desc. por total) |
 | `GET /productos/top` | `desde?`, `hasta?`, `limite?` (1–100, def. 10) | Top productos: `[{ productoId, nombre, codigo, cantidad, monto }]` (desc. por cantidad) |
 | `GET /stock/bajo` | `umbral?` (≥0, def. 5) | Productos con saldo ≤ umbral: `[{ producto, saldo }]` (asc. por saldo) |
+| `GET /libro-ventas` | — | Descarga el **libro de ventas Excel** (`ventas.xlsx`) que genera el `VentasModule` (ADR-0021). 404 si todavía no hay ventas. |
 
 ### Rango de fechas
 

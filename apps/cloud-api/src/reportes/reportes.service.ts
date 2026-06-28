@@ -1,4 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { promises as fs } from 'node:fs';
+import { join } from 'node:path';
+import { ConfigService } from '@nestjs/config';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
 import type { RangoFechasDto } from './dto/rango-fechas.dto';
@@ -21,7 +24,10 @@ const UMBRAL_STOCK_POR_DEFECTO = 5;
  */
 @Injectable()
 export class ReportesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
 
   /** KPIs del período: total vendido, cantidad de ventas, ticket promedio, descuentos. */
   async resumenVentas(sucursalId: string, rango: RangoFechasDto) {
@@ -202,6 +208,25 @@ export class ReportesService {
     }
 
     return bajos.sort((a, b) => new Decimal(a.saldo).cmp(new Decimal(b.saldo)));
+  }
+
+  /** Ruta del libro de ventas Excel (misma config que el `VentasModule`, ADR-0021). */
+  rutaLibroVentas(): string {
+    const carpeta = this.config.get<string>('RESPALDO_RUTA') ?? './respaldos';
+    return (
+      this.config.get<string>('LIBRO_VENTAS_ARCHIVO') ?? join(carpeta, 'ventas.xlsx')
+    );
+  }
+
+  /** Lee el libro de ventas Excel. Lanza 404 si todavía no existe (sin ventas). */
+  async abrirLibroDeVentas(): Promise<Buffer> {
+    try {
+      return await fs.readFile(this.rutaLibroVentas());
+    } catch {
+      throw new NotFoundException(
+        'Todavía no hay libro de ventas (ninguna venta registrada).',
+      );
+    }
   }
 
   /**

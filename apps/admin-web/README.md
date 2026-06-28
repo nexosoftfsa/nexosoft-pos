@@ -5,9 +5,9 @@ React + Vite + TypeScript. **Solo lectura**: consume los endpoints `/reportes` d
 `cloud-api`. App independiente del POS, pensada para abrirse desde cualquier
 navegador de la LAN del comercio.
 
-> Estado: **Fase 6.4** — scaffold + login + shell (6.2), **dashboard de ventas**
-> (6.3) y **reportes de productos y stock** (top vendidos + stock bajo). Export y
-> serve estático desde el cloud-api quedan para 6.5.
+> Estado: **Fase 6 COMPLETA** — scaffold + login + shell (6.2), dashboard de
+> ventas (6.3), reportes de productos y stock (6.4) y **export CSV + descarga del
+> libro de ventas Excel + serve estático desde el cloud-api** (6.5).
 
 ## Cómo correrlo
 
@@ -25,6 +25,21 @@ La URL del backend se toma de `VITE_API_URL` (default
 VITE_API_URL=http://192.168.0.10:3000/api/v1 corepack pnpm --filter @nexosoft/admin-web build
 ```
 
+### Servir el panel desde el cloud-api (producción)
+
+El `cloud-api` puede servir el panel ya compilado (no hace falta un proceso
+aparte). Se construye el panel y se apunta `PANEL_RUTA` al `dist` (o se copia a
+`./panel` junto al backend):
+
+```bash
+corepack pnpm --filter @nexosoft/admin-web build           # genera dist/
+PANEL_RUTA=/ruta/a/apps/admin-web/dist corepack pnpm --filter @nexosoft/cloud-api start
+```
+
+El backend sirve el panel en `/` y la API sigue en `/api/v1` (excluida del
+static). Como es un SPA, las rutas internas (`/ventas`, etc.) caen en
+`index.html`.
+
 ## Cómo está armado
 
 - **`api/`** — `config.ts` (URL base), `cliente-http.ts` (`ClienteApi`: GET tipado
@@ -41,7 +56,10 @@ VITE_API_URL=http://192.168.0.10:3000/api/v1 corepack pnpm --filter @nexosoft/ad
   rango + Top N), `Stock` (stock bajo con umbral configurable).
 - **`hooks/useReporte.ts`** — carga datos con estado de carga/error y cancela
   resultados obsoletos al cambiar el rango.
-- **`api/reportes.ts`** — funciones tipadas de los endpoints `/reportes`.
+- **`api/reportes.ts`** — funciones tipadas de los endpoints `/reportes` (incluye
+  `libroVentas`, que descarga el Excel como Blob).
+- **`csv.ts`** — `aCsv` (escapado) + `descargarCsv`/`descargarBlob` para exportar
+  reportes a CSV y bajar archivos en el navegador.
 - **`componentes/`** (reportes) — `SelectorRango` (presets + fechas), `TarjetaKpi`,
   `GraficoSerie`/`GraficoMedioPago` (Recharts), `EstadoReporteVista`
   (carga/error/vacío). `formato.ts` formatea moneda (es-AR), fechas y medios de pago.
@@ -54,6 +72,6 @@ y aunque la sortee, el backend responde **403** (RBAC en el `cloud-api`).
 ## Tests
 
 `token.spec.ts` (decode de JWT, expiración, gating por rol),
-`cliente-http.spec.ts` (headers, query string, manejo de errores) y
-`formato.spec.ts` (moneda, fechas, medios de pago) — 18 tests.
-La UI se verifica en el navegador con el preview.
+`cliente-http.spec.ts` (headers, query string, manejo de errores),
+`formato.spec.ts` (moneda, fechas, medios de pago) y `csv.spec.ts` (escapado) —
+21 tests. La UI se verifica en el navegador con el preview.

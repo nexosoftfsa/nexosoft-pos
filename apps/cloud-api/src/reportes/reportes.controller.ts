@@ -1,4 +1,12 @@
-import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  Request,
+  Res,
+  StreamableFile,
+} from '@nestjs/common';
 import { RolUsuario } from '@prisma/client';
 import { ReportesService } from './reportes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -54,5 +62,19 @@ export class ReportesController {
   @Get('stock/bajo')
   stockBajo(@Request() req: { user: UsuarioJwt }, @Query() consulta: StockBajoDto) {
     return this.reportesService.stockBajo(req.user.sucursalId, consulta.umbral);
+  }
+
+  /** Descarga el libro de ventas Excel (el que viaja a la nube propia del cliente). */
+  @Get('libro-ventas')
+  async libroVentas(
+    @Res({ passthrough: true }) res: { set: (headers: Record<string, string>) => void },
+  ): Promise<StreamableFile> {
+    const contenido = await this.reportesService.abrirLibroDeVentas();
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="ventas.xlsx"',
+    });
+    return new StreamableFile(contenido);
   }
 }

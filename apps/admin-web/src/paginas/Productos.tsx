@@ -5,6 +5,7 @@ import { useReporte } from "../hooks/useReporte";
 import { SelectorRango, rangoUltimos30 } from "../componentes/SelectorRango";
 import { EstadoReporteVista } from "../componentes/EstadoReporteVista";
 import { formatearMoneda } from "../formato";
+import { descargarCsv } from "../csv";
 
 const OPCIONES_LIMITE = [10, 20, 50] as const;
 
@@ -25,19 +26,39 @@ export function Productos() {
       <div className="panel">
         <div className="panel__cabecera">
           <h3 className="panel__titulo">Productos más vendidos</h3>
-          <label className="campo campo--inline">
-            <span>Mostrar</span>
-            <select
-              value={limite}
-              onChange={(e) => setLimite(Number(e.target.value))}
+          <div className="panel__controles">
+            <label className="campo campo--inline">
+              <span>Mostrar</span>
+              <select
+                value={limite}
+                onChange={(e) => setLimite(Number(e.target.value))}
+              >
+                {OPCIONES_LIMITE.map((n) => (
+                  <option key={n} value={n}>
+                    Top {n}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              className="boton boton--secundario boton--chico"
+              disabled={!top.datos || top.datos.length === 0}
+              onClick={() =>
+                descargarCsv("productos-top.csv", [
+                  ["#", "Código", "Producto", "Cantidad", "Monto"],
+                  ...(top.datos ?? []).map((p, i) => [
+                    String(i + 1),
+                    p.codigo,
+                    p.nombre,
+                    p.cantidad,
+                    p.monto,
+                  ]),
+                ])
+              }
             >
-              {OPCIONES_LIMITE.map((n) => (
-                <option key={n} value={n}>
-                  Top {n}
-                </option>
-              ))}
-            </select>
-          </label>
+              Exportar CSV
+            </button>
+          </div>
         </div>
 
         <EstadoReporteVista

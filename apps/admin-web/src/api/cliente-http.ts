@@ -45,6 +45,18 @@ export class ClienteApi {
     return (await res.json()) as T;
   }
 
+  /** Descarga un recurso binario (con auth) como Blob. Para archivos (Excel, etc.). */
+  async descargarBlob(ruta: string): Promise<Blob> {
+    const token = this.obtenerToken();
+    const res = await fetch(`${this.baseUrl}${ruta}`, {
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    if (!res.ok) {
+      throw new ErrorApi(this.mensajeDeError(res.status), res.status);
+    }
+    return res.blob();
+  }
+
   private armarQuery(query?: ParametrosQuery): string {
     if (!query) return "";
     const params = new URLSearchParams();

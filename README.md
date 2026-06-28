@@ -5,10 +5,12 @@ argentino. **Offline-first**, con integración fiscal **ARCA (ex AFIP)**,
 hardware de comercio (impresoras ESC/POS, balanzas, lectores) y backend cloud
 multi-sucursal.
 
-> **Estado: Fases 1–4 completas.** Dominio, POS offline, fiscal, Tauri, hardware,
-> pagos, backend NestJS, respaldo a nube propia, libro de ventas Excel y
-> sincronización terminal↔servidor están implementados y testeados.
-> Próximo: **Fase 5 — POS nativo productivo** (ver [Roadmap](#roadmap-de-fases)).
+> **Estado: Fases 1–6 completas.** Dominio, POS offline, fiscal (mock), Tauri,
+> hardware, pagos, backend NestJS, respaldo a nube propia, libro de ventas Excel,
+> sincronización terminal↔servidor, POS nativo instalable (NSIS) y **panel web de
+> reportes** están implementados y testeados.
+> Pendiente clave para producción legal: **CAE real ARCA** (se integra con el
+> primer cliente, junto a sus certificados y CUIT). Ver [Roadmap](#roadmap-de-fases).
 
 ## Características clave
 
@@ -95,7 +97,8 @@ corepack pnpm --filter @nexosoft/cloud-api verify:e2e
 | 3    | Tauri nativo + hardware (ESC/POS, lector) + pagos MercadoPago         | ✅ |
 | 4    | Backend NestJS + respaldo nube propia + libro Excel + sync terminal↔servidor | ✅ |
 | 5    | **POS nativo productivo**: adaptadores reales en Tauri (SQLite/HTTP), pull de catálogo, login + terminal, configuración, instalador NSIS | ✅ |
-| —    | Pendientes posteriores: deploy (Railway), funciones de negocio (remitos, presupuestos, combos, lotes/vencimientos, cuenta corriente), panel web de reportes | ⏳ |
+| 6    | **Panel web de reportes** (`apps/admin-web`): login + RBAC, dashboard de ventas, productos/stock, export CSV + libro Excel, servido por el cloud-api | ✅ |
+| —    | Pendientes posteriores: CAE real ARCA (se integra con el primer cliente), funciones de negocio (remitos, presupuestos, combos, lotes/vencimientos, cuenta corriente), deploy (Railway) | ⏳ |
 
 ### Qué incluye la Fase 5 (propuesta)
 

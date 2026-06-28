@@ -272,6 +272,11 @@ body {
 .panel__cabecera .panel__titulo {
   margin-bottom: 0;
 }
+.panel__controles {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
 .campo--inline select,
 .campo--inline input[type="number"] {
   background: var(--color-fondo);

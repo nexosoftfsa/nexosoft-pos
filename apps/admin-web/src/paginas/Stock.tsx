@@ -3,6 +3,7 @@ import { useSesion } from "../auth/contexto-sesion";
 import { reportes } from "../api/reportes";
 import { useReporte } from "../hooks/useReporte";
 import { EstadoReporteVista } from "../componentes/EstadoReporteVista";
+import { descargarCsv } from "../csv";
 
 export function Stock() {
   const { api } = useSesion();
@@ -15,15 +16,33 @@ export function Stock() {
       <div className="panel">
         <div className="panel__cabecera">
           <h3 className="panel__titulo">Productos con stock bajo</h3>
-          <label className="campo campo--inline">
-            <span>Umbral (≤)</span>
-            <input
-              type="number"
-              min={0}
-              value={umbral}
-              onChange={(e) => setUmbral(Math.max(0, Number(e.target.value)))}
-            />
-          </label>
+          <div className="panel__controles">
+            <label className="campo campo--inline">
+              <span>Umbral (≤)</span>
+              <input
+                type="number"
+                min={0}
+                value={umbral}
+                onChange={(e) => setUmbral(Math.max(0, Number(e.target.value)))}
+              />
+            </label>
+            <button
+              className="boton boton--secundario boton--chico"
+              disabled={!bajo.datos || bajo.datos.length === 0}
+              onClick={() =>
+                descargarCsv("stock-bajo.csv", [
+                  ["Código", "Producto", "Saldo"],
+                  ...(bajo.datos ?? []).map((s) => [
+                    s.producto.codigo,
+                    s.producto.nombre,
+                    s.saldo,
+                  ]),
+                ])
+              }
+            >
+              Exportar CSV
+            </button>
+          </div>
         </div>
 
         <EstadoReporteVista
