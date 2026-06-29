@@ -1,0 +1,280 @@
+/*
+ * Átomos de UI para las pantallas de gestión (Fase 7.2+), portados de
+ * `prototipo/styles.css`: card, toolbar, tabla, badges y formulario/modal.
+ * Lo de pantalla (tabla/toolbar) va scopeado bajo `.gestion`; el modal es un
+ * overlay fijo y se estila global (no choca con `estilos.css`).
+ */
+
+.gestion {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px;
+}
+
+/* ---------- Card ---------- */
+.gestion .card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- Toolbar ---------- */
+.gestion .toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.gestion .toolbar .spacer {
+  flex: 1;
+}
+.gestion .searchbar--gestion {
+  display: flex;
+  align-items: center;
+  background: var(--surface-2);
+  border: 1.5px solid var(--line);
+  border-radius: 11px;
+  height: 40px;
+  padding: 0 13px;
+  min-width: 260px;
+}
+.gestion .searchbar--gestion input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  color: var(--texto);
+}
+.gestion .check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* ---------- Pill buttons ---------- */
+.pill-btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 11px;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--line);
+  color: var(--texto);
+  cursor: pointer;
+}
+.pill-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.pill-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.pill-btn--primary {
+  background: var(--grad);
+  color: #fff;
+  border: none;
+  box-shadow: var(--shadow);
+}
+.pill-btn--primary:hover {
+  filter: brightness(1.06);
+  color: #fff;
+}
+
+/* ---------- Tabla ---------- */
+.gestion .tablewrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.gestion table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.gestion th {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 700;
+}
+.gestion td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.gestion tr:last-child td {
+  border-bottom: none;
+}
+.gestion tbody tr:hover {
+  background: var(--surface-2);
+}
+.gestion .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.gestion .strong {
+  font-weight: 700;
+}
+.gestion .muted {
+  color: var(--muted);
+}
+.gestion .td-vacio {
+  text-align: center;
+  color: var(--muted);
+  padding: 28px 16px;
+}
+.gestion .fila-inactiva td {
+  opacity: 0.55;
+}
+.gestion .acciones {
+  display: flex;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+/* ---------- Badges (complementa las de shell.css) ---------- */
+.badge--ok {
+  background: var(--ok-soft);
+  color: #13794f;
+}
+.badge--n {
+  background: #eef2f6;
+  color: var(--muted);
+}
+
+/* ---------- Link buttons ---------- */
+.linkbtn {
+  color: var(--teal);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 2px 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.linkbtn:hover {
+  text-decoration: underline;
+}
+.linkbtn--danger {
+  color: var(--peligro, #e5484d);
+}
+
+/* ---------- Formulario / modal ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.field label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.input {
+  height: 46px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: var(--surface-2);
+  color: var(--texto);
+  width: 100%;
+  appearance: none;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--teal);
+  background: #fff;
+}
+.input:disabled {
+  opacity: 0.6;
+}
+select.input {
+  cursor: pointer;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(8, 20, 33, 0.5);
+}
+.modal--show {
+  display: flex;
+}
+.modal__box {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 92vh;
+  overflow: auto;
+  box-shadow: 0 30px 80px rgba(8, 20, 33, 0.4);
+}
+.modal__head {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.modal__head h3 {
+  margin: 0;
+  font-size: 17px;
+  flex: 1;
+}
+.modal__x {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  border: none;
+  cursor: pointer;
+}
+.modal__body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.modal__foot {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  justify-content: flex-end;
+}
+.modal__foot .pill-btn {
+  height: 46px;
+  padding: 0 20px;
+}
+
+@media (max-width: 560px) {
+  .modal__row {
+    grid-template-columns: 1fr;
+  }
+}

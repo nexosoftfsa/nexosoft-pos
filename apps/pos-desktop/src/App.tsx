@@ -18,6 +18,9 @@ import { EjecutorSqlTauri, estaEnTauri } from "./datos/ejecutor-sql-tauri";
 import { SesionManager } from "./datos/sesion";
 import { ClienteAuthHttp, type Credenciales } from "./sync/cliente-auth-http";
 import { ClienteTerminalesHttp } from "./sync/cliente-terminales-http";
+import type { ClienteCatalogoAdmin } from "./sync/cliente-catalogo-admin";
+import { ClienteCatalogoAdminHttp } from "./sync/cliente-catalogo-admin";
+import { ClienteCatalogoAdminSimulado } from "./sync/cliente-catalogo-admin-simulado";
 
 /** Aviso a pantalla completa para estados de carga/error. */
 function Aviso({ children }: { children: ReactNode }) {
@@ -46,12 +49,21 @@ export function App() {
 /** Navegador (desarrollo): datos en memoria, sin login. */
 function AppNavegador() {
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
+  const clienteCatalogoRef = useRef<ClienteCatalogoAdmin | null>(null);
   useEffect(() => {
     setEntorno(crearEntornoPos());
+    clienteCatalogoRef.current = new ClienteCatalogoAdminSimulado();
   }, []);
   if (entorno === null) return <Aviso>Iniciando NexoSoft POS…</Aviso>;
-  // En desarrollo (navegador) no hay login: mostramos el shell completo como ADMIN.
-  return <Shell entorno={entorno} usuario={{ rol: "ADMIN", email: "demo@nexosoft.local" }} />;
+  // En desarrollo (navegador) no hay login: mostramos el shell completo como ADMIN
+  // y el ABM de catálogo corre contra un cliente simulado en memoria.
+  return (
+    <Shell
+      entorno={entorno}
+      usuario={{ rol: "ADMIN", email: "demo@nexosoft.local" }}
+      {...(clienteCatalogoRef.current !== null ? { clienteCatalogo: clienteCatalogoRef.current } : {})}
+    />
+  );
 }
 
 type Fase = "cargando" | "login" | "terminal" | "config" | "listo" | "error";
@@ -61,6 +73,7 @@ function AppTauri() {
   const ejecutorRef = useRef<EjecutorSqlTauri | null>(null);
   const sesionRef = useRef<SesionManager | null>(null);
   const baseUrlRef = useRef<string>("");
+  const clienteCatalogoRef = useRef<ClienteCatalogoAdmin | null>(null);
   const [fase, setFase] = useState<Fase>("cargando");
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
@@ -84,6 +97,11 @@ function AppTauri() {
         obtenerToken: () => sesion.obtenerToken(),
         ...(sesion.terminalId !== undefined ? { terminalId: sesion.terminalId } : {}),
       });
+      // ABM de catálogo online contra el servidor de sucursal (mismo token).
+      clienteCatalogoRef.current = new ClienteCatalogoAdminHttp(
+        baseUrlRef.current,
+        () => sesion.obtenerToken(),
+      );
       setEntorno(env);
       setFase("listo");
     } catch (e) {
@@ -209,6 +227,7 @@ function AppTauri() {
           ...(sesionRef.current?.email !== undefined ? { email: sesionRef.current.email } : {}),
           ...(sesionRef.current?.rol !== undefined ? { rol: sesionRef.current.rol } : {}),
         }}
+        {...(clienteCatalogoRef.current !== null ? { clienteCatalogo: clienteCatalogoRef.current } : {})}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }
           : {})}

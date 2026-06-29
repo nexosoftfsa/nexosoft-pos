@@ -11,9 +11,11 @@
 import { useMemo, useState } from "react";
 
 import type { EntornoPos } from "../datos/bootstrap";
+import type { ClienteCatalogoAdmin } from "../sync/cliente-catalogo-admin";
 import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
+import { CatalogoAbm } from "../componentes/CatalogoAbm";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -42,12 +44,15 @@ function iniciales(email: string | undefined): string {
 export function Shell({
   entorno,
   usuario,
+  clienteCatalogo,
   terminalNombre,
   onCerrarSesion,
   onAbrirConfig,
 }: {
   entorno: EntornoPos;
   usuario: UsuarioShell;
+  /** Cliente del ABM de catálogo (HTTP en Tauri, simulado en el navegador). */
+  clienteCatalogo?: ClienteCatalogoAdmin;
   terminalNombre?: string;
   onCerrarSesion?: () => void;
   onAbrirConfig?: () => void;
@@ -150,6 +155,8 @@ export function Shell({
         <div className="shell-content">
           {activo?.id === "pos" ? (
             <PantallaPos entorno={entorno} sync={sync} />
+          ) : activo?.id === "catalogo" && clienteCatalogo ? (
+            <CatalogoAbm cliente={clienteCatalogo} />
           ) : activo ? (
             <Placeholder modulo={activo} />
           ) : null}

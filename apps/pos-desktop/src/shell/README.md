@@ -26,7 +26,7 @@ con su `RolesGuard`).
 | Sección | Módulos | Roles | Estado |
 | ------- | ------- | ----- | ------ |
 | Operación | Inicio · Punto de Venta · Caja y Tesorería | todos | Ventas ✅, resto placeholder |
-| Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | placeholder |
+| Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)**, resto placeholder |
 | Inteligencia | Reportes · Asistente IA | ADMIN, SUPERVISOR | placeholder |
 | Sistema | Configuración | ADMIN, SUPERVISOR | reabre la fase de config del `App` |
 
@@ -44,3 +44,18 @@ hay login: el shell se monta como **ADMIN** para poder ver todo.
 La pantalla de **Ventas** (`componentes/PantallaPos.tsx`) ya vive dentro del
 shell: recibe `entorno` y el `sync` (estado de la cola) como props; ya no tiene
 barra propia.
+
+## Catálogo (ABM, Fase 7.2)
+
+`componentes/CatalogoAbm.tsx` es el primer módulo de gestión real: lista, alta,
+edición y baja (desactivación) de productos. Es **online** (ADR-0025): habla con
+el cloud-api por un puerto `ClienteCatalogoAdmin` (`sync/cliente-catalogo-admin.ts`)
+con dos adaptadores — HTTP real en Tauri y un **simulado en memoria** para el
+navegador de desarrollo (sembrado con los productos demo, valida código duplicado
+con 409 igual que el backend). La lógica del formulario (validación, normalización
+de importes es-AR, margen) vive en `componentes/catalogo-form.ts` y está testeada.
+Los átomos de UI de gestión (card/tabla/toolbar/modal/form) están en
+`shell/gestion.css`, scopeados bajo `.gestion`.
+
+La baja **no borra**: desactiva (`activo = false`) y se puede reactivar; el POS
+deja de venderlo en el próximo pull de catálogo.
