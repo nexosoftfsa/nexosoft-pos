@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
-import { PantallaPos } from "./componentes/PantallaPos";
+import { Shell } from "./shell/Shell";
 import { PantallaLogin } from "./componentes/PantallaLogin";
 import { PantallaTerminal } from "./componentes/PantallaTerminal";
 import { PantallaConfig, type ValoresConfig } from "./componentes/PantallaConfig";
@@ -50,7 +50,8 @@ function AppNavegador() {
     setEntorno(crearEntornoPos());
   }, []);
   if (entorno === null) return <Aviso>Iniciando NexoSoft POS…</Aviso>;
-  return <PantallaPos entorno={entorno} />;
+  // En desarrollo (navegador) no hay login: mostramos el shell completo como ADMIN.
+  return <Shell entorno={entorno} usuario={{ rol: "ADMIN", email: "demo@nexosoft.local" }} />;
 }
 
 type Fase = "cargando" | "login" | "terminal" | "config" | "listo" | "error";
@@ -202,8 +203,12 @@ function AppTauri() {
   if (fase === "terminal") return <PantallaTerminal listar={listarTerminales} onElegir={onElegirTerminal} />;
   if (fase === "listo" && entorno !== null) {
     return (
-      <PantallaPos
+      <Shell
         entorno={entorno}
+        usuario={{
+          ...(sesionRef.current?.email !== undefined ? { email: sesionRef.current.email } : {}),
+          ...(sesionRef.current?.rol !== undefined ? { rol: sesionRef.current.rol } : {}),
+        }}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }
           : {})}

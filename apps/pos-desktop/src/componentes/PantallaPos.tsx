@@ -15,9 +15,8 @@ import type { IntentoPago } from "@nexosoft/pagos";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { etiquetaComprobante, pesos } from "../formato";
-import { IndicadorSync } from "../sync/IndicadorSync";
 import { construirOperacionVenta, mapearMedioPago } from "../sync/mapeo";
-import { useSync } from "../sync/useSync";
+import type { EstadoSync } from "../sync/useSync";
 
 interface ItemCarrito {
   readonly producto: ProductoCatalogo;
@@ -61,24 +60,15 @@ function armarComando(
   };
 }
 
-const ETIQUETA_CONDICION: Record<string, string> = {
-  [CondicionIva.ResponsableInscripto]: "Responsable Inscripto",
-  [CondicionIva.Monotributo]: "Monotributo",
-};
-
 export function PantallaPos({
   entorno,
-  terminalNombre,
-  onCerrarSesion,
-  onAbrirConfig,
+  sync,
 }: {
   entorno: EntornoPos;
-  terminalNombre?: string;
-  onCerrarSesion?: () => void;
-  onAbrirConfig?: () => void;
+  /** Estado de la cola de sincronización (lo orquesta el shell con `useSync`). */
+  sync: EstadoSync;
 }) {
   const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
-  const sync = useSync(entorno.sync);
 
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [condicionReceptor, setCondicionReceptor] = useState<CondicionIva>(
@@ -347,37 +337,6 @@ export function PantallaPos({
 
   return (
     <div className="pos">
-      <header className="barra">
-        <div className="marca">
-          Nexo<span>Soft</span>
-        </div>
-        <div className="comercio">
-          <strong>{config.razonSocial}</strong>
-          <span>
-            {ETIQUETA_CONDICION[config.condicionIvaEmisor] ?? config.condicionIvaEmisor} · Punto de
-            venta {String(config.puntoDeVenta).padStart(4, "0")}
-          </span>
-        </div>
-        <IndicadorSync estado={sync} />
-        {(terminalNombre !== undefined || onCerrarSesion !== undefined || onAbrirConfig !== undefined) && (
-          <div className="sesion" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            {terminalNombre !== undefined && (
-              <span style={{ fontSize: "0.85rem", color: "#475569" }}>🗔 {terminalNombre}</span>
-            )}
-            {onAbrirConfig !== undefined && (
-              <button type="button" className="boton-secundario" onClick={onAbrirConfig} title="Configuración">
-                ⚙
-              </button>
-            )}
-            {onCerrarSesion !== undefined && (
-              <button type="button" className="boton-secundario" onClick={onCerrarSesion}>
-                Salir
-              </button>
-            )}
-          </div>
-        )}
-      </header>
-
       <main className="cuerpo">
         <section className="catalogo">
           {catalogo.map((p) => (

@@ -43,6 +43,12 @@ function decodificarSucursal(token: string): string {
   return typeof payload?.["sucursalId"] === "string" ? (payload["sucursalId"] as string) : "";
 }
 
+/** Devuelve el rol (`rol`) del JWT, o `undefined` si no se puede leer. */
+export function decodificarRol(token: string): string | undefined {
+  const payload = decodificarPayload(token);
+  return typeof payload?.["rol"] === "string" ? (payload["rol"] as string) : undefined;
+}
+
 export class SesionManager {
   private constructor(
     private readonly ejecutor: EjecutorSql,
@@ -77,6 +83,11 @@ export class SesionManager {
 
   get email(): string | undefined {
     return this.estado?.email;
+  }
+
+  /** Rol del usuario logueado (ADMIN/SUPERVISOR/CAJERO), leído del access token. */
+  get rol(): string | undefined {
+    return this.estado === null ? undefined : decodificarRol(this.estado.accessToken);
   }
 
   /** Inicia sesión contra el servidor y persiste los tokens. */

@@ -41,3 +41,4 @@ Consecuencias y Alternativas consideradas.
 | 0022 | [Adaptador `EjecutorSql` sobre Tauri y reescritura de placeholders](0022-adaptador-ejecutorsql-tauri-y-placeholders.md) | Aceptada |
 | 0023 | [Transacciones en el POS por serialización del acceso a SQLite](0023-transacciones-sqlite-por-serializacion.md) | Aceptada |
 | 0024 | [Panel web de reportes como app independiente (read-only)](0024-panel-web-de-reportes.md) | Aceptada |
+| 0025 | [Shell de gestión en el POS (menú lateral + identidad de la maqueta)](0025-shell-de-gestion-en-el-pos.md) | Aceptada |

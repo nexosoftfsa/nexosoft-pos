@@ -228,8 +228,14 @@ body {
 }
 .pago-nuevo {
   display: grid;
-  grid-template-columns: 1fr 1fr auto auto;
+  /* 2 columnas × 2 filas: forma + monto arriba, Agregar + Exacto abajo.
+     Entra en el panel de 380px sin desbordar (antes era 1fr 1fr auto auto). */
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
+}
+.pago-nuevo select,
+.pago-nuevo input {
+  min-width: 0;
 }
 .pago-nuevo button {
   padding: 8px 10px;
