@@ -35,7 +35,7 @@ export class LibroDeVentasExcel implements LibroDeVentas {
     await fs.mkdir(dirname(this.rutaArchivo), { recursive: true });
 
     const workbook = new Workbook();
-    let hoja = await this.cargarOCrear(workbook);
+    const hoja = await this.cargarOCrear(workbook);
 
     // Si ya existe una fila con este operacionId, la actualizamos (idempotencia).
     const filaExistente = this.buscarPorOperacion(hoja, fila.operacionId);

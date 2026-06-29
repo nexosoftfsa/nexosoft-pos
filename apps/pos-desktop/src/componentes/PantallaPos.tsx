@@ -104,7 +104,6 @@ export function PantallaPos({
       else setError(`Código de barras no encontrado: ${codigo}`);
     },
     // agregar se define más abajo, pero es estable porque usa setCarrito funcional
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [catalogo],
   );
 

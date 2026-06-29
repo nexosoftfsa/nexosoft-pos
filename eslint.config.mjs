@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
 import prettier from "eslint-config-prettier";
 
 // Configuración base (flat config, ESLint 9). Cada paquete/app puede extenderla.
@@ -31,6 +32,32 @@ export default tseslint.config(
           message: "Los montos monetarios no se tipan como number. Usá Money/Decimal (ADR-0007).",
         },
       ],
+    },
+  },
+  {
+    // Reglas de hooks de React para los componentes (apps pos-desktop y admin-web).
+    files: ["**/*.{ts,tsx}"],
+    plugins: { "react-hooks": reactHooks },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  },
+  {
+    // Scripts Node ESM (e2e, utilidades): corren fuera del build de TS, con los
+    // globals de Node. Sin esto, ESLint marca console/process/fetch como no-undef.
+    files: ["**/*.mjs"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+        URL: "readonly",
+        URLSearchParams: "readonly",
+        Buffer: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+      },
     },
   },
 );

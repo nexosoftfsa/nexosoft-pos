@@ -41,7 +41,9 @@ export function useReporte<T>(
     return () => {
       activo = false;
     };
-    // El llamador controla la reactividad vía `deps` (el rango).
+    // Hook genérico: el llamador controla la reactividad vía `deps` (el rango).
+    // `cargar` se recrea en cada render a propósito y NO debe ir en deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return estado;
