@@ -26,7 +26,7 @@ con su `RolesGuard`).
 | Sección | Módulos | Roles | Estado |
 | ------- | ------- | ----- | ------ |
 | Operación | Inicio · Punto de Venta · Caja y Tesorería | todos | Ventas ✅, resto placeholder |
-| Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)**, resto placeholder |
+| Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)** · **Stock ✅**, Ctas. Ctes. placeholder |
 | Inteligencia | Reportes · Asistente IA | ADMIN, SUPERVISOR | placeholder |
 | Sistema | Configuración | ADMIN, SUPERVISOR | reabre la fase de config del `App` |
 
@@ -59,3 +59,14 @@ Los átomos de UI de gestión (card/tabla/toolbar/modal/form) están en
 
 La baja **no borra**: desactiva (`activo = false`) y se puede reactivar; el POS
 deja de venderlo en el próximo pull de catálogo.
+
+## Stock (Fase 7.3)
+
+`componentes/StockAbm.tsx`: saldos por producto con estado (ok/bajo/sin según un
+umbral), KPIs del inventario, registro de movimientos (ingreso por compra, ajuste,
+salida/merma) e historial por producto. Online contra el módulo de stock del
+cloud-api vía el puerto `ClienteStock` (`sync/cliente-stock.ts`), con adaptador
+HTTP (Tauri) y simulado en memoria (navegador, sembrado con el stock inicial de
+los productos demo). El **saldo = ENTRADA/AJUSTE − SALIDA/VENTA**; las salidas
+validan stock suficiente (400). La lógica pura (estado, KPIs, validación) vive en
+`componentes/stock-helpers.ts` y está testeada.

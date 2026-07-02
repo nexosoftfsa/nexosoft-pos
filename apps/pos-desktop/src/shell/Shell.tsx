@@ -12,10 +12,12 @@ import { useMemo, useState } from "react";
 
 import type { EntornoPos } from "../datos/bootstrap";
 import type { ClienteCatalogoAdmin } from "../sync/cliente-catalogo-admin";
+import type { ClienteStock } from "../sync/cliente-stock";
 import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
 import { CatalogoAbm } from "../componentes/CatalogoAbm";
+import { StockAbm } from "../componentes/StockAbm";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -45,6 +47,7 @@ export function Shell({
   entorno,
   usuario,
   clienteCatalogo,
+  clienteStock,
   terminalNombre,
   onCerrarSesion,
   onAbrirConfig,
@@ -53,6 +56,8 @@ export function Shell({
   usuario: UsuarioShell;
   /** Cliente del ABM de catálogo (HTTP en Tauri, simulado en el navegador). */
   clienteCatalogo?: ClienteCatalogoAdmin;
+  /** Cliente de stock (HTTP en Tauri, simulado en el navegador). */
+  clienteStock?: ClienteStock;
   terminalNombre?: string;
   onCerrarSesion?: () => void;
   onAbrirConfig?: () => void;
@@ -157,6 +162,8 @@ export function Shell({
             <PantallaPos entorno={entorno} sync={sync} />
           ) : activo?.id === "catalogo" && clienteCatalogo ? (
             <CatalogoAbm cliente={clienteCatalogo} />
+          ) : activo?.id === "stock" && clienteStock ? (
+            <StockAbm cliente={clienteStock} />
           ) : activo ? (
             <Placeholder modulo={activo} />
           ) : null}

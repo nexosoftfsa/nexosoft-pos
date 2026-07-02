@@ -21,6 +21,9 @@ import { ClienteTerminalesHttp } from "./sync/cliente-terminales-http";
 import type { ClienteCatalogoAdmin } from "./sync/cliente-catalogo-admin";
 import { ClienteCatalogoAdminHttp } from "./sync/cliente-catalogo-admin";
 import { ClienteCatalogoAdminSimulado } from "./sync/cliente-catalogo-admin-simulado";
+import type { ClienteStock } from "./sync/cliente-stock";
+import { ClienteStockHttp } from "./sync/cliente-stock";
+import { ClienteStockSimulado } from "./sync/cliente-stock-simulado";
 
 /** Aviso a pantalla completa para estados de carga/error. */
 function Aviso({ children }: { children: ReactNode }) {
@@ -50,18 +53,21 @@ export function App() {
 function AppNavegador() {
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
   const clienteCatalogoRef = useRef<ClienteCatalogoAdmin | null>(null);
+  const clienteStockRef = useRef<ClienteStock | null>(null);
   useEffect(() => {
     setEntorno(crearEntornoPos());
     clienteCatalogoRef.current = new ClienteCatalogoAdminSimulado();
+    clienteStockRef.current = new ClienteStockSimulado();
   }, []);
   if (entorno === null) return <Aviso>Iniciando NexoSoft POS…</Aviso>;
   // En desarrollo (navegador) no hay login: mostramos el shell completo como ADMIN
-  // y el ABM de catálogo corre contra un cliente simulado en memoria.
+  // y los módulos de gestión corren contra clientes simulados en memoria.
   return (
     <Shell
       entorno={entorno}
       usuario={{ rol: "ADMIN", email: "demo@nexosoft.local" }}
       {...(clienteCatalogoRef.current !== null ? { clienteCatalogo: clienteCatalogoRef.current } : {})}
+      {...(clienteStockRef.current !== null ? { clienteStock: clienteStockRef.current } : {})}
     />
   );
 }
@@ -74,6 +80,7 @@ function AppTauri() {
   const sesionRef = useRef<SesionManager | null>(null);
   const baseUrlRef = useRef<string>("");
   const clienteCatalogoRef = useRef<ClienteCatalogoAdmin | null>(null);
+  const clienteStockRef = useRef<ClienteStock | null>(null);
   const [fase, setFase] = useState<Fase>("cargando");
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
@@ -97,11 +104,12 @@ function AppTauri() {
         obtenerToken: () => sesion.obtenerToken(),
         ...(sesion.terminalId !== undefined ? { terminalId: sesion.terminalId } : {}),
       });
-      // ABM de catálogo online contra el servidor de sucursal (mismo token).
+      // ABM de catálogo y stock online contra el servidor de sucursal (mismo token).
       clienteCatalogoRef.current = new ClienteCatalogoAdminHttp(
         baseUrlRef.current,
         () => sesion.obtenerToken(),
       );
+      clienteStockRef.current = new ClienteStockHttp(baseUrlRef.current, () => sesion.obtenerToken());
       setEntorno(env);
       setFase("listo");
     } catch (e) {
@@ -228,6 +236,7 @@ function AppTauri() {
           ...(sesionRef.current?.rol !== undefined ? { rol: sesionRef.current.rol } : {}),
         }}
         {...(clienteCatalogoRef.current !== null ? { clienteCatalogo: clienteCatalogoRef.current } : {})}
+        {...(clienteStockRef.current !== null ? { clienteStock: clienteStockRef.current } : {})}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }
           : {})}
