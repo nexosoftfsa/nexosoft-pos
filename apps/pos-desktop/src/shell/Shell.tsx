@@ -13,11 +13,13 @@ import { useMemo, useState } from "react";
 import type { EntornoPos } from "../datos/bootstrap";
 import type { ClienteCatalogoAdmin } from "../sync/cliente-catalogo-admin";
 import type { ClienteStock } from "../sync/cliente-stock";
+import type { ClienteCaja } from "../sync/cliente-caja";
 import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
 import { CatalogoAbm } from "../componentes/CatalogoAbm";
 import { StockAbm } from "../componentes/StockAbm";
+import { CajaPanel } from "../componentes/CajaPanel";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -48,6 +50,8 @@ export function Shell({
   usuario,
   clienteCatalogo,
   clienteStock,
+  clienteCaja,
+  terminalId,
   terminalNombre,
   onCerrarSesion,
   onAbrirConfig,
@@ -58,6 +62,10 @@ export function Shell({
   clienteCatalogo?: ClienteCatalogoAdmin;
   /** Cliente de stock (HTTP en Tauri, simulado en el navegador). */
   clienteStock?: ClienteStock;
+  /** Cliente de caja (HTTP en Tauri, simulado en el navegador). */
+  clienteCaja?: ClienteCaja;
+  /** Id de la terminal (para la caja). */
+  terminalId?: string;
   terminalNombre?: string;
   onCerrarSesion?: () => void;
   onAbrirConfig?: () => void;
@@ -164,6 +172,8 @@ export function Shell({
             <CatalogoAbm cliente={clienteCatalogo} />
           ) : activo?.id === "stock" && clienteStock ? (
             <StockAbm cliente={clienteStock} />
+          ) : activo?.id === "caja" && clienteCaja && terminalId ? (
+            <CajaPanel cliente={clienteCaja} terminalId={terminalId} />
           ) : activo ? (
             <Placeholder modulo={activo} />
           ) : null}

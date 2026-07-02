@@ -19,6 +19,61 @@
   border-radius: 16px;
   box-shadow: var(--shadow);
 }
+.gestion .card__pad {
+  padding: 18px;
+}
+.gestion .card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.gestion .card__head h3 {
+  margin: 0;
+  font-size: 15.5px;
+}
+.gestion .section-title {
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin: 4px 2px 12px;
+}
+.gestion .kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  gap: 10px;
+}
+.gestion .kv:last-child {
+  border-bottom: none;
+}
+.gestion .kv span {
+  color: var(--muted);
+}
+
+/* Caja: dos columnas (estado + movimientos) */
+.caja-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 18px;
+  align-items: start;
+}
+.caja-abrir {
+  max-width: 420px;
+}
+.caja-abrir .field {
+  margin: 12px 0;
+}
+@media (max-width: 900px) {
+  .caja-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* ---------- Toolbar ---------- */
 .gestion .toolbar {

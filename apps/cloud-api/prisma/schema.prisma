@@ -24,6 +24,8 @@ model Sucursal {
   ventas    Venta[]
   movimientosStock MovimientoStock[]
   terminales Terminal[]
+  turnosCaja TurnoCaja[]
+  movimientosCaja MovimientoCaja[]
 
   @@map("sucursales")
 }
@@ -40,6 +42,7 @@ model Terminal {
   sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
 
   ventas     Venta[]
+  turnosCaja TurnoCaja[]
 
   @@map("terminales")
 }
@@ -66,6 +69,7 @@ model Usuario {
 
   refreshTokens RefreshToken[]
   ventas        Venta[]
+  turnosCaja    TurnoCaja[]
 
   @@map("usuarios")
 }
@@ -213,4 +217,53 @@ model ItemVenta {
   producto     Producto @relation(fields: [productoId], references: [id])
 
   @@map("items_venta")
+}
+
+// ─── Caja y tesorería ─────────────────────────────────────────────────────────
+
+enum EstadoTurnoCaja {
+  ABIERTO
+  CERRADO
+}
+
+model TurnoCaja {
+  id            String          @id @default(cuid())
+  estado        EstadoTurnoCaja @default(ABIERTO)
+  fondoApertura Decimal         @db.Decimal(12, 2)   // efectivo al abrir
+  abiertoEn     DateTime        @default(now())
+  cerradoEn     DateTime?
+  montoContado  Decimal?        @db.Decimal(12, 2)   // arqueo (conteo físico) al cerrar
+  diferencia    Decimal?        @db.Decimal(12, 2)   // contado - teórico (+ sobrante / - faltante)
+  observaciones String?
+
+  sucursalId    String
+  sucursal      Sucursal        @relation(fields: [sucursalId], references: [id])
+  terminalId    String
+  terminal      Terminal        @relation(fields: [terminalId], references: [id])
+  usuarioId     String                                // quién abrió el turno
+  usuario       Usuario         @relation(fields: [usuarioId], references: [id])
+
+  movimientos   MovimientoCaja[]
+
+  @@map("turnos_caja")
+}
+
+enum TipoMovimientoCaja {
+  INGRESO   // aporte de efectivo a la caja
+  EGRESO    // retiro / pago con efectivo de la caja
+}
+
+model MovimientoCaja {
+  id           String             @id @default(cuid())
+  tipo         TipoMovimientoCaja
+  monto        Decimal            @db.Decimal(12, 2)
+  concepto     String?
+  creadoEn     DateTime           @default(now())
+
+  turnoCajaId  String
+  turnoCaja    TurnoCaja          @relation(fields: [turnoCajaId], references: [id], onDelete: Cascade)
+  sucursalId   String
+  sucursal     Sucursal           @relation(fields: [sucursalId], references: [id])
+
+  @@map("movimientos_caja")
 }

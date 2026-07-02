@@ -25,7 +25,7 @@ con su `RolesGuard`).
 
 | Sección | Módulos | Roles | Estado |
 | ------- | ------- | ----- | ------ |
-| Operación | Inicio · Punto de Venta · Caja y Tesorería | todos | Ventas ✅, resto placeholder |
+| Operación | Inicio · Punto de Venta · Caja y Tesorería | todos | Ventas ✅ · **Caja ✅**, Inicio placeholder |
 | Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)** · **Stock ✅**, Ctas. Ctes. placeholder |
 | Inteligencia | Reportes · Asistente IA | ADMIN, SUPERVISOR | placeholder |
 | Sistema | Configuración | ADMIN, SUPERVISOR | reabre la fase de config del `App` |
@@ -70,3 +70,14 @@ HTTP (Tauri) y simulado en memoria (navegador, sembrado con el stock inicial de
 los productos demo). El **saldo = ENTRADA/AJUSTE − SALIDA/VENTA**; las salidas
 validan stock suficiente (400). La lógica pura (estado, KPIs, validación) vive en
 `componentes/stock-helpers.ts` y está testeada.
+
+## Caja y Tesorería (Fase 7.4)
+
+`componentes/CajaPanel.tsx`: apertura de turno (fondo inicial), panel de estado
+(saldo teórico + desglose apertura/ventas efectivo/ingresos/egresos),
+ingresos/egresos de efectivo, movimientos del turno y arqueo/cierre con
+diferencia (sobrante/faltante). Online contra el módulo `caja` **nuevo** del
+cloud-api (`ClienteCaja` en `sync/cliente-caja.ts`, adaptador HTTP + simulado).
+Un turno abierto por terminal; las ventas en efectivo se derivan de `Venta` por
+ventana de tiempo (ADR-0026), no se duplican. El `terminalId` viene de la sesión.
+Lógica pura en `componentes/caja-helpers.ts` (testeada).

@@ -24,6 +24,9 @@ import { ClienteCatalogoAdminSimulado } from "./sync/cliente-catalogo-admin-simu
 import type { ClienteStock } from "./sync/cliente-stock";
 import { ClienteStockHttp } from "./sync/cliente-stock";
 import { ClienteStockSimulado } from "./sync/cliente-stock-simulado";
+import type { ClienteCaja } from "./sync/cliente-caja";
+import { ClienteCajaHttp } from "./sync/cliente-caja";
+import { ClienteCajaSimulado } from "./sync/cliente-caja-simulado";
 
 /** Aviso a pantalla completa para estados de carga/error. */
 function Aviso({ children }: { children: ReactNode }) {
@@ -54,10 +57,12 @@ function AppNavegador() {
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
   const clienteCatalogoRef = useRef<ClienteCatalogoAdmin | null>(null);
   const clienteStockRef = useRef<ClienteStock | null>(null);
+  const clienteCajaRef = useRef<ClienteCaja | null>(null);
   useEffect(() => {
     setEntorno(crearEntornoPos());
     clienteCatalogoRef.current = new ClienteCatalogoAdminSimulado();
     clienteStockRef.current = new ClienteStockSimulado();
+    clienteCajaRef.current = new ClienteCajaSimulado();
   }, []);
   if (entorno === null) return <Aviso>Iniciando NexoSoft POS…</Aviso>;
   // En desarrollo (navegador) no hay login: mostramos el shell completo como ADMIN
@@ -66,8 +71,10 @@ function AppNavegador() {
     <Shell
       entorno={entorno}
       usuario={{ rol: "ADMIN", email: "demo@nexosoft.local" }}
+      terminalId="caja-demo"
       {...(clienteCatalogoRef.current !== null ? { clienteCatalogo: clienteCatalogoRef.current } : {})}
       {...(clienteStockRef.current !== null ? { clienteStock: clienteStockRef.current } : {})}
+      {...(clienteCajaRef.current !== null ? { clienteCaja: clienteCajaRef.current } : {})}
     />
   );
 }
@@ -81,6 +88,7 @@ function AppTauri() {
   const baseUrlRef = useRef<string>("");
   const clienteCatalogoRef = useRef<ClienteCatalogoAdmin | null>(null);
   const clienteStockRef = useRef<ClienteStock | null>(null);
+  const clienteCajaRef = useRef<ClienteCaja | null>(null);
   const [fase, setFase] = useState<Fase>("cargando");
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
@@ -110,6 +118,7 @@ function AppTauri() {
         () => sesion.obtenerToken(),
       );
       clienteStockRef.current = new ClienteStockHttp(baseUrlRef.current, () => sesion.obtenerToken());
+      clienteCajaRef.current = new ClienteCajaHttp(baseUrlRef.current, () => sesion.obtenerToken());
       setEntorno(env);
       setFase("listo");
     } catch (e) {
@@ -237,6 +246,8 @@ function AppTauri() {
         }}
         {...(clienteCatalogoRef.current !== null ? { clienteCatalogo: clienteCatalogoRef.current } : {})}
         {...(clienteStockRef.current !== null ? { clienteStock: clienteStockRef.current } : {})}
+        {...(clienteCajaRef.current !== null ? { clienteCaja: clienteCajaRef.current } : {})}
+        {...(sesionRef.current?.terminalId !== undefined ? { terminalId: sesionRef.current.terminalId } : {})}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }
           : {})}
