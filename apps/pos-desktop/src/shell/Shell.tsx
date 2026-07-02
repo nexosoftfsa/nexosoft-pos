@@ -14,12 +14,14 @@ import type { EntornoPos } from "../datos/bootstrap";
 import type { ClienteCatalogoAdmin } from "../sync/cliente-catalogo-admin";
 import type { ClienteStock } from "../sync/cliente-stock";
 import type { ClienteCaja } from "../sync/cliente-caja";
+import type { ClienteCtaCte } from "../sync/cliente-ctacte";
 import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
 import { CatalogoAbm } from "../componentes/CatalogoAbm";
 import { StockAbm } from "../componentes/StockAbm";
 import { CajaPanel } from "../componentes/CajaPanel";
+import { CuentasCorrientes } from "../componentes/CuentasCorrientes";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -51,6 +53,7 @@ export function Shell({
   clienteCatalogo,
   clienteStock,
   clienteCaja,
+  clienteCtaCte,
   terminalId,
   terminalNombre,
   onCerrarSesion,
@@ -64,6 +67,8 @@ export function Shell({
   clienteStock?: ClienteStock;
   /** Cliente de caja (HTTP en Tauri, simulado en el navegador). */
   clienteCaja?: ClienteCaja;
+  /** Cliente de cuentas corrientes (HTTP en Tauri, simulado en el navegador). */
+  clienteCtaCte?: ClienteCtaCte;
   /** Id de la terminal (para la caja). */
   terminalId?: string;
   terminalNombre?: string;
@@ -174,6 +179,8 @@ export function Shell({
             <StockAbm cliente={clienteStock} />
           ) : activo?.id === "caja" && clienteCaja && terminalId ? (
             <CajaPanel cliente={clienteCaja} terminalId={terminalId} />
+          ) : activo?.id === "ctacte" && clienteCtaCte ? (
+            <CuentasCorrientes cliente={clienteCtaCte} />
           ) : activo ? (
             <Placeholder modulo={activo} />
           ) : null}

@@ -26,6 +26,8 @@ model Sucursal {
   terminales Terminal[]
   turnosCaja TurnoCaja[]
   movimientosCaja MovimientoCaja[]
+  clientes Cliente[]
+  movimientosCuentaCorriente MovimientoCuentaCorriente[]
 
   @@map("sucursales")
 }
@@ -266,4 +268,53 @@ model MovimientoCaja {
   sucursal     Sucursal           @relation(fields: [sucursalId], references: [id])
 
   @@map("movimientos_caja")
+}
+
+// ─── Clientes y cuentas corrientes ─────────────────────────────────────────────
+
+enum CondicionIva {
+  CONSUMIDOR_FINAL
+  RESPONSABLE_INSCRIPTO
+  MONOTRIBUTO
+  EXENTO
+}
+
+model Cliente {
+  id            String       @id @default(cuid())
+  nombre        String
+  documento     String?      // CUIT o DNI
+  condicionIva  CondicionIva @default(CONSUMIDOR_FINAL)
+  email         String?
+  telefono      String?
+  direccion     String?
+  limiteCredito Decimal      @db.Decimal(12, 2) @default(0)  // 0 = sin límite
+  activo        Boolean      @default(true)
+  creadoEn      DateTime     @default(now())
+
+  sucursalId    String
+  sucursal      Sucursal     @relation(fields: [sucursalId], references: [id])
+
+  movimientos   MovimientoCuentaCorriente[]
+
+  @@map("clientes")
+}
+
+enum TipoMovimientoCtaCte {
+  CARGO   // deuda: venta a cuenta / ajuste a favor del comercio
+  PAGO    // cobro: reduce la deuda
+}
+
+model MovimientoCuentaCorriente {
+  id          String               @id @default(cuid())
+  tipo        TipoMovimientoCtaCte
+  monto       Decimal              @db.Decimal(12, 2)
+  concepto    String?
+  creadoEn    DateTime             @default(now())
+
+  clienteId   String
+  cliente     Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  sucursalId  String
+  sucursal    Sucursal             @relation(fields: [sucursalId], references: [id])
+
+  @@map("movimientos_cuenta_corriente")
 }

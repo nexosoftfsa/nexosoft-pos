@@ -26,7 +26,7 @@ con su `RolesGuard`).
 | Sección | Módulos | Roles | Estado |
 | ------- | ------- | ----- | ------ |
 | Operación | Inicio · Punto de Venta · Caja y Tesorería | todos | Ventas ✅ · **Caja ✅**, Inicio placeholder |
-| Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)** · **Stock ✅**, Ctas. Ctes. placeholder |
+| Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)** · **Stock ✅** · **Ctas. Ctes. ✅** |
 | Inteligencia | Reportes · Asistente IA | ADMIN, SUPERVISOR | placeholder |
 | Sistema | Configuración | ADMIN, SUPERVISOR | reabre la fase de config del `App` |
 
@@ -81,3 +81,14 @@ cloud-api (`ClienteCaja` en `sync/cliente-caja.ts`, adaptador HTTP + simulado).
 Un turno abierto por terminal; las ventas en efectivo se derivan de `Venta` por
 ventana de tiempo (ADR-0026), no se duplican. El `terminalId` viene de la sesión.
 Lógica pura en `componentes/caja-helpers.ts` (testeada).
+
+## Cuentas Corrientes (Fase 7.5)
+
+`componentes/CuentasCorrientes.tsx`: clientes con su saldo, alta/edición/baja,
+venta a cuenta (cargo), cobro (pago) y estado de cuenta (ledger). Online contra el
+módulo `clientes` **nuevo** del cloud-api (`ClienteCtaCte` en `sync/cliente-ctacte.ts`,
+adaptador HTTP + simulado). El **saldo = ΣCARGO − ΣPAGO** (positivo = debe); un
+CARGO que excede el `limiteCredito` (si hay uno) se rechaza con 409 (ADR-0027).
+La "venta a cuenta" se registra como cargo desde esta pantalla; la integración
+automática venta-POS→cargo queda pendiente (requiere `clienteId` en la venta).
+Lógica pura en `componentes/ctacte-helpers.ts` (testeada).

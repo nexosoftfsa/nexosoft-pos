@@ -43,3 +43,4 @@ Consecuencias y Alternativas consideradas.
 | 0024 | [Panel web de reportes como app independiente (read-only)](0024-panel-web-de-reportes.md) | Aceptada |
 | 0025 | [Shell de gestión en el POS (menú lateral + identidad de la maqueta)](0025-shell-de-gestion-en-el-pos.md) | Aceptada |
 | 0026 | [Caja por turnos, ventas en efectivo por ventana de tiempo](0026-caja-por-turnos-y-ventana-de-tiempo.md) | Aceptada |
+| 0027 | [Clientes y cuenta corriente como ledger](0027-clientes-y-cuenta-corriente-ledger.md) | Aceptada |
