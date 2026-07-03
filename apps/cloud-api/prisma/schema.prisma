@@ -199,6 +199,11 @@ model Venta {
   terminalId      String?
   terminal        Terminal?   @relation(fields: [terminalId], references: [id])
 
+  /// Si este comprobante es una Nota de Crédito/Débito, apunta al comprobante que anula.
+  comprobanteAsociadoId String?
+  comprobanteAsociado   Venta?  @relation("Anulacion", fields: [comprobanteAsociadoId], references: [id])
+  notasEmitidas         Venta[] @relation("Anulacion")
+
   items           ItemVenta[]
   movimientosStock MovimientoStock[]
 

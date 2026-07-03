@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { VentasService } from './ventas.service';
 import { CrearVentaDto } from './dto/crear-venta.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -26,5 +26,15 @@ export class VentasController {
       { id: req.user.id, email: req.user.email, sucursalId: req.user.sucursalId },
       dto,
     );
+  }
+
+  @Get(':id')
+  obtener(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
+    return this.ventasService.obtener(req.user.sucursalId, id);
+  }
+
+  @Post(':id/anular')
+  anular(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
+    return this.ventasService.anular(req.user.sucursalId, id);
   }
 }

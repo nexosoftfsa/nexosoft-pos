@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
@@ -29,8 +35,89 @@ export class VentasService {
     return this.prisma.venta.findMany({
       where: { sucursalId },
       orderBy: { creadaEn: 'desc' },
-      include: { items: true },
+      include: { items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } } },
     });
+  }
+
+  async obtener(sucursalId: string, id: string) {
+    const venta = await this.prisma.venta.findFirst({
+      where: { id, sucursalId },
+      include: { items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } } },
+    });
+    if (!venta) throw new NotFoundException(`Comprobante ${id} no encontrado`);
+    return venta;
+  }
+
+  /**
+   * Anula un comprobante emitiendo una Nota de Crédito por el total (comprobante
+   * asociado + CAE mock), marca el original ANULADO y restaura el stock vendido.
+   * Todo en una transacción. Ver ADR-0028.
+   */
+  async anular(sucursalId: string, id: string) {
+    const original = await this.obtener(sucursalId, id);
+    if (original.estado === 'ANULADA') {
+      throw new BadRequestException('El comprobante ya está anulado');
+    }
+    if (original.tipoComprobante?.startsWith('NotaCredito')) {
+      throw new BadRequestException('No se puede anular una Nota de Crédito');
+    }
+
+    const tipoNc = notaCreditoDe(original.tipoComprobante);
+    const cae = await this.cae.autorizar({
+      tipoComprobante: tipoNc,
+      total: original.total.toString(),
+      sucursalId,
+    });
+
+    const notaCredito = await this.prisma.$transaction(async (tx) => {
+      const nc = await tx.venta.create({
+        data: {
+          operacionId: `${original.operacionId}-NC`,
+          estado: 'COMPLETADA',
+          subtotal: original.subtotal,
+          descuento: original.descuento,
+          total: original.total,
+          medioPago: original.medioPago,
+          cae: cae.cae,
+          caeFechaVto: cae.caeFechaVto,
+          numeroComprobante: cae.numeroComprobante,
+          tipoComprobante: cae.tipoComprobante,
+          sucursalId,
+          usuarioId: original.usuarioId,
+          terminalId: original.terminalId,
+          comprobanteAsociadoId: original.id,
+          items: {
+            create: original.items.map((it) => ({
+              cantidad: it.cantidad,
+              precioUnitario: it.precioUnitario,
+              descuento: it.descuento,
+              subtotal: it.subtotal,
+              productoId: it.productoId,
+            })),
+          },
+        },
+        include: { items: true },
+      });
+
+      // La mercadería vuelve al stock: una ENTRADA por cada ítem.
+      for (const it of original.items) {
+        await tx.movimientoStock.create({
+          data: {
+            tipo: 'ENTRADA',
+            cantidad: it.cantidad,
+            motivo: `Anulación ${original.tipoComprobante ?? ''} ${original.numeroComprobante ?? ''}`.trim(),
+            productoId: it.productoId,
+            sucursalId,
+            ventaId: nc.id,
+          },
+        });
+      }
+
+      await tx.venta.update({ where: { id: original.id }, data: { estado: 'ANULADA' } });
+      return nc;
+    });
+
+    return { anulada: await this.obtener(sucursalId, id), notaCredito };
   }
 
   async registrar(usuario: UsuarioCtx, dto: CrearVentaDto) {
@@ -144,4 +231,12 @@ export class VentasService {
       this.logger.error(`Falló el respaldo post-venta: ${(error as Error).message}`);
     }
   }
+}
+
+/** Tipo de Nota de Crédito que corresponde a un comprobante (hereda la letra). */
+export function notaCreditoDe(tipoComprobante: string | null): string {
+  if (tipoComprobante?.startsWith('Factura')) {
+    return tipoComprobante.replace('Factura', 'NotaCredito');
+  }
+  return 'NotaCreditoB';
 }

@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import {
   IconoCaja,
   IconoCatalogo,
+  IconoComprobantes,
   IconoConfig,
   IconoCtaCte,
   IconoIa,
@@ -58,6 +59,7 @@ export const MODULOS: readonly DefinicionModulo[] = [
   { id: "inicio", titulo: "Inicio", crumb: "Panel general", seccion: "Operación", icono: IconoInicio, roles: TODOS },
   { id: "pos", titulo: "Punto de Venta", crumb: "Operación · Caja", seccion: "Operación", icono: IconoPos, roles: TODOS },
   { id: "caja", titulo: "Caja y Tesorería", crumb: "Turno de caja", seccion: "Operación", icono: IconoCaja, roles: TODOS },
+  { id: "comprobantes", titulo: "Comprobantes", crumb: "Facturas y notas de crédito", seccion: "Operación", icono: IconoComprobantes, roles: TODOS },
   { id: "catalogo", titulo: "Catálogo y Precios", crumb: "Artículos y listas", seccion: "Gestión", icono: IconoCatalogo, roles: GESTION },
   { id: "stock", titulo: "Stock e Inventario", crumb: "Existencias", seccion: "Gestión", icono: IconoStock, roles: GESTION },
   { id: "ctacte", titulo: "Cuentas Corrientes", crumb: "Clientes y proveedores", seccion: "Gestión", icono: IconoCtaCte, roles: GESTION },

@@ -96,6 +96,15 @@ export function IconoConfig() {
   );
 }
 
+export function IconoComprobantes() {
+  return (
+    <Svg>
+      <path d="M6 2h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" />
+      <path d="M14 2v6h6M9 13h6M9 17h6M9 9h1" />
+    </Svg>
+  );
+}
+
 export function IconoMenu() {
   return (
     <Svg>

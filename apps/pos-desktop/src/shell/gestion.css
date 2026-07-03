@@ -114,6 +114,41 @@
   cursor: pointer;
 }
 
+/* Control segmentado (ej. Hoy / Todos) */
+.seg {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 4px;
+}
+.seg button {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.seg button.on {
+  background: #fff;
+  color: var(--navy);
+  box-shadow: var(--shadow);
+}
+
+/* Aviso de éxito (verde), complementa a .error */
+.aviso-ok {
+  background: var(--ok-soft);
+  color: #13794f;
+  border: 1px solid #bfe9d4;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
 /* ---------- Pill buttons ---------- */
 .pill-btn {
   height: 40px;

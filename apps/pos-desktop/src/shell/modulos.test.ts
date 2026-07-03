@@ -31,9 +31,9 @@ describe("modulosVisibles", () => {
     expect(modulosVisibles("SUPERVISOR")).toHaveLength(MODULOS.length);
   });
 
-  it("el CAJERO solo ve la operación (inicio, ventas, caja)", () => {
+  it("el CAJERO solo ve la operación (inicio, ventas, caja, comprobantes)", () => {
     const ids = modulosVisibles("CAJERO").map((m) => m.id);
-    expect(ids).toEqual(["inicio", "pos", "caja"]);
+    expect(ids).toEqual(["inicio", "pos", "caja", "comprobantes"]);
   });
 
   it("el CAJERO no ve gestión, reportes ni configuración", () => {

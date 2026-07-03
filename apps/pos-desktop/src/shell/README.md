@@ -25,7 +25,7 @@ con su `RolesGuard`).
 
 | Sección | Módulos | Roles | Estado |
 | ------- | ------- | ----- | ------ |
-| Operación | Inicio · Punto de Venta · Caja y Tesorería | todos | Ventas ✅ · **Caja ✅**, Inicio placeholder |
+| Operación | Inicio · Punto de Venta · Caja · Comprobantes | todos | Ventas ✅ · **Caja ✅** · **Comprobantes ✅**, Inicio placeholder |
 | Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)** · **Stock ✅** · **Ctas. Ctes. ✅** |
 | Inteligencia | Reportes · Asistente IA | ADMIN, SUPERVISOR | placeholder |
 | Sistema | Configuración | ADMIN, SUPERVISOR | reabre la fase de config del `App` |
@@ -92,3 +92,14 @@ CARGO que excede el `limiteCredito` (si hay uno) se rechaza con 409 (ADR-0027).
 La "venta a cuenta" se registra como cargo desde esta pantalla; la integración
 automática venta-POS→cargo queda pendiente (requiere `clienteId` en la venta).
 Lógica pura en `componentes/ctacte-helpers.ts` (testeada).
+
+## Comprobantes y anulaciones (Fase 7.6)
+
+`componentes/Comprobantes.tsx`: lista de facturas y notas de crédito del servidor
+(filtro Hoy/Todos), con **anulación** (emite NC) y **reimpresión**. Online contra
+el módulo de ventas del cloud-api (`ClienteVentas` en `sync/cliente-ventas.ts`,
+adaptador HTTP + simulado). Anular llama a `POST /ventas/:id/anular`, que emite una
+Nota de Crédito con letra heredada + comprobante asociado, marca el original
+ANULADA y **restaura el stock** (ADR-0028). El CAE sigue mock (ARCA real diferido).
+No se puede anular dos veces ni anular una NC. Lógica pura en
+`componentes/comprobantes-helpers.ts` (testeada).
