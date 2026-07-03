@@ -284,6 +284,73 @@
   font-size: 14px;
 }
 
+/* ---------- Reportes ---------- */
+.gestion .kpis--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+.rep-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 170px;
+  padding: 8px 4px 0;
+}
+.bars .bar {
+  flex: 1;
+  background: var(--teal-soft);
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  min-height: 6px;
+}
+.bars .bar i {
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: normal;
+}
+.bars .bar:last-child {
+  background: var(--grad);
+}
+.barra-prop {
+  margin-bottom: 14px;
+}
+.barra-prop__cab {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  margin-bottom: 5px;
+}
+.barra-prop__track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.barra-prop__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--grad);
+}
+
+@media (max-width: 900px) {
+  .gestion .kpis--4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rep-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 700px) {
   .gestion .kpis {
     grid-template-columns: 1fr;

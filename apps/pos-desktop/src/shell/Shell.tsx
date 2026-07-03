@@ -16,6 +16,7 @@ import type { ClienteStock } from "../sync/cliente-stock";
 import type { ClienteCaja } from "../sync/cliente-caja";
 import type { ClienteCtaCte } from "../sync/cliente-ctacte";
 import type { ClienteVentas } from "../sync/cliente-ventas";
+import type { ClienteReportes } from "../sync/cliente-reportes";
 import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
@@ -24,6 +25,7 @@ import { StockAbm } from "../componentes/StockAbm";
 import { CajaPanel } from "../componentes/CajaPanel";
 import { CuentasCorrientes } from "../componentes/CuentasCorrientes";
 import { Comprobantes } from "../componentes/Comprobantes";
+import { ReportesPos } from "../componentes/ReportesPos";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -57,6 +59,7 @@ export function Shell({
   clienteCaja,
   clienteCtaCte,
   clienteVentas,
+  clienteReportes,
   terminalId,
   terminalNombre,
   onCerrarSesion,
@@ -74,6 +77,8 @@ export function Shell({
   clienteCtaCte?: ClienteCtaCte;
   /** Cliente de comprobantes/ventas (HTTP en Tauri, simulado en el navegador). */
   clienteVentas?: ClienteVentas;
+  /** Cliente de reportes (HTTP en Tauri, simulado en el navegador). */
+  clienteReportes?: ClienteReportes;
   /** Id de la terminal (para la caja). */
   terminalId?: string;
   terminalNombre?: string;
@@ -188,6 +193,8 @@ export function Shell({
             <CuentasCorrientes cliente={clienteCtaCte} />
           ) : activo?.id === "comprobantes" && clienteVentas ? (
             <Comprobantes cliente={clienteVentas} />
+          ) : activo?.id === "reportes" && clienteReportes ? (
+            <ReportesPos cliente={clienteReportes} />
           ) : activo ? (
             <Placeholder modulo={activo} />
           ) : null}

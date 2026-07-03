@@ -27,7 +27,7 @@ con su `RolesGuard`).
 | ------- | ------- | ----- | ------ |
 | Operación | Inicio · Punto de Venta · Caja · Comprobantes | todos | Ventas ✅ · **Caja ✅** · **Comprobantes ✅**, Inicio placeholder |
 | Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)** · **Stock ✅** · **Ctas. Ctes. ✅** |
-| Inteligencia | Reportes · Asistente IA | ADMIN, SUPERVISOR | placeholder |
+| Inteligencia | Reportes · Asistente IA | ADMIN, SUPERVISOR | **Reportes ✅**, IA placeholder |
 | Sistema | Configuración | ADMIN, SUPERVISOR | reabre la fase de config del `App` |
 
 Un rol desconocido o ausente cae al **menor privilegio** (CAJERO). El rol se lee
@@ -103,3 +103,13 @@ Nota de Crédito con letra heredada + comprobante asociado, marca el original
 ANULADA y **restaura el stock** (ADR-0028). El CAE sigue mock (ARCA real diferido).
 No se puede anular dos veces ni anular una NC. Lógica pura en
 `componentes/comprobantes-helpers.ts` (testeada).
+
+## Reportes en el POS (Fase 7.7)
+
+`componentes/ReportesPos.tsx`: resumen de ventas (KPIs), evolución diaria (barras
+CSS), ventas por medio de pago (barras proporcionales) y ranking de productos.
+**Reusa los endpoints `/reportes` de la Fase 6** vía el puerto `ClienteReportes`
+(`sync/cliente-reportes.ts`, adaptador HTTP + simulado). Restringido a
+ADMIN/SUPERVISOR por el backend (RolesGuard). Selector de rango (Hoy / 7 / 30 días
+/ Este mes) con fechas **locales** en `componentes/reportes-helpers.ts` (testeado).
+Sin Recharts: el POS usa barras CSS para mantener el bundle liviano.

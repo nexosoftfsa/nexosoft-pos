@@ -98,7 +98,7 @@ corepack pnpm --filter @nexosoft/cloud-api verify:e2e
 | 4    | Backend NestJS + respaldo nube propia + libro Excel + sync terminal↔servidor | ✅ |
 | 5    | **POS nativo productivo**: adaptadores reales en Tauri (SQLite/HTTP), pull de catálogo, login + terminal, configuración, instalador NSIS | ✅ |
 | 6    | **Panel web de reportes** (`apps/admin-web`): login + RBAC, dashboard de ventas, productos/stock, export CSV + libro Excel, servido por el cloud-api | ✅ |
-| 7    | **Sistema de gestión completo en el POS** (UI de la maqueta, real): catálogo, stock, caja, cuentas corrientes, comprobantes/NC, reportes y funciones avanzadas. Ver [roadmap Fase 7](docs/roadmap-fase-7-gestion.md). **7.1 ✅** shell + identidad visual + menú por rol · **7.2 ✅** catálogo (ABM online) · **7.3 ✅** stock (saldos, movimientos, historial) · **7.4 ✅** caja (turnos, arqueo, tesorería) · **7.5 ✅** cuentas corrientes (clientes + ledger) · **7.6 ✅** comprobantes y anulaciones (NC) | 🚧 En curso |
+| 7    | **Sistema de gestión completo en el POS** (UI de la maqueta, real): catálogo, stock, caja, cuentas corrientes, comprobantes/NC, reportes y funciones avanzadas. Ver [roadmap Fase 7](docs/roadmap-fase-7-gestion.md). **7.1 ✅** shell + identidad visual + menú por rol · **7.2 ✅** catálogo (ABM online) · **7.3 ✅** stock (saldos, movimientos, historial) · **7.4 ✅** caja (turnos, arqueo, tesorería) · **7.5 ✅** cuentas corrientes (clientes + ledger) · **7.6 ✅** comprobantes y anulaciones (NC) · **7.7 ✅** reportes en el POS | 🚧 En curso |
 | —    | Pendientes posteriores: CAE real ARCA (se integra con el primer cliente), funciones de negocio (remitos, presupuestos, combos, lotes/vencimientos, cuenta corriente), deploy (Railway) | ⏳ |
 
 ### Qué incluye la Fase 5 (propuesta)
