@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
-import { VentasService, notaCreditoDe } from './ventas.service';
+import { VentasService, notaCreditoDe, resumenMedioPago } from './ventas.service';
 import { LibroDeVentasEnMemoria } from './libro/libro-de-ventas-en-memoria';
 
 function ventaConItems(overrides: Record<string, unknown> = {}) {
@@ -24,6 +24,23 @@ function ventaConItems(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+describe('resumenMedioPago', () => {
+  it('sin desglose usa el fallback', () => {
+    expect(resumenMedioPago([], 'EFECTIVO' as never)).toBe('EFECTIVO');
+  });
+  it('un solo medio devuelve ese medio', () => {
+    expect(resumenMedioPago([{ medioPago: 'EFECTIVO' as never }], 'TARJETA_DEBITO' as never)).toBe('EFECTIVO');
+  });
+  it('varios medios distintos devuelve COMBINADO', () => {
+    expect(
+      resumenMedioPago(
+        [{ medioPago: 'EFECTIVO' as never }, { medioPago: 'TARJETA_CREDITO' as never }],
+        'EFECTIVO' as never,
+      ),
+    ).toBe('COMBINADO');
+  });
+});
 
 describe('notaCreditoDe', () => {
   it('hereda la letra de la factura', () => {

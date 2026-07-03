@@ -27,6 +27,7 @@ const ETIQUETAS_MEDIO: Record<string, string> = {
   TARJETA_CREDITO: "Tarjeta de crédito",
   MERCADOPAGO_QR: "MercadoPago QR",
   CUENTA_CORRIENTE: "Cuenta corriente",
+  COMBINADO: "Combinado",
 };
 
 export function etiquetaMedioPago(medio: string): string {

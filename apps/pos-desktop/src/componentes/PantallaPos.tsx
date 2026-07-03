@@ -15,7 +15,7 @@ import type { IntentoPago } from "@nexosoft/pagos";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { etiquetaComprobante, pesos } from "../formato";
-import { construirOperacionVenta, mapearMedioPago } from "../sync/mapeo";
+import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
 
 interface ItemCarrito {
@@ -261,12 +261,21 @@ export function PantallaPos({
           cantidad: c.cantidad,
           precioUnitario: c.producto.precioFinal.aDecimalString(2),
         }));
-        const medioPago = mapearMedioPago(pagos[0]?.forma ?? FormaDePago.Efectivo);
+        // Pago combinado: viaja el desglose (un pago por medio) y el resumen.
+        const pagosSync = pagos.map((p) => ({
+          medioPago: mapearMedioPago(p.forma),
+          monto: p.monto.aDecimalString(2),
+        }));
+        const medioPago = resumenMedioPago(
+          pagosSync,
+          mapearMedioPago(pagos[0]?.forma ?? FormaDePago.Efectivo),
+        );
         await sync.encolar(
           construirOperacionVenta({
             items: itemsSync,
             medioPago,
             terminalId: entorno.sync.terminalId,
+            pagos: pagosSync,
           }),
         );
       } catch (e) {

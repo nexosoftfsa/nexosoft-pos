@@ -48,7 +48,7 @@ export class ClienteVentasSimulado implements ClienteVentas {
         subtotal: "12000.00",
         descuento: "0.00",
         total: "12000.00",
-        medioPago: "TARJETA_CREDITO",
+        medioPago: "COMBINADO",
         cae: caeSimulado(),
         caeFechaVto: new Date(base + 10 * 86400000).toISOString(),
         numeroComprobante: 2,
@@ -57,6 +57,10 @@ export class ClienteVentasSimulado implements ClienteVentas {
         comprobanteAsociadoId: null,
         items: [
           { id: "it2", cantidad: "1", precioUnitario: "12000.00", subtotal: "12000.00", producto: { id: "cafe", nombre: "Café molido 250 g", codigo: "7790004" } },
+        ],
+        pagos: [
+          { id: "pg1", medioPago: "EFECTIVO", monto: "5000.00" },
+          { id: "pg2", medioPago: "TARJETA_CREDITO", monto: "7000.00" },
         ],
       },
     ];

@@ -28,6 +28,15 @@ export class ItemVentaDto {
   descuento?: string;
 }
 
+/** Un pago de la venta (pago combinado: varios medios en una misma venta). */
+export class PagoVentaDto {
+  @IsEnum(MedioPago)
+  medioPago!: MedioPago;
+
+  @IsNumberString()
+  monto!: string;
+}
+
 export class CrearVentaDto {
   /** Generado en el POS local; garantiza idempotencia en la sincronización. */
   @IsString()
@@ -42,6 +51,17 @@ export class CrearVentaDto {
   @ValidateNested({ each: true })
   @Type(() => ItemVentaDto)
   items!: ItemVentaDto[];
+
+  /**
+   * Desglose de pagos (pago combinado). Opcional y retrocompatible: si no viene,
+   * la venta usa el `medioPago` único. Si viene, se persiste el detalle y el
+   * `medioPago` resumen queda COMBINADO cuando hay más de un medio.
+   */
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => PagoVentaDto)
+  pagos?: PagoVentaDto[];
 
   /** Descuento global sobre el total (además de los descuentos por ítem). */
   @IsNumberString()

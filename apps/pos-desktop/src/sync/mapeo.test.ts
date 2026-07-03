@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { FormaDePago } from "@nexosoft/domain";
 
-import { construirOperacionVenta, mapearMedioPago } from "./mapeo";
+import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "./mapeo";
 
 describe("mapearMedioPago", () => {
   it("mapea las formas del dominio a los medios del backend", () => {
@@ -32,5 +32,45 @@ describe("construirOperacionVenta", () => {
     const a = construirOperacionVenta({ terminalId: "t", medioPago: "EFECTIVO", items: [] });
     const b = construirOperacionVenta({ terminalId: "t", medioPago: "EFECTIVO", items: [] });
     expect(a.operacionId).not.toBe(b.operacionId);
+  });
+
+  it("incluye el desglose de pagos en el payload cuando hay pago combinado", () => {
+    const op = construirOperacionVenta({
+      terminalId: "t",
+      medioPago: "COMBINADO",
+      items: [],
+      pagos: [
+        { medioPago: "EFECTIVO", monto: "140.00" },
+        { medioPago: "TARJETA_CREDITO", monto: "100.00" },
+      ],
+    });
+    const payload = op.payload as { pagos?: Array<{ medioPago: string; monto: string }> };
+    expect(payload.pagos).toHaveLength(2);
+    expect(payload.pagos?.[0]?.monto).toBe("140.00");
+  });
+
+  it("no incluye pagos en el payload si no hay desglose", () => {
+    const op = construirOperacionVenta({ terminalId: "t", medioPago: "EFECTIVO", items: [] });
+    expect((op.payload as { pagos?: unknown }).pagos).toBeUndefined();
+  });
+});
+
+describe("resumenMedioPago", () => {
+  it("sin pagos usa el fallback", () => {
+    expect(resumenMedioPago([], "EFECTIVO")).toBe("EFECTIVO");
+  });
+  it("un solo medio devuelve ese medio", () => {
+    expect(resumenMedioPago([{ medioPago: "EFECTIVO", monto: "100" }], "TARJETA_DEBITO")).toBe("EFECTIVO");
+  });
+  it("varios medios distintos devuelve COMBINADO", () => {
+    expect(
+      resumenMedioPago(
+        [
+          { medioPago: "EFECTIVO", monto: "50" },
+          { medioPago: "MERCADOPAGO_QR", monto: "50" },
+        ],
+        "EFECTIVO",
+      ),
+    ).toBe("COMBINADO");
   });
 });

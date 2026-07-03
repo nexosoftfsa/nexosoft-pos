@@ -14,6 +14,12 @@ export interface ItemComprobante {
   readonly producto: { readonly id: string; readonly nombre: string; readonly codigo: string } | null;
 }
 
+export interface PagoComprobante {
+  readonly id: string;
+  readonly medioPago: string;
+  readonly monto: string;
+}
+
 export interface Comprobante {
   readonly id: string;
   readonly estado: EstadoComprobante;
@@ -28,6 +34,8 @@ export interface Comprobante {
   readonly creadaEn: string;
   readonly comprobanteAsociadoId: string | null;
   readonly items: ItemComprobante[];
+  /** Desglose de pagos (presente en ventas con pago combinado). */
+  readonly pagos?: PagoComprobante[];
 }
 
 export interface ResultadoAnulacion {

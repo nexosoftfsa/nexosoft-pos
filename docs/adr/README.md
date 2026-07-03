@@ -45,3 +45,4 @@ Consecuencias y Alternativas consideradas.
 | 0026 | [Caja por turnos, ventas en efectivo por ventana de tiempo](0026-caja-por-turnos-y-ventana-de-tiempo.md) | Aceptada |
 | 0027 | [Clientes y cuenta corriente como ledger](0027-clientes-y-cuenta-corriente-ledger.md) | Aceptada |
 | 0028 | [Comprobantes y anulación con Nota de Crédito (online)](0028-comprobantes-y-anulacion-con-nota-de-credito.md) | Aceptada |
+| 0029 | [Pago combinado (desglose de pagos por venta)](0029-pago-combinado.md) | Aceptada |

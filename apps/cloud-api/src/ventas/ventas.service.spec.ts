@@ -141,6 +141,30 @@ describe('VentasService', () => {
     });
   });
 
+  describe('pago combinado', () => {
+    it('con varios medios: persiste el desglose y el medioPago resumen queda COMBINADO', async () => {
+      await service.registrar(USUARIO, {
+        ...DTO,
+        pagos: [
+          { medioPago: 'EFECTIVO', monto: '140' },
+          { medioPago: 'TARJETA_CREDITO', monto: '100' },
+        ],
+      } as never);
+
+      const data = tx.venta.create.mock.calls[0]![0].data;
+      expect(data.medioPago).toBe('COMBINADO');
+      expect(data.pagos.create).toHaveLength(2);
+      expect(data.pagos.create[0].medioPago).toBe('EFECTIVO');
+    });
+
+    it('sin desglose: usa el medioPago del DTO y no crea pagos', async () => {
+      await service.registrar(USUARIO, DTO);
+      const data = tx.venta.create.mock.calls[0]![0].data;
+      expect(data.medioPago).toBe('EFECTIVO');
+      expect(data.pagos).toBeUndefined();
+    });
+  });
+
   describe('robustez de efectos posteriores', () => {
     it('no tumba la venta si el libro de ventas falla', async () => {
       const libroRoto = { registrar: vi.fn().mockRejectedValue(new Error('disco lleno')) };

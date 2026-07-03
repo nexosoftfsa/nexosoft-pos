@@ -171,6 +171,7 @@ enum MedioPago {
   TARJETA_CREDITO
   MERCADOPAGO_QR
   CUENTA_CORRIENTE
+  COMBINADO
 }
 
 model Venta {
@@ -206,8 +207,23 @@ model Venta {
 
   items           ItemVenta[]
   movimientosStock MovimientoStock[]
+  pagos           Pago[]
 
   @@map("ventas")
+}
+
+/// Desglose de pago de una venta. Una venta puede pagarse con varios medios
+/// (pago combinado); cada fila es un medio con su monto. Ver ADR-0029.
+model Pago {
+  id        String    @id @default(cuid())
+  medioPago MedioPago
+  monto     Decimal   @db.Decimal(12, 2)
+  creadoEn  DateTime  @default(now())
+
+  ventaId   String
+  venta     Venta     @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+
+  @@map("pagos")
 }
 
 model ItemVenta {

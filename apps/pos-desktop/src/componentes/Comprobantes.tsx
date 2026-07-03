@@ -217,6 +217,16 @@ function ModalReimpresion({ comprobante, onCerrar }: { comprobante: Comprobante;
           <span>TOTAL</span>
           <span>{money(comprobante.total)}</span>
         </div>
+        {comprobante.pagos !== undefined && comprobante.pagos.length > 0 && (
+          <ul className="ticket-pagos">
+            {comprobante.pagos.map((p) => (
+              <li key={p.id}>
+                <span>{etiquetaMedioPago(p.medioPago)}</span>
+                <span>{money(p.monto)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="ticket-acciones">
           <button onClick={() => window.print()}>Imprimir</button>
           <button className="primario" onClick={onCerrar}>

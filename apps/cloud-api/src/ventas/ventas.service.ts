@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Decimal } from '@prisma/client/runtime/library';
+import { MedioPago } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MotorDeRespaldo } from '../respaldo/motor-de-respaldo';
 import { SERVICIO_CAE, type ServicioCae } from './cae/servicio-cae';
@@ -35,14 +36,20 @@ export class VentasService {
     return this.prisma.venta.findMany({
       where: { sucursalId },
       orderBy: { creadaEn: 'desc' },
-      include: { items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } } },
+      include: {
+        items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } },
+        pagos: true,
+      },
     });
   }
 
   async obtener(sucursalId: string, id: string) {
     const venta = await this.prisma.venta.findFirst({
       where: { id, sucursalId },
-      include: { items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } } },
+      include: {
+        items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } },
+        pagos: true,
+      },
     });
     if (!venta) throw new NotFoundException(`Comprobante ${id} no encontrado`);
     return venta;
@@ -146,6 +153,11 @@ export class VentasService {
     const total = subtotal.sub(descuentoGlobal);
     const tipoComprobante = dto.tipoComprobante ?? 'FacturaB';
 
+    // Pago combinado: si viene el desglose, el medioPago resumen es el único
+    // medio (si todos coinciden) o COMBINADO. Sin desglose, se usa dto.medioPago.
+    const pagos = dto.pagos ?? [];
+    const medioPagoResumen = resumenMedioPago(pagos, dto.medioPago);
+
     // Autorización fiscal (mock; el real es @nexosoft/fiscal vía ARCA).
     const cae = await this.cae.autorizar({
       tipoComprobante,
@@ -153,7 +165,7 @@ export class VentasService {
       sucursalId: usuario.sucursalId,
     });
 
-    // Transacción: venta + ítems + movimientos de stock VENTA (atómico).
+    // Transacción: venta + ítems + pagos + movimientos de stock VENTA (atómico).
     const venta = await this.prisma.$transaction(async (tx) => {
       const v = await tx.venta.create({
         data: {
@@ -162,7 +174,7 @@ export class VentasService {
           subtotal,
           descuento: descuentoGlobal,
           total,
-          medioPago: dto.medioPago,
+          medioPago: medioPagoResumen,
           cae: cae.cae,
           caeFechaVto: cae.caeFechaVto,
           numeroComprobante: cae.numeroComprobante,
@@ -171,8 +183,14 @@ export class VentasService {
           usuarioId: usuario.id,
           terminalId: dto.terminalId ?? null,
           items: { create: itemsData },
+          ...(pagos.length > 0
+            ? { pagos: { create: pagos.map((p) => ({ medioPago: p.medioPago, monto: new Decimal(p.monto) })) } }
+            : {}),
         },
-        include: { items: true },
+        include: {
+          items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } },
+          pagos: true,
+        },
       });
 
       // La venta física ya ocurrió: registramos la salida de stock, sin
@@ -231,6 +249,16 @@ export class VentasService {
       this.logger.error(`Falló el respaldo post-venta: ${(error as Error).message}`);
     }
   }
+}
+
+/** Medio de pago resumen de una venta: el único medio, o COMBINADO, o el fallback. */
+export function resumenMedioPago(
+  pagos: ReadonlyArray<{ medioPago: MedioPago }>,
+  fallback: MedioPago,
+): MedioPago {
+  if (pagos.length === 0) return fallback;
+  const medios = new Set(pagos.map((p) => p.medioPago));
+  return medios.size === 1 ? [...medios][0]! : MedioPago.COMBINADO;
 }
 
 /** Tipo de Nota de Crédito que corresponde a un comprobante (hereda la letra). */
