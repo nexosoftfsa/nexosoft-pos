@@ -33,7 +33,7 @@ describe("modulosVisibles", () => {
 
   it("el CAJERO solo ve la operación (inicio, ventas, caja, comprobantes, presupuestos)", () => {
     const ids = modulosVisibles("CAJERO").map((m) => m.id);
-    expect(ids).toEqual(["inicio", "pos", "caja", "comprobantes", "presupuestos"]);
+    expect(ids).toEqual(["inicio", "pos", "caja", "comprobantes", "presupuestos", "remitos"]);
   });
 
   it("el CAJERO no ve gestión, reportes ni configuración", () => {

@@ -48,3 +48,4 @@ Consecuencias y Alternativas consideradas.
 | 0029 | [Pago combinado (desglose de pagos por venta)](0029-pago-combinado.md) | Aceptada |
 | 0030 | [Recargo global en el comprobante](0030-recargo-global.md) | Aceptada |
 | 0031 | [Presupuestos como comprobante no fiscal](0031-presupuestos-no-fiscales.md) | Aceptada |
+| 0032 | [Remitos como documento de entrega no fiscal](0032-remitos-no-fiscales.md) | Aceptada |

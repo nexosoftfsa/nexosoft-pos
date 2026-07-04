@@ -29,6 +29,7 @@ model Sucursal {
   clientes Cliente[]
   movimientosCuentaCorriente MovimientoCuentaCorriente[]
   presupuestos Presupuesto[]
+  remitos Remito[]
 
   @@map("sucursales")
 }
@@ -379,4 +380,39 @@ model ItemPresupuesto {
   presupuesto    Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
 
   @@map("items_presupuesto")
+}
+
+// ─── Remitos (documento de entrega, NO fiscal, sin precios) ────────────────────
+
+enum EstadoRemito {
+  EMITIDO
+  ANULADO
+}
+
+model Remito {
+  id            String       @id @default(cuid())
+  numero        Int
+  clienteNombre String?
+  observaciones String?
+  estado        EstadoRemito @default(EMITIDO)
+  creadoEn      DateTime     @default(now())
+
+  sucursalId    String
+  sucursal      Sucursal     @relation(fields: [sucursalId], references: [id])
+
+  items         ItemRemito[]
+
+  @@map("remitos")
+}
+
+model ItemRemito {
+  id          String  @id @default(cuid())
+  descripcion String
+  cantidad    Decimal @db.Decimal(12, 3)
+  productoId  String?
+
+  remitoId    String
+  remito      Remito  @relation(fields: [remitoId], references: [id], onDelete: Cascade)
+
+  @@map("items_remito")
 }

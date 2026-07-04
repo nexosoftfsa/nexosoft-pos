@@ -114,6 +114,15 @@ export function IconoPresupuesto() {
   );
 }
 
+export function IconoRemito() {
+  return (
+    <Svg>
+      <path d="M3 7l9-4 9 4v10l-9 4-9-4z" />
+      <path d="M3 7l9 4 9-4M12 11v10" />
+    </Svg>
+  );
+}
+
 export function IconoMenu() {
   return (
     <Svg>

@@ -39,6 +39,9 @@ import { ClienteReportesSimulado } from "./sync/cliente-reportes-simulado";
 import type { ClientePresupuestos } from "./sync/cliente-presupuestos";
 import { ClientePresupuestosHttp } from "./sync/cliente-presupuestos";
 import { ClientePresupuestosSimulado } from "./sync/cliente-presupuestos-simulado";
+import type { ClienteRemitos } from "./sync/cliente-remitos";
+import { ClienteRemitosHttp } from "./sync/cliente-remitos";
+import { ClienteRemitosSimulado } from "./sync/cliente-remitos-simulado";
 
 /** Aviso a pantalla completa para estados de carga/error. */
 function Aviso({ children }: { children: ReactNode }) {
@@ -74,6 +77,7 @@ function AppNavegador() {
   const clienteVentasRef = useRef<ClienteVentas | null>(null);
   const clienteReportesRef = useRef<ClienteReportes | null>(null);
   const clientePresupuestosRef = useRef<ClientePresupuestos | null>(null);
+  const clienteRemitosRef = useRef<ClienteRemitos | null>(null);
   useEffect(() => {
     setEntorno(crearEntornoPos());
     clienteCatalogoRef.current = new ClienteCatalogoAdminSimulado();
@@ -83,6 +87,7 @@ function AppNavegador() {
     clienteVentasRef.current = new ClienteVentasSimulado();
     clienteReportesRef.current = new ClienteReportesSimulado();
     clientePresupuestosRef.current = new ClientePresupuestosSimulado();
+    clienteRemitosRef.current = new ClienteRemitosSimulado();
   }, []);
   if (entorno === null) return <Aviso>Iniciando NexoSoft POS…</Aviso>;
   // En desarrollo (navegador) no hay login: mostramos el shell completo como ADMIN
@@ -99,6 +104,7 @@ function AppNavegador() {
       {...(clienteVentasRef.current !== null ? { clienteVentas: clienteVentasRef.current } : {})}
       {...(clienteReportesRef.current !== null ? { clienteReportes: clienteReportesRef.current } : {})}
       {...(clientePresupuestosRef.current !== null ? { clientePresupuestos: clientePresupuestosRef.current } : {})}
+      {...(clienteRemitosRef.current !== null ? { clienteRemitos: clienteRemitosRef.current } : {})}
     />
   );
 }
@@ -117,6 +123,7 @@ function AppTauri() {
   const clienteVentasRef = useRef<ClienteVentas | null>(null);
   const clienteReportesRef = useRef<ClienteReportes | null>(null);
   const clientePresupuestosRef = useRef<ClientePresupuestos | null>(null);
+  const clienteRemitosRef = useRef<ClienteRemitos | null>(null);
   const [fase, setFase] = useState<Fase>("cargando");
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
@@ -151,6 +158,7 @@ function AppTauri() {
       clienteVentasRef.current = new ClienteVentasHttp(baseUrlRef.current, () => sesion.obtenerToken());
       clienteReportesRef.current = new ClienteReportesHttp(baseUrlRef.current, () => sesion.obtenerToken());
       clientePresupuestosRef.current = new ClientePresupuestosHttp(baseUrlRef.current, () => sesion.obtenerToken());
+      clienteRemitosRef.current = new ClienteRemitosHttp(baseUrlRef.current, () => sesion.obtenerToken());
       setEntorno(env);
       setFase("listo");
     } catch (e) {
@@ -283,6 +291,7 @@ function AppTauri() {
         {...(clienteVentasRef.current !== null ? { clienteVentas: clienteVentasRef.current } : {})}
         {...(clienteReportesRef.current !== null ? { clienteReportes: clienteReportesRef.current } : {})}
         {...(clientePresupuestosRef.current !== null ? { clientePresupuestos: clientePresupuestosRef.current } : {})}
+        {...(clienteRemitosRef.current !== null ? { clienteRemitos: clienteRemitosRef.current } : {})}
         {...(sesionRef.current?.terminalId !== undefined ? { terminalId: sesionRef.current.terminalId } : {})}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }
