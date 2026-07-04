@@ -17,6 +17,7 @@ import type { ClienteCaja } from "../sync/cliente-caja";
 import type { ClienteCtaCte } from "../sync/cliente-ctacte";
 import type { ClienteVentas } from "../sync/cliente-ventas";
 import type { ClienteReportes } from "../sync/cliente-reportes";
+import type { ClientePresupuestos } from "../sync/cliente-presupuestos";
 import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
@@ -26,6 +27,7 @@ import { CajaPanel } from "../componentes/CajaPanel";
 import { CuentasCorrientes } from "../componentes/CuentasCorrientes";
 import { Comprobantes } from "../componentes/Comprobantes";
 import { ReportesPos } from "../componentes/ReportesPos";
+import { Presupuestos } from "../componentes/Presupuestos";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -60,6 +62,7 @@ export function Shell({
   clienteCtaCte,
   clienteVentas,
   clienteReportes,
+  clientePresupuestos,
   terminalId,
   terminalNombre,
   onCerrarSesion,
@@ -79,6 +82,8 @@ export function Shell({
   clienteVentas?: ClienteVentas;
   /** Cliente de reportes (HTTP en Tauri, simulado en el navegador). */
   clienteReportes?: ClienteReportes;
+  /** Cliente de presupuestos (HTTP en Tauri, simulado en el navegador). */
+  clientePresupuestos?: ClientePresupuestos;
   /** Id de la terminal (para la caja). */
   terminalId?: string;
   terminalNombre?: string;
@@ -87,6 +92,15 @@ export function Shell({
 }) {
   const sync = useSync(entorno.sync);
   const visibles = useMemo(() => modulosVisibles(usuario.rol), [usuario.rol]);
+  const catalogoPresup = useMemo(
+    () =>
+      entorno.catalogo.map((c) => ({
+        id: c.articulo.id,
+        descripcion: c.articulo.descripcion,
+        precio: c.precioFinal.aDecimalString(2),
+      })),
+    [entorno.catalogo],
+  );
   const [activoId, setActivoId] = useState<string>(() => moduloInicial(usuario.rol));
   const [navAbierto, setNavAbierto] = useState(false);
 
@@ -195,6 +209,8 @@ export function Shell({
             <Comprobantes cliente={clienteVentas} />
           ) : activo?.id === "reportes" && clienteReportes ? (
             <ReportesPos cliente={clienteReportes} />
+          ) : activo?.id === "presupuestos" && clientePresupuestos ? (
+            <Presupuestos cliente={clientePresupuestos} catalogo={catalogoPresup} />
           ) : activo ? (
             <Placeholder modulo={activo} />
           ) : null}

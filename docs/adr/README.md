@@ -47,3 +47,4 @@ Consecuencias y Alternativas consideradas.
 | 0028 | [Comprobantes y anulación con Nota de Crédito (online)](0028-comprobantes-y-anulacion-con-nota-de-credito.md) | Aceptada |
 | 0029 | [Pago combinado (desglose de pagos por venta)](0029-pago-combinado.md) | Aceptada |
 | 0030 | [Recargo global en el comprobante](0030-recargo-global.md) | Aceptada |
+| 0031 | [Presupuestos como comprobante no fiscal](0031-presupuestos-no-fiscales.md) | Aceptada |

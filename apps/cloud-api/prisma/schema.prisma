@@ -28,6 +28,7 @@ model Sucursal {
   movimientosCaja MovimientoCaja[]
   clientes Cliente[]
   movimientosCuentaCorriente MovimientoCuentaCorriente[]
+  presupuestos Presupuesto[]
 
   @@map("sucursales")
 }
@@ -338,4 +339,44 @@ model MovimientoCuentaCorriente {
   sucursal    Sucursal             @relation(fields: [sucursalId], references: [id])
 
   @@map("movimientos_cuenta_corriente")
+}
+
+// ─── Presupuestos (comprobante NO fiscal) ──────────────────────────────────────
+
+enum EstadoPresupuesto {
+  VIGENTE
+  CONVERTIDO
+  ANULADO
+}
+
+model Presupuesto {
+  id            String            @id @default(cuid())
+  numero        Int
+  clienteNombre String?
+  observaciones String?
+  validezDias   Int               @default(15)
+  total         Decimal           @db.Decimal(12, 2)
+  estado        EstadoPresupuesto @default(VIGENTE)
+  creadoEn      DateTime          @default(now())
+
+  sucursalId    String
+  sucursal      Sucursal          @relation(fields: [sucursalId], references: [id])
+
+  items         ItemPresupuesto[]
+
+  @@map("presupuestos")
+}
+
+model ItemPresupuesto {
+  id             String      @id @default(cuid())
+  descripcion    String
+  cantidad       Decimal     @db.Decimal(12, 3)
+  precioUnitario Decimal     @db.Decimal(12, 2)
+  subtotal       Decimal     @db.Decimal(12, 2)
+  productoId     String?
+
+  presupuestoId  String
+  presupuesto    Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+
+  @@map("items_presupuesto")
 }

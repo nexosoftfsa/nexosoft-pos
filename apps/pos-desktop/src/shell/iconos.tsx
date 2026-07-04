@@ -105,6 +105,15 @@ export function IconoComprobantes() {
   );
 }
 
+export function IconoPresupuesto() {
+  return (
+    <Svg>
+      <path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4" />
+      <path d="M9 3v4h6V3M8 12h8M8 16h5" />
+    </Svg>
+  );
+}
+
 export function IconoMenu() {
   return (
     <Svg>

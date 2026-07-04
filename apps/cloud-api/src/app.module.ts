@@ -14,6 +14,7 @@ import { SyncModule } from './sync/sync.module';
 import { ReportesModule } from './reportes/reportes.module';
 import { CajaModule } from './caja/caja.module';
 import { ClientesModule } from './clientes/clientes.module';
+import { PresupuestosModule } from './presupuestos/presupuestos.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ClientesModule } from './clientes/clientes.module';
     ReportesModule,
     CajaModule,
     ClientesModule,
+    PresupuestosModule,
   ],
 })
 export class AppModule {}
