@@ -59,6 +59,7 @@ export interface ComandoVenta {
   readonly condicionReceptor: CondicionIva;
   readonly pagos: readonly PagoComando[];
   readonly descuentoPorcentaje?: number;
+  readonly recargoPorcentaje?: number;
   readonly clienteId?: string;
 }
 
@@ -237,6 +238,9 @@ export class ServicioDeVenta {
       preciosIncluyenIva: this.config.preciosIncluyenIva,
       ...(comando.descuentoPorcentaje !== undefined
         ? { descuentoPorcentaje: comando.descuentoPorcentaje }
+        : {}),
+      ...(comando.recargoPorcentaje !== undefined
+        ? { recargoPorcentaje: comando.recargoPorcentaje }
         : {}),
     });
 

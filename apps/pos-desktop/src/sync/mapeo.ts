@@ -47,6 +47,8 @@ export function construirOperacionVenta(args: {
   readonly terminalId: string;
   /** Desglose de pagos (pago combinado). Opcional. */
   readonly pagos?: readonly PagoSync[];
+  /** Recargo aplicado, como monto string. Opcional. */
+  readonly recargo?: string;
 }): OperacionSync {
   return {
     operacionId: crypto.randomUUID(),
@@ -62,6 +64,9 @@ export function construirOperacionVenta(args: {
       })),
       ...(args.pagos !== undefined && args.pagos.length > 0
         ? { pagos: args.pagos.map((p) => ({ medioPago: p.medioPago, monto: p.monto })) }
+        : {}),
+      ...(args.recargo !== undefined && args.recargo !== "0.00"
+        ? { recargo: args.recargo }
         : {}),
     },
   };

@@ -49,6 +49,7 @@ function armarComando(
   carrito: readonly ItemCarrito[],
   condicionReceptor: CondicionIva,
   pagos: readonly PagoUi[],
+  recargoPorcentaje = 0,
 ): ComandoVenta {
   return {
     items: carrito.map((c) => ({
@@ -57,6 +58,7 @@ function armarComando(
     })),
     condicionReceptor,
     pagos: pagos.map((p) => ({ forma: p.forma, monto: p.monto })),
+    ...(recargoPorcentaje > 0 ? { recargoPorcentaje } : {}),
   };
 }
 
@@ -75,6 +77,7 @@ export function PantallaPos({
     CondicionIva.ConsumidorFinal,
   );
   const [pagos, setPagos] = useState<PagoUi[]>([]);
+  const [recargoPorc, setRecargoPorc] = useState<number>(0);
   const [preview, setPreview] = useState<PrevisualizacionVenta | null>(null);
   const [ultimaVenta, setUltimaVenta] = useState<VentaConfirmada | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -128,7 +131,7 @@ export function PantallaPos({
     }
     let vivo = true;
     servicio
-      .previsualizarVenta(armarComando(carrito, condicionReceptor, pagos))
+      .previsualizarVenta(armarComando(carrito, condicionReceptor, pagos, recargoPorc))
       .then((p) => {
         if (vivo) {
           setPreview(p);
@@ -144,7 +147,7 @@ export function PantallaPos({
     return () => {
       vivo = false;
     };
-  }, [carrito, condicionReceptor, pagos, servicio]);
+  }, [carrito, condicionReceptor, pagos, recargoPorc, servicio]);
 
   const tipo = resolverTipoComprobante(config.condicionIvaEmisor, condicionReceptor);
 
@@ -250,7 +253,9 @@ export function PantallaPos({
 
   async function _finalizarVenta() {
     try {
-      const venta = await servicio.confirmarVenta(armarComando(carrito, condicionReceptor, pagos));
+      const venta = await servicio.confirmarVenta(
+        armarComando(carrito, condicionReceptor, pagos, recargoPorc),
+      );
       setUltimaVenta(venta);
 
       // Encolar la venta para sincronizar con el servidor de sucursal.
@@ -276,6 +281,7 @@ export function PantallaPos({
             medioPago,
             terminalId: entorno.sync.terminalId,
             pagos: pagosSync,
+            recargo: venta.resultado.recargo.aDecimalString(2),
           }),
         );
       } catch (e) {
@@ -284,6 +290,7 @@ export function PantallaPos({
 
       setCarrito([]);
       setPagos([]);
+      setRecargoPorc(0);
       setError(null);
     } catch (e) {
       setError(mensajeError(e));
@@ -411,6 +418,24 @@ export function PantallaPos({
               )}
               {preview.resultado.descuento.esPositivo() && (
                 <Fila etiqueta="Descuento" valor={`-${pesos(preview.resultado.descuento)}`} />
+              )}
+              <div className="fila recargo-ctrl">
+                <span>Recargo</span>
+                <span className="recargo-botones">
+                  {[0, 10, 15].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      className={recargoPorc === p ? "on" : ""}
+                      onClick={() => setRecargoPorc(p)}
+                    >
+                      {p === 0 ? "Sin" : `${p}%`}
+                    </button>
+                  ))}
+                </span>
+              </div>
+              {preview.resultado.recargo.esPositivo() && (
+                <Fila etiqueta={`Recargo ${recargoPorc}%`} valor={`+${pesos(preview.resultado.recargo)}`} />
               )}
               <Fila etiqueta="TOTAL" valor={pesos(preview.resultado.total)} destacado />
             </div>

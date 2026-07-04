@@ -205,6 +205,28 @@ body {
   font-weight: 800;
   padding-top: 6px;
 }
+.recargo-ctrl {
+  align-items: center;
+}
+.recargo-botones {
+  display: inline-flex;
+  gap: 4px;
+}
+.recargo-botones button {
+  padding: 3px 9px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--suave);
+  cursor: pointer;
+}
+.recargo-botones button.on {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
 
 /* Pagos */
 .pagos {

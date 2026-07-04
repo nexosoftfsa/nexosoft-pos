@@ -55,6 +55,8 @@ export interface OpcionesCalculo {
   readonly preciosIncluyenIva?: boolean;
   /** Descuento global sobre todo el comprobante, en porcentaje 0..100. */
   readonly descuentoPorcentaje?: number;
+  /** Recargo global (ej. financiación por tarjeta), en porcentaje 0..100. */
+  readonly recargoPorcentaje?: number;
 }
 
 export interface LineaCalculada {
@@ -83,6 +85,8 @@ export interface ResultadoComprobante {
   readonly brutoSinDescuento: Money;
   /** Total descontado (descuentos de línea + global). */
   readonly descuento: Money;
+  /** Recargo global aplicado (0,00 si no hay). */
+  readonly recargo: Money;
   readonly netoGravado: Money;
   readonly iva: Money;
   /** Reservado: siempre 0,00 en Fase 1.1 (ver nota del módulo). */
@@ -115,12 +119,16 @@ export function calcularComprobante(
   const preciosIncluyenIva = opciones.preciosIncluyenIva ?? true;
   const descuentoGlobal = opciones.descuentoPorcentaje ?? 0;
   validarPorcentaje(descuentoGlobal, "El descuento global");
+  const recargoGlobal = opciones.recargoPorcentaje ?? 0;
+  validarPorcentaje(recargoGlobal, "El recargo global");
 
   const letra = letraDe(opciones.tipo);
   const tieneIva = letra === "A" || letra === "B";
 
   const lineasCalc: LineaCalculada[] = [];
   let brutoSinDescAcum = Money.cero();
+  // Suma de importes tras descuentos pero ANTES del recargo (para reportar montos).
+  let sinRecargoAcum = Money.cero();
 
   // Grupos por alícuota, acumulando importes de línea YA redondeados.
   const grupos = new Map<number, { readonly alicuota: AlicuotaIva; bruto: Money }>();
@@ -144,8 +152,10 @@ export function calcularComprobante(
 
     const brutoLista = linea.precioUnitario.multiplicarPor(linea.cantidad);
     const trasDescLinea = brutoLista.restar(brutoLista.porcentaje(descLinea));
-    const brutoFinal = trasDescLinea.restar(trasDescLinea.porcentaje(descuentoGlobal));
+    const trasDescuentos = trasDescLinea.restar(trasDescLinea.porcentaje(descuentoGlobal));
+    const brutoFinal = trasDescuentos.sumar(trasDescuentos.porcentaje(recargoGlobal));
     const importe = brutoFinal.redondear(2);
+    sinRecargoAcum = sinRecargoAcum.sumar(trasDescuentos.redondear(2));
 
     lineasCalc.push({
       descripcion: linea.descripcion,
@@ -200,7 +210,9 @@ export function calcularComprobante(
 
   const sumaImportes = lineasCalc.reduce((acc, l) => acc.sumar(l.importe), Money.cero());
   const brutoSinDescuento = brutoSinDescAcum.redondear(2);
-  const descuento = brutoSinDescuento.restar(sumaImportes);
+  const sinRecargo = sinRecargoAcum.redondear(2);
+  const descuento = brutoSinDescuento.restar(sinRecargo);
+  const recargo = sumaImportes.restar(sinRecargo);
   // IVA incluido: total = Σ importes. Netos: el IVA se suma por encima.
   const total = preciosIncluyenIva ? sumaImportes : netoGravado.sumar(iva);
 
@@ -212,6 +224,7 @@ export function calcularComprobante(
     subtotalesPorAlicuota,
     brutoSinDescuento,
     descuento,
+    recargo,
     netoGravado,
     iva,
     impuestosInternos: Money.cero(),

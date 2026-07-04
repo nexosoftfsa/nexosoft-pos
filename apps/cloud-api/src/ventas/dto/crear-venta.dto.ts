@@ -68,6 +68,11 @@ export class CrearVentaDto {
   @IsOptional()
   descuento?: string;
 
+  /** Recargo global sobre el total (ej. financiación por tarjeta), como monto. */
+  @IsNumberString()
+  @IsOptional()
+  recargo?: string;
+
   /** Tipo de comprobante (FacturaA/B/C…). Por defecto B si no se envía. */
   @IsString()
   @IsOptional()

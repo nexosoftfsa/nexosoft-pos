@@ -150,7 +150,8 @@ export class VentasService {
     });
 
     const descuentoGlobal = new Decimal(dto.descuento ?? '0');
-    const total = subtotal.sub(descuentoGlobal);
+    const recargoGlobal = new Decimal(dto.recargo ?? '0');
+    const total = subtotal.sub(descuentoGlobal).add(recargoGlobal);
     const tipoComprobante = dto.tipoComprobante ?? 'FacturaB';
 
     // Pago combinado: si viene el desglose, el medioPago resumen es el único

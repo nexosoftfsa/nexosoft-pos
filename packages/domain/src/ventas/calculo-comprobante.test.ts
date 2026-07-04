@@ -32,6 +32,24 @@ describe("calcularComprobante — Factura B (IVA incluido, no discrimina)", () =
   });
 });
 
+describe("calcularComprobante — recargo global", () => {
+  it("aplica el recargo por encima del total y lo reporta, manteniendo el IVA consistente", () => {
+    const r = calcularComprobante([ITEM_21("1000.00")], {
+      tipo: TipoComprobante.FacturaB,
+      recargoPorcentaje: 10,
+    });
+    expect(r.total.aDecimalString()).toBe("1100.00"); // 1000 + 10%
+    expect(r.recargo.aDecimalString()).toBe("100.00");
+    expect(r.descuento.aDecimalString()).toBe("0.00");
+    expect(r.netoGravado.sumar(r.iva).igualA(r.total)).toBe(true);
+  });
+
+  it("sin recargo el campo queda en 0,00", () => {
+    const r = calcularComprobante([ITEM_21("1000.00")], { tipo: TipoComprobante.FacturaB });
+    expect(r.recargo.aDecimalString()).toBe("0.00");
+  });
+});
+
 describe("calcularComprobante — Factura A discrimina IVA", () => {
   const r = calcularComprobante([ITEM_21("1210.00")], {
     tipo: TipoComprobante.FacturaA,
