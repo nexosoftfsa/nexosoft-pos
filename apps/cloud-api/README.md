@@ -80,7 +80,17 @@ completo tras cada venta (default `false`: en alto volumen es caro). Ver
 | `pnpm prisma:migrate`    | Migraciones de base de datos         |
 | `pnpm typecheck`         | Chequeo de tipos                     |
 | `pnpm test`              | Tests (Vitest)                       |
-| `pnpm verify:e2e`        | E2E real con PostgreSQL embebido (sin Docker) |
+| `pnpm verify:e2e`        | E2E real de sync con PostgreSQL embebido (sin Docker) |
+| `pnpm verify:e2e:features` | E2E real de **combos + lotes/vencimientos** contra Postgres |
+| `pnpm seed:demo`         | Puebla una demo realista (almacén, combos, lotes, clientes, ventas) |
+
+### Demo en vivo para mostrar al cliente
+
+```bash
+# Deja el backend corriendo en :3000 con datos de demo (Ctrl+C para terminar).
+# Login: duenio@nexo.com / demo1234 (ADMIN) — apuntá el POS y el panel a :3000.
+DEMO_KEEPALIVE=1 pnpm --filter @nexosoft/cloud-api seed:demo
+```
 
 ## Estado (Fase 4)
 
