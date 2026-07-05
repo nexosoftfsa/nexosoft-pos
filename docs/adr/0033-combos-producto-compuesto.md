@@ -42,16 +42,19 @@ de los componentes**, no el del combo (el combo no tiene existencia física).
 - La anulación de una venta con combo restaura el stock correcto de los insumos.
 - El precio del combo es independiente del de sus componentes (permite promo).
 
-## Alcance / pendiente
+## Alcance
 
-- **8.1.a (esta entrega):** combos en el catálogo + expansión de stock al vender y
-  al anular **en el cloud-api** + ABM en el POS. Los combos son un concepto del
-  servidor.
-- **8.1.b (siguiente):** hacer el combo **vendible offline-first** en la pantalla
-  de ventas del POS. Hoy el dominio (`@nexosoft/app`) no conoce combos: vender un
-  combo offline validaría/descontaría el stock del combo (que no tiene existencia)
-  en vez de sus componentes. Requiere enseñarle combos al dominio + al pull de
-  catálogo + a los repos SQLite locales.
+- **8.1.a ✅:** combos en el catálogo + expansión de stock al vender y al anular
+  **en el cloud-api** + ABM en el POS. Los combos como concepto del servidor.
+- **8.1.b ✅:** combo **vendible offline-first** en la pantalla de ventas del POS.
+  Se le enseñó combos a la capa de aplicación con un puerto **opcional**
+  `RepositorioCombos` (`componentesDe(articuloId)`): `ServicioDeVenta.confirmarVenta`
+  resuelve los movimientos de stock **expandiendo el combo a sus componentes**
+  (validación + descuento), sin tocar el `Articulo`. Adaptadores en memoria
+  (navegador) y SQLite (Tauri, tabla `combo_componente`); el **pull** del catálogo
+  trae los combos y sus componentes y **omite la existencia del combo** (no tiene
+  stock propio). La venta sigue registrando la **línea del combo** (con su precio);
+  solo el stock resuelve a componentes.
 
 ## Alternativas consideradas
 

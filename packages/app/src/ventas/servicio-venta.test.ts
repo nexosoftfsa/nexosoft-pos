@@ -67,6 +67,68 @@ function crearEscenario(opciones: OpcionesEscenario = {}) {
   return { repos, servicio: new ServicioDeVenta(repos, config) };
 }
 
+/**
+ * Escenario con un COMBO ("combo") de 1×café + 2×alfajor. Café y alfajor tienen
+ * stock propio; el combo no. Precio del combo: $5.000.
+ */
+function crearEscenarioCombo(opciones: { stockCafe?: string; stockAlfajor?: string } = {}) {
+  const mkArt = (id: string, cod: string, desc: string, costo: string) =>
+    crearArticulo({
+      id,
+      codigoInterno: cod,
+      descripcion: desc,
+      unidadDeMedida: UnidadDeMedida.Unidad,
+      costoNeto: Money.desde(costo),
+      alicuotaIva: ALICUOTAS_IVA.VEINTIUNO,
+    });
+  const mkPrecio = (articuloId: string, precio: string): PrecioArticulo => ({
+    articuloId,
+    listaId: "LISTA",
+    modo: ModoPrecio.Manual,
+    precioManual: Money.desde(precio),
+  });
+  const repos = crearRepositoriosMemoria({
+    articulos: [
+      mkArt("cafe", "C1", "Café", "2800"),
+      mkArt("alfajor", "A1", "Alfajor", "700"),
+      mkArt("combo", "K1", "Combo Merienda", "3500"),
+    ],
+    precios: [mkPrecio("cafe", "4300"), mkPrecio("alfajor", "1200"), mkPrecio("combo", "5000")],
+    existencias: [
+      crearExistencia({
+        articuloId: "cafe",
+        depositoId: "DEP",
+        cantidad: Cantidad.de(opciones.stockCafe ?? "10"),
+      }),
+      crearExistencia({
+        articuloId: "alfajor",
+        depositoId: "DEP",
+        cantidad: Cantidad.de(opciones.stockAlfajor ?? "10"),
+      }),
+    ],
+    combos: new Map([
+      [
+        "combo",
+        [
+          { articuloId: "cafe", cantidad: Cantidad.de("1") },
+          { articuloId: "alfajor", cantidad: Cantidad.de("2") },
+        ],
+      ],
+    ]),
+  });
+  const config: ConfiguracionComercio = {
+    cuit: "20-12345678-9",
+    razonSocial: "Comercio de prueba",
+    condicionIvaEmisor: CondicionIva.ResponsableInscripto,
+    puntoDeVenta: 1,
+    depositoPorDefectoId: "DEP",
+    listaPredeterminadaId: "LISTA",
+    preciosIncluyenIva: true,
+    permitirStockNegativo: false,
+  };
+  return { repos, servicio: new ServicioDeVenta(repos, config) };
+}
+
 const efectivo = (m: string) => ({ forma: FormaDePago.Efectivo, monto: Money.desde(m) });
 
 describe("ServicioDeVenta — confirmarVenta (camino feliz)", () => {
@@ -136,6 +198,47 @@ describe("ServicioDeVenta — confirmarVenta (camino feliz)", () => {
       pagos: [{ forma: FormaDePago.Tarjeta, monto: Money.desde("1000") }, efectivo("1500")],
     });
     expect(venta.vuelto.aDecimalString()).toBe("80.00");
+  });
+});
+
+describe("ServicioDeVenta — combos (Fase 8.1.b)", () => {
+  it("vender un combo descuenta el stock de sus componentes, no del combo", async () => {
+    const { repos, servicio } = crearEscenarioCombo();
+    const venta = await servicio.confirmarVenta({
+      items: [{ articuloId: "combo", cantidad: Cantidad.de("2") }],
+      condicionReceptor: CondicionIva.ConsumidorFinal,
+      pagos: [efectivo("10000")],
+    });
+
+    // La línea de la venta sigue siendo el combo (con su precio).
+    expect(venta.items).toHaveLength(1);
+    expect(venta.items[0]?.articuloId).toBe("combo");
+    expect(venta.resultado.total.aDecimalString()).toBe("10000.00");
+
+    // Stock: café 10 − (2×1) = 8; alfajor 10 − (2×2) = 6.
+    const cafe = await repos.existencias.obtener("cafe", "DEP");
+    const alfajor = await repos.existencias.obtener("alfajor", "DEP");
+    expect(cafe?.cantidad.aDecimalString(0)).toBe("8");
+    expect(alfajor?.cantidad.aDecimalString(0)).toBe("6");
+    // El combo no tiene existencia propia.
+    expect(await repos.existencias.obtener("combo", "DEP")).toBeUndefined();
+    // Un movimiento de venta por componente.
+    expect(repos.movimientos.movimientos).toHaveLength(2);
+  });
+
+  it("bloquea la venta del combo si falta stock de un componente", async () => {
+    const { repos, servicio } = crearEscenarioCombo({ stockAlfajor: "1" });
+    await expect(
+      servicio.confirmarVenta({
+        items: [{ articuloId: "combo", cantidad: Cantidad.de("1") }],
+        condicionReceptor: CondicionIva.ConsumidorFinal,
+        pagos: [efectivo("5000")],
+      }),
+    ).rejects.toBeInstanceOf(ErrorStock);
+    // No se persistió nada: stock intacto.
+    const cafe = await repos.existencias.obtener("cafe", "DEP");
+    expect(cafe?.cantidad.aDecimalString(0)).toBe("10");
+    expect(repos.ventas.ventas).toHaveLength(0);
   });
 });
 

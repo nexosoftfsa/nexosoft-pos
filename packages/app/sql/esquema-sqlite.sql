@@ -89,6 +89,15 @@ CREATE TABLE IF NOT EXISTS lote (
 );
 CREATE INDEX IF NOT EXISTS idx_lote_vto ON lote (articulo_id, vencimiento);
 
+-- Combos (Fase 8.1.b): un artículo COMBO agrupa componentes cuyo stock se
+-- descuenta al vender el combo. El combo no tiene existencia propia.
+CREATE TABLE IF NOT EXISTS combo_componente (
+  combo_id     TEXT NOT NULL REFERENCES articulo(id),
+  componente_id TEXT NOT NULL REFERENCES articulo(id),
+  cantidad     TEXT NOT NULL,
+  PRIMARY KEY (combo_id, componente_id)
+);
+
 -- Ventas y comprobantes -------------------------------------------------------
 CREATE TABLE IF NOT EXISTS venta (
   id               TEXT PRIMARY KEY,

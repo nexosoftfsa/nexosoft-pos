@@ -76,6 +76,12 @@ export const SENTENCIAS_ESQUEMA: readonly string[] = [
     vencimiento TEXT NOT NULL,
     cantidad TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS combo_componente (
+    combo_id TEXT NOT NULL REFERENCES articulo(id),
+    componente_id TEXT NOT NULL REFERENCES articulo(id),
+    cantidad TEXT NOT NULL,
+    PRIMARY KEY (combo_id, componente_id)
+  )`,
   `CREATE TABLE IF NOT EXISTS venta (
     id TEXT PRIMARY KEY,
     fecha TEXT NOT NULL,

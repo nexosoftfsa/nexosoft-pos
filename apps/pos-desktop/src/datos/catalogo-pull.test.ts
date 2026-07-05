@@ -135,4 +135,46 @@ describe("sincronizarCatalogo", () => {
     const existencia = await repos.existencias.obtener("p1", config.depositoPorDefectoId);
     expect(existencia?.cantidad.aDecimalString(0)).toBe("7");
   });
+
+  it("un combo persiste sus componentes y NO crea existencia propia (Fase 8.1.b)", async () => {
+    const combo: ProductoRemoto = {
+      id: "combo1",
+      codigo: "COMBO1",
+      nombre: "Combo Merienda",
+      descripcion: null,
+      precioVenta: "2500.00",
+      precioCosto: "1500.00",
+      tipoIva: "IVA_21",
+      activo: true,
+      tipo: "COMBO",
+      componentes: [
+        { componenteId: "p1", cantidad: "1" },
+        { componenteId: "p2", cantidad: "2" },
+      ],
+    };
+    const prod2: ProductoRemoto = { ...PROD, id: "p2", codigo: "002", nombre: "Alfajor" };
+    const r = await sincronizarCatalogo(
+      repos,
+      clienteFalso(
+        [PROD, prod2, combo],
+        [
+          { producto: { id: "p1" }, saldo: "10" },
+          { producto: { id: "p2" }, saldo: "20" },
+        ],
+      ),
+      config,
+      { reemplazarStock: true },
+    );
+    // Se procesan 3 productos; el combo no inicializa existencia (solo p1 y p2).
+    expect(r).toEqual({ productos: 3, stockInicializado: 2 });
+
+    const comps = await repos.combos.componentesDe("combo1");
+    expect(comps.map((c) => [c.articuloId, c.cantidad.aDecimalString(0)])).toEqual([
+      ["p1", "1"],
+      ["p2", "2"],
+    ]);
+    // El combo se guardó como artículo pero sin existencia.
+    expect(await repos.articulos.obtener("combo1")).toBeDefined();
+    expect(await repos.existencias.obtener("combo1", config.depositoPorDefectoId)).toBeUndefined();
+  });
 });

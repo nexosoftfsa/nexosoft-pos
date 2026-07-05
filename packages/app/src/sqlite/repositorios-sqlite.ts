@@ -5,6 +5,7 @@
  * cantidades como texto (ver `mapeo.ts`).
  */
 import {
+  Cantidad,
   nuevoId,
   type Articulo,
   type Deposito,
@@ -16,7 +17,9 @@ import {
 } from "@nexosoft/domain";
 
 import type {
+  ComponenteDeCombo,
   RepositorioArticulos,
+  RepositorioCombos,
   RepositorioExistencias,
   RepositorioMovimientos,
   RepositorioPrecios,
@@ -137,6 +140,29 @@ export class RepositorioMovimientosSqlite implements RepositorioMovimientos {
   }
 }
 
+export class RepositorioCombosSqlite implements RepositorioCombos {
+  constructor(private readonly db: EjecutorSql) {}
+
+  async componentesDe(articuloId: string): Promise<readonly ComponenteDeCombo[]> {
+    const filas = await this.db.consultar<{ componente_id: string; cantidad: string }>(
+      "SELECT componente_id, cantidad FROM combo_componente WHERE combo_id = ? ORDER BY componente_id",
+      [articuloId],
+    );
+    return filas.map((f) => ({ articuloId: f.componente_id, cantidad: Cantidad.de(f.cantidad) }));
+  }
+
+  /** Reemplaza el set de componentes de un combo (lo usa el pull del catálogo). */
+  async reemplazar(comboId: string, componentes: readonly ComponenteDeCombo[]): Promise<void> {
+    await this.db.ejecutar("DELETE FROM combo_componente WHERE combo_id = ?", [comboId]);
+    for (const c of componentes) {
+      await this.db.ejecutar(
+        "INSERT INTO combo_componente (combo_id, componente_id, cantidad) VALUES (?,?,?)",
+        [comboId, c.articuloId, c.cantidad.aDecimalString(3)],
+      );
+    }
+  }
+}
+
 export class RepositorioVentasSqlite implements RepositorioVentas {
   constructor(private readonly db: EjecutorSql) {}
 
@@ -228,6 +254,7 @@ export interface RepositoriosSqlite extends Repositorios {
   readonly existencias: RepositorioExistenciasSqlite;
   readonly movimientos: RepositorioMovimientosSqlite;
   readonly ventas: RepositorioVentasSqlite;
+  readonly combos: RepositorioCombosSqlite;
 }
 
 /** Arma los repositorios SQLite sobre un `EjecutorSql`. */
@@ -238,5 +265,6 @@ export function crearRepositoriosSqlite(db: EjecutorSql): RepositoriosSqlite {
     existencias: new RepositorioExistenciasSqlite(db),
     movimientos: new RepositorioMovimientosSqlite(db),
     ventas: new RepositorioVentasSqlite(db),
+    combos: new RepositorioCombosSqlite(db),
   };
 }

@@ -9,6 +9,7 @@
  */
 import type {
   Articulo,
+  Cantidad,
   Existencia,
   MovimientoDeStock,
   PrecioArticulo,
@@ -19,6 +20,21 @@ import type { VentaConfirmada } from "../ventas/venta.js";
 
 export interface RepositorioArticulos {
   obtener(id: string): Promise<Articulo | undefined>;
+}
+
+/** Un componente de un combo: qué artículo entra y en qué cantidad por combo. */
+export interface ComponenteDeCombo {
+  readonly articuloId: string;
+  readonly cantidad: Cantidad;
+}
+
+/**
+ * Combos (Fase 8.1.b): mapea un artículo COMBO a los componentes cuyo stock se
+ * descuenta al venderlo. Devuelve vacío si el artículo no es un combo, de modo
+ * que la venta lo trate como un producto simple.
+ */
+export interface RepositorioCombos {
+  componentesDe(articuloId: string): Promise<readonly ComponenteDeCombo[]>;
 }
 
 export interface RepositorioPrecios {
@@ -49,4 +65,6 @@ export interface Repositorios {
   readonly existencias: RepositorioExistencias;
   readonly movimientos: RepositorioMovimientos;
   readonly ventas: RepositorioVentas;
+  /** Opcional: si está presente, la venta expande combos a sus componentes. */
+  readonly combos?: RepositorioCombos;
 }

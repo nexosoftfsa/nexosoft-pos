@@ -8,6 +8,7 @@ import {
   crearRepositoriosMemoria,
   ServicioDeFacturacion,
   ServicioDeVenta,
+  type ComponenteDeCombo,
   type ConfiguracionComercio,
 } from "@nexosoft/app";
 import { MockServicioFiscal } from "@nexosoft/fiscal";
@@ -199,11 +200,45 @@ export function construirSemillaDemo(): {
 
 export function crearEntornoPos(): EntornoPos {
   const { articulos, precios, existencias } = construirSemillaDemo();
-  const repos = crearRepositoriosMemoria({ articulos, precios, existencias });
   const config = CONFIG_DEMO;
 
-  const catalogo: ProductoCatalogo[] = articulos.map((articulo, i) => {
-    const precio = precios[i];
+  // Combo demo (Fase 8.1.b): es un artículo vendible sin stock propio; al
+  // venderlo se descuenta el stock de sus componentes (café + alfajor).
+  const comboArticulo = crearArticulo({
+    id: "combo-merienda",
+    codigoInterno: "COMBO1",
+    descripcion: "Combo Merienda",
+    unidadDeMedida: UnidadDeMedida.Unidad,
+    costoNeto: Money.desde("2000"),
+    alicuotaIva: ALICUOTAS_IVA.VEINTIUNO,
+  });
+  const comboPrecio: PrecioArticulo = {
+    articuloId: comboArticulo.id,
+    listaId: LISTA,
+    modo: ModoPrecio.Manual,
+    precioManual: Money.desde("3200.00"),
+  };
+  const combos = new Map<string, readonly ComponenteDeCombo[]>([
+    [
+      comboArticulo.id,
+      [
+        { articuloId: "cafe", cantidad: Cantidad.de("1") },
+        { articuloId: "alfajor", cantidad: Cantidad.de("1") },
+      ],
+    ],
+  ]);
+
+  const articulosCatalogo = [...articulos, comboArticulo];
+  const preciosCatalogo = [...precios, comboPrecio];
+  const repos = crearRepositoriosMemoria({
+    articulos: articulosCatalogo,
+    precios: preciosCatalogo,
+    existencias,
+    combos,
+  });
+
+  const catalogo: ProductoCatalogo[] = articulosCatalogo.map((articulo, i) => {
+    const precio = preciosCatalogo[i];
     return {
       articulo,
       precioFinal:

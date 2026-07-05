@@ -46,6 +46,19 @@ export async function sincronizarCatalogo(
     await repos.articulos.guardar(articulo);
     await repos.precios.guardar(precio);
 
+    // Los combos no tienen stock propio: se persisten sus componentes y se
+    // omite la existencia (su stock se descuenta de los componentes al vender).
+    if (p.tipo === "COMBO") {
+      await repos.combos.reemplazar(
+        p.id,
+        (p.componentes ?? []).map((c) => ({
+          articuloId: c.componenteId,
+          cantidad: Cantidad.de(c.cantidad),
+        })),
+      );
+      continue;
+    }
+
     const existente = await repos.existencias.obtener(articulo.id, deposito);
     if (existente === undefined || opciones.reemplazarStock === true) {
       const saldo = saldoPorId.get(p.id) ?? "0";

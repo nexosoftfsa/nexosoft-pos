@@ -101,13 +101,18 @@ export class ServicioDeVenta {
     }
 
     const depositoId = this.config.depositoPorDefectoId;
+    // Un combo no tiene stock propio: se descuenta el de sus componentes. Por eso
+    // resolvemos los movimientos de stock reales (expandiendo combos) antes de
+    // validar y de descontar (Fase 8.1.b, ADR-0033).
+    const movimientosStock = await this.resolverMovimientosDeStock(items);
+
     // Validar stock ANTES de persistir nada.
-    for (const item of items) {
+    for (const m of movimientosStock) {
       const existencia =
-        (await this.repos.existencias.obtener(item.articuloId, depositoId)) ??
-        crearExistencia({ articuloId: item.articuloId, depositoId });
-      if (!this.config.permitirStockNegativo && !hayStockSuficiente(existencia, item.cantidad)) {
-        throw new ErrorStock("STOCK_INSUFICIENTE", `Stock insuficiente de "${item.descripcion}".`);
+        (await this.repos.existencias.obtener(m.articuloId, depositoId)) ??
+        crearExistencia({ articuloId: m.articuloId, depositoId });
+      if (!this.config.permitirStockNegativo && !hayStockSuficiente(existencia, m.cantidad)) {
+        throw new ErrorStock("STOCK_INSUFICIENTE", `Stock insuficiente de "${m.descripcion}".`);
       }
     }
 
@@ -131,20 +136,21 @@ export class ServicioDeVenta {
     };
     await this.repos.ventas.guardar(venta);
 
-    // Descuento de stock: un movimiento de venta por ítem.
-    for (const item of items) {
+    // Descuento de stock: un movimiento de venta por cada componente (los combos
+    // ya vienen expandidos en `movimientosStock`).
+    for (const m of movimientosStock) {
       const movimiento = crearMovimiento({
-        articuloId: item.articuloId,
+        articuloId: m.articuloId,
         depositoId,
         tipo: TipoMovimiento.Venta,
-        cantidad: item.cantidad,
+        cantidad: m.cantidad,
         referencia: venta.id,
         fecha: venta.fecha,
       });
       await this.repos.movimientos.agregar(movimiento);
       const existencia =
-        (await this.repos.existencias.obtener(item.articuloId, depositoId)) ??
-        crearExistencia({ articuloId: item.articuloId, depositoId });
+        (await this.repos.existencias.obtener(m.articuloId, depositoId)) ??
+        crearExistencia({ articuloId: m.articuloId, depositoId });
       const actualizada = aplicarMovimiento(existencia, movimiento, {
         permitirNegativo: this.config.permitirStockNegativo,
       });
@@ -155,6 +161,40 @@ export class ServicioDeVenta {
   }
 
   // --- Interno --------------------------------------------------------------
+
+  /**
+   * Traduce los ítems de la venta a movimientos de stock a nivel de artículo
+   * físico. Un ítem simple se mueve a sí mismo; un ítem COMBO se expande a sus
+   * componentes (`cantidad_ítem × cantidad_componente`). Sin `repos.combos`
+   * configurado, todo se trata como simple.
+   */
+  private async resolverMovimientosDeStock(
+    items: readonly ItemVenta[],
+  ): Promise<Array<{ articuloId: string; cantidad: Cantidad; descripcion: string }>> {
+    const salida: Array<{ articuloId: string; cantidad: Cantidad; descripcion: string }> = [];
+    for (const item of items) {
+      const componentes = this.repos.combos
+        ? await this.repos.combos.componentesDe(item.articuloId)
+        : [];
+      if (componentes.length === 0) {
+        salida.push({
+          articuloId: item.articuloId,
+          cantidad: item.cantidad,
+          descripcion: item.descripcion,
+        });
+        continue;
+      }
+      for (const componente of componentes) {
+        const articulo = await this.repos.articulos.obtener(componente.articuloId);
+        salida.push({
+          articuloId: componente.articuloId,
+          cantidad: item.cantidad.multiplicarPor(componente.cantidad.aDecimalString(3)),
+          descripcion: articulo?.descripcion ?? componente.articuloId,
+        });
+      }
+    }
+    return salida;
+  }
 
   private async armar(comando: ComandoVenta): Promise<{
     tipoComprobante: TipoComprobante;

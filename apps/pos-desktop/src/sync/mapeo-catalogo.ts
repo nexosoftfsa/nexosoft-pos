@@ -27,6 +27,12 @@ import { LISTA } from "../datos/bootstrap";
 /** Valores del enum `TipoIva` del cloud-api (ver schema.prisma). */
 export type TipoIvaRemoto = "EXENTO" | "IVA_10_5" | "IVA_21" | "IVA_27";
 
+/** Un componente de un combo tal como lo devuelve el cloud-api. */
+export interface ComponenteRemoto {
+  readonly componenteId: string;
+  readonly cantidad: string;
+}
+
 /** Producto tal como lo devuelve `GET /productos` del cloud-api. */
 export interface ProductoRemoto {
   readonly id: string;
@@ -37,6 +43,10 @@ export interface ProductoRemoto {
   readonly precioCosto: string;
   readonly tipoIva: TipoIvaRemoto;
   readonly activo: boolean;
+  /** "SIMPLE" (default) o "COMBO" (Fase 8.1). */
+  readonly tipo?: "SIMPLE" | "COMBO";
+  /** Componentes del combo (presente cuando `tipo` es COMBO). */
+  readonly componentes?: readonly ComponenteRemoto[];
 }
 
 /** Saldo de stock tal como lo devuelve `GET /stock` del cloud-api. */

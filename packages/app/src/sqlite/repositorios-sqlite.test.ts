@@ -117,6 +117,69 @@ describe("Adaptador SQLite — round-trip de catálogo", () => {
   });
 });
 
+describe("Adaptador SQLite — combos (Fase 8.1.b)", () => {
+  it("guarda y relee los componentes de un combo; vender descuenta cada uno", async () => {
+    const { ejecutor, repos, servicio } = await montar();
+
+    // Un segundo artículo simple + el combo (café ya existe como "art").
+    await repos.articulos.guardar(
+      crearArticulo({
+        id: "alfajor",
+        codigoInterno: "A1",
+        descripcion: "Alfajor",
+        unidadDeMedida: UnidadDeMedida.Unidad,
+        costoNeto: Money.desde("300"),
+        alicuotaIva: ALICUOTAS_IVA.VEINTIUNO,
+      }),
+    );
+    await repos.existencias.guardar(
+      crearExistencia({ articuloId: "alfajor", depositoId: DEP, cantidad: Cantidad.de("10") }),
+    );
+    await repos.articulos.guardar(
+      crearArticulo({
+        id: "combo",
+        codigoInterno: "K1",
+        descripcion: "Combo",
+        unidadDeMedida: UnidadDeMedida.Unidad,
+        costoNeto: Money.desde("700"),
+        alicuotaIva: ALICUOTAS_IVA.VEINTIUNO,
+      }),
+    );
+    await repos.precios.guardar({
+      articuloId: "combo",
+      listaId: LISTA,
+      modo: ModoPrecio.Manual,
+      precioManual: Money.desde("2000.00"),
+    });
+    await repos.combos.reemplazar("combo", [
+      { articuloId: "art", cantidad: Cantidad.de("1") },
+      { articuloId: "alfajor", cantidad: Cantidad.de("3") },
+    ]);
+
+    // Relectura del puerto (orden determinista por componente_id).
+    const comps = await repos.combos.componentesDe("combo");
+    expect(comps.map((c) => [c.articuloId, c.cantidad.aDecimalString(0)])).toEqual([
+      ["alfajor", "3"],
+      ["art", "1"],
+    ]);
+
+    await servicio.confirmarVenta({
+      items: [{ articuloId: "combo", cantidad: Cantidad.de("2") }],
+      condicionReceptor: CondicionIva.ConsumidorFinal,
+      pagos: [efectivo("4000")],
+    });
+
+    // art 10 − (2×1) = 8; alfajor 10 − (2×3) = 4.
+    const art = await repos.existencias.obtener("art", DEP);
+    const alfajor = await repos.existencias.obtener("alfajor", DEP);
+    expect(art?.cantidad.aDecimalString(0)).toBe("8");
+    expect(alfajor?.cantidad.aDecimalString(0)).toBe("4");
+
+    const movs = await ejecutor.consultar("SELECT * FROM movimiento_stock WHERE tipo='venta'");
+    expect(movs).toHaveLength(2);
+  });
+});
+
 describe("Adaptador SQLite — ServicioDeVenta persiste de verdad", () => {
   let ctx: Awaited<ReturnType<typeof montar>>;
   beforeEach(async () => {

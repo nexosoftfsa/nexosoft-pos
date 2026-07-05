@@ -12,8 +12,10 @@ import type {
 } from "@nexosoft/domain";
 
 import type {
+  ComponenteDeCombo,
   Repositorios,
   RepositorioArticulos,
+  RepositorioCombos,
   RepositorioExistencias,
   RepositorioMovimientos,
   RepositorioPrecios,
@@ -65,6 +67,16 @@ export class RepositorioMovimientosMemoria implements RepositorioMovimientos {
   }
 }
 
+export class RepositorioCombosMemoria implements RepositorioCombos {
+  private readonly datos = new Map<string, readonly ComponenteDeCombo[]>();
+  constructor(combos: ReadonlyMap<string, readonly ComponenteDeCombo[]> = new Map()) {
+    for (const [id, comps] of combos) this.datos.set(id, comps);
+  }
+  async componentesDe(articuloId: string): Promise<readonly ComponenteDeCombo[]> {
+    return this.datos.get(articuloId) ?? [];
+  }
+}
+
 export class RepositorioVentasMemoria implements RepositorioVentas {
   readonly ventas: VentaConfirmada[] = [];
   private readonly numeradores = new Map<string, number>();
@@ -87,6 +99,8 @@ export interface SemillaMemoria {
   readonly articulos?: readonly Articulo[];
   readonly precios?: readonly PrecioArticulo[];
   readonly existencias?: readonly Existencia[];
+  /** Mapa `articuloId del combo → componentes`. */
+  readonly combos?: ReadonlyMap<string, readonly ComponenteDeCombo[]>;
 }
 
 export interface RepositoriosMemoria extends Repositorios {
@@ -95,6 +109,7 @@ export interface RepositoriosMemoria extends Repositorios {
   readonly existencias: RepositorioExistenciasMemoria;
   readonly movimientos: RepositorioMovimientosMemoria;
   readonly ventas: RepositorioVentasMemoria;
+  readonly combos: RepositorioCombosMemoria;
 }
 
 /** Arma un juego de repositorios en memoria con datos de semilla opcionales. */
@@ -105,5 +120,6 @@ export function crearRepositoriosMemoria(semilla: SemillaMemoria = {}): Reposito
     existencias: new RepositorioExistenciasMemoria(semilla.existencias),
     movimientos: new RepositorioMovimientosMemoria(),
     ventas: new RepositorioVentasMemoria(),
+    combos: new RepositorioCombosMemoria(semilla.combos),
   };
 }
