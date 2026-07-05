@@ -41,10 +41,20 @@ export interface DatosPresupuesto {
   readonly items: DatosItemPresupuesto[];
 }
 
+/** Resultado de convertir un presupuesto: el presupuesto CONVERTIDO + la venta generada. */
+export interface ConversionPresupuesto {
+  readonly presupuesto: Presupuesto;
+  readonly venta: {
+    readonly id: string;
+    readonly numeroComprobante: number | null;
+    readonly tipoComprobante: string | null;
+  };
+}
+
 export interface ClientePresupuestos {
   listar(): Promise<Presupuesto[]>;
   crear(datos: DatosPresupuesto): Promise<Presupuesto>;
-  convertir(id: string): Promise<Presupuesto>;
+  convertir(id: string): Promise<ConversionPresupuesto>;
   anular(id: string): Promise<Presupuesto>;
 }
 
@@ -70,8 +80,8 @@ export class ClientePresupuestosHttp implements ClientePresupuestos {
   crear(datos: DatosPresupuesto): Promise<Presupuesto> {
     return this.pedir<Presupuesto>("POST", "/presupuestos", datos);
   }
-  convertir(id: string): Promise<Presupuesto> {
-    return this.pedir<Presupuesto>("POST", `/presupuestos/${id}/convertir`);
+  convertir(id: string): Promise<ConversionPresupuesto> {
+    return this.pedir<ConversionPresupuesto>("POST", `/presupuestos/${id}/convertir`);
   }
   anular(id: string): Promise<Presupuesto> {
     return this.pedir<Presupuesto>("POST", `/presupuestos/${id}/anular`);

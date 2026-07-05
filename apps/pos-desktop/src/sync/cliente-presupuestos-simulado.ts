@@ -2,6 +2,7 @@
 import {
   ErrorPresupuestos,
   type ClientePresupuestos,
+  type ConversionPresupuesto,
   type DatosPresupuesto,
   type Presupuesto,
 } from "./cliente-presupuestos";
@@ -59,8 +60,17 @@ export class ClientePresupuestosSimulado implements ClientePresupuestos {
     return { ...nuevo };
   }
 
-  async convertir(id: string): Promise<Presupuesto> {
-    return this.cambiar(id, "CONVERTIDO");
+  async convertir(id: string): Promise<ConversionPresupuesto> {
+    const presupuesto = this.cambiar(id, "CONVERTIDO");
+    // En el navegador no hay backend de ventas: devolvemos un comprobante simulado.
+    return {
+      presupuesto,
+      venta: {
+        id: `venta-sim-${id}`,
+        numeroComprobante: 1000 + presupuesto.numero,
+        tipoComprobante: "FacturaB",
+      },
+    };
   }
   async anular(id: string): Promise<Presupuesto> {
     return this.cambiar(id, "ANULADO");

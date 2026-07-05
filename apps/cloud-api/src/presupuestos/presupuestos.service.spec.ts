@@ -10,13 +10,15 @@ const mockPresupuesto = {
   update: vi.fn(),
 };
 const mockPrisma = { presupuesto: mockPresupuesto };
+const mockVentas = { registrar: vi.fn() };
 const SUC = 's1';
+const USUARIO = { id: 'u1', email: 'duenio@nexo.com', sucursalId: SUC };
 
 describe('PresupuestosService', () => {
   let service: PresupuestosService;
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new PresupuestosService(mockPrisma as never);
+    service = new PresupuestosService(mockPrisma as never, mockVentas as never);
   });
 
   describe('crear', () => {
@@ -51,14 +53,49 @@ describe('PresupuestosService', () => {
       expect(mockPresupuesto.update.mock.calls[0]![0].data.estado).toBe('ANULADO');
     });
 
-    it('rechaza cambiar el estado si no está vigente', async () => {
+    it('rechaza convertir si no está vigente', async () => {
       mockPresupuesto.findFirst.mockResolvedValue({ id: 'p1', estado: 'CONVERTIDO', items: [] });
-      await expect(service.convertir(SUC, 'p1')).rejects.toThrow(BadRequestException);
+      await expect(service.convertir(USUARIO, 'p1')).rejects.toThrow(BadRequestException);
     });
 
     it('lanza NotFound si no existe', async () => {
       mockPresupuesto.findFirst.mockResolvedValue(null);
       await expect(service.obtener(SUC, 'x')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('convertir → venta real (Fase 9, ADR-0035)', () => {
+    it('genera la venta con los ítems y marca el presupuesto CONVERTIDO', async () => {
+      mockPresupuesto.findFirst.mockResolvedValue({
+        id: 'p1', estado: 'VIGENTE',
+        items: [
+          { productoId: 'prod1', cantidad: new Decimal('2'), precioUnitario: new Decimal('100') },
+          { productoId: 'prod2', cantidad: new Decimal('1'), precioUnitario: new Decimal('50') },
+        ],
+      });
+      mockVentas.registrar.mockResolvedValue({ id: 'v1', numeroComprobante: 7, tipoComprobante: 'FacturaB' });
+      mockPresupuesto.update.mockResolvedValue({ id: 'p1', estado: 'CONVERTIDO' });
+
+      const r = await service.convertir(USUARIO, 'p1');
+
+      const dto = mockVentas.registrar.mock.calls[0]![1];
+      expect(dto.operacionId).toBe('presup-p1');
+      expect(dto.medioPago).toBe('EFECTIVO');
+      expect(dto.items).toEqual([
+        { productoId: 'prod1', cantidad: '2', precioUnitario: '100' },
+        { productoId: 'prod2', cantidad: '1', precioUnitario: '50' },
+      ]);
+      expect(mockPresupuesto.update.mock.calls[0]![0].data.estado).toBe('CONVERTIDO');
+      expect(r.venta.id).toBe('v1');
+    });
+
+    it('rechaza convertir si hay una línea libre (sin producto del catálogo)', async () => {
+      mockPresupuesto.findFirst.mockResolvedValue({
+        id: 'p1', estado: 'VIGENTE',
+        items: [{ productoId: null, cantidad: new Decimal('1'), precioUnitario: new Decimal('10') }],
+      });
+      await expect(service.convertir(USUARIO, 'p1')).rejects.toThrow(BadRequestException);
+      expect(mockVentas.registrar).not.toHaveBeenCalled();
     });
   });
 });

@@ -54,6 +54,7 @@ export function Presupuestos({
   const [items, setItems] = useState<Presupuesto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [nuevo, setNuevo] = useState(false);
   const [ver, setVer] = useState<Presupuesto | null>(null);
 
@@ -74,11 +75,18 @@ export function Presupuestos({
   }, [cargar]);
 
   async function accion(p: Presupuesto, tipo: "convertir" | "anular") {
-    const verbo = tipo === "anular" ? "anular" : "marcar como convertido";
+    const verbo = tipo === "anular" ? "anular" : "convertir en venta";
     if (!window.confirm(`¿Querés ${verbo} el presupuesto N° ${p.numero}?`)) return;
+    setError(null);
+    setAviso(null);
     try {
-      if (tipo === "anular") await cliente.anular(p.id);
-      else await cliente.convertir(p.id);
+      if (tipo === "anular") {
+        await cliente.anular(p.id);
+      } else {
+        const r = await cliente.convertir(p.id);
+        const comp = `${r.venta.tipoComprobante ?? "Comprobante"} N° ${r.venta.numeroComprobante ?? "—"}`;
+        setAviso(`Presupuesto N° ${p.numero} convertido en venta (${comp}). Se descontó el stock.`);
+      }
       await cargar();
     } catch (e) {
       setError(mensaje(e));
@@ -95,6 +103,7 @@ export function Presupuestos({
       </div>
 
       {error !== null && <div className="error">{error}</div>}
+      {aviso !== null && <div className="aviso-ok">{aviso}</div>}
 
       <div className="card">
         <div className="tablewrap">

@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 interface UsuarioJwt {
   id: string;
+  email: string;
   sucursalId: string;
   rol: string;
 }
@@ -31,7 +32,8 @@ export class PresupuestosController {
 
   @Post(':id/convertir')
   convertir(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
-    return this.presupuestos.convertir(req.user.sucursalId, id);
+    const { id: usuarioId, email, sucursalId } = req.user;
+    return this.presupuestos.convertir({ id: usuarioId, email, sucursalId }, id);
   }
 
   @Post(':id/anular')
