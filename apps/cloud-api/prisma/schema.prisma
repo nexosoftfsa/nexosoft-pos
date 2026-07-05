@@ -194,6 +194,10 @@ model MovimientoStock {
   loteId      String?
   lote        Lote?          @relation(fields: [loteId], references: [id])
 
+  // Remito que originó el movimiento (salida por entrega / su reversa al anular).
+  remitoId    String?
+  remito      Remito?        @relation(fields: [remitoId], references: [id])
+
   @@map("movimientos_stock")
 }
 
@@ -462,6 +466,7 @@ model Remito {
   sucursal      Sucursal     @relation(fields: [sucursalId], references: [id])
 
   items         ItemRemito[]
+  movimientos   MovimientoStock[]
 
   @@map("remitos")
 }

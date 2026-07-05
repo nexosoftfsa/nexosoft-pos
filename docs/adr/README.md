@@ -52,3 +52,4 @@ Consecuencias y Alternativas consideradas.
 | 0033 | [Combos como producto compuesto (stock por componente)](0033-combos-producto-compuesto.md) | Aceptada |
 | 0034 | [Lotes y vencimientos con consumo FEFO](0034-lotes-y-vencimientos-fefo.md) | Aceptada |
 | 0035 | [Convertir un presupuesto en una venta real](0035-presupuesto-a-venta.md) | Aceptada |
+| 0036 | [El remito mueve stock (entrega)](0036-remito-mueve-stock.md) | Aceptada |
