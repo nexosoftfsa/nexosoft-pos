@@ -234,6 +234,32 @@ try {
   }
   ok(`${ventaIds.length} ventas (varios medios de pago), repartidas en los últimos 6 días`);
 
+  // ─── Features de Fase 9: presupuesto, remito, venta fiada ───────────────────
+  await api('POST', '/presupuestos', token, {
+    clienteNombre: 'Ana Gómez', validezDias: 15,
+    items: [
+      { descripcion: P['YERBA'].nombre, cantidad: '2', precioUnitario: P['YERBA'].precioVenta, productoId: P['YERBA'].id },
+      { descripcion: P['CAFE'].nombre, cantidad: '1', precioUnitario: P['CAFE'].precioVenta, productoId: P['CAFE'].id },
+    ],
+  });
+  await api('POST', '/remitos', token, {
+    clienteNombre: 'Bar El Tano',
+    items: [{ descripcion: P['CERV'].nombre, cantidad: '12', productoId: P['CERV'].id }],
+  });
+  const fiado = await api('POST', '/sync/operaciones', token, {
+    operaciones: [{
+      operacionId: 'demo-fiado', tipo: 'venta', terminalId: caja1.id,
+      payload: {
+        medioPago: 'CUENTA_CORRIENTE', clienteId: clientes['Ana Gómez'].id,
+        items: [item('ACEITE', 1), item('FIDEOS', 2)],
+      },
+    }],
+  });
+  if (fiado['demo-fiado']?.ok) {
+    const saldoAna = (await api('GET', `/clientes/${clientes['Ana Gómez'].id}`, token)).saldo;
+    ok(`1 presupuesto vigente, 1 remito (descontó stock), 1 venta fiada → Ana debe $${saldoAna}`);
+  }
+
   // ─── Resumen ────────────────────────────────────────────────────────────────
   const resumen = await api('GET', `/reportes/ventas/resumen?desde=${hoyMenos(-30).slice(0, 10)}&hasta=${hoyMenos(1).slice(0, 10)}`, token);
   const vencs = await api('GET', '/stock/vencimientos?dias=30', token);
