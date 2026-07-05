@@ -24,6 +24,8 @@ export interface ItemVentaSync {
   readonly cantidad: number;
   /** Precio unitario como string decimal, ej. "1850.00". */
   readonly precioUnitario: string;
+  /** Descuento del ítem (monto, ej. por promoción). Opcional. */
+  readonly descuento?: string;
 }
 
 /** Un pago de la venta (pago combinado). */
@@ -63,6 +65,9 @@ export function construirOperacionVenta(args: {
         productoId: i.productoId,
         cantidad: String(i.cantidad),
         precioUnitario: i.precioUnitario,
+        ...(i.descuento !== undefined && i.descuento !== "0.00"
+          ? { descuento: i.descuento }
+          : {}),
       })),
       ...(args.pagos !== undefined && args.pagos.length > 0
         ? { pagos: args.pagos.map((p) => ({ medioPago: p.medioPago, monto: p.monto })) }

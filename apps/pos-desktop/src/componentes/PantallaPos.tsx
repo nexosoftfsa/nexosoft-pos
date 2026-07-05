@@ -17,6 +17,12 @@ import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { etiquetaComprobante, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
+import {
+  descuentoDeLinea,
+  descuentoPorcentajeLinea,
+  PROMOS_DEMO,
+  promoAplicable,
+} from "./promos";
 
 interface ItemCarrito {
   readonly producto: ProductoCatalogo;
@@ -52,6 +58,16 @@ function mensajeError(e: unknown): string {
   return String(e);
 }
 
+/** Promoción vigente que aplica a un ítem del carrito (o `undefined`). */
+function promoDeItem(c: ItemCarrito) {
+  return promoAplicable(
+    PROMOS_DEMO,
+    c.producto.articulo.id,
+    c.producto.articulo.rubroId,
+    new Date(),
+  );
+}
+
 function armarComando(
   carrito: readonly ItemCarrito[],
   condicionReceptor: CondicionIva,
@@ -60,10 +76,17 @@ function armarComando(
   clienteId?: string,
 ): ComandoVenta {
   return {
-    items: carrito.map((c) => ({
-      articuloId: c.producto.articulo.id,
-      cantidad: Cantidad.de(String(c.cantidad)),
-    })),
+    items: carrito.map((c) => {
+      const promo = promoDeItem(c);
+      const pct = promo
+        ? descuentoPorcentajeLinea(promo, c.cantidad, c.producto.precioFinal)
+        : 0;
+      return {
+        articuloId: c.producto.articulo.id,
+        cantidad: Cantidad.de(String(c.cantidad)),
+        ...(pct > 0 ? { descuentoPorcentaje: pct } : {}),
+      };
+    }),
     condicionReceptor,
     pagos: pagos.map((p) => ({ forma: p.forma, monto: p.monto })),
     ...(recargoPorcentaje > 0 ? { recargoPorcentaje } : {}),
@@ -281,11 +304,18 @@ export function PantallaPos({
       // Encolar la venta para sincronizar con el servidor de sucursal.
       // No rompe la venta (ya confirmada localmente) si el encolado falla.
       try {
-        const itemsSync = carrito.map((c) => ({
-          productoId: c.producto.articulo.id,
-          cantidad: c.cantidad,
-          precioUnitario: c.producto.precioFinal.aDecimalString(2),
-        }));
+        const itemsSync = carrito.map((c) => {
+          const promo = promoDeItem(c);
+          const desc = promo
+            ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
+            : Money.cero();
+          return {
+            productoId: c.producto.articulo.id,
+            cantidad: c.cantidad,
+            precioUnitario: c.producto.precioFinal.aDecimalString(2),
+            ...(desc.esPositivo() ? { descuento: desc.aDecimalString(2) } : {}),
+          };
+        });
         // Pago combinado: viaja el desglose (un pago por medio) y el resumen.
         const pagosSync = pagos.map((p) => ({
           medioPago: mapearMedioPago(p.forma),
@@ -416,9 +446,19 @@ export function PantallaPos({
 
           <ul className="items">
             {carrito.length === 0 && <li className="vacio">Agregá productos…</li>}
-            {carrito.map((c) => (
+            {carrito.map((c) => {
+              const promo = promoDeItem(c);
+              const descPromo = promo
+                ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
+                : Money.cero();
+              return (
               <li key={c.producto.articulo.id} className="item">
-                <span className="item-desc">{c.producto.articulo.descripcion}</span>
+                <span className="item-desc">
+                  {c.producto.articulo.descripcion}
+                  {promo && descPromo.esPositivo() && (
+                    <span className="item-promo">🏷 {promo.nombre} −{pesos(descPromo)}</span>
+                  )}
+                </span>
                 <div className="item-cant">
                   <button onClick={() => cambiarCantidad(c.producto.articulo.id, -1)}>−</button>
                   <span>{c.cantidad}</span>
@@ -435,7 +475,8 @@ export function PantallaPos({
                   ×
                 </button>
               </li>
-            ))}
+              );
+            })}
           </ul>
 
           {preview && (
