@@ -1,13 +1,17 @@
 /**
- * Pantalla de Stock (Fase 7.3): saldos por producto con estado (ok/bajo/sin),
- * KPIs del inventario, registro de movimientos (ingreso/ajuste/salida) e
- * historial por producto. Online contra el módulo de stock del cloud-api.
+ * Pantalla de Stock (Fase 7.3 + 8.2): saldos por producto con estado (ok/bajo/sin),
+ * KPIs del inventario, registro de movimientos (ingreso/ajuste/salida) e historial.
+ * Los productos perecederos (Fase 8.2) llevan lotes: el ingreso pide vencimiento,
+ * hay una vista de lotes por producto y un panel de alertas de vencimiento. Online
+ * contra el módulo de stock del cloud-api.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   ErrorStock,
+  type AlertaVencimiento,
   type ClienteStock,
+  type LoteStock,
   type MovimientoStock,
   type ProductoStock,
   type SaldoStock,
@@ -16,9 +20,13 @@ import {
   aDatosMovimiento,
   calcularKpis,
   estadoStock,
+  estadoVencimiento,
   etiquetaMovimiento,
+  fechaCorta,
   FORM_MOVIMIENTO_VACIO,
+  pideLote,
   sumaAlSaldo,
+  textoVencimiento,
   TIPOS_MOVIMIENTO,
   validarMovimiento,
   type FormMovimiento,
@@ -41,18 +49,22 @@ const UMBRAL_DEFECTO = 5;
 
 export function StockAbm({ cliente }: { cliente: ClienteStock }) {
   const [saldos, setSaldos] = useState<SaldoStock[]>([]);
+  const [alertas, setAlertas] = useState<AlertaVencimiento[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [umbral, setUmbral] = useState(UMBRAL_DEFECTO);
   const [soloAlertas, setSoloAlertas] = useState(false);
   const [movProducto, setMovProducto] = useState<ProductoStock | "abierto" | null>(null);
   const [historialDe, setHistorialDe] = useState<ProductoStock | null>(null);
+  const [lotesDe, setLotesDe] = useState<ProductoStock | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setError(null);
     try {
-      setSaldos(await cliente.saldos());
+      const [ss, vs] = await Promise.all([cliente.saldos(), cliente.vencimientos()]);
+      setSaldos(ss);
+      setAlertas(vs);
     } catch (e) {
       setError(mensaje(e));
     } finally {
@@ -74,7 +86,7 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
 
   return (
     <div className="gestion">
-      <div className="kpis">
+      <div className="kpis kpis--4">
         <div className="kpi">
           <div className="kpi__label">Artículos activos</div>
           <div className="kpi__val">{kpis.activos}</div>
@@ -91,7 +103,40 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
             {kpis.sin}
           </div>
         </div>
+        <div className="kpi">
+          <div className="kpi__label">Lotes por vencer</div>
+          <div className="kpi__val" style={{ color: alertas.length > 0 ? "var(--warn)" : undefined }}>
+            {alertas.length}
+          </div>
+        </div>
       </div>
+
+      {alertas.length > 0 && (
+        <div className="card card__pad section-alertas">
+          <div className="section-title">Alertas de vencimiento</div>
+          <div className="alertas">
+            {alertas.map((a) => {
+              const est = estadoVencimiento(a.diasParaVencer, a.vencido);
+              return (
+                <div key={a.loteId} className={`alerta alerta--${est}`}>
+                  <div className="alerta__prod">
+                    {a.producto.nombre}
+                    {a.numero !== null && <span className="muted"> · Lote {a.numero}</span>}
+                  </div>
+                  <div className="alerta__meta">
+                    <span className={`badge badge--venc-${est}`}>
+                      {textoVencimiento(a.diasParaVencer, a.vencido)}
+                    </span>
+                    <span className="muted">
+                      {fechaCorta(a.fechaVencimiento)} · saldo {a.saldo}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="toolbar">
         <label className="check">
@@ -149,7 +194,10 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
                   return (
                     <tr key={s.producto.id}>
                       <td className="strong">{s.producto.codigo}</td>
-                      <td>{s.producto.nombre}</td>
+                      <td>
+                        {s.producto.nombre}
+                        {s.producto.requiereLote && <span className="badge badge--lote">Lote</span>}
+                      </td>
                       <td className="num strong">{s.saldo}</td>
                       <td>
                         {estado === "ok" && <span className="badge badge--ok">OK</span>}
@@ -160,6 +208,11 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
                         <button type="button" className="linkbtn" onClick={() => setMovProducto(s.producto)}>
                           Movimiento
                         </button>
+                        {s.producto.requiereLote && (
+                          <button type="button" className="linkbtn" onClick={() => setLotesDe(s.producto)}>
+                            Lotes
+                          </button>
+                        )}
                         <button type="button" className="linkbtn" onClick={() => setHistorialDe(s.producto)}>
                           Historial
                         </button>
@@ -183,6 +236,10 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
             void cargar();
           }}
         />
+      )}
+
+      {lotesDe !== null && (
+        <ModalLotes cliente={cliente} producto={lotesDe} onCerrar={() => setLotesDe(null)} />
       )}
 
       {historialDe !== null && (
@@ -216,8 +273,12 @@ function ModalMovimiento({
     setForm((f) => ({ ...f, [clave]: valor }));
   }
 
+  const productoSel = productos.find((p) => p.id === form.productoId);
+  const requiereLote = productoSel?.requiereLote ?? false;
+  const conLote = pideLote(form.tipo, requiereLote);
+
   async function guardar() {
-    const erroresForm = validarMovimiento(form);
+    const erroresForm = validarMovimiento(form, requiereLote);
     if (erroresForm.length > 0) {
       setErrores(erroresForm);
       return;
@@ -225,7 +286,7 @@ function ModalMovimiento({
     setGuardando(true);
     setErrores([]);
     try {
-      await cliente.registrarMovimiento(aDatosMovimiento(form));
+      await cliente.registrarMovimiento(aDatosMovimiento(form, requiereLote));
       onGuardado();
     } catch (e) {
       setErrores([mensaje(e)]);
@@ -256,6 +317,7 @@ function ModalMovimiento({
               {productos.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.codigo} — {p.nombre}
+                  {p.requiereLote ? " (por lote)" : ""}
                 </option>
               ))}
             </select>
@@ -285,6 +347,30 @@ function ModalMovimiento({
               />
             </div>
           </div>
+          {conLote && (
+            <div className="modal__row">
+              <div className="field">
+                <label>Vencimiento del lote</label>
+                <input
+                  className="input"
+                  type="date"
+                  value={form.fechaVencimiento}
+                  onChange={(e) => campo("fechaVencimiento", e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label>N° de lote (opcional)</label>
+                <input
+                  className="input"
+                  value={form.numeroLote}
+                  onChange={(e) => campo("numeroLote", e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          {requiereLote && form.tipo === "SALIDA" && (
+            <p className="muted combo-ayuda">La salida consume los lotes que vencen antes (FEFO).</p>
+          )}
           <div className="field">
             <label>Motivo (opcional)</label>
             <input
@@ -308,6 +394,75 @@ function ModalMovimiento({
           </button>
           <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
             {guardando ? "Guardando…" : "Registrar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalLotes({
+  cliente,
+  producto,
+  onCerrar,
+}: {
+  cliente: ClienteStock;
+  producto: ProductoStock;
+  onCerrar: () => void;
+}) {
+  const [lotes, setLotes] = useState<LoteStock[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    cliente
+      .lotes(producto.id)
+      .then((ls) => vivo && setLotes(ls))
+      .catch((e: unknown) => vivo && setError(mensaje(e)));
+    return () => {
+      vivo = false;
+    };
+  }, [cliente, producto.id]);
+
+  return (
+    <div className="modal modal--show" onClick={onCerrar}>
+      <div className="modal__box" onClick={(e) => e.stopPropagation()}>
+        <div className="modal__head">
+          <h3>Lotes — {producto.nombre}</h3>
+          <button type="button" className="modal__x" onClick={onCerrar} aria-label="Cerrar">
+            ×
+          </button>
+        </div>
+        <div className="modal__body">
+          {error !== null && <div className="error">{error}</div>}
+          {error === null && lotes === null && <div className="muted">Cargando…</div>}
+          {lotes !== null && lotes.length === 0 && <div className="muted">Sin lotes registrados.</div>}
+          {lotes !== null && lotes.length > 0 && (
+            <div className="tablewrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>N° de lote</th>
+                    <th>Vencimiento</th>
+                    <th className="num">Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lotes.map((l) => (
+                    <tr key={l.id}>
+                      <td className="strong">{l.numero ?? <span className="muted">—</span>}</td>
+                      <td>{fechaCorta(l.fechaVencimiento)}</td>
+                      <td className="num strong">{l.saldo}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        <div className="modal__foot">
+          <button type="button" className="pill-btn pill-btn--primary" onClick={onCerrar}>
+            Cerrar
           </button>
         </div>
       </div>

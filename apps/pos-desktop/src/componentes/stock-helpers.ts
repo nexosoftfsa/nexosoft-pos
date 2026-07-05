@@ -69,6 +69,9 @@ export interface FormMovimiento {
   tipo: TipoMovimiento;
   cantidad: string;
   motivo: string;
+  /** Solo para ENTRADA de un perecedero (Fase 8.2). */
+  fechaVencimiento: string;
+  numeroLote: string;
 }
 
 export const FORM_MOVIMIENTO_VACIO: FormMovimiento = {
@@ -76,6 +79,8 @@ export const FORM_MOVIMIENTO_VACIO: FormMovimiento = {
   tipo: "ENTRADA",
   cantidad: "",
   motivo: "",
+  fechaVencimiento: "",
+  numeroLote: "",
 };
 
 function normalizarCantidad(valor: string): string {
@@ -83,24 +88,65 @@ function normalizarCantidad(valor: string): string {
   return v.includes(",") ? v.replace(/\./g, "").replace(",", ".") : v;
 }
 
+/**
+ * True si el movimiento debe pedir datos de lote: ENTRADA de un producto
+ * perecedero (la SALIDA consume lotes por FEFO en el servidor, sin elegir).
+ */
+export function pideLote(tipo: TipoMovimiento, requiereLote: boolean): boolean {
+  return requiereLote && tipo === "ENTRADA";
+}
+
 /** Errores del formulario de movimiento (vacío = válido). */
-export function validarMovimiento(f: FormMovimiento): string[] {
+export function validarMovimiento(f: FormMovimiento, requiereLote = false): string[] {
   const errores: string[] = [];
   if (f.productoId === "") errores.push("Elegí un producto.");
   const cant = normalizarCantidad(f.cantidad);
   if (!/^\d+(\.\d+)?$/.test(cant) || Number(cant) <= 0) {
     errores.push("La cantidad debe ser un número mayor a cero.");
   }
+  if (pideLote(f.tipo, requiereLote) && f.fechaVencimiento.trim() === "") {
+    errores.push("El ingreso de un perecedero necesita la fecha de vencimiento.");
+  }
   return errores;
 }
 
 /** Convierte un formulario válido en el payload del servidor. */
-export function aDatosMovimiento(f: FormMovimiento): DatosMovimiento {
+export function aDatosMovimiento(f: FormMovimiento, requiereLote = false): DatosMovimiento {
   const motivo = f.motivo.trim();
+  const conLote = pideLote(f.tipo, requiereLote);
+  const numeroLote = f.numeroLote.trim();
   return {
     productoId: f.productoId,
     tipo: f.tipo,
     cantidad: normalizarCantidad(f.cantidad),
     ...(motivo !== "" ? { motivo } : {}),
+    ...(conLote && f.fechaVencimiento.trim() !== ""
+      ? { fechaVencimiento: f.fechaVencimiento.trim() }
+      : {}),
+    ...(conLote && numeroLote !== "" ? { numeroLote } : {}),
   };
+}
+
+export type EstadoVencimiento = "vencido" | "critico" | "proximo";
+
+/** Clasifica una alerta de vencimiento para colorear el badge. */
+export function estadoVencimiento(diasParaVencer: number, vencido: boolean): EstadoVencimiento {
+  if (vencido) return "vencido";
+  if (diasParaVencer <= 7) return "critico";
+  return "proximo";
+}
+
+/** Texto legible del vencimiento ("vencido", "vence hoy", "en N días"). */
+export function textoVencimiento(diasParaVencer: number, vencido: boolean): string {
+  if (vencido) return `vencido hace ${Math.abs(diasParaVencer)} día(s)`;
+  if (diasParaVencer <= 0) return "vence hoy";
+  return `vence en ${diasParaVencer} día(s)`;
+}
+
+/** Fecha corta es-AR desde un ISO. */
+export function fechaCorta(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }

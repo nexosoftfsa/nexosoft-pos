@@ -37,6 +37,8 @@ export interface ProductoAdmin {
   readonly tipoIva: TipoIvaRemoto;
   readonly tipo: TipoProductoRemoto;
   readonly activo: boolean;
+  /** Perecedero: se gestiona por lotes con vencimiento (Fase 8.2). */
+  readonly requiereLote: boolean;
   readonly categoria: CategoriaAdmin | null;
   /** Presente cuando `tipo` es COMBO. */
   readonly componentes?: readonly ComponenteAdmin[];
@@ -51,6 +53,7 @@ export interface DatosProducto {
   readonly precioCosto: string;
   readonly tipoIva: TipoIvaRemoto;
   readonly tipo?: TipoProductoRemoto;
+  readonly requiereLote?: boolean;
   readonly componentes?: ReadonlyArray<{ readonly componenteId: string; readonly cantidad: string }>;
   readonly categoriaId?: string | null;
 }

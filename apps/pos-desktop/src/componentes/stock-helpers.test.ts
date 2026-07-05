@@ -5,8 +5,11 @@ import {
   aDatosMovimiento,
   calcularKpis,
   estadoStock,
+  estadoVencimiento,
   FORM_MOVIMIENTO_VACIO,
+  pideLote,
   sumaAlSaldo,
+  textoVencimiento,
   validarMovimiento,
 } from "./stock-helpers";
 
@@ -49,25 +52,89 @@ describe("validarMovimiento", () => {
 
   it("acepta un formulario correcto (con coma decimal)", () => {
     expect(
-      validarMovimiento({ productoId: "x", tipo: "ENTRADA", cantidad: "12,5", motivo: "" }),
+      validarMovimiento({ ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "ENTRADA", cantidad: "12,5" }),
     ).toEqual([]);
   });
 
   it("rechaza cantidad cero o negativa", () => {
     expect(
-      validarMovimiento({ productoId: "x", tipo: "SALIDA", cantidad: "0", motivo: "" }),
+      validarMovimiento({ ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "SALIDA", cantidad: "0" }),
     ).not.toEqual([]);
+  });
+
+  it("exige vencimiento en el INGRESO de un perecedero (Fase 8.2)", () => {
+    const errores = validarMovimiento(
+      { ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "ENTRADA", cantidad: "5" },
+      true,
+    );
+    expect(errores).toContain("El ingreso de un perecedero necesita la fecha de vencimiento.");
+  });
+
+  it("no exige vencimiento en la SALIDA de un perecedero (FEFO automático)", () => {
+    expect(
+      validarMovimiento(
+        { ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "SALIDA", cantidad: "5" },
+        true,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("pideLote", () => {
+  it("solo la ENTRADA de un perecedero pide datos de lote", () => {
+    expect(pideLote("ENTRADA", true)).toBe(true);
+    expect(pideLote("SALIDA", true)).toBe(false);
+    expect(pideLote("ENTRADA", false)).toBe(false);
   });
 });
 
 describe("aDatosMovimiento", () => {
   it("normaliza la cantidad y omite el motivo vacío", () => {
-    const datos = aDatosMovimiento({ productoId: "x", tipo: "ENTRADA", cantidad: "1.250,5", motivo: "  " });
+    const datos = aDatosMovimiento({ ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "ENTRADA", cantidad: "1.250,5" });
     expect(datos).toEqual({ productoId: "x", tipo: "ENTRADA", cantidad: "1250.5" });
   });
 
   it("incluye el motivo si viene", () => {
-    const datos = aDatosMovimiento({ productoId: "x", tipo: "SALIDA", cantidad: "2", motivo: "Rotura" });
+    const datos = aDatosMovimiento({ ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "SALIDA", cantidad: "2", motivo: "Rotura" });
     expect(datos.motivo).toBe("Rotura");
+  });
+
+  it("incluye vencimiento y N° de lote en el INGRESO de un perecedero", () => {
+    const datos = aDatosMovimiento(
+      {
+        ...FORM_MOVIMIENTO_VACIO,
+        productoId: "x",
+        tipo: "ENTRADA",
+        cantidad: "10",
+        fechaVencimiento: "2026-09-01",
+        numeroLote: "A1",
+      },
+      true,
+    );
+    expect(datos.fechaVencimiento).toBe("2026-09-01");
+    expect(datos.numeroLote).toBe("A1");
+  });
+
+  it("NO manda datos de lote si el producto no es perecedero", () => {
+    const datos = aDatosMovimiento(
+      { ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "ENTRADA", cantidad: "10", fechaVencimiento: "2026-09-01" },
+      false,
+    );
+    expect(datos.fechaVencimiento).toBeUndefined();
+    expect(datos.numeroLote).toBeUndefined();
+  });
+});
+
+describe("estadoVencimiento / textoVencimiento", () => {
+  it("clasifica vencido / crítico / próximo", () => {
+    expect(estadoVencimiento(-1, true)).toBe("vencido");
+    expect(estadoVencimiento(3, false)).toBe("critico");
+    expect(estadoVencimiento(20, false)).toBe("proximo");
+  });
+
+  it("texto legible del vencimiento", () => {
+    expect(textoVencimiento(-2, true)).toContain("vencido");
+    expect(textoVencimiento(0, false)).toBe("vence hoy");
+    expect(textoVencimiento(5, false)).toBe("vence en 5 día(s)");
   });
 });

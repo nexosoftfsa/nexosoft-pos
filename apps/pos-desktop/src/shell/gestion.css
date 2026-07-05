@@ -256,6 +256,65 @@
   color: #5b3ec8;
   margin-left: 8px;
 }
+.badge--lote {
+  background: #e0f2f1;
+  color: #0b6b63;
+  margin-left: 8px;
+}
+.check--field {
+  margin: 2px 0 10px;
+}
+
+/* ---------- Alertas de vencimiento (Fase 8.2) ---------- */
+.section-alertas {
+  margin-bottom: 18px;
+}
+.alertas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.alerta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.alerta--vencido {
+  border-left: 4px solid #b4262b;
+}
+.alerta--critico {
+  border-left: 4px solid #d98300;
+}
+.alerta--proximo {
+  border-left: 4px solid var(--acento, #1c97b0);
+}
+.alerta__prod {
+  font-weight: 600;
+}
+.alerta__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.badge--venc-vencido {
+  background: #fdecec;
+  color: #b4262b;
+}
+.badge--venc-critico {
+  background: var(--warn-soft);
+  color: #946800;
+}
+.badge--venc-proximo {
+  background: #e0f2f1;
+  color: #0b6b63;
+}
 
 /* ---------- Armador de combo (Fase 8.1) ---------- */
 .combo-ayuda {

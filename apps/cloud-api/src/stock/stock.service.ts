@@ -23,7 +23,7 @@ export class StockService {
   async saldoPorProducto(sucursalId: string, productoId: string) {
     const producto = await this.prisma.producto.findFirst({
       where: { id: productoId, sucursalId },
-      select: { id: true, nombre: true, codigo: true },
+      select: { id: true, nombre: true, codigo: true, requiereLote: true },
     });
     if (!producto) throw new NotFoundException(`Producto ${productoId} no encontrado`);
 
@@ -34,7 +34,7 @@ export class StockService {
   async saldosTodos(sucursalId: string) {
     const productos = await this.prisma.producto.findMany({
       where: { sucursalId, activo: true },
-      select: { id: true, nombre: true, codigo: true },
+      select: { id: true, nombre: true, codigo: true, requiereLote: true },
     });
 
     const saldos = await Promise.all(

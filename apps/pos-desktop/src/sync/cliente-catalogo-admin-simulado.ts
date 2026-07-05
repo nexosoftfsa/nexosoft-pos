@@ -31,6 +31,9 @@ const CATEGORIAS_DEMO: readonly CategoriaAdmin[] = [
   { id: "cat-panaderia", nombre: "Panadería" },
 ];
 
+/** Productos demo que se gestionan por lotes (perecederos). */
+const PERECEDEROS = new Set(["leche", "pan"]);
+
 const CATEGORIA_POR_PRODUCTO: Record<string, string> = {
   gaseosa: "cat-bebidas",
   agua: "cat-bebidas",
@@ -55,6 +58,7 @@ function sembrarProductos(): ProductoAdmin[] {
       precioCosto: d.costo,
       tipoIva: tipoIvaDeAlicuota(d.alicuota),
       tipo: "SIMPLE",
+      requiereLote: PERECEDEROS.has(d.id),
       activo: true,
       categoria,
     };
@@ -73,6 +77,7 @@ function sembrarProductos(): ProductoAdmin[] {
       precioCosto: "2000.00",
       tipoIva: "IVA_21",
       tipo: "COMBO",
+      requiereLote: false,
       activo: true,
       categoria: CATEGORIAS_DEMO.find((c) => c.id === "cat-almacen") ?? null,
       componentes: [
@@ -118,6 +123,7 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
       precioCosto: datos.precioCosto,
       tipoIva: datos.tipoIva,
       tipo: esCombo ? "COMBO" : "SIMPLE",
+      requiereLote: datos.requiereLote ?? false,
       activo: true,
       categoria: this.categorias.find((c) => c.id === datos.categoriaId) ?? null,
       ...(componentes !== undefined ? { componentes } : {}),
@@ -150,6 +156,7 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
       ...(cambios.precioVenta !== undefined ? { precioVenta: cambios.precioVenta } : {}),
       ...(cambios.precioCosto !== undefined ? { precioCosto: cambios.precioCosto } : {}),
       ...(cambios.tipoIva !== undefined ? { tipoIva: cambios.tipoIva } : {}),
+      ...(cambios.requiereLote !== undefined ? { requiereLote: cambios.requiereLote } : {}),
       ...(cambios.activo !== undefined ? { activo: cambios.activo } : {}),
       ...(componentes !== undefined ? { componentes } : {}),
       categoria,

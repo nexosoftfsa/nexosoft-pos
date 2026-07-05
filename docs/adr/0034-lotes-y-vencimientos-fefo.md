@@ -50,9 +50,14 @@ que las ventas consuman primero lo que caduca antes.
   `MovimientoStock.loteId`), `StockService` (ENTRADA con lote, SALIDA FEFO, lista
   de lotes, alertas de vencimiento), **VENTA con FEFO** en `VentasService` y
   restauración por lote en la anulación, + `requiereLote` en el ABM de catálogo.
-- **8.2.b (siguiente):** POS — marcar `requiereLote` en el catálogo, registrar
-  ENTRADA con lote/vencimiento, ver lotes por producto y panel de alertas de
-  vencimiento en el módulo de Stock.
+- **8.2.b ✅:** POS — checkbox "perecedero" en el ABM de catálogo; el módulo de
+  Stock pide vencimiento + N° de lote en la ENTRADA de un perecedero, muestra un
+  badge "Lote", una vista de lotes por producto y un **panel de alertas de
+  vencimiento** (KPI "Lotes por vencer" + lista vencido/crítico/próximo). La
+  SALIDA avisa que consume por FEFO (no se elige lote). Clientes `ClienteStock`
+  (HTTP + simulado con FEFO/alertas). **Los lotes son un concepto server-side**:
+  la venta offline del POS descuenta a nivel producto y el FEFO de lote lo hace el
+  servidor al sincronizar; no se tocó el dominio offline.
 
 ## Alternativas consideradas
 

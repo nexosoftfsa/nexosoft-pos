@@ -19,6 +19,7 @@ const valido: FormProducto = {
   precioCosto: "800",
   tipoIva: "IVA_21",
   tipo: "SIMPLE",
+  requiereLote: false,
   componentes: [],
   categoriaId: "cat-almacen",
 };
@@ -70,6 +71,7 @@ describe("formDesdeProducto", () => {
       precioCosto: "2800",
       tipoIva: "IVA_10_5",
       tipo: "SIMPLE",
+      requiereLote: false,
       activo: true,
       categoria: { id: "cat-almacen", nombre: "Almacén" },
     };
@@ -81,6 +83,7 @@ describe("formDesdeProducto", () => {
       precioCosto: "2800",
       tipoIva: "IVA_10_5",
       tipo: "SIMPLE",
+      requiereLote: false,
       componentes: [],
       categoriaId: "cat-almacen",
     });
@@ -96,6 +99,7 @@ describe("formDesdeProducto", () => {
       precioCosto: "2000.00",
       tipoIva: "IVA_21",
       tipo: "COMBO",
+      requiereLote: false,
       activo: true,
       categoria: null,
       componentes: [

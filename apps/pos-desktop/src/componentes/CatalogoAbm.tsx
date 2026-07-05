@@ -386,6 +386,17 @@ function ModalProducto({
               </select>
             </div>
           </div>
+          {!esCombo && (
+            <label className="check check--field">
+              <input
+                type="checkbox"
+                checked={form.requiereLote}
+                onChange={(e) => campo("requiereLote", e.target.checked)}
+              />
+              Producto perecedero (se gestiona por lotes con vencimiento)
+            </label>
+          )}
+
           {esCombo && (
             <div className="field">
               <label>Componentes del combo</label>

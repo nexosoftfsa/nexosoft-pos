@@ -35,6 +35,7 @@ export interface FormProducto {
   precioCosto: string;
   tipoIva: TipoIvaRemoto;
   tipo: TipoProductoRemoto;
+  requiereLote: boolean;
   componentes: ComponenteForm[];
   categoriaId: string;
 }
@@ -47,6 +48,7 @@ export const FORM_VACIO: FormProducto = {
   precioCosto: "",
   tipoIva: "IVA_21",
   tipo: "SIMPLE",
+  requiereLote: false,
   componentes: [],
   categoriaId: "",
 };
@@ -61,6 +63,7 @@ export function formDesdeProducto(p: ProductoAdmin): FormProducto {
     precioCosto: p.precioCosto,
     tipoIva: p.tipoIva,
     tipo: p.tipo,
+    requiereLote: p.requiereLote,
     componentes: (p.componentes ?? []).map((c) => ({
       componenteId: c.componenteId,
       cantidad: c.cantidad,
@@ -126,6 +129,7 @@ export function aDatosProducto(f: FormProducto): DatosProducto {
     precioCosto: normalizarImporte(f.precioCosto),
     tipoIva: f.tipoIva,
     tipo: f.tipo,
+    requiereLote: f.requiereLote,
     ...(esCombo
       ? {
           componentes: f.componentes
