@@ -48,6 +48,7 @@ describe('VentasService', () => {
   let tx: {
     venta: { create: ReturnType<typeof vi.fn> };
     movimientoStock: { create: ReturnType<typeof vi.fn> };
+    movimientoCuentaCorriente: { create: ReturnType<typeof vi.fn> };
   };
   let cae: { autorizar: ReturnType<typeof vi.fn> };
   let libro: LibroDeVentasEnMemoria;
@@ -59,6 +60,7 @@ describe('VentasService', () => {
     tx = {
       venta: { create: vi.fn().mockResolvedValue(ventaDevuelta()) },
       movimientoStock: { create: vi.fn().mockResolvedValue({}) },
+      movimientoCuentaCorriente: { create: vi.fn().mockResolvedValue({}) },
     };
     prisma = {
       venta: { findUnique: vi.fn().mockResolvedValue(null), findMany: vi.fn() },
@@ -199,6 +201,42 @@ describe('VentasService', () => {
         ['p1', '1', 'nuevo'],
         ['p2', '1', null],
       ]);
+    });
+  });
+
+  describe('venta a cuenta corriente / fiado (ADR-0037)', () => {
+    it('carga la deuda del cliente por lo pagado con cuenta corriente', async () => {
+      await service.registrar(USUARIO, {
+        ...DTO,
+        clienteId: 'cli1',
+        pagos: [{ medioPago: 'CUENTA_CORRIENTE', monto: '240' }],
+      } as never);
+
+      expect(tx.movimientoCuentaCorriente.create).toHaveBeenCalledOnce();
+      const data = tx.movimientoCuentaCorriente.create.mock.calls[0]![0].data;
+      expect(data.tipo).toBe('CARGO');
+      expect(data.clienteId).toBe('cli1');
+      expect(data.monto.toString()).toBe('240');
+    });
+
+    it('carga solo la porción CC en un pago combinado (efectivo + cuenta corriente)', async () => {
+      await service.registrar(USUARIO, {
+        ...DTO,
+        clienteId: 'cli1',
+        pagos: [
+          { medioPago: 'EFECTIVO', monto: '100' },
+          { medioPago: 'CUENTA_CORRIENTE', monto: '140' },
+        ],
+      } as never);
+
+      const data = tx.movimientoCuentaCorriente.create.mock.calls[0]![0].data;
+      expect(data.monto.toString()).toBe('140');
+      expect(tx.venta.create.mock.calls[0]![0].data.clienteId).toBe('cli1');
+    });
+
+    it('no genera cargo si no hay cuenta corriente', async () => {
+      await service.registrar(USUARIO, DTO);
+      expect(tx.movimientoCuentaCorriente.create).not.toHaveBeenCalled();
     });
   });
 

@@ -37,7 +37,14 @@ const FORMAS: ReadonlyArray<{ valor: FormaDePago; etiqueta: string; electronico?
   { valor: FormaDePago.Tarjeta, etiqueta: "Tarjeta / Point", electronico: true },
   { valor: FormaDePago.Billetera, etiqueta: "Billetera (QR)", electronico: true },
   { valor: FormaDePago.Transferencia, etiqueta: "Transferencia" },
+  { valor: FormaDePago.CuentaCorriente, etiqueta: "Cuenta corriente" },
 ];
+
+/** Cliente elegible para vender en cuenta corriente (fiado). */
+export interface ClienteVenta {
+  readonly id: string;
+  readonly nombre: string;
+}
 
 function mensajeError(e: unknown): string {
   if (e instanceof ErrorDominio) return e.message;
@@ -50,6 +57,7 @@ function armarComando(
   condicionReceptor: CondicionIva,
   pagos: readonly PagoUi[],
   recargoPorcentaje = 0,
+  clienteId?: string,
 ): ComandoVenta {
   return {
     items: carrito.map((c) => ({
@@ -59,16 +67,20 @@ function armarComando(
     condicionReceptor,
     pagos: pagos.map((p) => ({ forma: p.forma, monto: p.monto })),
     ...(recargoPorcentaje > 0 ? { recargoPorcentaje } : {}),
+    ...(clienteId !== undefined ? { clienteId } : {}),
   };
 }
 
 export function PantallaPos({
   entorno,
   sync,
+  clientes = [],
 }: {
   entorno: EntornoPos;
   /** Estado de la cola de sincronización (lo orquesta el shell con `useSync`). */
   sync: EstadoSync;
+  /** Clientes para vender en cuenta corriente (fiado). Vacío = sin selector. */
+  clientes?: readonly ClienteVenta[];
 }) {
   const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
 
@@ -76,6 +88,7 @@ export function PantallaPos({
   const [condicionReceptor, setCondicionReceptor] = useState<CondicionIva>(
     CondicionIva.ConsumidorFinal,
   );
+  const [clienteId, setClienteId] = useState<string>("");
   const [pagos, setPagos] = useState<PagoUi[]>([]);
   const [recargoPorc, setRecargoPorc] = useState<number>(0);
   const [preview, setPreview] = useState<PrevisualizacionVenta | null>(null);
@@ -252,9 +265,16 @@ export function PantallaPos({
   }
 
   async function _finalizarVenta() {
+    // Fiado: si se paga con cuenta corriente, hace falta elegir el cliente.
+    const hayCuentaCorriente = pagos.some((p) => p.forma === FormaDePago.CuentaCorriente);
+    if (hayCuentaCorriente && clienteId === "") {
+      setError("Elegí un cliente para vender en cuenta corriente.");
+      return;
+    }
+    const clienteVenta = clienteId === "" ? undefined : clienteId;
     try {
       const venta = await servicio.confirmarVenta(
-        armarComando(carrito, condicionReceptor, pagos, recargoPorc),
+        armarComando(carrito, condicionReceptor, pagos, recargoPorc, clienteVenta),
       );
       setUltimaVenta(venta);
 
@@ -282,6 +302,7 @@ export function PantallaPos({
             terminalId: entorno.sync.terminalId,
             pagos: pagosSync,
             recargo: venta.resultado.recargo.aDecimalString(2),
+            ...(clienteVenta !== undefined ? { clienteId: clienteVenta } : {}),
           }),
         );
       } catch (e) {
@@ -291,6 +312,7 @@ export function PantallaPos({
       setCarrito([]);
       setPagos([]);
       setRecargoPorc(0);
+      setClienteId("");
       setError(null);
     } catch (e) {
       setError(mensajeError(e));
@@ -377,6 +399,20 @@ export function PantallaPos({
               ))}
             </select>
           </div>
+
+          {clientes.length > 0 && (
+            <div className="comprobante cliente-venta">
+              <span className="tipo">Cliente</span>
+              <select value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+                <option value="">— Consumidor final —</option>
+                {clientes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <ul className="items">
             {carrito.length === 0 && <li className="vacio">Agregá productos…</li>}

@@ -8,7 +8,7 @@
  * sincronización, datos del comercio, terminal y cierre de sesión. La cola de
  * sync se orquesta una sola vez (`useSync`) y se baja como prop a Ventas.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { EntornoPos } from "../datos/bootstrap";
 import type { ClienteCatalogoAdmin } from "../sync/cliente-catalogo-admin";
@@ -109,6 +109,20 @@ export function Shell({
   const [activoId, setActivoId] = useState<string>(() => moduloInicial(usuario.rol));
   const [navAbierto, setNavAbierto] = useState(false);
 
+  // Clientes para vender en cuenta corriente (fiado) desde la pantalla de ventas.
+  const [clientesVenta, setClientesVenta] = useState<{ id: string; nombre: string }[]>([]);
+  useEffect(() => {
+    if (!clienteCtaCte) return;
+    let vivo = true;
+    clienteCtaCte
+      .listar(false)
+      .then((cs) => vivo && setClientesVenta(cs.map((c) => ({ id: c.id, nombre: c.nombre }))))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [clienteCtaCte]);
+
   const activo = visibles.find((m) => m.id === activoId) ?? visibles[0];
 
   function navegar(id: string) {
@@ -201,7 +215,7 @@ export function Shell({
 
         <div className="shell-content">
           {activo?.id === "pos" ? (
-            <PantallaPos entorno={entorno} sync={sync} />
+            <PantallaPos entorno={entorno} sync={sync} clientes={clientesVenta} />
           ) : activo?.id === "catalogo" && clienteCatalogo ? (
             <CatalogoAbm cliente={clienteCatalogo} />
           ) : activo?.id === "stock" && clienteStock ? (

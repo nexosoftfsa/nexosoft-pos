@@ -189,6 +189,18 @@ export class VentasService {
     const pagos = dto.pagos ?? [];
     const medioPagoResumen = resumenMedioPago(pagos, dto.medioPago);
 
+    // Fiado (ADR-0037): la parte pagada con CUENTA_CORRIENTE va a la deuda del
+    // cliente. Con desglose, se suma lo marcado CC; sin desglose, si el medio es
+    // CC, va el total. La venta ya ocurrió: no se bloquea por límite de crédito.
+    const montoCuentaCorriente =
+      pagos.length > 0
+        ? pagos
+            .filter((p) => p.medioPago === 'CUENTA_CORRIENTE')
+            .reduce((a, p) => a.add(new Decimal(p.monto)), new Decimal(0))
+        : dto.medioPago === 'CUENTA_CORRIENTE'
+          ? total
+          : new Decimal(0);
+
     // Autorización fiscal (mock; el real es @nexosoft/fiscal vía ARCA).
     const cae = await this.cae.autorizar({
       tipoComprobante,
@@ -213,6 +225,7 @@ export class VentasService {
           sucursalId: usuario.sucursalId,
           usuarioId: usuario.id,
           terminalId: dto.terminalId ?? null,
+          clienteId: dto.clienteId ?? null,
           items: { create: itemsData },
           ...(pagos.length > 0
             ? { pagos: { create: pagos.map((p) => ({ medioPago: p.medioPago, monto: new Decimal(p.monto) })) } }
@@ -237,6 +250,20 @@ export class VentasService {
             sucursalId: usuario.sucursalId,
             ventaId: v.id,
             loteId: t.loteId,
+          },
+        });
+      }
+
+      // Fiado: cargamos la deuda a la cuenta corriente del cliente (sin chequear
+      // el límite: la venta ya se hizo). El control de límite vive en el POS.
+      if (montoCuentaCorriente.gt(0) && dto.clienteId) {
+        await tx.movimientoCuentaCorriente.create({
+          data: {
+            tipo: 'CARGO',
+            monto: montoCuentaCorriente,
+            concepto: `Venta ${dto.operacionId}`,
+            clienteId: dto.clienteId,
+            sucursalId: usuario.sucursalId,
           },
         });
       }

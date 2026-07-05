@@ -53,6 +53,16 @@ describe("construirOperacionVenta", () => {
     const op = construirOperacionVenta({ terminalId: "t", medioPago: "EFECTIVO", items: [] });
     expect((op.payload as { pagos?: unknown }).pagos).toBeUndefined();
   });
+
+  it("incluye clienteId en el payload al vender a cuenta corriente (fiado)", () => {
+    const op = construirOperacionVenta({
+      terminalId: "t",
+      medioPago: "CUENTA_CORRIENTE",
+      items: [],
+      clienteId: "cli1",
+    });
+    expect((op.payload as { clienteId?: string }).clienteId).toBe("cli1");
+  });
 });
 
 describe("resumenMedioPago", () => {

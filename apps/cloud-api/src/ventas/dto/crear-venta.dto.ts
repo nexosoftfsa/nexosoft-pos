@@ -82,4 +82,9 @@ export class CrearVentaDto {
   @IsString()
   @IsOptional()
   terminalId?: string;
+
+  /** Cliente de la venta (obligatorio si se paga con cuenta corriente). */
+  @IsString()
+  @IsOptional()
+  clienteId?: string;
 }

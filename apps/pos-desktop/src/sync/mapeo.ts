@@ -49,6 +49,8 @@ export function construirOperacionVenta(args: {
   readonly pagos?: readonly PagoSync[];
   /** Recargo aplicado, como monto string. Opcional. */
   readonly recargo?: string;
+  /** Cliente de la venta (obligatorio para fiado). Opcional. */
+  readonly clienteId?: string;
 }): OperacionSync {
   return {
     operacionId: crypto.randomUUID(),
@@ -68,6 +70,7 @@ export function construirOperacionVenta(args: {
       ...(args.recargo !== undefined && args.recargo !== "0.00"
         ? { recargo: args.recargo }
         : {}),
+      ...(args.clienteId !== undefined ? { clienteId: args.clienteId } : {}),
     },
   };
 }
