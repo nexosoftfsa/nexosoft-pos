@@ -267,6 +267,12 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  /* En un grid, los botones no encogen por debajo de su contenido por defecto
+     (min-width:auto) y a anchos chicos quedaban cortados contra el borde. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pago-nuevo button.exacto {
   background: #fff;

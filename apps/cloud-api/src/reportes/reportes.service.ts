@@ -8,6 +8,14 @@ import type { RangoFechasDto } from './dto/rango-fechas.dto';
 
 /** Días hacia atrás que cubre un reporte cuando no se indica rango. */
 const DIAS_POR_DEFECTO = 30;
+/**
+ * Huso horario del comercio: Argentina (UTC-3, sin horario de verano desde 2009).
+ * Los reportes agrupan y filtran por el DÍA LOCAL, no por UTC: si no, una venta de
+ * la noche (que en UTC cae al día siguiente) quedaría en el día equivocado o fuera
+ * de un filtro "hasta hoy".
+ */
+const OFFSET_AR = '-03:00';
+const OFFSET_AR_MS = 3 * 60 * 60 * 1000;
 /** Solo las ventas COMPLETADA cuentan para los reportes (se excluyen ANULADA/PENDIENTE). */
 const ESTADO_VALIDO = 'COMPLETADA' as const;
 const TOP_POR_DEFECTO = 10;
@@ -64,7 +72,7 @@ export class ReportesService {
 
     const porDia = new Map<string, { total: Decimal; cantidad: number }>();
     for (const v of ventas) {
-      const dia = v.creadaEn.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+      const dia = this.diaLocal(v.creadaEn); // YYYY-MM-DD en hora Argentina
       const acc = porDia.get(dia) ?? { total: new Decimal(0), cantidad: 0 };
       acc.total = acc.total.add(v.total);
       acc.cantidad += 1;
@@ -231,30 +239,31 @@ export class ReportesService {
 
   /**
    * Resuelve el rango efectivo. `desde`/`hasta` vienen como `YYYY-MM-DD` y se
-   * interpretan en UTC; `hasta` es INCLUSIVE (se suma un día para el `lt`).
-   * Sin parámetros: los últimos {@link DIAS_POR_DEFECTO} días hasta hoy inclusive.
+   * interpretan como días de calendario en **hora Argentina** (medianoche AR =
+   * 03:00 UTC); `hasta` es INCLUSIVE (se suma un día para el `lt`). Sin parámetros:
+   * los últimos {@link DIAS_POR_DEFECTO} días hasta hoy (AR) inclusive.
    */
   private calcularRango(rango: RangoFechasDto): { gte: Date; lt: Date } {
-    const ahora = new Date();
+    const hoy = this.diaLocal(new Date());
+    const desde = rango.desde ?? this.sumarDias(hoy, -DIAS_POR_DEFECTO);
+    const hasta = rango.hasta ?? hoy;
 
-    let gte: Date;
-    if (rango.desde) {
-      gte = new Date(`${rango.desde}T00:00:00.000Z`);
-    } else {
-      gte = new Date(ahora);
-      gte.setUTCHours(0, 0, 0, 0);
-      gte.setUTCDate(gte.getUTCDate() - DIAS_POR_DEFECTO);
-    }
-
-    let lt: Date;
-    if (rango.hasta) {
-      lt = new Date(`${rango.hasta}T00:00:00.000Z`);
-    } else {
-      lt = new Date(ahora);
-      lt.setUTCHours(0, 0, 0, 0);
-    }
-    lt.setUTCDate(lt.getUTCDate() + 1); // hasta inclusive
+    const gte = new Date(`${desde}T00:00:00.000${OFFSET_AR}`);
+    const lt = new Date(`${hasta}T00:00:00.000${OFFSET_AR}`);
+    lt.setUTCDate(lt.getUTCDate() + 1); // hasta inclusive (día local completo)
 
     return { gte, lt };
+  }
+
+  /** Día de calendario en hora Argentina (UTC-3) de una fecha, como YYYY-MM-DD. */
+  private diaLocal(fecha: Date): string {
+    return new Date(fecha.getTime() - OFFSET_AR_MS).toISOString().slice(0, 10);
+  }
+
+  /** Suma (o resta) días a una fecha `YYYY-MM-DD` y devuelve el mismo formato. */
+  private sumarDias(yyyymmdd: string, dias: number): string {
+    const d = new Date(`${yyyymmdd}T00:00:00.000Z`);
+    d.setUTCDate(d.getUTCDate() + dias);
+    return d.toISOString().slice(0, 10);
   }
 }

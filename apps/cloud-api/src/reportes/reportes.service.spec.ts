@@ -59,22 +59,32 @@ describe('ReportesService', () => {
       const where = mockVenta.findMany.mock.calls[0][0].where;
       expect(where.sucursalId).toBe(SUCURSAL);
       expect(where.estado).toBe('COMPLETADA');
-      expect(where.creadaEn.gte.toISOString()).toBe('2026-06-01T00:00:00.000Z');
-      // hasta inclusive: el lt es el día siguiente a las 00:00
-      expect(where.creadaEn.lt.toISOString()).toBe('2026-07-01T00:00:00.000Z');
+      // Medianoche del día local AR = 03:00 UTC (huso -3).
+      expect(where.creadaEn.gte.toISOString()).toBe('2026-06-01T03:00:00.000Z');
+      // hasta inclusive: el lt es la medianoche AR del día siguiente.
+      expect(where.creadaEn.lt.toISOString()).toBe('2026-07-01T03:00:00.000Z');
     });
 
-    it('usa los últimos 30 días cuando no se pasa rango', async () => {
+    it('usa los últimos 30 días (hora AR) cuando no se pasa rango', async () => {
       vi.useFakeTimers();
-      vi.setSystemTime(new Date('2026-06-28T15:00:00.000Z'));
+      vi.setSystemTime(new Date('2026-06-28T15:00:00.000Z')); // 12:00 en AR → día 28
       mockVenta.findMany.mockResolvedValue([]);
 
       await service.resumenVentas(SUCURSAL, {});
 
       const where = mockVenta.findMany.mock.calls[0][0].where;
-      expect(where.creadaEn.gte.toISOString()).toBe('2026-05-29T00:00:00.000Z');
-      expect(where.creadaEn.lt.toISOString()).toBe('2026-06-29T00:00:00.000Z');
+      expect(where.creadaEn.gte.toISOString()).toBe('2026-05-29T03:00:00.000Z');
+      expect(where.creadaEn.lt.toISOString()).toBe('2026-06-29T03:00:00.000Z');
       vi.useRealTimers();
+    });
+
+    it('incluye una venta de la noche AR en el filtro "hasta ese día" (fix huso)', async () => {
+      mockVenta.findMany.mockResolvedValue([]);
+      // Venta del 29/06 23:30 AR = 30/06 02:30 UTC. Con "hasta 2026-06-29" debe entrar.
+      await service.resumenVentas(SUCURSAL, { desde: '2026-06-29', hasta: '2026-06-29' });
+      const where = mockVenta.findMany.mock.calls[0][0].where;
+      const ventaNocturna = new Date('2026-06-30T02:30:00.000Z');
+      expect(ventaNocturna >= where.creadaEn.gte && ventaNocturna < where.creadaEn.lt).toBe(true);
     });
   });
 
