@@ -6,9 +6,12 @@ import type { Credenciales } from "../sync/cliente-auth-http";
 export function PantallaLogin({
   onLogin,
   onConfig,
+  onModoDemo,
 }: {
   onLogin: (c: Credenciales) => Promise<void>;
   onConfig?: () => void;
+  /** Arranca el POS en modo demo autocontenido (sin backend). */
+  onModoDemo?: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -68,6 +71,11 @@ export function PantallaLogin({
         {onConfig !== undefined && (
           <button type="button" style={enlace} onClick={onConfig}>
             ⚙ Configuración del servidor
+          </button>
+        )}
+        {onModoDemo !== undefined && (
+          <button type="button" style={botonDemo} onClick={onModoDemo}>
+            Probar en modo demo (sin conexión)
           </button>
         )}
       </form>
@@ -132,5 +140,16 @@ const enlace: CSSProperties = {
   border: "none",
   color: "#2563eb",
   fontSize: "0.85rem",
+  cursor: "pointer",
+};
+const botonDemo: CSSProperties = {
+  marginTop: "0.2rem",
+  padding: "0.6rem",
+  borderRadius: "8px",
+  border: "1px solid #1C97B0",
+  background: "#fff",
+  color: "#0f6b7d",
+  fontSize: "0.9rem",
+  fontWeight: 600,
   cursor: "pointer",
 };

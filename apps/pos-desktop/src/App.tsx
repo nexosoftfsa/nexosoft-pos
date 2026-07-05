@@ -69,6 +69,16 @@ export function App() {
 
 /** Navegador (desarrollo): datos en memoria, sin login. */
 function AppNavegador() {
+  return <AppDemo />;
+}
+
+/**
+ * Modo DEMO autocontenido: todo en memoria (catálogo, combos, lotes, promos,
+ * cuentas corrientes…), sin backend ni login. Lo usa el navegador de desarrollo y
+ * el botón "Modo demo" de la app instalada, para que alguien pueda probar el POS
+ * sin levantar el servidor de sucursal.
+ */
+function AppDemo() {
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
   const clienteCatalogoRef = useRef<ClienteCatalogoAdmin | null>(null);
   const clienteStockRef = useRef<ClienteStock | null>(null);
@@ -128,6 +138,7 @@ function AppTauri() {
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
   const [valoresConfig, setValoresConfig] = useState<ValoresConfig | null>(null);
+  const [modoDemo, setModoDemo] = useState(false);
 
   const fallar = useCallback((e: unknown) => {
     setError(e instanceof Error ? e.message : String(e));
@@ -264,7 +275,34 @@ function AppTauri() {
     [],
   );
 
-  if (fase === "error") return <Aviso>No se pudo iniciar el POS: {error}</Aviso>;
+  // Modo demo autocontenido (sin backend), disparado desde el login.
+  if (modoDemo) return <AppDemo />;
+
+  if (fase === "error") {
+    return (
+      <Aviso>
+        <div>
+          <p>No se pudo conectar con el servidor de sucursal.</p>
+          <p style={{ color: "#64748b", fontSize: "0.9rem", margin: "0.5rem 0 1.25rem" }}>{error}</p>
+          <button
+            type="button"
+            onClick={() => setModoDemo(true)}
+            style={{
+              padding: "0.6rem 1.1rem",
+              borderRadius: "0.5rem",
+              border: "none",
+              background: "#1C97B0",
+              color: "#fff",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Probar en modo demo (sin conexión)
+          </button>
+        </div>
+      </Aviso>
+    );
+  }
   if (fase === "config" && valoresConfig !== null) {
     return (
       <PantallaConfig
@@ -274,7 +312,14 @@ function AppTauri() {
       />
     );
   }
-  if (fase === "login") return <PantallaLogin onLogin={onLogin} onConfig={() => void onAbrirConfig()} />;
+  if (fase === "login")
+    return (
+      <PantallaLogin
+        onLogin={onLogin}
+        onConfig={() => void onAbrirConfig()}
+        onModoDemo={() => setModoDemo(true)}
+      />
+    );
   if (fase === "terminal") return <PantallaTerminal listar={listarTerminales} onElegir={onElegirTerminal} />;
   if (fase === "listo" && entorno !== null) {
     return (
