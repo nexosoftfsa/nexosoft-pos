@@ -1,8 +1,9 @@
 /**
  * Adaptador EN MEMORIA del ABM de catálogo, para el desarrollo en el navegador
  * (sin servidor de sucursal). Reproduce el contrato del cloud-api: alta valida
- * código duplicado (409), edición y baja por id. Sembrado con los productos demo
- * para poder ver y verificar la pantalla en el preview.
+ * código duplicado (409) y las reglas de combo (Fase 8.1), edición y baja por id.
+ * Sembrado con los productos demo (incluye un combo) para ver la pantalla en el
+ * preview.
  */
 import { ALICUOTAS_IVA, type AlicuotaIva } from "@nexosoft/domain";
 
@@ -11,6 +12,7 @@ import {
   ErrorCatalogoAdmin,
   type CategoriaAdmin,
   type ClienteCatalogoAdmin,
+  type ComponenteAdmin,
   type DatosProducto,
   type ProductoAdmin,
   type TipoIvaRemoto,
@@ -41,7 +43,7 @@ const CATEGORIA_POR_PRODUCTO: Record<string, string> = {
 };
 
 function sembrarProductos(): ProductoAdmin[] {
-  return DEFS.map((d) => {
+  const simples = DEFS.map((d): ProductoAdmin => {
     const catId = CATEGORIA_POR_PRODUCTO[d.id];
     const categoria = CATEGORIAS_DEMO.find((c) => c.id === catId) ?? null;
     return {
@@ -52,10 +54,38 @@ function sembrarProductos(): ProductoAdmin[] {
       precioVenta: d.precio,
       precioCosto: d.costo,
       tipoIva: tipoIvaDeAlicuota(d.alicuota),
+      tipo: "SIMPLE",
       activo: true,
       categoria,
     };
   });
+
+  // Combo demo: café + alfajor (si ambos existen en la semilla).
+  const cafe = simples.find((p) => p.id === "cafe");
+  const alfajor = simples.find((p) => p.id === "alfajor");
+  if (cafe && alfajor) {
+    simples.push({
+      id: "combo-merienda",
+      codigo: "COMBO1",
+      nombre: "Combo Merienda",
+      descripcion: "Café + alfajor",
+      precioVenta: "3200.00",
+      precioCosto: "2000.00",
+      tipoIva: "IVA_21",
+      tipo: "COMBO",
+      activo: true,
+      categoria: CATEGORIAS_DEMO.find((c) => c.id === "cat-almacen") ?? null,
+      componentes: [
+        { componenteId: cafe.id, cantidad: "1", componente: snapshot(cafe) },
+        { componenteId: alfajor.id, cantidad: "1", componente: snapshot(alfajor) },
+      ],
+    });
+  }
+  return simples;
+}
+
+function snapshot(p: ProductoAdmin): NonNullable<ComponenteAdmin["componente"]> {
+  return { id: p.id, codigo: p.codigo, nombre: p.nombre };
 }
 
 export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
@@ -77,6 +107,8 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
     if (this.productos.some((p) => p.codigo === datos.codigo)) {
       throw new ErrorCatalogoAdmin(`Ya existe un producto con código ${datos.codigo}`, 409);
     }
+    const esCombo = datos.tipo === "COMBO";
+    const componentes = esCombo ? this.validarComponentes(datos.componentes) : undefined;
     const nuevo: ProductoAdmin = {
       id: `sim-${++this.secuencia}`,
       codigo: datos.codigo,
@@ -85,8 +117,10 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
       precioVenta: datos.precioVenta,
       precioCosto: datos.precioCosto,
       tipoIva: datos.tipoIva,
+      tipo: esCombo ? "COMBO" : "SIMPLE",
       activo: true,
       categoria: this.categorias.find((c) => c.id === datos.categoriaId) ?? null,
+      ...(componentes !== undefined ? { componentes } : {}),
     };
     this.productos = [...this.productos, nuevo];
     return { ...nuevo };
@@ -98,10 +132,17 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
   ): Promise<ProductoAdmin> {
     const actual = this.productos.find((p) => p.id === id);
     if (!actual) throw new ErrorCatalogoAdmin(`Producto ${id} no encontrado`, 404);
+    if (cambios.componentes !== undefined && actual.tipo !== "COMBO") {
+      throw new ErrorCatalogoAdmin("Solo un combo puede tener componentes.", 400);
+    }
     const categoria =
       cambios.categoriaId !== undefined
         ? (this.categorias.find((c) => c.id === cambios.categoriaId) ?? null)
         : actual.categoria;
+    const componentes =
+      cambios.componentes !== undefined
+        ? this.validarComponentes(cambios.componentes)
+        : actual.componentes;
     const actualizado: ProductoAdmin = {
       ...actual,
       ...(cambios.nombre !== undefined ? { nombre: cambios.nombre } : {}),
@@ -110,6 +151,7 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
       ...(cambios.precioCosto !== undefined ? { precioCosto: cambios.precioCosto } : {}),
       ...(cambios.tipoIva !== undefined ? { tipoIva: cambios.tipoIva } : {}),
       ...(cambios.activo !== undefined ? { activo: cambios.activo } : {}),
+      ...(componentes !== undefined ? { componentes } : {}),
       categoria,
     };
     this.productos = this.productos.map((p) => (p.id === id ? actualizado : p));
@@ -124,5 +166,29 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
 
   async listarCategorias(): Promise<CategoriaAdmin[]> {
     return this.categorias.map((c) => ({ ...c }));
+  }
+
+  /** Valida los componentes de un combo igual que el cloud-api (400 si algo falla). */
+  private validarComponentes(
+    componentes: ReadonlyArray<{ componenteId: string; cantidad: string }> | undefined,
+  ): ComponenteAdmin[] {
+    if (!componentes || componentes.length === 0) {
+      throw new ErrorCatalogoAdmin("Un combo necesita al menos un componente.", 400);
+    }
+    const ids = componentes.map((c) => c.componenteId);
+    if (new Set(ids).size !== ids.length) {
+      throw new ErrorCatalogoAdmin("El combo tiene componentes repetidos.", 400);
+    }
+    return componentes.map((c) => {
+      const prod = this.productos.find((p) => p.id === c.componenteId);
+      if (!prod) throw new ErrorCatalogoAdmin(`El componente ${c.componenteId} no existe.`, 400);
+      if (prod.tipo === "COMBO") {
+        throw new ErrorCatalogoAdmin("Un combo no puede incluir otro combo.", 400);
+      }
+      if (Number(c.cantidad) <= 0) {
+        throw new ErrorCatalogoAdmin("La cantidad de cada componente debe ser positiva.", 400);
+      }
+      return { componenteId: c.componenteId, cantidad: c.cantidad, componente: snapshot(prod) };
+    });
   }
 }

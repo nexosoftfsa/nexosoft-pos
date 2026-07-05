@@ -1,5 +1,16 @@
-import { IsString, IsOptional, IsEnum, IsNumberString, IsBoolean, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsNumberString,
+  IsBoolean,
+  IsArray,
+  ValidateNested,
+  MaxLength,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { TipoIva } from '@prisma/client';
+import { ComboComponenteDto } from './combo-componente.dto';
 
 export class ActualizarProductoDto {
   @IsString()
@@ -27,6 +38,13 @@ export class ActualizarProductoDto {
   @IsBoolean()
   @IsOptional()
   activo?: boolean;
+
+  /** Reemplaza el set de componentes del combo (solo aplica a productos COMBO). */
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ComboComponenteDto)
+  componentes?: ComboComponenteDto[];
 
   @IsString()
   @IsOptional()

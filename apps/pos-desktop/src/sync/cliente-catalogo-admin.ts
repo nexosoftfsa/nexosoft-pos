@@ -11,9 +11,19 @@ import type { TipoIvaRemoto } from "./mapeo-catalogo";
 
 export type { TipoIvaRemoto };
 
+/** SIMPLE = producto físico con stock; COMBO = agrupa otros productos (Fase 8.1). */
+export type TipoProductoRemoto = "SIMPLE" | "COMBO";
+
 export interface CategoriaAdmin {
   readonly id: string;
   readonly nombre: string;
+}
+
+/** Un componente de un combo, con el snapshot del producto que representa. */
+export interface ComponenteAdmin {
+  readonly componenteId: string;
+  readonly cantidad: string;
+  readonly componente?: { readonly id: string; readonly codigo: string; readonly nombre: string };
 }
 
 /** Producto tal como lo administra el catálogo (incluye la categoría). */
@@ -25,8 +35,11 @@ export interface ProductoAdmin {
   readonly precioVenta: string;
   readonly precioCosto: string;
   readonly tipoIva: TipoIvaRemoto;
+  readonly tipo: TipoProductoRemoto;
   readonly activo: boolean;
   readonly categoria: CategoriaAdmin | null;
+  /** Presente cuando `tipo` es COMBO. */
+  readonly componentes?: readonly ComponenteAdmin[];
 }
 
 /** Datos de alta/edición (lo que el formulario envía al servidor). */
@@ -37,6 +50,8 @@ export interface DatosProducto {
   readonly precioVenta: string;
   readonly precioCosto: string;
   readonly tipoIva: TipoIvaRemoto;
+  readonly tipo?: TipoProductoRemoto;
+  readonly componentes?: ReadonlyArray<{ readonly componenteId: string; readonly cantidad: string }>;
   readonly categoriaId?: string | null;
 }
 

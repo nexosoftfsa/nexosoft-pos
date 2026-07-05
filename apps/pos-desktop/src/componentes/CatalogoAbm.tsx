@@ -163,7 +163,10 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
                   return (
                     <tr key={p.id} className={p.activo ? "" : "fila-inactiva"}>
                       <td className="strong">{p.codigo}</td>
-                      <td>{p.nombre}</td>
+                      <td>
+                        {p.nombre}
+                        {p.tipo === "COMBO" && <span className="badge badge--combo">Combo</span>}
+                      </td>
                       <td>{p.categoria?.nombre ?? <span className="muted">—</span>}</td>
                       <td className="num">{precio(p.precioCosto)}</td>
                       <td className="num strong">{precio(p.precioVenta)}</td>
@@ -202,6 +205,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
         <ModalProducto
           cliente={cliente}
           categorias={categorias}
+          productos={productos}
           producto={editando === "nuevo" ? null : editando}
           onCerrar={() => setEditando(null)}
           onGuardado={() => {
@@ -217,12 +221,14 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
 function ModalProducto({
   cliente,
   categorias,
+  productos,
   producto,
   onCerrar,
   onGuardado,
 }: {
   cliente: ClienteCatalogoAdmin;
   categorias: readonly CategoriaAdmin[];
+  productos: readonly ProductoAdmin[];
   producto: ProductoAdmin | null;
   onCerrar: () => void;
   onGuardado: () => void;
@@ -237,6 +243,12 @@ function ModalProducto({
     setForm((f) => ({ ...f, [clave]: valor }));
   }
 
+  // Productos elegibles como componentes: simples, activos y distinto del combo actual.
+  const simplesDisponibles = useMemo(
+    () => productos.filter((p) => p.tipo === "SIMPLE" && p.activo && p.id !== producto?.id),
+    [productos, producto],
+  );
+
   async function guardar() {
     const erroresForm = validarProducto(form);
     if (erroresForm.length > 0) {
@@ -250,9 +262,11 @@ function ModalProducto({
       if (producto === null) {
         await cliente.crearProducto(datos);
       } else {
-        // El código no se edita (es la clave del producto); se manda el resto.
-        const { codigo: _codigo, ...cambios } = datos;
+        // Ni el código ni el tipo se editan (el tipo no es campo del PATCH); se
+        // manda el resto (incluye `componentes` para reemplazar el set del combo).
+        const { codigo: _codigo, tipo: _tipo, ...cambios } = datos;
         void _codigo;
+        void _tipo;
         await cliente.actualizarProducto(producto.id, cambios);
       }
       onGuardado();
@@ -264,6 +278,23 @@ function ModalProducto({
   }
 
   const esNuevo = producto === null;
+  const esCombo = form.tipo === "COMBO";
+
+  function agregarComponente() {
+    setForm((f) => ({
+      ...f,
+      componentes: [...f.componentes, { componenteId: "", cantidad: "1" }],
+    }));
+  }
+  function cambiarComponente(indice: number, patch: Partial<{ componenteId: string; cantidad: string }>) {
+    setForm((f) => ({
+      ...f,
+      componentes: f.componentes.map((c, i) => (i === indice ? { ...c, ...patch } : c)),
+    }));
+  }
+  function quitarComponente(indice: number) {
+    setForm((f) => ({ ...f, componentes: f.componentes.filter((_, i) => i !== indice) }));
+  }
 
   return (
     <div className="modal modal--show" onClick={onCerrar}>
@@ -275,6 +306,18 @@ function ModalProducto({
           </button>
         </div>
         <div className="modal__body">
+          <div className="field">
+            <label>Tipo</label>
+            <select
+              className="input"
+              value={form.tipo}
+              disabled={!esNuevo}
+              onChange={(e) => campo("tipo", e.target.value as FormProducto["tipo"])}
+            >
+              <option value="SIMPLE">Producto simple</option>
+              <option value="COMBO">Combo (agrupa otros productos)</option>
+            </select>
+          </div>
           <div className="field">
             <label>Código (de barras o interno)</label>
             <input
@@ -343,6 +386,53 @@ function ModalProducto({
               </select>
             </div>
           </div>
+          {esCombo && (
+            <div className="field">
+              <label>Componentes del combo</label>
+              <p className="muted combo-ayuda">
+                Al vender este combo se descuenta el stock de cada componente.
+              </p>
+              <div className="combo-comps">
+                {form.componentes.length === 0 && (
+                  <div className="muted">Todavía no agregaste componentes.</div>
+                )}
+                {form.componentes.map((c, i) => (
+                  <div key={i} className="combo-comp">
+                    <select
+                      className="input"
+                      value={c.componenteId}
+                      onChange={(e) => cambiarComponente(i, { componenteId: e.target.value })}
+                    >
+                      <option value="">— Elegí un producto —</option>
+                      {simplesDisponibles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      className="input input--mini"
+                      inputMode="decimal"
+                      aria-label="Cantidad"
+                      value={c.cantidad}
+                      onChange={(e) => cambiarComponente(i, { cantidad: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="linkbtn linkbtn--danger"
+                      onClick={() => quitarComponente(i)}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="pill-btn" onClick={agregarComponente}>
+                + Agregar componente
+              </button>
+            </div>
+          )}
+
           {errores.length > 0 && (
             <div className="error">
               {errores.map((e, i) => (

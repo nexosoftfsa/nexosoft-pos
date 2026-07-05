@@ -39,6 +39,7 @@ const DTO = {
 describe('VentasService', () => {
   let prisma: {
     venta: { findUnique: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
+    comboComponente: { findMany: ReturnType<typeof vi.fn> };
     $transaction: ReturnType<typeof vi.fn>;
   };
   let tx: {
@@ -58,6 +59,7 @@ describe('VentasService', () => {
     };
     prisma = {
       venta: { findUnique: vi.fn().mockResolvedValue(null), findMany: vi.fn() },
+      comboComponente: { findMany: vi.fn().mockResolvedValue([]) },
       $transaction: vi.fn((cb: (t: typeof tx) => unknown) => cb(tx)),
     };
     cae = {
@@ -138,6 +140,29 @@ describe('VentasService', () => {
       config.get.mockReturnValue('true');
       await service.registrar(USUARIO, DTO);
       expect(motor.crearRespaldo).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('venta de combo (Fase 8.1)', () => {
+    it('expande el combo: descuenta stock de sus componentes, no del combo', async () => {
+      // p1 es un combo de 2×gaseosa + 1×alfajor; p2 es simple.
+      prisma.comboComponente.findMany.mockResolvedValue([
+        { comboId: 'p1', componenteId: 'gaseosa', cantidad: new Decimal('2') },
+        { comboId: 'p1', componenteId: 'alfajor', cantidad: new Decimal('1') },
+      ]);
+
+      await service.registrar(USUARIO, DTO);
+
+      // DTO vende 2×p1 (combo) + 1×p2 (simple) → 2 componentes del combo + p2 = 3 movs.
+      expect(tx.movimientoStock.create).toHaveBeenCalledTimes(3);
+      const movs = tx.movimientoStock.create.mock.calls.map((c) => c[0].data);
+      expect(movs.map((m) => [m.productoId, m.cantidad.toString()])).toEqual([
+        ['gaseosa', '4'], // 2 (cantidad del ítem) × 2 (por combo)
+        ['alfajor', '2'], // 2 × 1
+        ['p2', '1'],
+      ]);
+      // El combo mismo no genera movimiento de stock.
+      expect(movs.some((m) => m.productoId === 'p1')).toBe(false);
     });
   });
 

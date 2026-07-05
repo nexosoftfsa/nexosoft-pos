@@ -61,7 +61,7 @@ describe('VentasService.anular', () => {
   };
   let tx: {
     venta: { create: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
-    movimientoStock: { create: ReturnType<typeof vi.fn> };
+    movimientoStock: { create: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
   };
   let cae: { autorizar: ReturnType<typeof vi.fn> };
   let service: VentasService;
@@ -69,7 +69,13 @@ describe('VentasService.anular', () => {
   beforeEach(() => {
     tx = {
       venta: { create: vi.fn().mockResolvedValue({ id: 'nc1', items: [] }), update: vi.fn().mockResolvedValue({}) },
-      movimientoStock: { create: vi.fn().mockResolvedValue({}) },
+      movimientoStock: {
+        create: vi.fn().mockResolvedValue({}),
+        // La anulación espeja los movimientos VENTA reales de la venta original.
+        findMany: vi.fn().mockResolvedValue([
+          { productoId: 'p1', cantidad: new Decimal('2'), tipo: 'VENTA' },
+        ]),
+      },
     };
     prisma = {
       venta: { findFirst: vi.fn().mockResolvedValue(ventaConItems()) },
@@ -105,6 +111,27 @@ describe('VentasService.anular', () => {
     expect(tx.venta.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'v1' }, data: { estado: 'ANULADA' } }),
     );
+  });
+
+  it('restaura stock espejando los movimientos VENTA reales (combo → componentes)', async () => {
+    // La venta original vendió un combo → se descontaron 2 componentes.
+    tx.movimientoStock.findMany.mockResolvedValue([
+      { productoId: 'gaseosa', cantidad: new Decimal('4'), tipo: 'VENTA' },
+      { productoId: 'alfajor', cantidad: new Decimal('2'), tipo: 'VENTA' },
+    ]);
+
+    await service.anular('s1', 'v1');
+
+    expect(tx.movimientoStock.findMany).toHaveBeenCalledWith({
+      where: { ventaId: 'v1', tipo: 'VENTA' },
+    });
+    expect(tx.movimientoStock.create).toHaveBeenCalledTimes(2);
+    const entradas = tx.movimientoStock.create.mock.calls.map((c) => c[0].data);
+    expect(entradas.every((m) => m.tipo === 'ENTRADA')).toBe(true);
+    expect(entradas.map((m) => [m.productoId, m.cantidad.toString()])).toEqual([
+      ['gaseosa', '4'],
+      ['alfajor', '2'],
+    ]);
   });
 
   it('pide el CAE para la Nota de Crédito con la letra heredada', async () => {

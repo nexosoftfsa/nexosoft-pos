@@ -7,6 +7,7 @@ import type {
   DatosProducto,
   ProductoAdmin,
   TipoIvaRemoto,
+  TipoProductoRemoto,
 } from "../sync/cliente-catalogo-admin";
 
 export const TIPOS_IVA: ReadonlyArray<{ valor: TipoIvaRemoto; etiqueta: string }> = [
@@ -20,6 +21,12 @@ export function etiquetaIva(tipo: TipoIvaRemoto): string {
   return TIPOS_IVA.find((t) => t.valor === tipo)?.etiqueta ?? tipo;
 }
 
+/** Una fila del armador de combo (producto elegido + cantidad, ambos como texto). */
+export interface ComponenteForm {
+  componenteId: string;
+  cantidad: string;
+}
+
 export interface FormProducto {
   codigo: string;
   nombre: string;
@@ -27,6 +34,8 @@ export interface FormProducto {
   precioVenta: string;
   precioCosto: string;
   tipoIva: TipoIvaRemoto;
+  tipo: TipoProductoRemoto;
+  componentes: ComponenteForm[];
   categoriaId: string;
 }
 
@@ -37,6 +46,8 @@ export const FORM_VACIO: FormProducto = {
   precioVenta: "",
   precioCosto: "",
   tipoIva: "IVA_21",
+  tipo: "SIMPLE",
+  componentes: [],
   categoriaId: "",
 };
 
@@ -49,6 +60,11 @@ export function formDesdeProducto(p: ProductoAdmin): FormProducto {
     precioVenta: p.precioVenta,
     precioCosto: p.precioCosto,
     tipoIva: p.tipoIva,
+    tipo: p.tipo,
+    componentes: (p.componentes ?? []).map((c) => ({
+      componenteId: c.componenteId,
+      cantidad: c.cantidad,
+    })),
     categoriaId: p.categoria?.id ?? "",
   };
 }
@@ -67,6 +83,10 @@ function esNumeroNoNegativo(valor: string): boolean {
   return /^\d+(\.\d+)?$/.test(valor) && Number(valor) >= 0;
 }
 
+function esNumeroPositivo(valor: string): boolean {
+  return /^\d+(\.\d+)?$/.test(valor) && Number(valor) > 0;
+}
+
 /** Devuelve la lista de errores del formulario (vacía = válido). */
 export function validarProducto(f: FormProducto): string[] {
   const errores: string[] = [];
@@ -78,12 +98,26 @@ export function validarProducto(f: FormProducto): string[] {
   if (!esNumeroNoNegativo(normalizarImporte(f.precioCosto))) {
     errores.push("El costo debe ser un número válido.");
   }
+  if (f.tipo === "COMBO") {
+    const items = f.componentes.filter((c) => c.componenteId !== "");
+    if (items.length === 0) {
+      errores.push("Un combo necesita al menos un componente.");
+    }
+    const ids = items.map((c) => c.componenteId);
+    if (new Set(ids).size !== ids.length) {
+      errores.push("El combo tiene componentes repetidos.");
+    }
+    if (items.some((c) => !esNumeroPositivo(normalizarImporte(c.cantidad)))) {
+      errores.push("Cada componente necesita una cantidad positiva.");
+    }
+  }
   return errores;
 }
 
 /** Convierte un formulario válido en el payload que espera el servidor. */
 export function aDatosProducto(f: FormProducto): DatosProducto {
   const descripcion = f.descripcion.trim();
+  const esCombo = f.tipo === "COMBO";
   return {
     codigo: f.codigo.trim(),
     nombre: f.nombre.trim(),
@@ -91,6 +125,17 @@ export function aDatosProducto(f: FormProducto): DatosProducto {
     precioVenta: normalizarImporte(f.precioVenta),
     precioCosto: normalizarImporte(f.precioCosto),
     tipoIva: f.tipoIva,
+    tipo: f.tipo,
+    ...(esCombo
+      ? {
+          componentes: f.componentes
+            .filter((c) => c.componenteId !== "")
+            .map((c) => ({
+              componenteId: c.componenteId,
+              cantidad: normalizarImporte(c.cantidad),
+            })),
+        }
+      : {}),
     categoriaId: f.categoriaId === "" ? null : f.categoriaId,
   };
 }

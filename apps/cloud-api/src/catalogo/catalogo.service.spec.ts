@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { CatalogoService } from './catalogo.service';
 
 const mockCategoria = {
@@ -17,7 +17,17 @@ const mockProducto = {
   update: vi.fn(),
 };
 
-const mockPrisma = { categoria: mockCategoria, producto: mockProducto };
+const mockComboComponente = {
+  deleteMany: vi.fn(),
+  createMany: vi.fn(),
+};
+
+const mockPrisma = {
+  categoria: mockCategoria,
+  producto: mockProducto,
+  comboComponente: mockComboComponente,
+  $transaction: vi.fn((cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma)),
+};
 
 const SUCURSAL = 's1';
 
@@ -127,6 +137,120 @@ describe('CatalogoService', () => {
       expect(mockProducto.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { activo: false } }),
       );
+    });
+  });
+
+  // ─── Combos (Fase 8.1) ─────────────────────────────────────────────────────
+
+  describe('crearProducto (combo)', () => {
+    const comboBase = {
+      codigo: 'COMBO1',
+      nombre: 'Combo Merienda',
+      precioVenta: '3000',
+      precioCosto: '1800',
+      tipo: 'COMBO' as const,
+    };
+
+    it('crea el combo con sus componentes (create anidado, tipo COMBO)', async () => {
+      mockProducto.findUnique.mockResolvedValue(null);
+      mockProducto.findMany.mockResolvedValue([
+        { id: 'cafe', tipo: 'SIMPLE' },
+        { id: 'alfajor', tipo: 'SIMPLE' },
+      ]);
+      mockProducto.create.mockResolvedValue({ id: 'combo1', codigo: 'COMBO1' });
+
+      await service.crearProducto(SUCURSAL, {
+        ...comboBase,
+        componentes: [
+          { componenteId: 'cafe', cantidad: '1' },
+          { componenteId: 'alfajor', cantidad: '2' },
+        ],
+      });
+
+      const data = mockProducto.create.mock.calls[0]![0].data;
+      expect(data.tipo).toBe('COMBO');
+      expect(data.componentes.create).toEqual([
+        { componenteId: 'cafe', cantidad: '1' },
+        { componenteId: 'alfajor', cantidad: '2' },
+      ]);
+    });
+
+    it('rechaza un combo sin componentes', async () => {
+      mockProducto.findUnique.mockResolvedValue(null);
+      await expect(
+        service.crearProducto(SUCURSAL, { ...comboBase, componentes: [] }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rechaza componentes repetidos', async () => {
+      mockProducto.findUnique.mockResolvedValue(null);
+      await expect(
+        service.crearProducto(SUCURSAL, {
+          ...comboBase,
+          componentes: [
+            { componenteId: 'cafe', cantidad: '1' },
+            { componenteId: 'cafe', cantidad: '2' },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rechaza un componente que no existe en la sucursal', async () => {
+      mockProducto.findUnique.mockResolvedValue(null);
+      mockProducto.findMany.mockResolvedValue([]); // ninguno existe
+      await expect(
+        service.crearProducto(SUCURSAL, {
+          ...comboBase,
+          componentes: [{ componenteId: 'fantasma', cantidad: '1' }],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rechaza un combo dentro de otro combo', async () => {
+      mockProducto.findUnique.mockResolvedValue(null);
+      mockProducto.findMany.mockResolvedValue([{ id: 'otroCombo', tipo: 'COMBO' }]);
+      await expect(
+        service.crearProducto(SUCURSAL, {
+          ...comboBase,
+          componentes: [{ componenteId: 'otroCombo', cantidad: '1' }],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rechaza cantidad de componente no positiva', async () => {
+      mockProducto.findUnique.mockResolvedValue(null);
+      await expect(
+        service.crearProducto(SUCURSAL, {
+          ...comboBase,
+          componentes: [{ componenteId: 'cafe', cantidad: '0' }],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('actualizarProducto (combo)', () => {
+    it('reemplaza el set de componentes en transacción', async () => {
+      mockProducto.findFirst.mockResolvedValue({ id: 'combo1', sucursalId: SUCURSAL, tipo: 'COMBO' });
+      mockProducto.findMany.mockResolvedValue([{ id: 'cafe', tipo: 'SIMPLE' }]);
+      mockProducto.update.mockResolvedValue({ id: 'combo1' });
+
+      await service.actualizarProducto(SUCURSAL, 'combo1', {
+        componentes: [{ componenteId: 'cafe', cantidad: '3' }],
+      });
+
+      expect(mockComboComponente.deleteMany).toHaveBeenCalledWith({ where: { comboId: 'combo1' } });
+      expect(mockComboComponente.createMany).toHaveBeenCalledWith({
+        data: [{ comboId: 'combo1', componenteId: 'cafe', cantidad: '3' }],
+      });
+    });
+
+    it('rechaza cargar componentes en un producto simple', async () => {
+      mockProducto.findFirst.mockResolvedValue({ id: 'p1', sucursalId: SUCURSAL, tipo: 'SIMPLE' });
+      await expect(
+        service.actualizarProducto(SUCURSAL, 'p1', {
+          componentes: [{ componenteId: 'cafe', cantidad: '1' }],
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

@@ -4,9 +4,13 @@ import {
   IsOptional,
   IsEnum,
   IsNumberString,
+  IsArray,
+  ValidateNested,
   MaxLength,
 } from 'class-validator';
-import { TipoIva } from '@prisma/client';
+import { Type } from 'class-transformer';
+import { TipoIva, TipoProducto } from '@prisma/client';
+import { ComboComponenteDto } from './combo-componente.dto';
 
 export class CrearProductoDto {
   @IsString()
@@ -33,6 +37,17 @@ export class CrearProductoDto {
   @IsEnum(TipoIva)
   @IsOptional()
   tipoIva?: TipoIva;
+
+  @IsEnum(TipoProducto)
+  @IsOptional()
+  tipo?: TipoProducto;
+
+  /** Componentes del combo (obligatorio cuando `tipo` es COMBO). */
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ComboComponenteDto)
+  componentes?: ComboComponenteDto[];
 
   @IsString()
   @IsOptional()

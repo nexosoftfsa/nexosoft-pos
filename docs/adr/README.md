@@ -49,3 +49,4 @@ Consecuencias y Alternativas consideradas.
 | 0030 | [Recargo global en el comprobante](0030-recargo-global.md) | Aceptada |
 | 0031 | [Presupuestos como comprobante no fiscal](0031-presupuestos-no-fiscales.md) | Aceptada |
 | 0032 | [Remitos como documento de entrega no fiscal](0032-remitos-no-fiscales.md) | Aceptada |
+| 0033 | [Combos como producto compuesto (stock por componente)](0033-combos-producto-compuesto.md) | Aceptada |

@@ -13,6 +13,7 @@ import { MotorDeRespaldo } from '../respaldo/motor-de-respaldo';
 import { SERVICIO_CAE, type ServicioCae } from './cae/servicio-cae';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
+import { expandirStockDeVenta, type ComponenteCombo } from './combo';
 
 interface UsuarioCtx {
   id: string;
@@ -106,14 +107,21 @@ export class VentasService {
         include: { items: true },
       });
 
-      // La mercadería vuelve al stock: una ENTRADA por cada ítem.
-      for (const it of original.items) {
+      // La mercadería vuelve al stock. Espejamos los movimientos VENTA reales de
+      // la venta original (no sus ítems): así un combo restaura el stock de sus
+      // componentes exactamente como se descontó, sin depender de la composición
+      // actual del combo (ADR-0033).
+      const movimientosVenta = await tx.movimientoStock.findMany({
+        where: { ventaId: original.id, tipo: 'VENTA' },
+      });
+      const motivo = `Anulación ${original.tipoComprobante ?? ''} ${original.numeroComprobante ?? ''}`.trim();
+      for (const m of movimientosVenta) {
         await tx.movimientoStock.create({
           data: {
             tipo: 'ENTRADA',
-            cantidad: it.cantidad,
-            motivo: `Anulación ${original.tipoComprobante ?? ''} ${original.numeroComprobante ?? ''}`.trim(),
-            productoId: it.productoId,
+            cantidad: m.cantidad,
+            motivo,
+            productoId: m.productoId,
             sucursalId,
             ventaId: nc.id,
           },
@@ -153,6 +161,12 @@ export class VentasService {
     const recargoGlobal = new Decimal(dto.recargo ?? '0');
     const total = subtotal.sub(descuentoGlobal).add(recargoGlobal);
     const tipoComprobante = dto.tipoComprobante ?? 'FacturaB';
+
+    // Combos: resolvemos qué ítems son combos para descontar el stock de sus
+    // componentes en vez del combo (ADR-0033).
+    const componentesPorCombo = await this.componentesDeCombos(
+      itemsData.map((it) => it.productoId),
+    );
 
     // Pago combinado: si viene el desglose, el medioPago resumen es el único
     // medio (si todos coinciden) o COMBINADO. Sin desglose, se usa dto.medioPago.
@@ -196,13 +210,15 @@ export class VentasService {
 
       // La venta física ya ocurrió: registramos la salida de stock, sin
       // bloquear por stock insuficiente (control de negativo es informativo).
-      for (const it of itemsData) {
+      // Los combos se expanden a movimientos sobre sus componentes.
+      const movimientos = expandirStockDeVenta(itemsData, componentesPorCombo);
+      for (const m of movimientos) {
         await tx.movimientoStock.create({
           data: {
             tipo: 'VENTA',
-            cantidad: it.cantidad,
+            cantidad: m.cantidad,
             motivo: `Venta ${dto.operacionId}`,
-            productoId: it.productoId,
+            productoId: m.productoId,
             sucursalId: usuario.sucursalId,
             ventaId: v.id,
           },
@@ -217,6 +233,23 @@ export class VentasService {
     await this.respaldarSiCorresponde();
 
     return venta;
+  }
+
+  /** Mapa `comboId → componentes` para los productos dados que sean combos. */
+  private async componentesDeCombos(
+    productoIds: readonly string[],
+  ): Promise<Map<string, ComponenteCombo[]>> {
+    const unicos = [...new Set(productoIds)];
+    const filas = await this.prisma.comboComponente.findMany({
+      where: { comboId: { in: unicos } },
+    });
+    const mapa = new Map<string, ComponenteCombo[]>();
+    for (const f of filas) {
+      const lista = mapa.get(f.comboId) ?? [];
+      lista.push({ componenteId: f.componenteId, cantidad: f.cantidad });
+      mapa.set(f.comboId, lista);
+    }
+    return mapa;
   }
 
   private async registrarEnLibro(
