@@ -91,6 +91,7 @@ export class CatalogoService {
         precioCosto: dto.precioCosto,
         tipoIva: dto.tipoIva ?? 'IVA_21',
         tipo: esCombo ? 'COMBO' : 'SIMPLE',
+        requiereLote: dto.requiereLote ?? false,
         sucursalId,
         categoriaId: dto.categoriaId ?? null,
         ...(esCombo
@@ -118,6 +119,7 @@ export class CatalogoService {
       ...(dto.precioCosto !== undefined && { precioCosto: dto.precioCosto }),
       ...(dto.tipoIva !== undefined && { tipoIva: dto.tipoIva }),
       ...(dto.activo !== undefined && { activo: dto.activo }),
+      ...(dto.requiereLote !== undefined && { requiereLote: dto.requiereLote }),
       ...(dto.categoriaId !== undefined && { categoriaId: dto.categoriaId }),
     };
 

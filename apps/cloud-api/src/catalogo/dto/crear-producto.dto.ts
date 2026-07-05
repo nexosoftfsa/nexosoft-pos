@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsNumberString,
   IsArray,
+  IsBoolean,
   ValidateNested,
   MaxLength,
 } from 'class-validator';
@@ -41,6 +42,11 @@ export class CrearProductoDto {
   @IsEnum(TipoProducto)
   @IsOptional()
   tipo?: TipoProducto;
+
+  /** Producto perecedero: se gestiona por lotes con vencimiento (Fase 8.2). */
+  @IsBoolean()
+  @IsOptional()
+  requiereLote?: boolean;
 
   /** Componentes del combo (obligatorio cuando `tipo` es COMBO). */
   @IsArray()

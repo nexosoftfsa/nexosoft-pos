@@ -5,11 +5,19 @@ import { StockService } from './stock.service';
 
 const mockProducto = { findFirst: vi.fn(), findMany: vi.fn() };
 const mockMovimiento = { findMany: vi.fn(), create: vi.fn() };
-const mockPrisma = { producto: mockProducto, movimientoStock: mockMovimiento };
+const mockLote = { create: vi.fn(), findMany: vi.fn() };
+const mockPrisma = {
+  producto: mockProducto,
+  movimientoStock: mockMovimiento,
+  lote: mockLote,
+  // El $transaction del servicio recibe un array de promesas (creates).
+  $transaction: vi.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
+};
 
 const SUCURSAL = 's1';
 const PRODUCTO_ID = 'p1';
 const PRODUCTO = { id: PRODUCTO_ID, nombre: 'Coca Cola', codigo: 'ABC' };
+const PERECEDERO = { id: 'yog', nombre: 'Yogur', codigo: 'YOG', requiereLote: true };
 
 describe('StockService', () => {
   let service: StockService;
@@ -114,6 +122,93 @@ describe('StockService', () => {
       });
 
       expect(result.tipo).toBe('SALIDA');
+    });
+  });
+
+  describe('registrarMovimiento (lotes, Fase 8.2)', () => {
+    it('ENTRADA de un perecedero abre un lote con vencimiento', async () => {
+      mockProducto.findFirst.mockResolvedValue(PERECEDERO);
+      mockLote.create.mockResolvedValue({ id: 'L1' });
+      mockMovimiento.create.mockResolvedValue({
+        id: 'm', tipo: 'ENTRADA', cantidad: new Decimal('12'), loteId: 'L1', producto: PERECEDERO,
+      });
+
+      const r = await service.registrarMovimiento(SUCURSAL, {
+        productoId: 'yog', tipo: 'ENTRADA', cantidad: '12',
+        fechaVencimiento: '2026-09-01', numeroLote: 'A1',
+      });
+
+      expect(mockLote.create).toHaveBeenCalledOnce();
+      expect(mockLote.create.mock.calls[0]![0].data).toMatchObject({ productoId: 'yog', numero: 'A1' });
+      expect(mockMovimiento.create.mock.calls[0]![0].data.loteId).toBe('L1');
+      expect(r.loteId).toBe('L1');
+    });
+
+    it('rechaza ENTRADA de un perecedero sin fecha de vencimiento', async () => {
+      mockProducto.findFirst.mockResolvedValue(PERECEDERO);
+      await expect(
+        service.registrarMovimiento(SUCURSAL, { productoId: 'yog', tipo: 'ENTRADA', cantidad: '5' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('SALIDA de un perecedero consume lotes por FEFO (vence antes primero)', async () => {
+      mockProducto.findFirst.mockResolvedValue(PERECEDERO);
+      mockLote.findMany.mockResolvedValue([
+        { id: 'viejo', numero: null, fechaVencimiento: new Date('2026-08-01') },
+        { id: 'nuevo', numero: null, fechaVencimiento: new Date('2026-12-01') },
+      ]);
+      mockMovimiento.findMany.mockResolvedValue([
+        { loteId: 'viejo', tipo: 'ENTRADA', cantidad: new Decimal('4') },
+        { loteId: 'nuevo', tipo: 'ENTRADA', cantidad: new Decimal('10') },
+      ]);
+      mockMovimiento.create.mockImplementation((args: { data: unknown }) =>
+        Promise.resolve(args.data),
+      );
+
+      await service.registrarMovimiento(SUCURSAL, { productoId: 'yog', tipo: 'SALIDA', cantidad: '6' });
+
+      const asignado = mockMovimiento.create.mock.calls.map((c) => [
+        c[0].data.loteId,
+        c[0].data.cantidad.toString(),
+      ]);
+      expect(asignado).toEqual([
+        ['viejo', '4'],
+        ['nuevo', '2'],
+      ]);
+    });
+
+    it('rechaza SALIDA de un perecedero si los lotes no alcanzan', async () => {
+      mockProducto.findFirst.mockResolvedValue(PERECEDERO);
+      mockLote.findMany.mockResolvedValue([
+        { id: 'l1', numero: null, fechaVencimiento: new Date('2026-08-01') },
+      ]);
+      mockMovimiento.findMany.mockResolvedValue([
+        { loteId: 'l1', tipo: 'ENTRADA', cantidad: new Decimal('2') },
+      ]);
+      await expect(
+        service.registrarMovimiento(SUCURSAL, { productoId: 'yog', tipo: 'SALIDA', cantidad: '5' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('vencimientos', () => {
+    it('lista solo lotes con saldo > 0 vencidos o próximos a vencer', async () => {
+      mockProducto.findMany.mockResolvedValue([PERECEDERO]);
+      const hoy = Date.now();
+      mockLote.findMany.mockResolvedValue([
+        { id: 'venc', numero: 'V', fechaVencimiento: new Date(hoy - 2 * 86_400_000) },
+        { id: 'lejos', numero: 'L', fechaVencimiento: new Date(hoy + 200 * 86_400_000) },
+      ]);
+      mockMovimiento.findMany.mockResolvedValue([
+        { loteId: 'venc', tipo: 'ENTRADA', cantidad: new Decimal('3') },
+        { loteId: 'lejos', tipo: 'ENTRADA', cantidad: new Decimal('5') },
+      ]);
+
+      const r = await service.vencimientos(SUCURSAL, 30);
+      expect(r).toHaveLength(1);
+      expect(r[0]!.loteId).toBe('venc');
+      expect(r[0]!.vencido).toBe(true);
+      expect(r[0]!.saldo).toBe('3');
     });
   });
 });

@@ -30,6 +30,7 @@ model Sucursal {
   movimientosCuentaCorriente MovimientoCuentaCorriente[]
   presupuestos Presupuesto[]
   remitos Remito[]
+  lotes Lote[]
 
   @@map("sucursales")
 }
@@ -120,6 +121,8 @@ model Producto {
   precioCosto Decimal   @db.Decimal(12, 2)
   tipoIva     TipoIva   @default(IVA_21)
   tipo        TipoProducto @default(SIMPLE)
+  // Los perecederos se gestionan por lotes con vencimiento (Fase 8.2).
+  requiereLote Boolean  @default(false)
   activo      Boolean   @default(true)
   creadoEn    DateTime  @default(now())
   actualizadoEn DateTime @updatedAt
@@ -132,6 +135,7 @@ model Producto {
 
   itemsVenta  ItemVenta[]
   movimientosStock MovimientoStock[]
+  lotes       Lote[]
 
   // Combos: los componentes cuando este producto es un COMBO, y los combos que
   // lo usan como componente (back-relation).
@@ -186,7 +190,34 @@ model MovimientoStock {
   ventaId     String?
   venta       Venta?         @relation(fields: [ventaId], references: [id])
 
+  // Lote al que se imputa el movimiento (solo productos con requiereLote).
+  loteId      String?
+  lote        Lote?          @relation(fields: [loteId], references: [id])
+
   @@map("movimientos_stock")
+}
+
+/**
+ * Un lote de un producto perecedero (Fase 8.2). El saldo del lote se deriva de
+ * sus `MovimientoStock` (ENTRADA/AJUSTE suman, SALIDA/VENTA restan). Las salidas
+ * consumen los lotes por FEFO (vence antes, sale antes).
+ */
+model Lote {
+  id              String   @id @default(cuid())
+  numero          String?  // número/código de lote del proveedor (opcional)
+  fechaVencimiento DateTime
+  creadoEn        DateTime @default(now())
+
+  productoId      String
+  producto        Producto @relation(fields: [productoId], references: [id])
+
+  sucursalId      String
+  sucursal        Sucursal @relation(fields: [sucursalId], references: [id])
+
+  movimientos     MovimientoStock[]
+
+  @@index([productoId, fechaVencimiento])
+  @@map("lotes")
 }
 
 // ─── Ventas ──────────────────────────────────────────────────────────────────

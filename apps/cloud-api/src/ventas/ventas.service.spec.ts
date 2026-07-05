@@ -40,6 +40,9 @@ describe('VentasService', () => {
   let prisma: {
     venta: { findUnique: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
     comboComponente: { findMany: ReturnType<typeof vi.fn> };
+    producto: { findMany: ReturnType<typeof vi.fn> };
+    lote: { findMany: ReturnType<typeof vi.fn> };
+    movimientoStock: { findMany: ReturnType<typeof vi.fn> };
     $transaction: ReturnType<typeof vi.fn>;
   };
   let tx: {
@@ -60,6 +63,10 @@ describe('VentasService', () => {
     prisma = {
       venta: { findUnique: vi.fn().mockResolvedValue(null), findMany: vi.fn() },
       comboComponente: { findMany: vi.fn().mockResolvedValue([]) },
+      // Sin productos perecederos por defecto → sin FEFO (tramos sin lote).
+      producto: { findMany: vi.fn().mockResolvedValue([]) },
+      lote: { findMany: vi.fn().mockResolvedValue([]) },
+      movimientoStock: { findMany: vi.fn().mockResolvedValue([]) },
       $transaction: vi.fn((cb: (t: typeof tx) => unknown) => cb(tx)),
     };
     cae = {
@@ -163,6 +170,35 @@ describe('VentasService', () => {
       ]);
       // El combo mismo no genera movimiento de stock.
       expect(movs.some((m) => m.productoId === 'p1')).toBe(false);
+    });
+  });
+
+  describe('venta de perecedero con lotes (Fase 8.2)', () => {
+    it('imputa la salida de stock a los lotes por FEFO (vence antes primero)', async () => {
+      // p1 perecedero con 2 lotes; p2 simple. DTO vende 2×p1 + 1×p2.
+      prisma.producto.findMany.mockResolvedValue([
+        { id: 'p1', requiereLote: true },
+        { id: 'p2', requiereLote: false },
+      ]);
+      prisma.lote.findMany.mockResolvedValue([
+        { id: 'viejo', fechaVencimiento: new Date('2026-08-01') },
+        { id: 'nuevo', fechaVencimiento: new Date('2026-12-01') },
+      ]);
+      prisma.movimientoStock.findMany.mockResolvedValue([
+        { loteId: 'viejo', tipo: 'ENTRADA', cantidad: new Decimal('1') },
+        { loteId: 'nuevo', tipo: 'ENTRADA', cantidad: new Decimal('10') },
+      ]);
+
+      await service.registrar(USUARIO, DTO);
+
+      // p1 (2u): FEFO → 1 del viejo + 1 del nuevo; p2 (1u): sin lote. = 3 movs.
+      expect(tx.movimientoStock.create).toHaveBeenCalledTimes(3);
+      const movs = tx.movimientoStock.create.mock.calls.map((c) => c[0].data);
+      expect(movs.map((m) => [m.productoId, m.cantidad.toString(), m.loteId])).toEqual([
+        ['p1', '1', 'viejo'],
+        ['p1', '1', 'nuevo'],
+        ['p2', '1', null],
+      ]);
     });
   });
 

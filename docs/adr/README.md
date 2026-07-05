@@ -50,3 +50,4 @@ Consecuencias y Alternativas consideradas.
 | 0031 | [Presupuestos como comprobante no fiscal](0031-presupuestos-no-fiscales.md) | Aceptada |
 | 0032 | [Remitos como documento de entrega no fiscal](0032-remitos-no-fiscales.md) | Aceptada |
 | 0033 | [Combos como producto compuesto (stock por componente)](0033-combos-producto-compuesto.md) | Aceptada |
+| 0034 | [Lotes y vencimientos con consumo FEFO](0034-lotes-y-vencimientos-fefo.md) | Aceptada |

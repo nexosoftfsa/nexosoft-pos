@@ -2,6 +2,19 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { Decimal } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
 import type { RegistrarMovimientoDto } from './dto/registrar-movimiento.dto';
+import { asignarFefo } from './fefo';
+
+const INCLUDE_MOV = {
+  producto: { select: { id: true, nombre: true, codigo: true } },
+} as const;
+
+/** Un lote con su saldo (derivado de sus movimientos) y datos de vencimiento. */
+interface LoteSaldo {
+  loteId: string;
+  numero: string | null;
+  saldo: Decimal;
+  fechaVencimiento: Date;
+}
 
 @Injectable()
 export class StockService {
@@ -43,6 +56,15 @@ export class StockService {
     const cantidad = new Decimal(dto.cantidad);
     if (cantidad.lte(0)) throw new BadRequestException('La cantidad debe ser mayor a cero');
 
+    // Productos con lote (Fase 8.2): la ENTRADA abre un lote con vencimiento; la
+    // SALIDA consume lotes por FEFO. El AJUSTE se registra a nivel producto.
+    if (producto.requiereLote && dto.tipo === 'ENTRADA') {
+      return this.registrarEntradaConLote(sucursalId, dto, cantidad);
+    }
+    if (producto.requiereLote && dto.tipo === 'SALIDA') {
+      return this.registrarSalidaFefo(sucursalId, dto, cantidad);
+    }
+
     // Para salidas/ventas verificar que haya stock suficiente
     if (dto.tipo === 'SALIDA' || dto.tipo === 'VENTA') {
       const saldoActual = await this.calcularSaldo(dto.productoId, sucursalId);
@@ -61,10 +83,163 @@ export class StockService {
         productoId: dto.productoId,
         sucursalId,
       },
-      include: {
-        producto: { select: { id: true, nombre: true, codigo: true } },
+      include: INCLUDE_MOV,
+    });
+  }
+
+  private async registrarEntradaConLote(
+    sucursalId: string,
+    dto: RegistrarMovimientoDto,
+    cantidad: Decimal,
+  ) {
+    if (!dto.fechaVencimiento) {
+      throw new BadRequestException(
+        'La ENTRADA de un producto con lote necesita una fecha de vencimiento.',
+      );
+    }
+    const lote = await this.prisma.lote.create({
+      data: {
+        productoId: dto.productoId,
+        sucursalId,
+        fechaVencimiento: new Date(dto.fechaVencimiento),
+        numero: dto.numeroLote ?? null,
       },
     });
+    return this.prisma.movimientoStock.create({
+      data: {
+        tipo: 'ENTRADA',
+        cantidad,
+        motivo: dto.motivo ?? null,
+        productoId: dto.productoId,
+        sucursalId,
+        loteId: lote.id,
+      },
+      include: INCLUDE_MOV,
+    });
+  }
+
+  private async registrarSalidaFefo(
+    sucursalId: string,
+    dto: RegistrarMovimientoDto,
+    cantidad: Decimal,
+  ) {
+    const lotes = await this.saldosDeLotes(dto.productoId, sucursalId);
+    const { asignaciones, restante } = asignarFefo(lotes, cantidad);
+    if (restante.gt(0)) {
+      const disponible = cantidad.sub(restante);
+      throw new BadRequestException(
+        `Stock insuficiente en lotes. Disponible: ${disponible.toString()}, solicitado: ${cantidad.toString()}`,
+      );
+    }
+    const creados = await this.prisma.$transaction(
+      asignaciones.map((a) =>
+        this.prisma.movimientoStock.create({
+          data: {
+            tipo: 'SALIDA',
+            cantidad: a.cantidad,
+            motivo: dto.motivo ?? null,
+            productoId: dto.productoId,
+            sucursalId,
+            loteId: a.loteId,
+          },
+          include: INCLUDE_MOV,
+        }),
+      ),
+    );
+    // Devolvemos el primer tramo (la UI recarga saldos/lotes tras el movimiento).
+    return creados[0];
+  }
+
+  /** Lotes de un producto con su saldo derivado de los movimientos (Fase 8.2). */
+  async lotesDeProducto(sucursalId: string, productoId: string) {
+    const producto = await this.prisma.producto.findFirst({
+      where: { id: productoId, sucursalId },
+      select: { id: true },
+    });
+    if (!producto) throw new NotFoundException(`Producto ${productoId} no encontrado`);
+
+    const lotes = await this.saldosDeLotes(productoId, sucursalId);
+    return lotes
+      .sort((a, b) => a.fechaVencimiento.getTime() - b.fechaVencimiento.getTime())
+      .map((l) => ({
+        id: l.loteId,
+        numero: l.numero,
+        fechaVencimiento: l.fechaVencimiento,
+        saldo: l.saldo.toString(),
+      }));
+  }
+
+  /**
+   * Alertas de vencimiento: lotes con saldo > 0 vencidos o que vencen dentro de
+   * `dias` (default 30). Ordenados por vencimiento más próximo primero.
+   */
+  async vencimientos(sucursalId: string, dias = 30) {
+    const productos = await this.prisma.producto.findMany({
+      where: { sucursalId, requiereLote: true, activo: true },
+      select: { id: true, nombre: true, codigo: true },
+    });
+    const ahora = Date.now();
+    const limiteMs = dias * 86_400_000;
+    const alertas: Array<{
+      producto: { id: string; nombre: string; codigo: string };
+      loteId: string;
+      numero: string | null;
+      fechaVencimiento: Date;
+      saldo: string;
+      diasParaVencer: number;
+      vencido: boolean;
+    }> = [];
+
+    for (const p of productos) {
+      const lotes = await this.saldosDeLotes(p.id, sucursalId);
+      for (const l of lotes) {
+        if (l.saldo.lte(0)) continue;
+        const deltaMs = l.fechaVencimiento.getTime() - ahora;
+        if (deltaMs > limiteMs) continue; // todavía lejos del vencimiento
+        alertas.push({
+          producto: p,
+          loteId: l.loteId,
+          numero: l.numero,
+          fechaVencimiento: l.fechaVencimiento,
+          saldo: l.saldo.toString(),
+          diasParaVencer: Math.floor(deltaMs / 86_400_000),
+          vencido: deltaMs < 0,
+        });
+      }
+    }
+    return alertas.sort(
+      (a, b) => a.fechaVencimiento.getTime() - b.fechaVencimiento.getTime(),
+    );
+  }
+
+  /** Saldo de cada lote de un producto (ENTRADA/AJUSTE suman, SALIDA/VENTA restan). */
+  private async saldosDeLotes(productoId: string, sucursalId: string): Promise<LoteSaldo[]> {
+    const lotes = await this.prisma.lote.findMany({
+      where: { productoId, sucursalId },
+      select: { id: true, numero: true, fechaVencimiento: true },
+    });
+    if (lotes.length === 0) return [];
+
+    const movimientos = await this.prisma.movimientoStock.findMany({
+      where: { productoId, sucursalId, loteId: { not: null } },
+      select: { loteId: true, tipo: true, cantidad: true },
+    });
+    const saldoPorLote = new Map<string, Decimal>();
+    for (const l of lotes) saldoPorLote.set(l.id, new Decimal(0));
+    for (const m of movimientos) {
+      if (m.loteId === null) continue;
+      const actual = saldoPorLote.get(m.loteId);
+      if (actual === undefined) continue;
+      const delta =
+        m.tipo === 'ENTRADA' || m.tipo === 'AJUSTE' ? m.cantidad : m.cantidad.neg();
+      saldoPorLote.set(m.loteId, actual.add(delta));
+    }
+    return lotes.map((l) => ({
+      loteId: l.id,
+      numero: l.numero,
+      saldo: saldoPorLote.get(l.id) ?? new Decimal(0),
+      fechaVencimiento: l.fechaVencimiento,
+    }));
   }
 
   async historialProducto(sucursalId: string, productoId: string) {

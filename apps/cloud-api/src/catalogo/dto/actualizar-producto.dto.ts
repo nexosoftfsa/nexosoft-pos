@@ -39,6 +39,10 @@ export class ActualizarProductoDto {
   @IsOptional()
   activo?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  requiereLote?: boolean;
+
   /** Reemplaza el set de componentes del combo (solo aplica a productos COMBO). */
   @IsArray()
   @IsOptional()

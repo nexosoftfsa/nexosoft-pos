@@ -14,6 +14,14 @@ import { SERVICIO_CAE, type ServicioCae } from './cae/servicio-cae';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
 import { expandirStockDeVenta, type ComponenteCombo } from './combo';
+import { asignarFefo, type LoteConSaldo } from '../stock/fefo';
+
+/** Un tramo de salida de stock: cantidad y (para perecederos) el lote imputado. */
+interface TramoStock {
+  productoId: string;
+  cantidad: Decimal;
+  loteId: string | null;
+}
 
 interface UsuarioCtx {
   id: string;
@@ -124,6 +132,8 @@ export class VentasService {
             productoId: m.productoId,
             sucursalId,
             ventaId: nc.id,
+            // Devuelve la mercadería al MISMO lote del que salió (perecederos).
+            loteId: m.loteId ?? null,
           },
         });
       }
@@ -166,6 +176,12 @@ export class VentasService {
     // componentes en vez del combo (ADR-0033).
     const componentesPorCombo = await this.componentesDeCombos(
       itemsData.map((it) => it.productoId),
+    );
+    // Movimientos de stock ya expandidos (combo→componentes) y con los lotes
+    // asignados por FEFO para los perecederos (ADR-0034).
+    const tramosStock = await this.planificarStockDeVenta(
+      usuario.sucursalId,
+      expandirStockDeVenta(itemsData, componentesPorCombo),
     );
 
     // Pago combinado: si viene el desglose, el medioPago resumen es el único
@@ -210,17 +226,17 @@ export class VentasService {
 
       // La venta física ya ocurrió: registramos la salida de stock, sin
       // bloquear por stock insuficiente (control de negativo es informativo).
-      // Los combos se expanden a movimientos sobre sus componentes.
-      const movimientos = expandirStockDeVenta(itemsData, componentesPorCombo);
-      for (const m of movimientos) {
+      // Combos ya expandidos y lotes ya asignados por FEFO (`tramosStock`).
+      for (const t of tramosStock) {
         await tx.movimientoStock.create({
           data: {
             tipo: 'VENTA',
-            cantidad: m.cantidad,
+            cantidad: t.cantidad,
             motivo: `Venta ${dto.operacionId}`,
-            productoId: m.productoId,
+            productoId: t.productoId,
             sucursalId: usuario.sucursalId,
             ventaId: v.id,
+            loteId: t.loteId,
           },
         });
       }
@@ -233,6 +249,73 @@ export class VentasService {
     await this.respaldarSiCorresponde();
 
     return venta;
+  }
+
+  /**
+   * Convierte los movimientos de stock de una venta (ya expandidos de combos) en
+   * tramos concretos: para un producto simple, un tramo sin lote; para un
+   * perecedero, los lotes asignados por FEFO más —si los lotes no alcanzan— un
+   * tramo sin lote por el sobrante (la venta ya ocurrió, no se pierde la salida).
+   */
+  private async planificarStockDeVenta(
+    sucursalId: string,
+    movimientos: ReadonlyArray<{ productoId: string; cantidad: Decimal }>,
+  ): Promise<TramoStock[]> {
+    const ids = [...new Set(movimientos.map((m) => m.productoId))];
+    const productos =
+      ids.length > 0
+        ? await this.prisma.producto.findMany({
+            where: { id: { in: ids } },
+            select: { id: true, requiereLote: true },
+          })
+        : [];
+    const requiereLote = new Map(productos.map((p) => [p.id, p.requiereLote]));
+
+    const tramos: TramoStock[] = [];
+    for (const m of movimientos) {
+      if (!requiereLote.get(m.productoId)) {
+        tramos.push({ productoId: m.productoId, cantidad: m.cantidad, loteId: null });
+        continue;
+      }
+      const lotes = await this.saldosDeLotes(sucursalId, m.productoId);
+      const { asignaciones, restante } = asignarFefo(lotes, m.cantidad);
+      for (const a of asignaciones) {
+        tramos.push({ productoId: m.productoId, cantidad: a.cantidad, loteId: a.loteId });
+      }
+      if (restante.gt(0)) {
+        tramos.push({ productoId: m.productoId, cantidad: restante, loteId: null });
+      }
+    }
+    return tramos;
+  }
+
+  /** Saldo por lote de un producto (ENTRADA/AJUSTE suman, SALIDA/VENTA restan). */
+  private async saldosDeLotes(sucursalId: string, productoId: string): Promise<LoteConSaldo[]> {
+    const lotes = await this.prisma.lote.findMany({
+      where: { productoId, sucursalId },
+      select: { id: true, fechaVencimiento: true },
+    });
+    if (lotes.length === 0) return [];
+    const movs = await this.prisma.movimientoStock.findMany({
+      where: { productoId, sucursalId, loteId: { not: null } },
+      select: { loteId: true, tipo: true, cantidad: true },
+    });
+    const saldo = new Map<string, Decimal>();
+    for (const l of lotes) saldo.set(l.id, new Decimal(0));
+    for (const mv of movs) {
+      if (mv.loteId === null) continue;
+      const cur = saldo.get(mv.loteId);
+      if (cur === undefined) continue;
+      saldo.set(
+        mv.loteId,
+        mv.tipo === 'ENTRADA' || mv.tipo === 'AJUSTE' ? cur.add(mv.cantidad) : cur.sub(mv.cantidad),
+      );
+    }
+    return lotes.map((l) => ({
+      loteId: l.id,
+      saldo: saldo.get(l.id) ?? new Decimal(0),
+      fechaVencimiento: l.fechaVencimiento,
+    }));
   }
 
   /** Mapa `comboId → componentes` para los productos dados que sean combos. */

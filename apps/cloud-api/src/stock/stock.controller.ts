@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
 import { StockService } from './stock.service';
 import { RegistrarMovimientoDto } from './dto/registrar-movimiento.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -19,12 +19,33 @@ export class StockController {
     return this.stockService.saldosTodos(req.user.sucursalId);
   }
 
+  // Debe declararse ANTES de `:productoId` para que no lo capture la ruta con parámetro.
+  @Get('vencimientos')
+  vencimientos(
+    @Request() req: { user: UsuarioJwt },
+    @Query('dias') dias?: string,
+  ) {
+    const n = dias !== undefined ? Number(dias) : 30;
+    return this.stockService.vencimientos(
+      req.user.sucursalId,
+      Number.isFinite(n) ? n : 30,
+    );
+  }
+
   @Get(':productoId')
   saldoPorProducto(
     @Request() req: { user: UsuarioJwt },
     @Param('productoId') productoId: string,
   ) {
     return this.stockService.saldoPorProducto(req.user.sucursalId, productoId);
+  }
+
+  @Get(':productoId/lotes')
+  lotes(
+    @Request() req: { user: UsuarioJwt },
+    @Param('productoId') productoId: string,
+  ) {
+    return this.stockService.lotesDeProducto(req.user.sucursalId, productoId);
   }
 
   @Get(':productoId/historial')
