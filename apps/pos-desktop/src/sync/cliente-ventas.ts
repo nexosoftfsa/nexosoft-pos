@@ -3,6 +3,7 @@
  * crédito) del servidor de sucursal y permite anular emitiendo una NC. Online
  * (ADR-0028), con adaptador HTTP real (Tauri) y simulado en memoria (navegador).
  */
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 export type EstadoComprobante = "PENDIENTE" | "COMPLETADA" | "ANULADA";
 
@@ -74,10 +75,15 @@ export class ClienteVentasHttp implements ClienteVentas {
 
   private async pedir<T>(metodo: string, ruta: string): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: metodo,
-      headers: token !== null ? { Authorization: `Bearer ${token}` } : {},
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: metodo,
+        headers: token !== null ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch (e) {
+      throw new ErrorVentas(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) throw new ErrorVentas(await mensajeDeError(res), res.status);
     return (await res.json()) as T;
   }

@@ -8,6 +8,7 @@
  * y un simulado en memoria (desarrollo en el navegador, sin servidor).
  */
 import type { TipoIvaRemoto } from "./mapeo-catalogo";
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 export type { TipoIvaRemoto };
 
@@ -117,14 +118,19 @@ export class ClienteCatalogoAdminHttp implements ClienteCatalogoAdmin {
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: metodo,
-      headers: {
-        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
-        ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: metodo,
+        headers: {
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+          ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
+      });
+    } catch (e) {
+      throw new ErrorCatalogoAdmin(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) {
       throw new ErrorCatalogoAdmin(await mensajeDeError(res), res.status);
     }

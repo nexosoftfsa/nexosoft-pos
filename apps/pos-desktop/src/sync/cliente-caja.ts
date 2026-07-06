@@ -4,6 +4,7 @@
  * (ingreso/egreso) y cierre con arqueo. Online (ADR-0025/0026), con adaptador
  * HTTP real (Tauri) y simulado en memoria (navegador de desarrollo).
  */
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 export type EstadoTurno = "ABIERTO" | "CERRADO";
 export type TipoMovimientoCaja = "INGRESO" | "EGRESO";
@@ -100,14 +101,19 @@ export class ClienteCajaHttp implements ClienteCaja {
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: metodo,
-      headers: {
-        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
-        ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: metodo,
+        headers: {
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+          ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
+      });
+    } catch (e) {
+      throw new ErrorCaja(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) {
       throw new ErrorCaja(await mensajeDeError(res), res.status);
     }

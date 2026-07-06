@@ -2,6 +2,7 @@
  * Cliente HTTP de autenticación contra el cloud-api (`POST /auth/login`,
  * `POST /auth/refresh`). Devuelve el par de tokens (access 15m + refresh 30d).
  */
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 export interface Credenciales {
   readonly email: string;
   readonly password: string;
@@ -41,11 +42,16 @@ export class ClienteAuthHttp implements ClienteAuth {
   }
 
   private async post(ruta: string, cuerpo: unknown): Promise<TokensAuth> {
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cuerpo),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cuerpo),
+      });
+    } catch (e) {
+      throw new ErrorAuth(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) {
       const detalle = res.status === 401 ? "Credenciales inválidas" : `Error ${res.status}`;
       throw new ErrorAuth(detalle, res.status);

@@ -3,6 +3,7 @@
  * y marcar convertido. Online, con adaptador HTTP real (Tauri) y simulado en
  * memoria (navegador de desarrollo).
  */
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 export type EstadoPresupuesto = "VIGENTE" | "CONVERTIDO" | "ANULADO";
 
@@ -89,14 +90,19 @@ export class ClientePresupuestosHttp implements ClientePresupuestos {
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: metodo,
-      headers: {
-        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
-        ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: metodo,
+        headers: {
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+          ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
+      });
+    } catch (e) {
+      throw new ErrorPresupuestos(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) throw new ErrorPresupuestos(await mensajeDeError(res), res.status);
     return (await res.json()) as T;
   }

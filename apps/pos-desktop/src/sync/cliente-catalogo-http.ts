@@ -4,6 +4,7 @@
  * Complementa a `ClienteSyncHttp` (subida de ventas). Ambos van con el JWT.
  */
 import type { ProductoRemoto, SaldoRemoto } from "./mapeo-catalogo";
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 /** Puerto: lo que el pull necesita del servidor (testeable con un doble). */
 export interface ClienteCatalogo {
@@ -31,9 +32,14 @@ export class ClienteCatalogoHttp implements ClienteCatalogo {
 
   private async get<T>(ruta: string): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      headers: token !== null ? { Authorization: `Bearer ${token}` } : {},
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        headers: token !== null ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch (e) {
+      throw new Error(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e));
+    }
     if (!res.ok) {
       throw new Error(`Catálogo HTTP ${res.status} en ${ruta}`);
     }

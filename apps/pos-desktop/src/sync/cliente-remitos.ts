@@ -2,6 +2,7 @@
  * Cliente de REMITOS (Fase 7.8). Documento de entrega NO fiscal (sin precios).
  * Online, con adaptador HTTP real (Tauri) y simulado en memoria (navegador).
  */
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 export type EstadoRemito = "EMITIDO" | "ANULADO";
 
 export interface ItemRemito {
@@ -67,14 +68,19 @@ export class ClienteRemitosHttp implements ClienteRemitos {
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: metodo,
-      headers: {
-        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
-        ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: metodo,
+        headers: {
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+          ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
+      });
+    } catch (e) {
+      throw new ErrorRemitos(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) throw new ErrorRemitos(await mensajeDeError(res), res.status);
     return (await res.json()) as T;
   }

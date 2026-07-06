@@ -4,6 +4,7 @@
  * cloud-api. Online (ADR-0027), con adaptador HTTP real (Tauri) y simulado en
  * memoria (navegador de desarrollo).
  */
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 export type CondicionIva =
   | "CONSUMIDOR_FINAL"
@@ -114,14 +115,19 @@ export class ClienteCtaCteHttp implements ClienteCtaCte {
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: metodo,
-      headers: {
-        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
-        ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: metodo,
+        headers: {
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+          ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
+      });
+    } catch (e) {
+      throw new ErrorCtaCte(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) throw new ErrorCtaCte(await mensajeDeError(res), res.status);
     return (await res.json().catch(() => null)) as T;
   }

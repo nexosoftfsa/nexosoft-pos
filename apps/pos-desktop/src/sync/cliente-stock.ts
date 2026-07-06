@@ -6,6 +6,7 @@
  * Es **online** (ADR-0025). Dos adaptadores: HTTP real (Tauri) y simulado en
  * memoria (desarrollo en el navegador).
  */
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 /** Tipos de movimiento del cloud-api. ENTRADA/AJUSTE suman; SALIDA/VENTA restan. */
 export type TipoMovimiento = "ENTRADA" | "SALIDA" | "AJUSTE" | "VENTA";
@@ -115,14 +116,19 @@ export class ClienteStockHttp implements ClienteStock {
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: metodo,
-      headers: {
-        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
-        ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: metodo,
+        headers: {
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+          ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
+      });
+    } catch (e) {
+      throw new ErrorStock(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) {
       throw new ErrorStock(await mensajeDeError(res), res.status);
     }

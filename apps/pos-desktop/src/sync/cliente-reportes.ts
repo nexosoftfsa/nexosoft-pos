@@ -5,6 +5,7 @@
  * por el backend (RolesGuard).
  */
 import type { RangoFechas } from "../componentes/reportes-helpers";
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 export interface ResumenVentas {
   readonly cantidadVentas: number;
@@ -81,9 +82,14 @@ export class ClienteReportesHttp implements ClienteReportes {
 
   private async get<T>(ruta: string): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      headers: token !== null ? { Authorization: `Bearer ${token}` } : {},
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        headers: token !== null ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch (e) {
+      throw new ErrorReportes(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) throw new ErrorReportes(await mensajeDeError(res), res.status);
     return (await res.json()) as T;
   }
