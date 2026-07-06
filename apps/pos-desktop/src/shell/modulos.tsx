@@ -1,8 +1,9 @@
 /**
  * Registro de módulos del POS y reglas de visibilidad por rol. Es la base del
  * menú lateral (Fase 7.1): qué secciones existen, en qué orden y quién las ve.
- * Las pantallas reales se van implementando en las sub-fases siguientes; por
- * ahora la mayoría son placeholders salvo "Punto de Venta" (ya funciona).
+ * Todas las pantallas están implementadas (Inicio, Ventas, Caja, Comprobantes,
+ * Presupuestos, Remitos, Catálogo, Stock, Cuentas Corrientes, Reportes y el
+ * Asistente IA con mock funcional).
  *
  * El gateo por rol es UX: el backend igual impone permisos en sus endpoints
  * (RolesGuard). Decisión del usuario (2026-06-28): gatear el menú por rol.
