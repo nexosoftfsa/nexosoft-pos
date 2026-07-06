@@ -59,4 +59,11 @@ describe("ClienteAsistenteConfigHttp", () => {
     await expect(cliente.obtener()).rejects.toThrow("No tenés permisos");
     vi.unstubAllGlobals();
   });
+
+  it("si el servidor no responde (fetch falla), da un mensaje claro en vez de 'Failed to fetch'", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    const cliente = new ClienteAsistenteConfigHttp("http://server", () => "tok");
+    await expect(cliente.actualizar("clave-nueva")).rejects.toThrow(/no se pudo conectar/i);
+    vi.unstubAllGlobals();
+  });
 });

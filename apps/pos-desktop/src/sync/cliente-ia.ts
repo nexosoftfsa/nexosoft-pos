@@ -8,6 +8,7 @@
 import type { ClienteReportes } from "./cliente-reportes";
 import type { ClienteStock } from "./cliente-stock";
 import type { ClienteCtaCte } from "./cliente-ctacte";
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
 /** Puerto: lo que la pantalla del asistente necesita. */
 export interface AsistenteIA {
@@ -162,14 +163,19 @@ export class AsistenteIAHttp implements AsistenteIA {
 
   async preguntar(texto: string): Promise<string> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}/asistente/preguntar`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ pregunta: texto }),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}/asistente/preguntar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ pregunta: texto }),
+      });
+    } catch (e) {
+      throw new Error(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e));
+    }
     if (!res.ok) {
       const cuerpo = (await res.json().catch(() => null)) as { message?: string } | null;
       throw new Error(cuerpo?.message ?? `El asistente respondió con error ${res.status}.`);

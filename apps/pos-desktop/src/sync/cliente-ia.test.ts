@@ -116,6 +116,13 @@ describe("AsistenteIAHttp", () => {
     await expect(cliente.preguntar("hola")).rejects.toThrow("sin GEMINI_API_KEY");
     vi.unstubAllGlobals();
   });
+
+  it("si el servidor no responde (fetch falla), da un mensaje claro en vez de 'Failed to fetch'", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    const cliente = new AsistenteIAHttp("http://server", () => null);
+    await expect(cliente.preguntar("hola")).rejects.toThrow(/no se pudo conectar/i);
+    vi.unstubAllGlobals();
+  });
 });
 
 describe("AsistenteIACompuesto", () => {

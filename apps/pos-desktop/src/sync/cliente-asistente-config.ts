@@ -4,6 +4,8 @@
  * igual con `RolesGuard`). La clave nunca vuelve del servidor: `obtener()` solo
  * informa si hay una cargada y con qué modelo.
  */
+import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
+
 export interface EstadoConfiguracionAsistente {
   readonly configurada: boolean;
   readonly modelo: string;
@@ -43,14 +45,19 @@ export class ClienteAsistenteConfigHttp implements ClienteAsistenteConfig {
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
     const token = this.obtenerToken();
-    const res = await fetch(`${this.baseUrl}${ruta}`, {
-      method: metodo,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${ruta}`, {
+        method: metodo,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
+      });
+    } catch (e) {
+      throw new ErrorAsistenteConfig(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
+    }
     if (!res.ok) {
       const cuerpoError = (await res.json().catch(() => null)) as { message?: string | string[] } | null;
       const m = cuerpoError?.message;
