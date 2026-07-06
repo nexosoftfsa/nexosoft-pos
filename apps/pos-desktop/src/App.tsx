@@ -81,8 +81,11 @@ function AppNavegador() {
  * cuentas corrientes…), sin backend ni login. Lo usa el navegador de desarrollo y
  * el botón "Modo demo" de la app instalada, para que alguien pueda probar el POS
  * sin levantar el servidor de sucursal.
+ *
+ * `onSalir`, si se pasa (solo desde `AppTauri`), habilita el botón de "Salir del
+ * modo demo" en el sidebar para volver al login/terminal real.
  */
-function AppDemo() {
+function AppDemo({ onSalir }: { onSalir?: () => void } = {}) {
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
   const clienteCatalogoRef = useRef<ClienteCatalogoAdmin | null>(null);
   const clienteStockRef = useRef<ClienteStock | null>(null);
@@ -119,6 +122,7 @@ function AppDemo() {
       {...(clienteReportesRef.current !== null ? { clienteReportes: clienteReportesRef.current } : {})}
       {...(clientePresupuestosRef.current !== null ? { clientePresupuestos: clientePresupuestosRef.current } : {})}
       {...(clienteRemitosRef.current !== null ? { clienteRemitos: clienteRemitosRef.current } : {})}
+      {...(onSalir ? { onCerrarSesion: onSalir, tituloCerrarSesion: "Salir del modo demo" } : {})}
     />
   );
 }
@@ -287,7 +291,7 @@ function AppTauri() {
   );
 
   // Modo demo autocontenido (sin backend), disparado desde el login.
-  if (modoDemo) return <AppDemo />;
+  if (modoDemo) return <AppDemo onSalir={() => { setModoDemo(false); void inicializar(); }} />;
 
   if (fase === "error") {
     return (

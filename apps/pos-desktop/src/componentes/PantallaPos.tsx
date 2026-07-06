@@ -128,7 +128,9 @@ export function PantallaPos({
   const bufferLector = useRef("");
   const buscarPorCodigo = useCallback(
     (codigo: string) => {
-      const prod = catalogo.find((p) => p.articulo.codigoInterno === codigo);
+      const prod = catalogo.find(
+        (p) => p.articulo.codigoInterno === codigo || p.articulo.codigoBarras === codigo,
+      );
       if (prod) agregar(prod);
       else setError(`Código de barras no encontrado: ${codigo}`);
     },

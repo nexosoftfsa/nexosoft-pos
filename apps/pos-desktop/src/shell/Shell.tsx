@@ -75,6 +75,7 @@ export function Shell({
   terminalId,
   terminalNombre,
   onCerrarSesion,
+  tituloCerrarSesion = "Cerrar sesión",
   onAbrirConfig,
 }: {
   entorno: EntornoPos;
@@ -103,6 +104,8 @@ export function Shell({
   terminalId?: string;
   terminalNombre?: string;
   onCerrarSesion?: () => void;
+  /** Texto del botón/tooltip de `onCerrarSesion` (p.ej. "Salir del modo demo"). */
+  tituloCerrarSesion?: string;
   onAbrirConfig?: () => void;
 }) {
   const sync = useSync(entorno.sync);
@@ -204,8 +207,8 @@ export function Shell({
               type="button"
               className="logout-btn"
               onClick={onCerrarSesion}
-              title="Cerrar sesión"
-              aria-label="Cerrar sesión"
+              title={tituloCerrarSesion}
+              aria-label={tituloCerrarSesion}
             >
               <IconoSalir />
             </button>
