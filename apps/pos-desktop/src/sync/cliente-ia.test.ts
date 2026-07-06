@@ -22,6 +22,12 @@ describe("interpretar", () => {
   it("cae en ayuda si no reconoce", () => {
     expect(interpretar("hola qué tal")).toBe("ayuda");
   });
+  it("no confunde preguntas genéricas con 'hoy'/'cuánto' con ventas (deriva a ayuda/LLM)", () => {
+    // Bug real: "hoy" y "cuánto" eran claves de "ventas" y matcheaban cualquier
+    // pregunta que las contuviera, aunque no tuviera nada que ver (ej. el dólar).
+    expect(interpretar("¿cuánto está el dólar hoy?")).toBe("ayuda");
+    expect(interpretar("¿qué hora es?")).toBe("ayuda");
+  });
 });
 
 describe("AsistenteIAMock", () => {

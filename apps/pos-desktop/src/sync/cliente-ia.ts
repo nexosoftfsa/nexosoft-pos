@@ -23,7 +23,7 @@ const REGLAS: ReadonlyArray<{ intencion: Intencion; claves: readonly string[] }>
   { intencion: "vencimientos", claves: ["venc", "lote", "caduc", "por vencer"] },
   { intencion: "deudores", claves: ["deb", "deud", "cobrar", "fiado", "cuenta corriente", "me debe"] },
   { intencion: "stock_bajo", claves: ["stock", "repon", "falta", "reponer", "quedan", "bajo"] },
-  { intencion: "ventas", claves: ["vend", "venta", "factur", "recaud", "hoy", "cuánto", "cuanto"] },
+  { intencion: "ventas", claves: ["vend", "venta", "factur", "recaud"] },
 ];
 
 /** Clasifica la pregunta en una intención (pura, testeable sin datos). */
