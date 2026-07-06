@@ -31,8 +31,8 @@ import { ReportesPos } from "../componentes/ReportesPos";
 import { Presupuestos } from "../componentes/Presupuestos";
 import { Remitos } from "../componentes/Remitos";
 import { Inicio } from "../componentes/Inicio";
-import { AsistenteIA } from "../componentes/AsistenteIA";
-import { AsistenteIAMock } from "../sync/cliente-ia";
+import { AsistenteIA as PantallaAsistenteIA } from "../componentes/AsistenteIA";
+import { AsistenteIACompuesto, AsistenteIAMock, type AsistenteIA } from "../sync/cliente-ia";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -69,6 +69,7 @@ export function Shell({
   clienteReportes,
   clientePresupuestos,
   clienteRemitos,
+  clienteIA,
   terminalId,
   terminalNombre,
   onCerrarSesion,
@@ -92,6 +93,8 @@ export function Shell({
   clientePresupuestos?: ClientePresupuestos;
   /** Cliente de remitos (HTTP en Tauri, simulado en el navegador). */
   clienteRemitos?: ClienteRemitos;
+  /** Asistente con LLM real (Gemini vía el servidor). Sin esto, solo responde con datos. */
+  clienteIA?: AsistenteIA;
   /** Id de la terminal (para la caja). */
   terminalId?: string;
   terminalNombre?: string;
@@ -142,10 +145,17 @@ export function Shell({
   const rolLegible = ETIQUETA_ROL[normalizarRol(usuario.rol)];
   const puedeGestion = normalizarRol(usuario.rol) !== "CAJERO";
 
-  // Asistente de IA (mock funcional): responde con los datos del comercio.
-  const asistente = useMemo(
+  // Asistente de IA: los datos exactos (ventas/stock/vencimientos/deudores) los
+  // responde siempre el mock local; todo lo demás (funciones del sistema, dudas
+  // fiscales, charla libre) se deriva al LLM real (Gemini vía el servidor) si
+  // está disponible.
+  const asistenteMock = useMemo(
     () => new AsistenteIAMock({ reportes: clienteReportes, stock: clienteStock, ctacte: clienteCtaCte }),
     [clienteReportes, clienteStock, clienteCtaCte],
+  );
+  const asistente = useMemo(
+    () => new AsistenteIACompuesto(asistenteMock, clienteIA),
+    [asistenteMock, clienteIA],
   );
 
   return (
@@ -234,7 +244,7 @@ export function Shell({
               {...(clienteCtaCte ? { clienteCtaCte } : {})}
             />
           ) : activo?.id === "ia" ? (
-            <AsistenteIA cliente={asistente} />
+            <PantallaAsistenteIA cliente={asistente} />
           ) : activo?.id === "pos" ? (
             <PantallaPos entorno={entorno} sync={sync} clientes={clientesVenta} />
           ) : activo?.id === "catalogo" && clienteCatalogo ? (

@@ -55,3 +55,4 @@ Consecuencias y Alternativas consideradas.
 | 0036 | [El remito mueve stock (entrega)](0036-remito-mueve-stock.md) | Aceptada |
 | 0037 | [Venta a cuenta corriente (fiado)](0037-venta-a-cuenta-corriente.md) | Aceptada |
 | 0038 | [Promociones (2x1 / %) aplicadas en el POS](0038-promociones-en-el-pos.md) | Aceptada |
+| 0039 | [Asistente IA con Google Gemini (server-side)](0039-asistente-ia-gemini.md) | Aceptada |

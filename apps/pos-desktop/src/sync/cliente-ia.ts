@@ -128,15 +128,60 @@ export class AsistenteIAMock implements AsistenteIA {
 }
 
 /**
- * Adaptador REAL con Google Gemini (ADR-0011). Pendiente: requiere `GEMINI_API_KEY`
- * y el SDK; además, para responder sobre el negocio se le pasarían los datos del
- * comercio como contexto (function calling / RAG sobre los mismos endpoints que
- * usa el mock). Se enchufa acá sin tocar la pantalla del asistente.
+ * Adaptador HTTP real: le pregunta al servidor de sucursal (`POST
+ * /asistente/preguntar`), que a su vez habla con Google Gemini (ADR-0011). La
+ * API key de Gemini vive SOLO en ese servidor — nunca en el POS instalado.
+ * Online (requiere conexión con el servidor); si falla, `AsistenteIACompuesto`
+ * cae al mock.
  */
-export class AsistenteIAGemini implements AsistenteIA {
-  preguntar(): Promise<string> {
-    return Promise.reject(
-      new Error("El asistente con Gemini todavía no está configurado (falta la API key)."),
-    );
+export class AsistenteIAHttp implements AsistenteIA {
+  constructor(
+    private readonly baseUrl: string,
+    private readonly obtenerToken: () => string | null,
+  ) {}
+
+  async preguntar(texto: string): Promise<string> {
+    const token = this.obtenerToken();
+    const res = await fetch(`${this.baseUrl}/asistente/preguntar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ pregunta: texto }),
+    });
+    if (!res.ok) {
+      const cuerpo = (await res.json().catch(() => null)) as { message?: string } | null;
+      throw new Error(cuerpo?.message ?? `El asistente respondió con error ${res.status}.`);
+    }
+    const data = (await res.json()) as { respuesta: string };
+    return data.respuesta;
+  }
+}
+
+/**
+ * Asistente compuesto: las preguntas de **datos exactos del comercio** (ventas,
+ * stock bajo, vencimientos, deudores) las responde siempre el mock local —son
+ * rápidas, gratis y no pueden alucinar. Todo lo demás (explicar una función del
+ * sistema, dudas fiscales, charla libre) se deriva al LLM real si está
+ * disponible; si no hay conexión o no está configurado, cae al texto de ayuda.
+ */
+export class AsistenteIACompuesto implements AsistenteIA {
+  constructor(
+    private readonly datos: AsistenteIAMock,
+    private readonly llm?: AsistenteIA,
+  ) {}
+
+  async preguntar(texto: string): Promise<string> {
+    if (interpretar(texto) !== "ayuda" || !this.llm) {
+      return this.datos.preguntar(texto);
+    }
+    try {
+      return await this.llm.preguntar(texto);
+    } catch (e) {
+      const motivo = e instanceof Error ? e.message : String(e);
+      const ayuda = await this.datos.preguntar(texto);
+      return `${motivo}\n\n${ayuda}`;
+    }
   }
 }

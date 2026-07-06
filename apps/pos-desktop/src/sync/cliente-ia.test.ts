@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { AsistenteIAMock, interpretar } from "./cliente-ia";
+import { AsistenteIACompuesto, AsistenteIAHttp, AsistenteIAMock, interpretar } from "./cliente-ia";
 
 describe("interpretar", () => {
   it("clasifica preguntas de ventas", () => {
@@ -60,6 +60,67 @@ describe("AsistenteIAMock", () => {
   it("da ayuda ante una pregunta que no entiende", async () => {
     const asistente = new AsistenteIAMock({});
     const r = await asistente.preguntar("contame un chiste");
+    expect(r.toLowerCase()).toContain("puedo ayudarte");
+  });
+});
+
+describe("AsistenteIAHttp", () => {
+  it("postea la pregunta con el token y devuelve la respuesta", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ respuesta: "El CAE es..." }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const cliente = new AsistenteIAHttp("http://server/api/v1", () => "tok-123");
+    const r = await cliente.preguntar("¿qué es el CAE?");
+
+    expect(r).toBe("El CAE es...");
+    const [url, opciones] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("http://server/api/v1/asistente/preguntar");
+    expect((opciones as { headers: Record<string, string> }).headers.Authorization).toBe("Bearer tok-123");
+    vi.unstubAllGlobals();
+  });
+
+  it("lanza con el mensaje del servidor si la respuesta no es ok", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 503, json: async () => ({ message: "sin GEMINI_API_KEY" }) }),
+    );
+    const cliente = new AsistenteIAHttp("http://server", () => null);
+    await expect(cliente.preguntar("hola")).rejects.toThrow("sin GEMINI_API_KEY");
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("AsistenteIACompuesto", () => {
+  it("resuelve preguntas de datos SIEMPRE con el mock, sin llamar al LLM", async () => {
+    const llm = { preguntar: vi.fn() };
+    const mock = new AsistenteIAMock({});
+    const compuesto = new AsistenteIACompuesto(mock, llm);
+    await compuesto.preguntar("¿cuánto vendí hoy?");
+    expect(llm.preguntar).not.toHaveBeenCalled();
+  });
+
+  it("deriva al LLM las preguntas que no son de datos", async () => {
+    const llm = { preguntar: vi.fn().mockResolvedValue("Respuesta del LLM") };
+    const compuesto = new AsistenteIACompuesto(new AsistenteIAMock({}), llm);
+    const r = await compuesto.preguntar("¿qué es el Monotributo?");
+    expect(r).toBe("Respuesta del LLM");
+    expect(llm.preguntar).toHaveBeenCalledWith("¿qué es el Monotributo?");
+  });
+
+  it("si el LLM falla, cae al texto de ayuda del mock", async () => {
+    const llm = { preguntar: vi.fn().mockRejectedValue(new Error("sin conexión")) };
+    const compuesto = new AsistenteIACompuesto(new AsistenteIAMock({}), llm);
+    const r = await compuesto.preguntar("¿qué es el Monotributo?");
+    expect(r).toContain("sin conexión");
+    expect(r.toLowerCase()).toContain("puedo ayudarte");
+  });
+
+  it("sin LLM configurado, usa directamente el mock", async () => {
+    const compuesto = new AsistenteIACompuesto(new AsistenteIAMock({}));
+    const r = await compuesto.preguntar("¿qué es el Monotributo?");
     expect(r.toLowerCase()).toContain("puedo ayudarte");
   });
 });

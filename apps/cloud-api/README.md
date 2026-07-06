@@ -41,10 +41,29 @@ sincronizan al recuperar la red (Fase 4.5).
 | `ventas`    | `POST /ventas` (registrar, idempotente), `GET /ventas` (historial)   |
 | `sync`      | `POST /sync/operaciones` (ingesta de la cola de las terminales)      |
 | `respaldo`  | `POST /respaldo` (crear), `GET /respaldo` (listar) — ver más abajo   |
+| `asistente` | `POST /asistente/preguntar` — Asistente IA (Gemini, ver más abajo)   |
 | `health`    | `GET /health` (estado + chequeo de DB)                              |
 
 Todos los endpoints (salvo `auth` y `health`) requieren **JWT** y quedan
 automáticamente acotados a la **sucursal** del token.
+
+## Asistente IA (Google Gemini)
+
+`POST /asistente/preguntar` responde preguntas en lenguaje natural sobre el
+sistema y nociones fiscales argentinas (ARCA, Monotributo, Ingresos Brutos),
+vía Gemini. La clave de API **vive solo en este servidor** (nunca en el POS
+instalado) — ver [ADR-0039](../../docs/adr/0039-asistente-ia-gemini.md).
+
+Configuración (`.env`, gitignoreado):
+
+```
+GEMINI_API_KEY=tu-clave-de-google-ai-studio
+GEMINI_MODEL=gemini-2.5-flash   # opcional; default gemini-2.5-flash
+```
+
+Conseguir una clave: https://aistudio.google.com/apikey (tiene nivel
+gratuito). **Cada servidor de sucursal usa la clave de SU propio comercio** —
+al instalar en un cliente, generan la suya con su cuenta de Google.
 
 ## Respaldo en nube propia
 

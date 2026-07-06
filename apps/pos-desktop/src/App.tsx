@@ -42,6 +42,8 @@ import { ClientePresupuestosSimulado } from "./sync/cliente-presupuestos-simulad
 import type { ClienteRemitos } from "./sync/cliente-remitos";
 import { ClienteRemitosHttp } from "./sync/cliente-remitos";
 import { ClienteRemitosSimulado } from "./sync/cliente-remitos-simulado";
+import type { AsistenteIA } from "./sync/cliente-ia";
+import { AsistenteIAHttp } from "./sync/cliente-ia";
 
 /** Aviso a pantalla completa para estados de carga/error. */
 function Aviso({ children }: { children: ReactNode }) {
@@ -134,6 +136,7 @@ function AppTauri() {
   const clienteReportesRef = useRef<ClienteReportes | null>(null);
   const clientePresupuestosRef = useRef<ClientePresupuestos | null>(null);
   const clienteRemitosRef = useRef<ClienteRemitos | null>(null);
+  const clienteIARef = useRef<AsistenteIA | null>(null);
   const [fase, setFase] = useState<Fase>("cargando");
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
@@ -170,6 +173,7 @@ function AppTauri() {
       clienteReportesRef.current = new ClienteReportesHttp(baseUrlRef.current, () => sesion.obtenerToken());
       clientePresupuestosRef.current = new ClientePresupuestosHttp(baseUrlRef.current, () => sesion.obtenerToken());
       clienteRemitosRef.current = new ClienteRemitosHttp(baseUrlRef.current, () => sesion.obtenerToken());
+      clienteIARef.current = new AsistenteIAHttp(baseUrlRef.current, () => sesion.obtenerToken());
       setEntorno(env);
       setFase("listo");
     } catch (e) {
@@ -337,6 +341,7 @@ function AppTauri() {
         {...(clienteReportesRef.current !== null ? { clienteReportes: clienteReportesRef.current } : {})}
         {...(clientePresupuestosRef.current !== null ? { clientePresupuestos: clientePresupuestosRef.current } : {})}
         {...(clienteRemitosRef.current !== null ? { clienteRemitos: clienteRemitosRef.current } : {})}
+        {...(clienteIARef.current !== null ? { clienteIA: clienteIARef.current } : {})}
         {...(sesionRef.current?.terminalId !== undefined ? { terminalId: sesionRef.current.terminalId } : {})}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }
