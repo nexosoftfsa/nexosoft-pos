@@ -508,3 +508,22 @@ body {
     display: none;
   }
 }
+
+/* Celular/tablet angosto: el ticket (380px fijo) no entra al lado de la
+   grilla de productos, así que se apilan verticalmente en vez de en fila. */
+@media (max-width: 900px) {
+  .cuerpo {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .catalogo {
+    flex: none;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    overflow-y: visible;
+  }
+  .ticket-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--borde);
+  }
+}
