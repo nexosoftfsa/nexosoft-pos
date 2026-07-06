@@ -62,6 +62,31 @@ describe("AsistenteIAMock", () => {
     const r = await asistente.preguntar("contame un chiste");
     expect(r.toLowerCase()).toContain("puedo ayudarte");
   });
+
+  it("si falla la consulta de red (ventas), responde 'no hay datos aún' en vez del error crudo", async () => {
+    const reportes = { resumen: async () => { throw new TypeError("Failed to fetch"); } };
+    const asistente = new AsistenteIAMock({ reportes: reportes as never });
+    const r = await asistente.preguntar("¿cuánto vendí hoy?");
+    expect(r.toLowerCase()).toContain("no hay datos aún");
+    expect(r).not.toContain("Failed to fetch");
+  });
+
+  it("si falla la consulta de red (vencimientos/stock), responde 'no hay datos aún'", async () => {
+    const stock = {
+      vencimientos: async () => { throw new TypeError("Failed to fetch"); },
+      saldos: async () => { throw new TypeError("Failed to fetch"); },
+    };
+    const asistente = new AsistenteIAMock({ stock: stock as never });
+    expect((await asistente.preguntar("¿qué está por vencer?")).toLowerCase()).toContain("no hay datos aún");
+    expect((await asistente.preguntar("¿qué stock está bajo?")).toLowerCase()).toContain("no hay datos aún");
+  });
+
+  it("si falla la consulta de red (deudores), responde 'no hay datos aún'", async () => {
+    const ctacte = { listar: async () => { throw new TypeError("Failed to fetch"); } };
+    const asistente = new AsistenteIAMock({ ctacte: ctacte as never });
+    const r = await asistente.preguntar("¿quién me debe?");
+    expect(r.toLowerCase()).toContain("no hay datos aún");
+  });
 });
 
 describe("AsistenteIAHttp", () => {

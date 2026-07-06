@@ -37,6 +37,10 @@ export function interpretar(texto: string): Intencion {
 const pesos = (n: number) =>
   n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
+/** Se muestra cuando falla la consulta al servidor (red caída, servidor apagado, etc.)
+ * en vez de dejar que el error crudo (p.ej. "Failed to fetch") llegue al chat. */
+const NO_HAY_DATOS = "No hay datos aún: no pude conectarme con el servidor para consultarlos. Probá de nuevo en un momento.";
+
 /** Rango "hoy" en fecha local (YYYY-MM-DD) para los reportes. */
 function hoyIso(): string {
   const d = new Date();
@@ -75,45 +79,61 @@ export class AsistenteIAMock implements AsistenteIA {
 
   private async ventasDelDia(): Promise<string> {
     if (!this.fuentes.reportes) return "No tengo acceso a los reportes en este momento.";
-    const hoy = hoyIso();
-    const r = await this.fuentes.reportes.resumen({ desde: hoy, hasta: hoy });
-    if (r.cantidadVentas === 0) return "Todavía no hubo ventas hoy.";
-    return `Hoy llevás ${r.cantidadVentas} venta(s) por ${pesos(Number(r.totalVendido))}, con un ticket promedio de ${pesos(Number(r.ticketPromedio))}.`;
+    try {
+      const hoy = hoyIso();
+      const r = await this.fuentes.reportes.resumen({ desde: hoy, hasta: hoy });
+      if (r.cantidadVentas === 0) return "Todavía no hubo ventas hoy.";
+      return `Hoy llevás ${r.cantidadVentas} venta(s) por ${pesos(Number(r.totalVendido))}, con un ticket promedio de ${pesos(Number(r.ticketPromedio))}.`;
+    } catch {
+      return NO_HAY_DATOS;
+    }
   }
 
   private async vencimientos(): Promise<string> {
     if (!this.fuentes.stock) return "No tengo acceso al stock en este momento.";
-    const v = await this.fuentes.stock.vencimientos(30);
-    if (v.length === 0) return "No hay lotes vencidos ni próximos a vencer en los próximos 30 días. 👍";
-    const filas = v
-      .slice(0, 5)
-      .map((a) => {
-        const cuando = a.vencido ? "VENCIDO" : `vence en ${a.diasParaVencer} día(s)`;
-        return `• ${a.producto.nombre}${a.numero ? ` (lote ${a.numero})` : ""}: ${cuando}, saldo ${a.saldo}`;
-      })
-      .join("\n");
-    return `Atención con ${v.length} lote(s):\n${filas}`;
+    try {
+      const v = await this.fuentes.stock.vencimientos(30);
+      if (v.length === 0) return "No hay lotes vencidos ni próximos a vencer en los próximos 30 días. 👍";
+      const filas = v
+        .slice(0, 5)
+        .map((a) => {
+          const cuando = a.vencido ? "VENCIDO" : `vence en ${a.diasParaVencer} día(s)`;
+          return `• ${a.producto.nombre}${a.numero ? ` (lote ${a.numero})` : ""}: ${cuando}, saldo ${a.saldo}`;
+        })
+        .join("\n");
+      return `Atención con ${v.length} lote(s):\n${filas}`;
+    } catch {
+      return NO_HAY_DATOS;
+    }
   }
 
   private async stockBajo(): Promise<string> {
     if (!this.fuentes.stock) return "No tengo acceso al stock en este momento.";
-    const saldos = await this.fuentes.stock.saldos();
-    const bajos = saldos.filter((s) => Number(s.saldo) <= 5).sort((a, b) => Number(a.saldo) - Number(b.saldo));
-    if (bajos.length === 0) return "El stock está en niveles razonables, no hay artículos por debajo del mínimo.";
-    const filas = bajos.slice(0, 6).map((s) => `• ${s.producto.nombre}: quedan ${s.saldo}`).join("\n");
-    return `Conviene reponer ${bajos.length} artículo(s):\n${filas}`;
+    try {
+      const saldos = await this.fuentes.stock.saldos();
+      const bajos = saldos.filter((s) => Number(s.saldo) <= 5).sort((a, b) => Number(a.saldo) - Number(b.saldo));
+      if (bajos.length === 0) return "El stock está en niveles razonables, no hay artículos por debajo del mínimo.";
+      const filas = bajos.slice(0, 6).map((s) => `• ${s.producto.nombre}: quedan ${s.saldo}`).join("\n");
+      return `Conviene reponer ${bajos.length} artículo(s):\n${filas}`;
+    } catch {
+      return NO_HAY_DATOS;
+    }
   }
 
   private async deudores(): Promise<string> {
     if (!this.fuentes.ctacte) return "No tengo acceso a las cuentas corrientes en este momento.";
-    const clientes = await this.fuentes.ctacte.listar(false);
-    const deudores = clientes
-      .filter((c) => Number(c.saldo) > 0)
-      .sort((a, b) => Number(b.saldo) - Number(a.saldo));
-    if (deudores.length === 0) return "Nadie te debe: todas las cuentas corrientes están al día. 👍";
-    const total = deudores.reduce((a, c) => a + Number(c.saldo), 0);
-    const filas = deudores.slice(0, 6).map((c) => `• ${c.nombre}: debe ${pesos(Number(c.saldo))}`).join("\n");
-    return `Tenés ${pesos(total)} por cobrar de ${deudores.length} cliente(s):\n${filas}`;
+    try {
+      const clientes = await this.fuentes.ctacte.listar(false);
+      const deudores = clientes
+        .filter((c) => Number(c.saldo) > 0)
+        .sort((a, b) => Number(b.saldo) - Number(a.saldo));
+      if (deudores.length === 0) return "Nadie te debe: todas las cuentas corrientes están al día. 👍";
+      const total = deudores.reduce((a, c) => a + Number(c.saldo), 0);
+      const filas = deudores.slice(0, 6).map((c) => `• ${c.nombre}: debe ${pesos(Number(c.saldo))}`).join("\n");
+      return `Tenés ${pesos(total)} por cobrar de ${deudores.length} cliente(s):\n${filas}`;
+    } catch {
+      return NO_HAY_DATOS;
+    }
   }
 
   private ayuda(): Promise<string> {
