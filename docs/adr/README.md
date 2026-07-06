@@ -56,3 +56,4 @@ Consecuencias y Alternativas consideradas.
 | 0037 | [Venta a cuenta corriente (fiado)](0037-venta-a-cuenta-corriente.md) | Aceptada |
 | 0038 | [Promociones (2x1 / %) aplicadas en el POS](0038-promociones-en-el-pos.md) | Aceptada |
 | 0039 | [Asistente IA con Google Gemini (server-side)](0039-asistente-ia-gemini.md) | Aceptada |
+| 0040 | [Configurar la clave de Gemini desde la UI](0040-configuracion-asistente-desde-ui.md) | Aceptada |

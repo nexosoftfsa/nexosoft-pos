@@ -33,6 +33,7 @@ import { Remitos } from "../componentes/Remitos";
 import { Inicio } from "../componentes/Inicio";
 import { AsistenteIA as PantallaAsistenteIA } from "../componentes/AsistenteIA";
 import { AsistenteIACompuesto, AsistenteIAMock, type AsistenteIA } from "../sync/cliente-ia";
+import type { ClienteAsistenteConfig } from "../sync/cliente-asistente-config";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -70,6 +71,7 @@ export function Shell({
   clientePresupuestos,
   clienteRemitos,
   clienteIA,
+  clienteAsistenteConfig,
   terminalId,
   terminalNombre,
   onCerrarSesion,
@@ -95,6 +97,8 @@ export function Shell({
   clienteRemitos?: ClienteRemitos;
   /** Asistente con LLM real (Gemini vía el servidor). Sin esto, solo responde con datos. */
   clienteIA?: AsistenteIA;
+  /** Config del asistente (cargar/editar la clave de Gemini). Solo ADMIN, solo Tauri conectado. */
+  clienteAsistenteConfig?: ClienteAsistenteConfig;
   /** Id de la terminal (para la caja). */
   terminalId?: string;
   terminalNombre?: string;
@@ -144,6 +148,7 @@ export function Shell({
 
   const rolLegible = ETIQUETA_ROL[normalizarRol(usuario.rol)];
   const puedeGestion = normalizarRol(usuario.rol) !== "CAJERO";
+  const esAdmin = normalizarRol(usuario.rol) === "ADMIN";
 
   // Asistente de IA: los datos exactos (ventas/stock/vencimientos/deudores) los
   // responde siempre el mock local; todo lo demás (funciones del sistema, dudas
@@ -244,7 +249,11 @@ export function Shell({
               {...(clienteCtaCte ? { clienteCtaCte } : {})}
             />
           ) : activo?.id === "ia" ? (
-            <PantallaAsistenteIA cliente={asistente} />
+            <PantallaAsistenteIA
+              cliente={asistente}
+              puedeConfigurar={esAdmin}
+              {...(clienteAsistenteConfig ? { clienteConfig: clienteAsistenteConfig } : {})}
+            />
           ) : activo?.id === "pos" ? (
             <PantallaPos entorno={entorno} sync={sync} clientes={clientesVenta} />
           ) : activo?.id === "catalogo" && clienteCatalogo ? (

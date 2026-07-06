@@ -54,7 +54,12 @@ sistema y nociones fiscales argentinas (ARCA, Monotributo, Ingresos Brutos),
 vía Gemini. La clave de API **vive solo en este servidor** (nunca en el POS
 instalado) — ver [ADR-0039](../../docs/adr/0039-asistente-ia-gemini.md).
 
-Configuración (`.env`, gitignoreado):
+**Configuración desde la UI (recomendado, ADR-0040):** el ADMIN entra a
+"Asistente IA" en el POS → "⚙ Configurar IA" y pega la clave ahí. Se guarda en
+la tabla `configuracion_sistema` y no requiere reiniciar el servidor.
+
+**Configuración por variable de entorno** (alternativa, `.env` gitignoreado —
+si hay una clave cargada desde la UI, esa tiene prioridad):
 
 ```
 GEMINI_API_KEY=tu-clave-de-google-ai-studio

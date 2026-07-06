@@ -10,6 +10,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// Configuración del servidor editable desde la UI (una sola fila). Hoy solo
+/// guarda la clave del Asistente IA (Gemini); si `.env` tiene GEMINI_API_KEY,
+/// esta fila (si existe) tiene prioridad — ver ADR-0040.
+model ConfiguracionSistema {
+  id            Int      @id @default(1)
+  geminiApiKey  String?
+  geminiModel   String?
+  actualizadoEn DateTime @updatedAt
+
+  @@map("configuracion_sistema")
+}
+
 // ─── Sucursal ────────────────────────────────────────────────────────────────
 
 model Sucursal {
