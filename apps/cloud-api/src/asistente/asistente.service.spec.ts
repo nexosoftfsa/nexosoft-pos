@@ -93,6 +93,23 @@ describe('AsistenteService', () => {
     await expect(service.preguntar('hola')).rejects.toThrow(ServiceUnavailableException);
   });
 
+  it('el mensaje de error incluye el motivo real de Gemini (para poder diagnosticar la clave)', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: { message: 'API key not valid. Please pass a valid API key.' } }),
+    }) as never;
+
+    const service = new AsistenteService(mockConfig({ GEMINI_API_KEY: 'clave-mala' }) as never, mockPrisma() as never);
+    await expect(service.preguntar('hola')).rejects.toThrow(/400.*API key not valid/);
+  });
+
+  it('si Gemini no manda detalle de error, el mensaje igual incluye el status', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 503, json: async () => ({}) }) as never;
+    const service = new AsistenteService(mockConfig({ GEMINI_API_KEY: 'clave-x' }) as never, mockPrisma() as never);
+    await expect(service.preguntar('hola')).rejects.toThrow(/503/);
+  });
+
   it('lanza ServiceUnavailableException si falla la conexión', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('network down')) as never;
     const service = new AsistenteService(mockConfig({ GEMINI_API_KEY: 'clave-x' }) as never, mockPrisma() as never);

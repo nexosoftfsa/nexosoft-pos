@@ -65,8 +65,16 @@ export class AsistenteService {
 
     const data = (await res.json().catch(() => ({}))) as RespuestaGemini;
     if (!res.ok) {
-      this.logger.error(`Gemini respondió ${res.status}: ${data.error?.message ?? ''}`);
-      throw new ServiceUnavailableException('El asistente de IA no pudo responder en este momento.');
+      const detalle = data.error?.message;
+      this.logger.error(`Gemini respondió ${res.status}: ${detalle ?? ''}`);
+      // Se expone el motivo real de Gemini (clave inválida, cuota agotada, modelo
+      // inexistente, etc.) porque sin esto el ADMIN no tiene forma de diagnosticar
+      // su propia clave: el mensaje genérico anterior escondía la causa, y los
+      // logs del servidor no siempre están visibles (p.ej. el script de demo
+      // corre con `logger: false`).
+      throw new ServiceUnavailableException(
+        `El asistente de IA no pudo responder (Gemini ${res.status}${detalle ? `: ${detalle}` : ''}).`,
+      );
     }
 
     const texto = data.candidates?.[0]?.content?.parts?.[0]?.text;
