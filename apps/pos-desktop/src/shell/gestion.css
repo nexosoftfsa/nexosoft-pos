@@ -265,6 +265,129 @@
   margin: 2px 0 10px;
 }
 
+/* ---------- Inicio (panel general) ---------- */
+.inicio-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.inicio-titulo {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 800;
+}
+.kpi__sub {
+  font-size: 12px;
+  margin-top: 4px;
+}
+.accesos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+}
+.acceso {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.08s, border-color 0.08s;
+}
+.acceso:hover {
+  transform: translateY(-2px);
+  border-color: var(--acento, #1c97b0);
+}
+.acceso-icono {
+  font-size: 26px;
+}
+.acceso-titulo {
+  font-weight: 700;
+  font-size: 15px;
+  margin-top: 4px;
+}
+.acceso-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ---------- Asistente IA (chat) ---------- */
+.ia-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  max-width: 760px;
+}
+.ia-mensajes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 340px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding: 4px;
+}
+.ia-msg {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.ia-msg--usuario {
+  flex-direction: row-reverse;
+}
+.ia-avatar {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.ia-burbuja {
+  padding: 10px 14px;
+  border-radius: 14px;
+  white-space: pre-line;
+  font-size: 14px;
+  line-height: 1.45;
+  max-width: 80%;
+}
+.ia-msg--asistente .ia-burbuja {
+  background: #f1f0fb;
+  color: #2a2547;
+  border-bottom-left-radius: 4px;
+}
+.ia-msg--usuario .ia-burbuja {
+  background: var(--acento, #1c97b0);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.ia-burbuja--pensando {
+  color: var(--muted);
+  font-style: italic;
+}
+.ia-sugerencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ia-entrada {
+  display: flex;
+  gap: 8px;
+}
+.ia-entrada .input {
+  flex: 1;
+}
+.ia-nota {
+  margin-top: 12px;
+  font-size: 12.5px;
+  max-width: 760px;
+}
+
 /* ---------- Alertas de vencimiento (Fase 8.2) ---------- */
 .section-alertas {
   margin-bottom: 18px;

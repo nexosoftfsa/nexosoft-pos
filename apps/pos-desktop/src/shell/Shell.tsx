@@ -30,6 +30,9 @@ import { Comprobantes } from "../componentes/Comprobantes";
 import { ReportesPos } from "../componentes/ReportesPos";
 import { Presupuestos } from "../componentes/Presupuestos";
 import { Remitos } from "../componentes/Remitos";
+import { Inicio } from "../componentes/Inicio";
+import { AsistenteIA } from "../componentes/AsistenteIA";
+import { AsistenteIAMock } from "../sync/cliente-ia";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -137,6 +140,13 @@ export function Shell({
   }
 
   const rolLegible = ETIQUETA_ROL[normalizarRol(usuario.rol)];
+  const puedeGestion = normalizarRol(usuario.rol) !== "CAJERO";
+
+  // Asistente de IA (mock funcional): responde con los datos del comercio.
+  const asistente = useMemo(
+    () => new AsistenteIAMock({ reportes: clienteReportes, stock: clienteStock, ctacte: clienteCtaCte }),
+    [clienteReportes, clienteStock, clienteCtaCte],
+  );
 
   return (
     <div className="app-shell">
@@ -214,7 +224,18 @@ export function Shell({
         </header>
 
         <div className="shell-content">
-          {activo?.id === "pos" ? (
+          {activo?.id === "inicio" ? (
+            <Inicio
+              nombreComercio={entorno.config.razonSocial}
+              rolPuedeGestion={puedeGestion}
+              onNavegar={navegar}
+              {...(clienteReportes ? { clienteReportes } : {})}
+              {...(clienteStock ? { clienteStock } : {})}
+              {...(clienteCtaCte ? { clienteCtaCte } : {})}
+            />
+          ) : activo?.id === "ia" ? (
+            <AsistenteIA cliente={asistente} />
+          ) : activo?.id === "pos" ? (
             <PantallaPos entorno={entorno} sync={sync} clientes={clientesVenta} />
           ) : activo?.id === "catalogo" && clienteCatalogo ? (
             <CatalogoAbm cliente={clienteCatalogo} />
