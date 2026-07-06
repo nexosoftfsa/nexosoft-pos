@@ -11,7 +11,7 @@ const MEDIOS: Partial<Record<FormaDePago, string>> = {
   [FormaDePago.Efectivo]: "EFECTIVO",
   [FormaDePago.Tarjeta]: "TARJETA_DEBITO",
   [FormaDePago.Billetera]: "MERCADOPAGO_QR",
-  [FormaDePago.Transferencia]: "EFECTIVO",
+  [FormaDePago.Transferencia]: "TRANSFERENCIA",
   [FormaDePago.CuentaCorriente]: "CUENTA_CORRIENTE",
 };
 

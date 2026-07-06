@@ -10,6 +10,13 @@ describe("mapearMedioPago", () => {
     expect(mapearMedioPago(FormaDePago.Tarjeta)).toBe("TARJETA_DEBITO");
     expect(mapearMedioPago(FormaDePago.Billetera)).toBe("MERCADOPAGO_QR");
   });
+
+  it("Transferencia mapea a TRANSFERENCIA, no a EFECTIVO", () => {
+    // Bug real: antes mapeaba a "EFECTIVO", lo que hacía que un pago combinado
+    // Efectivo+Transferencia se viera como "todo efectivo" (resumenMedioPago
+    // agrupaba ambos medios en uno solo, sin distinguirlos).
+    expect(mapearMedioPago(FormaDePago.Transferencia)).toBe("TRANSFERENCIA");
+  });
 });
 
 describe("construirOperacionVenta", () => {
@@ -78,6 +85,17 @@ describe("resumenMedioPago", () => {
         [
           { medioPago: "EFECTIVO", monto: "50" },
           { medioPago: "MERCADOPAGO_QR", monto: "50" },
+        ],
+        "EFECTIVO",
+      ),
+    ).toBe("COMBINADO");
+  });
+  it("Efectivo + Transferencia da COMBINADO (no se funden en un solo medio)", () => {
+    expect(
+      resumenMedioPago(
+        [
+          { medioPago: "EFECTIVO", monto: "140" },
+          { medioPago: "TRANSFERENCIA", monto: "100" },
         ],
         "EFECTIVO",
       ),

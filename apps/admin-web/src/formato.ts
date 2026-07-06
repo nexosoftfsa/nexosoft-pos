@@ -32,6 +32,7 @@ const ETIQUETAS_MEDIO_PAGO: Record<string, string> = {
   TARJETA_DEBITO: "Tarjeta débito",
   TARJETA_CREDITO: "Tarjeta crédito",
   MERCADOPAGO_QR: "MercadoPago QR",
+  TRANSFERENCIA: "Transferencia",
   CUENTA_CORRIENTE: "Cuenta corriente",
 };
 

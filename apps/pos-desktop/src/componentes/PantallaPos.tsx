@@ -233,7 +233,7 @@ export function PantallaPos({
     if (!preview) return;
     const saldo = preview.cobro.saldoPendiente;
     if (saldo.esPositivo()) {
-      setPagos((prev) => [...prev, { forma: FormaDePago.Efectivo, monto: saldo }]);
+      setPagos((prev) => [...prev, { forma: formaPago, monto: saldo }]);
     }
   }
 
