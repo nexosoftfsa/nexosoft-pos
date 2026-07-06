@@ -16,7 +16,7 @@ import {
 import { leerServidorUrl, guardarServidorUrl } from "./datos/ajustes-sqlite";
 import { EjecutorSqlTauri, estaEnTauri } from "./datos/ejecutor-sql-tauri";
 import { SesionManager } from "./datos/sesion";
-import { ClienteAuthHttp, type Credenciales } from "./sync/cliente-auth-http";
+import { ClienteAuthHttp, ErrorAuth, type Credenciales } from "./sync/cliente-auth-http";
 import { ClienteTerminalesHttp } from "./sync/cliente-terminales-http";
 import type { ClienteCatalogoAdmin } from "./sync/cliente-catalogo-admin";
 import { ClienteCatalogoAdminHttp } from "./sync/cliente-catalogo-admin";
@@ -188,6 +188,14 @@ function AppTauri() {
       setEntorno(env);
       setFase("listo");
     } catch (e) {
+      // Refresh token inválido/expirado (servidor reinstalado, sesión vieja, etc.):
+      // la sesión guardada ya no sirve. En vez de un error sin salida, limpiamos
+      // y volvemos al login para que el usuario pueda entrar de nuevo.
+      if (e instanceof ErrorAuth && e.status === 401) {
+        await sesion.cerrar();
+        setFase("login");
+        return;
+      }
       fallar(e);
     }
   }, [fallar]);
