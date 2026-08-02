@@ -13,6 +13,7 @@
     "verify:e2e": "nest build && node test/e2e-sync.mjs",
     "verify:e2e:features": "nest build && node test/e2e-combos-lotes.mjs",
     "seed:demo": "nest build && node test/seed-demo.mjs",
+    "importar:catalogo": "nest build && node scripts/importar-catalogo.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },

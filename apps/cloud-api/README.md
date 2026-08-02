@@ -107,6 +107,7 @@ completo tras cada venta (default `false`: en alto volumen es caro). Ver
 | `pnpm verify:e2e`        | E2E real de sync con PostgreSQL embebido (sin Docker) |
 | `pnpm verify:e2e:features` | E2E real de **combos + lotes/vencimientos** contra Postgres |
 | `pnpm seed:demo`         | Puebla una demo realista (almacén, combos, lotes, clientes, ventas) |
+| `pnpm importar:catalogo -- --email E --password P [--archivo X] [--api URL] [--dry-run]` | Importa un catálogo (Excel) del sistema anterior de un comercio contra un servidor real, vía `/categorias`+`/productos`+`/stock/movimientos`. Idempotente por código. Ver [ADR-0042](../../docs/adr/0042-importador-de-catalogo.md). |
 
 ### Demo en vivo para mostrar al cliente
 
