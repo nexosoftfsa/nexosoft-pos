@@ -14,6 +14,7 @@ const ETIQUETAS_TIPO: Record<string, string> = {
   NotaDebitoA: "Nota de Débito A",
   NotaDebitoB: "Nota de Débito B",
   NotaDebitoC: "Nota de Débito C",
+  TicketNoFiscal: "Ticket",
 };
 
 export function etiquetaTipoComprobante(tipo: string | null): string {
@@ -42,6 +43,11 @@ export function numeroComprobante(numero: number | null): string {
 
 export function esNotaCredito(tipo: string | null): boolean {
   return tipo?.startsWith("NotaCredito") ?? false;
+}
+
+/** Un `TicketNoFiscal` (Fase 10.1: comercio sin alta en ARCA) no lleva CAE. */
+export function esFiscal(tipo: string | null): boolean {
+  return tipo !== "TicketNoFiscal";
 }
 
 /** Un comprobante es anulable si no está anulado y no es una Nota de Crédito. */

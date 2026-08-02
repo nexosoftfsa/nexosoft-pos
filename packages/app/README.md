@@ -22,7 +22,7 @@ aportan los adaptadores.
 
 | Módulo                             | Qué expone                                                                                                    |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `config/configuracion-comercio.ts` | `ConfiguracionComercio`: condición fiscal del emisor, punto de venta, depósito/lista por defecto y políticas. |
+| `config/configuracion-comercio.ts` | `ConfiguracionComercio`: condición fiscal del emisor, punto de venta, depósito/lista por defecto, políticas y `emiteComprobantesFiscales` (Fase 10.1: `false` = comercio sin alta en ARCA, vende con `TicketNoFiscal` — ADR-0041). |
 | `puertos/repositorios.ts`          | Interfaces `RepositorioArticulos/Precios/Existencias/Movimientos/Ventas` y `Repositorios`.                    |
 | `memoria/repositorios-memoria.ts`  | Adaptadores **en memoria** + `crearRepositoriosMemoria(semilla)` para tests.                                  |
 | `ventas/servicio-venta.ts`         | `ServicioDeVenta`: `previsualizarVenta` (totales) y `confirmarVenta` (persiste + descuenta stock).            |

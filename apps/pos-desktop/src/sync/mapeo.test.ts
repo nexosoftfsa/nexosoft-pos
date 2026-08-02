@@ -70,6 +70,21 @@ describe("construirOperacionVenta", () => {
     });
     expect((op.payload as { clienteId?: string }).clienteId).toBe("cli1");
   });
+
+  it("incluye tipoComprobante en el payload (Fase 10.1: TicketNoFiscal viaja al servidor)", () => {
+    const op = construirOperacionVenta({
+      terminalId: "t",
+      medioPago: "EFECTIVO",
+      items: [],
+      tipoComprobante: "TicketNoFiscal",
+    });
+    expect((op.payload as { tipoComprobante?: string }).tipoComprobante).toBe("TicketNoFiscal");
+  });
+
+  it("no incluye tipoComprobante si no se pasa", () => {
+    const op = construirOperacionVenta({ terminalId: "t", medioPago: "EFECTIVO", items: [] });
+    expect((op.payload as { tipoComprobante?: string }).tipoComprobante).toBeUndefined();
+  });
 });
 
 describe("resumenMedioPago", () => {

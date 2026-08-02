@@ -79,11 +79,15 @@ export class VentasService {
     }
 
     const tipoNc = notaCreditoDe(original.tipoComprobante);
-    const cae = await this.cae.autorizar({
-      tipoComprobante: tipoNc,
-      total: original.total.toString(),
-      sucursalId,
-    });
+    // Fase 10.1: un TicketNoFiscal no tiene Nota de Crédito (no es fiscal) — se
+    // anula reflejando el mismo tipo, sin pedir CAE.
+    const cae = esComprobanteFiscal(tipoNc)
+      ? await this.cae.autorizar({
+          tipoComprobante: tipoNc,
+          total: original.total.toString(),
+          sucursalId,
+        })
+      : null;
 
     const notaCredito = await this.prisma.$transaction(async (tx) => {
       const nc = await tx.venta.create({
@@ -94,10 +98,10 @@ export class VentasService {
           descuento: original.descuento,
           total: original.total,
           medioPago: original.medioPago,
-          cae: cae.cae,
-          caeFechaVto: cae.caeFechaVto,
-          numeroComprobante: cae.numeroComprobante,
-          tipoComprobante: cae.tipoComprobante,
+          cae: cae?.cae ?? null,
+          caeFechaVto: cae?.caeFechaVto ?? null,
+          numeroComprobante: cae?.numeroComprobante ?? null,
+          tipoComprobante: cae?.tipoComprobante ?? tipoNc,
           sucursalId,
           usuarioId: original.usuarioId,
           terminalId: original.terminalId,
@@ -202,11 +206,14 @@ export class VentasService {
           : new Decimal(0);
 
     // Autorización fiscal (mock; el real es @nexosoft/fiscal vía ARCA).
-    const cae = await this.cae.autorizar({
-      tipoComprobante,
-      total: total.toString(),
-      sucursalId: usuario.sucursalId,
-    });
+    // Fase 10.1: un TicketNoFiscal (comercio sin alta en ARCA) no pide CAE.
+    const cae = esComprobanteFiscal(tipoComprobante)
+      ? await this.cae.autorizar({
+          tipoComprobante,
+          total: total.toString(),
+          sucursalId: usuario.sucursalId,
+        })
+      : null;
 
     // Transacción: venta + ítems + pagos + movimientos de stock VENTA (atómico).
     const venta = await this.prisma.$transaction(async (tx) => {
@@ -218,10 +225,10 @@ export class VentasService {
           descuento: descuentoGlobal,
           total,
           medioPago: medioPagoResumen,
-          cae: cae.cae,
-          caeFechaVto: cae.caeFechaVto,
-          numeroComprobante: cae.numeroComprobante,
-          tipoComprobante: cae.tipoComprobante,
+          cae: cae?.cae ?? null,
+          caeFechaVto: cae?.caeFechaVto ?? null,
+          numeroComprobante: cae?.numeroComprobante ?? null,
+          tipoComprobante: cae?.tipoComprobante ?? tipoComprobante,
           sucursalId: usuario.sucursalId,
           usuarioId: usuario.id,
           terminalId: dto.terminalId ?? null,
@@ -407,8 +414,16 @@ export function resumenMedioPago(
 
 /** Tipo de Nota de Crédito que corresponde a un comprobante (hereda la letra). */
 export function notaCreditoDe(tipoComprobante: string | null): string {
+  // Fase 10.1: un ticket sin valor fiscal no tiene Nota de Crédito — anular
+  // refleja el mismo tipo (ver `esComprobanteFiscal`).
+  if (tipoComprobante === 'TicketNoFiscal') return 'TicketNoFiscal';
   if (tipoComprobante?.startsWith('Factura')) {
     return tipoComprobante.replace('Factura', 'NotaCredito');
   }
   return 'NotaCreditoB';
+}
+
+/** ¿El tipo de comprobante requiere CAE de ARCA? (Fase 10.1: TicketNoFiscal no.) */
+export function esComprobanteFiscal(tipoComprobante: string): boolean {
+  return tipoComprobante !== 'TicketNoFiscal';
 }

@@ -9,6 +9,7 @@ import {
   FormaDePago,
   Money,
   resolverTipoComprobante,
+  TipoComprobante,
 } from "@nexosoft/domain";
 import type { DatosTicket } from "@nexosoft/hardware";
 import type { IntentoPago } from "@nexosoft/pagos";
@@ -187,7 +188,12 @@ export function PantallaPos({
     };
   }, [carrito, condicionReceptor, pagos, recargoPorc, servicio]);
 
-  const tipo = resolverTipoComprobante(config.condicionIvaEmisor, condicionReceptor);
+  // Fase 10.1: sin alta en ARCA, la preview muestra el ticket sin fiscal —
+  // el receptor no influye (no se resuelve A/B/C).
+  const emiteFiscal = config.emiteComprobantesFiscales !== false;
+  const tipo = emiteFiscal
+    ? resolverTipoComprobante(config.condicionIvaEmisor, condicionReceptor)
+    : TipoComprobante.TicketNoFiscal;
 
   function agregar(producto: ProductoCatalogo) {
     setError(null);
@@ -334,6 +340,7 @@ export function PantallaPos({
             terminalId: entorno.sync.terminalId,
             pagos: pagosSync,
             recargo: venta.resultado.recargo.aDecimalString(2),
+            tipoComprobante: venta.tipoComprobante,
             ...(clienteVenta !== undefined ? { clienteId: clienteVenta } : {}),
           }),
         );
@@ -420,16 +427,18 @@ export function PantallaPos({
         <aside className="ticket-panel">
           <div className="comprobante">
             <span className="tipo">{etiquetaComprobante(tipo)}</span>
-            <select
-              value={condicionReceptor}
-              onChange={(e) => setCondicionReceptor(e.target.value as CondicionIva)}
-            >
-              {RECEPTORES.map((r) => (
-                <option key={r.valor} value={r.valor}>
-                  {r.etiqueta}
-                </option>
-              ))}
-            </select>
+            {emiteFiscal && (
+              <select
+                value={condicionReceptor}
+                onChange={(e) => setCondicionReceptor(e.target.value as CondicionIva)}
+              >
+                {RECEPTORES.map((r) => (
+                  <option key={r.valor} value={r.valor}>
+                    {r.etiqueta}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {clientes.length > 0 && (
@@ -595,6 +604,8 @@ export function PantallaPos({
                   <span>Vto. {ultimaVenta.vencimientoCae.toLocaleDateString("es-AR")}</span>
                 )}
               </div>
+            ) : ultimaVenta.tipoComprobante === TipoComprobante.TicketNoFiscal ? (
+              <div className="ticket-estado">No válido como factura</div>
             ) : (
               <div className="ticket-estado">{ultimaVenta.estadoCae}</div>
             )}

@@ -53,6 +53,8 @@ export function construirOperacionVenta(args: {
   readonly recargo?: string;
   /** Cliente de la venta (obligatorio para fiado). Opcional. */
   readonly clienteId?: string;
+  /** Tipo de comprobante resuelto localmente (Fase 10.1: puede ser "TicketNoFiscal"). */
+  readonly tipoComprobante?: string;
 }): OperacionSync {
   return {
     operacionId: crypto.randomUUID(),
@@ -76,6 +78,7 @@ export function construirOperacionVenta(args: {
         ? { recargo: args.recargo }
         : {}),
       ...(args.clienteId !== undefined ? { clienteId: args.clienteId } : {}),
+      ...(args.tipoComprobante !== undefined ? { tipoComprobante: args.tipoComprobante } : {}),
     },
   };
 }

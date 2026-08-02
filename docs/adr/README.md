@@ -57,3 +57,4 @@ Consecuencias y Alternativas consideradas.
 | 0038 | [Promociones (2x1 / %) aplicadas en el POS](0038-promociones-en-el-pos.md) | Aceptada |
 | 0039 | [Asistente IA con Google Gemini (server-side)](0039-asistente-ia-gemini.md) | Aceptada |
 | 0040 | [Configurar la clave de Gemini desde la UI](0040-configuracion-asistente-desde-ui.md) | Aceptada |
+| 0041 | [Modo de venta sin alta en ARCA (TicketNoFiscal)](0041-modo-de-venta-sin-arca.md) | Aceptada |

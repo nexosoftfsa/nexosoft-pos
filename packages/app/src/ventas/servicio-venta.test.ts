@@ -27,6 +27,7 @@ interface OpcionesEscenario {
   permitirStockNegativo?: boolean;
   stock?: string;
   unidad?: (typeof UnidadDeMedida)[keyof typeof UnidadDeMedida];
+  emiteComprobantesFiscales?: boolean;
 }
 
 function crearEscenario(opciones: OpcionesEscenario = {}) {
@@ -63,6 +64,9 @@ function crearEscenario(opciones: OpcionesEscenario = {}) {
     listaPredeterminadaId: "LISTA",
     preciosIncluyenIva: true,
     permitirStockNegativo: opciones.permitirStockNegativo ?? false,
+    ...(opciones.emiteComprobantesFiscales !== undefined
+      ? { emiteComprobantesFiscales: opciones.emiteComprobantesFiscales }
+      : {}),
   };
   return { repos, servicio: new ServicioDeVenta(repos, config) };
 }
@@ -151,6 +155,23 @@ describe("ServicioDeVenta — confirmarVenta (camino feliz)", () => {
     expect(e?.cantidad.aDecimalString(0)).toBe("8");
     expect(repos.movimientos.movimientos).toHaveLength(1);
     expect(repos.ventas.ventas).toHaveLength(1);
+  });
+
+  it("con emiteComprobantesFiscales=false vende un TicketNoFiscal sin pedir CAE (Fase 10.1)", async () => {
+    const { repos, servicio } = crearEscenario({ emiteComprobantesFiscales: false });
+    const venta = await servicio.confirmarVenta({
+      items: [{ articuloId: "art", cantidad: Cantidad.de("2") }],
+      // Aunque se mande un receptor distinto, no influye: no hay resolución A/B/C.
+      condicionReceptor: CondicionIva.ResponsableInscripto,
+      pagos: [efectivo("3000")],
+    });
+
+    expect(venta.tipoComprobante).toBe(TipoComprobante.TicketNoFiscal);
+    expect(venta.estadoCae).toBe(EstadoCae.Borrador);
+    expect(venta.resultado.total.aDecimalString()).toBe("2420.00");
+    // El stock se descuenta igual: es una venta real, solo que sin CAE.
+    const e = await repos.existencias.obtener("art", "DEP");
+    expect(e?.cantidad.aDecimalString(0)).toBe("8");
   });
 
   it("numera correlativamente por punto de venta y tipo", async () => {

@@ -11,6 +11,7 @@ import { ErrorVentas, type Comprobante, type ClienteVentas } from "../sync/clien
 import { pesos } from "../formato";
 import {
   esAnulable,
+  esFiscal,
   esNotaCredito,
   etiquetaMedioPago,
   etiquetaTipoComprobante,
@@ -79,7 +80,14 @@ export function Comprobantes({ cliente }: { cliente: ClienteVentas }) {
   );
 
   async function anular(c: Comprobante) {
-    if (!window.confirm(`¿Anular ${etiquetaTipoComprobante(c.tipoComprobante)} ${numeroComprobante(c.numeroComprobante)}? Se emitirá una Nota de Crédito.`)) {
+    const consecuencia = esFiscal(c.tipoComprobante)
+      ? "Se emitirá una Nota de Crédito."
+      : "No es un comprobante fiscal: se anula directo, sin Nota de Crédito.";
+    if (
+      !window.confirm(
+        `¿Anular ${etiquetaTipoComprobante(c.tipoComprobante)} ${numeroComprobante(c.numeroComprobante)}? ${consecuencia}`,
+      )
+    ) {
       return;
     }
     setAnulando(c.id);
@@ -88,7 +96,9 @@ export function Comprobantes({ cliente }: { cliente: ClienteVentas }) {
     try {
       const r = await cliente.anular(c.id);
       setAviso(
-        `Se emitió la ${etiquetaTipoComprobante(r.notaCredito.tipoComprobante)} ${numeroComprobante(r.notaCredito.numeroComprobante)}.`,
+        esFiscal(r.notaCredito.tipoComprobante)
+          ? `Se emitió la ${etiquetaTipoComprobante(r.notaCredito.tipoComprobante)} ${numeroComprobante(r.notaCredito.numeroComprobante)}.`
+          : "Comprobante anulado.",
       );
       await cargar();
     } catch (e) {

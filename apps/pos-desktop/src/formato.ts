@@ -16,6 +16,7 @@ const ETIQUETAS: Partial<Record<TipoComprobante, string>> = {
   [TipoComprobante.NotaCreditoA]: "Nota de Crédito A",
   [TipoComprobante.NotaCreditoB]: "Nota de Crédito B",
   [TipoComprobante.NotaCreditoC]: "Nota de Crédito C",
+  [TipoComprobante.TicketNoFiscal]: "Ticket",
 };
 
 /** Etiqueta legible de un tipo de comprobante. */

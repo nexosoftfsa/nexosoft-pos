@@ -154,6 +154,7 @@ export const CONFIG_DEMO: ConfiguracionComercio = {
   listaPredeterminadaId: LISTA,
   preciosIncluyenIva: true,
   permitirStockNegativo: false,
+  emiteComprobantesFiscales: true,
 };
 
 /**

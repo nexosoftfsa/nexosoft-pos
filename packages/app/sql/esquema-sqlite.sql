@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS comercio_config (
   deposito_por_defecto  TEXT    NOT NULL,
   lista_predeterminada  TEXT    NOT NULL,
   precios_incluyen_iva  INTEGER NOT NULL DEFAULT 1 CHECK (precios_incluyen_iva IN (0,1)),
-  permitir_stock_negativo INTEGER NOT NULL DEFAULT 0 CHECK (permitir_stock_negativo IN (0,1))
+  permitir_stock_negativo INTEGER NOT NULL DEFAULT 0 CHECK (permitir_stock_negativo IN (0,1)),
+  emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1))
 );
 
 -- Catálogo --------------------------------------------------------------------

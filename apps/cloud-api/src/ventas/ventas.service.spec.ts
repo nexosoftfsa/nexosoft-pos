@@ -152,6 +152,26 @@ describe('VentasService', () => {
     });
   });
 
+  describe('venta con tipoComprobante=TicketNoFiscal (Fase 10.1 — sin alta en ARCA)', () => {
+    it('NO pide CAE y persiste cae/numeroComprobante en null', async () => {
+      await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
+
+      expect(cae.autorizar).not.toHaveBeenCalled();
+      const data = tx.venta.create.mock.calls[0]![0].data;
+      expect(data.tipoComprobante).toBe('TicketNoFiscal');
+      expect(data.cae).toBeNull();
+      expect(data.caeFechaVto).toBeNull();
+      expect(data.numeroComprobante).toBeNull();
+    });
+
+    it('igual descuenta stock y registra en el libro de ventas', async () => {
+      await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
+
+      expect(tx.movimientoStock.create).toHaveBeenCalledTimes(2);
+      expect(libro.filas).toHaveLength(1);
+    });
+  });
+
   describe('venta de combo (Fase 8.1)', () => {
     it('expande el combo: descuenta stock de sus componentes, no del combo', async () => {
       // p1 es un combo de 2×gaseosa + 1×alfajor; p2 es simple.

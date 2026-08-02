@@ -268,6 +268,7 @@ function AppTauri() {
         cuit: config.cuit,
         condicionIvaEmisor: config.condicionIvaEmisor,
         puntoDeVenta: config.puntoDeVenta,
+        emiteComprobantesFiscales: config.emiteComprobantesFiscales ?? true,
       });
       setFase("config");
     } catch (e) {
@@ -286,6 +287,7 @@ function AppTauri() {
         cuit: v.cuit,
         condicionIvaEmisor: v.condicionIvaEmisor,
         puntoDeVenta: v.puntoDeVenta,
+        emiteComprobantesFiscales: v.emiteComprobantesFiscales,
       });
       await guardarServidorUrl(ejecutor, v.servidorUrl);
       await inicializar(); // re-lee la URL, reconstruye el cliente y reevalúa la fase

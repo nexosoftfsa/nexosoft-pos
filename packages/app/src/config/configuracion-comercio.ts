@@ -16,4 +16,12 @@ export interface ConfiguracionComercio {
   readonly preciosIncluyenIva: boolean;
   /** Si se permite vender sin stock (sobreventa). Por defecto, no. */
   readonly permitirStockNegativo: boolean;
+  /**
+   * Si el comercio ya está de alta en ARCA y puede emitir comprobantes
+   * fiscales (Factura A/B/C). Por defecto `true` (comportamiento histórico).
+   * En `false` (Fase 10.1), toda venta se resuelve como `TicketNoFiscal`: no
+   * se calcula tipo A/B/C ni se pide CAE. Pensado para un comercio que está
+   * probando el sistema o recién inició el trámite de alta en ARCA.
+   */
+  readonly emiteComprobantesFiscales?: boolean;
 }

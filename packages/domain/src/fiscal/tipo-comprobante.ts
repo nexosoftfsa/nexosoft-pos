@@ -23,6 +23,13 @@ export const TipoComprobante = {
   /** Documentos internos (no fiscales): no llevan CAE. */
   Remito: "Remito",
   Presupuesto: "Presupuesto",
+  /**
+   * Ticket de venta SIN valor fiscal: para un comercio que todavía no está
+   * dado de alta en ARCA (ver `ConfiguracionComercio.emiteComprobantesFiscales`).
+   * A diferencia de Remito/Presupuesto, SÍ es una venta real (mueve stock,
+   * cobra), solo que no pide CAE ni se numera como Factura.
+   */
+  TicketNoFiscal: "TicketNoFiscal",
 } as const;
 
 export type TipoComprobante = (typeof TipoComprobante)[keyof typeof TipoComprobante];
@@ -45,6 +52,7 @@ export type EstadoCae = (typeof EstadoCae)[keyof typeof EstadoCae];
 const DOCUMENTOS_NO_FISCALES = new Set<TipoComprobante>([
   TipoComprobante.Remito,
   TipoComprobante.Presupuesto,
+  TipoComprobante.TicketNoFiscal,
 ]);
 
 /** ¿El comprobante requiere CAE de ARCA? (Remito/Presupuesto no.) */

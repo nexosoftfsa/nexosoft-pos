@@ -85,6 +85,7 @@ interface FilaConfig extends Fila {
   lista_predeterminada: string;
   precios_incluyen_iva: number;
   permitir_stock_negativo: number;
+  emite_comprobantes_fiscales: number;
 }
 
 /** Guarda (alta/actualización) la configuración del comercio (fila única id=1). */
@@ -95,13 +96,15 @@ export async function guardarConfig(
   await ejecutor.ejecutar(
     `INSERT INTO comercio_config
        (id, cuit, razon_social, condicion_iva_emisor, punto_de_venta,
-        deposito_por_defecto, lista_predeterminada, precios_incluyen_iva, permitir_stock_negativo)
-     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+        deposito_por_defecto, lista_predeterminada, precios_incluyen_iva, permitir_stock_negativo,
+        emite_comprobantes_fiscales)
+     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        cuit=excluded.cuit, razon_social=excluded.razon_social,
        condicion_iva_emisor=excluded.condicion_iva_emisor, punto_de_venta=excluded.punto_de_venta,
        deposito_por_defecto=excluded.deposito_por_defecto, lista_predeterminada=excluded.lista_predeterminada,
-       precios_incluyen_iva=excluded.precios_incluyen_iva, permitir_stock_negativo=excluded.permitir_stock_negativo`,
+       precios_incluyen_iva=excluded.precios_incluyen_iva, permitir_stock_negativo=excluded.permitir_stock_negativo,
+       emite_comprobantes_fiscales=excluded.emite_comprobantes_fiscales`,
     [
       config.cuit,
       config.razonSocial,
@@ -111,6 +114,7 @@ export async function guardarConfig(
       config.listaPredeterminadaId,
       config.preciosIncluyenIva ? 1 : 0,
       config.permitirStockNegativo ? 1 : 0,
+      config.emiteComprobantesFiscales === false ? 0 : 1,
     ],
   );
 }
@@ -131,6 +135,7 @@ export async function leerConfig(ejecutor: EjecutorSql): Promise<ConfiguracionCo
     listaPredeterminadaId: f.lista_predeterminada,
     preciosIncluyenIva: f.precios_incluyen_iva === 1,
     permitirStockNegativo: f.permitir_stock_negativo === 1,
+    emiteComprobantesFiscales: f.emite_comprobantes_fiscales === 1,
   };
 }
 

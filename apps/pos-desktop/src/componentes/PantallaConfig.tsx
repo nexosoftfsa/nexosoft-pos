@@ -8,6 +8,8 @@ export interface ValoresConfig {
   readonly cuit: string;
   readonly condicionIvaEmisor: CondicionIva;
   readonly puntoDeVenta: number;
+  /** Fase 10.1: si el comercio ya está de alta en ARCA y emite Factura A/B/C. */
+  readonly emiteComprobantesFiscales: boolean;
 }
 
 const EMISORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
@@ -30,6 +32,7 @@ export function PantallaConfig({
   const [cuit, setCuit] = useState(valores.cuit);
   const [condicion, setCondicion] = useState<CondicionIva>(valores.condicionIvaEmisor);
   const [puntoDeVenta, setPuntoDeVenta] = useState(String(valores.puntoDeVenta));
+  const [emiteFiscal, setEmiteFiscal] = useState(valores.emiteComprobantesFiscales);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -53,6 +56,7 @@ export function PantallaConfig({
         cuit: cuit.trim(),
         condicionIvaEmisor: condicion,
         puntoDeVenta: pv,
+        emiteComprobantesFiscales: emiteFiscal,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -101,6 +105,21 @@ export function PantallaConfig({
             onChange={(e) => setPuntoDeVenta(e.target.value)}
           />
         </label>
+        <label style={{ ...etiqueta, flexDirection: "row", alignItems: "center", gap: "0.5rem" }}>
+          <input
+            type="checkbox"
+            checked={emiteFiscal}
+            onChange={(e) => setEmiteFiscal(e.target.checked)}
+          />
+          Ya está de alta en ARCA (emite Factura A/B/C)
+        </label>
+        {!emiteFiscal && (
+          <div style={ayuda}>
+            Mientras esté desmarcado, el sistema vende con un ticket interno sin
+            CAE ni numeración fiscal. Activalo cuando el comercio complete el
+            alta en ARCA.
+          </div>
+        )}
 
         {error !== null && <div style={aviso}>{error}</div>}
 
@@ -177,4 +196,11 @@ const aviso: CSSProperties = {
   padding: "0.5rem 0.7rem",
   borderRadius: "8px",
   fontSize: "0.85rem",
+};
+const ayuda: CSSProperties = {
+  background: "#fffbeb",
+  color: "#92400e",
+  padding: "0.5rem 0.7rem",
+  borderRadius: "8px",
+  fontSize: "0.8rem",
 };

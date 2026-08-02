@@ -73,9 +73,17 @@ describe("requiereCae", () => {
     expect(requiereCae(TipoComprobante.NotaCreditoC)).toBe(true);
   });
 
-  it("remito y presupuesto no requieren CAE", () => {
+  it("remito, presupuesto y ticket no fiscal no requieren CAE", () => {
     expect(requiereCae(TipoComprobante.Remito)).toBe(false);
     expect(requiereCae(TipoComprobante.Presupuesto)).toBe(false);
+    expect(requiereCae(TipoComprobante.TicketNoFiscal)).toBe(false);
+  });
+});
+
+describe("TicketNoFiscal (Fase 10.1 — comercio sin alta en ARCA)", () => {
+  it("no tiene letra fiscal ni discrimina IVA, igual que Remito/Presupuesto", () => {
+    expect(letraDe(TipoComprobante.TicketNoFiscal)).toBe("X");
+    expect(discriminaIva(TipoComprobante.TicketNoFiscal)).toBe(false);
   });
 });
 

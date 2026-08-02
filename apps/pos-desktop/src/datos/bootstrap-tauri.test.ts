@@ -6,6 +6,7 @@ import { crearRepositoriosSqlite, type RepositoriosSqlite } from "@nexosoft/app"
 import { Cantidad, CondicionIva, FormaDePago, Money, TipoComprobante } from "@nexosoft/domain";
 
 import {
+  guardarConfig,
   inicializarBaseTauri,
   leerCatalogo,
   leerConfig,
@@ -57,6 +58,17 @@ describe("bootstrap-tauri — siembra", () => {
     expect(config.cuit).toBe("30-71234567-8");
     expect(config.condicionIvaEmisor).toBe(CondicionIva.ResponsableInscripto);
     expect(config.depositoPorDefectoId).toBe("principal");
+    // Fase 10.1: por defecto el comercio ya emite comprobantes fiscales.
+    expect(config.emiteComprobantesFiscales).toBe(true);
+  });
+
+  it("guardarConfig persiste emiteComprobantesFiscales=false y leerConfig lo respeta (Fase 10.1)", async () => {
+    const { ejecutor } = await montar();
+    const actual = await leerConfig(ejecutor);
+    await guardarConfig(ejecutor, { ...actual, emiteComprobantesFiscales: false });
+
+    const releida = await leerConfig(ejecutor);
+    expect(releida.emiteComprobantesFiscales).toBe(false);
   });
 
   it("es idempotente: sembrar de nuevo no duplica artículos", async () => {

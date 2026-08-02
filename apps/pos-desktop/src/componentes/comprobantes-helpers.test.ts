@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Comprobante } from "../sync/cliente-ventas";
 import {
   esAnulable,
+  esFiscal,
   esNotaCredito,
   etiquetaMedioPago,
   etiquetaTipoComprobante,
@@ -32,9 +33,18 @@ describe("etiquetaTipoComprobante", () => {
   it("traduce los tipos conocidos", () => {
     expect(etiquetaTipoComprobante("FacturaB")).toBe("Factura B");
     expect(etiquetaTipoComprobante("NotaCreditoA")).toBe("Nota de Crédito A");
+    expect(etiquetaTipoComprobante("TicketNoFiscal")).toBe("Ticket");
   });
   it("devuelve un texto genérico si es null", () => {
     expect(etiquetaTipoComprobante(null)).toBe("Comprobante");
+  });
+});
+
+describe("esFiscal (Fase 10.1)", () => {
+  it("un TicketNoFiscal no es fiscal; el resto sí", () => {
+    expect(esFiscal("TicketNoFiscal")).toBe(false);
+    expect(esFiscal("FacturaB")).toBe(true);
+    expect(esFiscal(null)).toBe(true);
   });
 });
 

@@ -26,6 +26,7 @@ import {
   requiereCae,
   resolverPrecioArticulo,
   resolverTipoComprobante,
+  TipoComprobante,
   TipoMovimiento,
   type Cantidad,
   type CondicionIva,
@@ -35,7 +36,6 @@ import {
   type Pago,
   type ResultadoCobro,
   type ResultadoComprobante,
-  type TipoComprobante,
 } from "@nexosoft/domain";
 
 import type { ConfiguracionComercio } from "../config/configuracion-comercio.js";
@@ -269,10 +269,12 @@ export class ServicioDeVenta {
       });
     }
 
-    const tipoComprobante = resolverTipoComprobante(
-      this.config.condicionIvaEmisor,
-      comando.condicionReceptor,
-    );
+    // Fase 10.1: sin alta en ARCA, toda venta es un ticket sin valor fiscal —
+    // no se resuelve A/B/C según emisor/receptor (ADR-0041).
+    const tipoComprobante =
+      this.config.emiteComprobantesFiscales === false
+        ? TipoComprobante.TicketNoFiscal
+        : resolverTipoComprobante(this.config.condicionIvaEmisor, comando.condicionReceptor);
     const resultado = calcularComprobante(lineas, {
       tipo: tipoComprobante,
       preciosIncluyenIva: this.config.preciosIncluyenIva,

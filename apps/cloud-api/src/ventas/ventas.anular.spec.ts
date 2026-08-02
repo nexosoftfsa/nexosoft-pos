@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
-import { VentasService, notaCreditoDe, resumenMedioPago } from './ventas.service';
+import { esComprobanteFiscal, notaCreditoDe, resumenMedioPago, VentasService } from './ventas.service';
 import { LibroDeVentasEnMemoria } from './libro/libro-de-ventas-en-memoria';
 
 function ventaConItems(overrides: Record<string, unknown> = {}) {
@@ -51,6 +51,17 @@ describe('notaCreditoDe', () => {
   it('cae a NotaCreditoB si no reconoce el tipo', () => {
     expect(notaCreditoDe(null)).toBe('NotaCreditoB');
     expect(notaCreditoDe('Recibo')).toBe('NotaCreditoB');
+  });
+  it('un TicketNoFiscal (Fase 10.1) refleja el mismo tipo, no una NC', () => {
+    expect(notaCreditoDe('TicketNoFiscal')).toBe('TicketNoFiscal');
+  });
+});
+
+describe('esComprobanteFiscal', () => {
+  it('un TicketNoFiscal no es fiscal; facturas y NC sí', () => {
+    expect(esComprobanteFiscal('TicketNoFiscal')).toBe(false);
+    expect(esComprobanteFiscal('FacturaB')).toBe(true);
+    expect(esComprobanteFiscal('NotaCreditoB')).toBe(true);
   });
 });
 
@@ -149,5 +160,24 @@ describe('VentasService.anular', () => {
   it('rechaza anular una Nota de Crédito', async () => {
     prisma.venta.findFirst.mockResolvedValue(ventaConItems({ tipoComprobante: 'NotaCreditoB' }));
     await expect(service.anular('s1', 'v1')).rejects.toThrow(BadRequestException);
+  });
+
+  it('anula un TicketNoFiscal sin pedir CAE ni crear una NC (Fase 10.1)', async () => {
+    prisma.venta.findFirst.mockResolvedValue(
+      ventaConItems({ tipoComprobante: 'TicketNoFiscal', cae: null, caeFechaVto: null, numeroComprobante: null }),
+    );
+
+    await service.anular('s1', 'v1');
+
+    expect(cae.autorizar).not.toHaveBeenCalled();
+    const data = tx.venta.create.mock.calls[0]![0].data;
+    expect(data.tipoComprobante).toBe('TicketNoFiscal');
+    expect(data.cae).toBeNull();
+    expect(data.numeroComprobante).toBeNull();
+    // El stock se restaura igual que en una anulación fiscal.
+    expect(tx.movimientoStock.create).toHaveBeenCalledOnce();
+    expect(tx.venta.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'v1' }, data: { estado: 'ANULADA' } }),
+    );
   });
 });
