@@ -268,7 +268,7 @@ export function Shell({
           ) : activo?.id === "ctacte" && clienteCtaCte ? (
             <CuentasCorrientes cliente={clienteCtaCte} />
           ) : activo?.id === "comprobantes" && clienteVentas ? (
-            <Comprobantes cliente={clienteVentas} />
+            <Comprobantes cliente={clienteVentas} config={entorno.config} />
           ) : activo?.id === "reportes" && clienteReportes ? (
             <ReportesPos cliente={clienteReportes} />
           ) : activo?.id === "presupuestos" && clientePresupuestos ? (

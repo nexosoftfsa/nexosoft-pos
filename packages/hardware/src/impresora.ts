@@ -43,6 +43,8 @@ export interface DatosTicket {
   readonly numero: number;
   readonly fecha: Date;
   readonly condicionIvaReceptor: string;
+  /** `false` = comercio sin alta en ARCA (Fase 10.1): no imprimir como si fuera fiscal. Default `true`. */
+  readonly esFiscal?: boolean;
 
   // Cuerpo
   readonly lineas: readonly LineaTicket[];

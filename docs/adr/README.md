@@ -59,3 +59,4 @@ Consecuencias y Alternativas consideradas.
 | 0040 | [Configurar la clave de Gemini desde la UI](0040-configuracion-asistente-desde-ui.md) | Aceptada |
 | 0041 | [Modo de venta sin alta en ARCA (TicketNoFiscal)](0041-modo-de-venta-sin-arca.md) | Aceptada |
 | 0042 | [Importador de catálogo desde el sistema anterior del comercio](0042-importador-de-catalogo.md) | Aceptada |
+| 0043 | [Impresión A4 del comprobante](0043-impresion-a4-del-comprobante.md) | Aceptada |

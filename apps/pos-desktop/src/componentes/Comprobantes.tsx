@@ -6,10 +6,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Money } from "@nexosoft/domain";
+import type { ConfiguracionComercio } from "@nexosoft/app";
 
 import { ErrorVentas, type Comprobante, type ClienteVentas } from "../sync/cliente-ventas";
 import { pesos } from "../formato";
+import { ComprobanteA4 } from "./ComprobanteA4";
 import {
+  datosTicketDeComprobante,
   esAnulable,
   esFiscal,
   esNotaCredito,
@@ -17,6 +20,7 @@ import {
   etiquetaTipoComprobante,
   numeroComprobante,
 } from "./comprobantes-helpers";
+import { useImpresionA4 } from "./usar-impresion-a4";
 
 function mensajeError(e: unknown): string {
   if (e instanceof ErrorVentas) return e.message;
@@ -49,7 +53,13 @@ function esDeHoy(iso: string): boolean {
   );
 }
 
-export function Comprobantes({ cliente }: { cliente: ClienteVentas }) {
+export function Comprobantes({
+  cliente,
+  config,
+}: {
+  cliente: ClienteVentas;
+  config: ConfiguracionComercio;
+}) {
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -195,12 +205,23 @@ export function Comprobantes({ cliente }: { cliente: ClienteVentas }) {
         </div>
       </div>
 
-      {reimprimir !== null && <ModalReimpresion comprobante={reimprimir} onCerrar={() => setReimprimir(null)} />}
+      {reimprimir !== null && (
+        <ModalReimpresion comprobante={reimprimir} config={config} onCerrar={() => setReimprimir(null)} />
+      )}
     </div>
   );
 }
 
-function ModalReimpresion({ comprobante, onCerrar }: { comprobante: Comprobante; onCerrar: () => void }) {
+function ModalReimpresion({
+  comprobante,
+  config,
+  onCerrar,
+}: {
+  comprobante: Comprobante;
+  config: ConfiguracionComercio;
+  onCerrar: () => void;
+}) {
+  const { datosA4, imprimirA4 } = useImpresionA4();
   return (
     <div className="overlay" onClick={onCerrar}>
       <div className="ticket" onClick={(e) => e.stopPropagation()}>
@@ -239,11 +260,15 @@ function ModalReimpresion({ comprobante, onCerrar }: { comprobante: Comprobante;
         )}
         <div className="ticket-acciones">
           <button onClick={() => window.print()}>Imprimir</button>
+          <button onClick={() => imprimirA4(datosTicketDeComprobante(comprobante, config))}>
+            Imprimir A4
+          </button>
           <button className="primario" onClick={onCerrar}>
             Cerrar
           </button>
         </div>
       </div>
+      {datosA4 && <ComprobanteA4 datos={datosA4} />}
     </div>
   );
 }

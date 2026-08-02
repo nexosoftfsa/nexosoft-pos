@@ -6,6 +6,7 @@ import {
   CondicionIva,
   ErrorDominio,
   EstadoCae,
+  etiquetaCondicionIva,
   FormaDePago,
   Money,
   resolverTipoComprobante,
@@ -18,12 +19,14 @@ import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { etiquetaComprobante, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
+import { ComprobanteA4 } from "./ComprobanteA4";
 import {
   descuentoDeLinea,
   descuentoPorcentajeLinea,
   PROMOS_DEMO,
   promoAplicable,
 } from "./promos";
+import { useImpresionA4 } from "./usar-impresion-a4";
 
 interface ItemCarrito {
   readonly producto: ProductoCatalogo;
@@ -123,6 +126,7 @@ export function PantallaPos({
   const [imprimiendo, setImprimiendo] = useState(false);
   const [pagoElectronico, setPagoElectronico] = useState<IntentoPago | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { datosA4, imprimirA4 } = useImpresionA4();
 
   // ----- Lector de barras HID -----
   // Los lectores HID se comportan como teclado: acumulamos teclas hasta Enter.
@@ -645,6 +649,9 @@ export function PantallaPos({
               <button onClick={() => imprimirTicket(ultimaVenta)} disabled={imprimiendo}>
                 {imprimiendo ? "Imprimiendo…" : "Imprimir"}
               </button>
+              <button onClick={() => imprimirA4(construirDatosTicket(ultimaVenta, config, catalogo, pagos))}>
+                Imprimir A4
+              </button>
               <button
                 className="primario"
                 onClick={() => {
@@ -676,6 +683,8 @@ export function PantallaPos({
           </div>
         </div>
       )}
+
+      {datosA4 && <ComprobanteA4 datos={datosA4} />}
     </div>
   );
 }
@@ -706,12 +715,13 @@ function construirDatosTicket(
   return {
     razonSocial: config.razonSocial,
     cuit: config.cuit,
-    condicionIvaEmisor: config.condicionIvaEmisor,
+    condicionIvaEmisor: etiquetaCondicionIva(config.condicionIvaEmisor),
     puntoDeVenta: config.puntoDeVenta,
-    tipoComprobante: venta.tipoComprobante,
+    tipoComprobante: etiquetaComprobante(venta.tipoComprobante),
     numero: venta.numero,
     fecha: new Date(),
-    condicionIvaReceptor: venta.condicionIvaReceptor,
+    condicionIvaReceptor: etiquetaCondicionIva(venta.condicionIvaReceptor),
+    esFiscal: venta.tipoComprobante !== TipoComprobante.TicketNoFiscal,
     lineas: venta.items.map((it, i) => ({
       descripcion: it.descripcion,
       cantidad: it.cantidad,

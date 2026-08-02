@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { CondicionIva } from "@nexosoft/domain";
+import type { ConfiguracionComercio } from "@nexosoft/app";
+
 import type { Comprobante } from "../sync/cliente-ventas";
 import {
+  datosTicketDeComprobante,
   esAnulable,
   esFiscal,
   esNotaCredito,
@@ -9,6 +13,17 @@ import {
   etiquetaTipoComprobante,
   numeroComprobante,
 } from "./comprobantes-helpers";
+
+const CONFIG: ConfiguracionComercio = {
+  cuit: "30-71234567-8",
+  razonSocial: "Almacén de prueba",
+  condicionIvaEmisor: CondicionIva.ResponsableInscripto,
+  puntoDeVenta: 1,
+  depositoPorDefectoId: "DEP",
+  listaPredeterminadaId: "LISTA",
+  preciosIncluyenIva: true,
+  permitirStockNegativo: false,
+};
 
 function comprobante(overrides: Partial<Comprobante> = {}): Comprobante {
   return {
@@ -79,5 +94,46 @@ describe("esAnulable", () => {
   });
   it("una nota de crédito no es anulable", () => {
     expect(esAnulable(comprobante({ tipoComprobante: "NotaCreditoB" }))).toBe(false);
+  });
+});
+
+describe("datosTicketDeComprobante (Fase 10.4)", () => {
+  it("arma los datos del comercio y del comprobante para reimprimir en A4", () => {
+    const c = comprobante({
+      items: [
+        {
+          id: "i1",
+          cantidad: "2",
+          precioUnitario: "100",
+          subtotal: "200",
+          producto: { id: "p1", nombre: "Gaseosa", codigo: "G1" },
+        },
+      ],
+      pagos: [{ id: "pg1", medioPago: "EFECTIVO", monto: "200" }],
+    });
+    const datos = datosTicketDeComprobante(c, CONFIG);
+
+    expect(datos.razonSocial).toBe("Almacén de prueba");
+    expect(datos.tipoComprobante).toBe("Factura B");
+    expect(datos.numero).toBe(5);
+    expect(datos.esFiscal).toBe(true);
+    expect(datos.lineas).toHaveLength(1);
+    expect(datos.lineas[0]?.descripcion).toBe("Gaseosa");
+    expect(datos.lineas[0]?.importe.aDecimalString()).toBe("200.00");
+    expect(datos.formasDePago[0]?.etiqueta).toBe("Efectivo");
+    expect(datos.cae).toBe("1");
+  });
+
+  it("un TicketNoFiscal queda marcado esFiscal:false y sin CAE", () => {
+    const c = comprobante({ tipoComprobante: "TicketNoFiscal", cae: null, caeFechaVto: null, numeroComprobante: null });
+    const datos = datosTicketDeComprobante(c, CONFIG);
+    expect(datos.esFiscal).toBe(false);
+    expect(datos.cae).toBeUndefined();
+    expect(datos.numero).toBe(0);
+  });
+
+  it("sin desglose de IVA persistido (limitación conocida del backend): subtotalesIva vacío", () => {
+    const datos = datosTicketDeComprobante(comprobante(), CONFIG);
+    expect(datos.subtotalesIva).toEqual([]);
   });
 });

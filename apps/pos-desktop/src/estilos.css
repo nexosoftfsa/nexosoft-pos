@@ -491,22 +491,125 @@ body {
 }
 
 @media print {
-  body * {
+  body:not(.modo-impresion-a4) * {
     visibility: hidden;
   }
-  .ticket,
-  .ticket * {
+  body:not(.modo-impresion-a4) .ticket,
+  body:not(.modo-impresion-a4) .ticket * {
     visibility: visible;
   }
-  .ticket {
+  body:not(.modo-impresion-a4) .ticket {
     position: absolute;
     left: 0;
     top: 0;
     box-shadow: none;
   }
-  .ticket-acciones {
+  body:not(.modo-impresion-a4) .ticket-acciones {
     display: none;
   }
+
+  /* Fase 10.4: factura A4 — solo visible mientras dura window.print(),
+     ver imprimirA4() en PantallaPos.tsx/Comprobantes.tsx. */
+  body.modo-impresion-a4 * {
+    visibility: hidden;
+  }
+  body.modo-impresion-a4 .hoja-a4,
+  body.modo-impresion-a4 .hoja-a4 * {
+    visibility: visible;
+  }
+  body.modo-impresion-a4 .hoja-a4 {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
+
+/* Factura A4 (oculta en pantalla; ver regla @media print de arriba) */
+.hoja-a4 {
+  display: none;
+  font-family: "Times New Roman", Georgia, serif;
+  color: #111;
+  font-size: 11pt;
+  line-height: 1.4;
+}
+.a4-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #111;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.a4-razon-social {
+  font-size: 14pt;
+  font-weight: 700;
+}
+.a4-comprobante {
+  text-align: right;
+}
+.a4-tipo {
+  font-size: 13pt;
+  font-weight: 700;
+}
+.a4-aviso-no-fiscal {
+  border: 1px solid #b91c1c;
+  color: #b91c1c;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+.a4-items {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.8rem;
+}
+.a4-items th,
+.a4-items td {
+  border-bottom: 1px solid #ccc;
+  padding: 0.35rem 0.4rem;
+  text-align: left;
+}
+.a4-items th:nth-child(n + 2),
+.a4-items td:nth-child(n + 2) {
+  text-align: right;
+}
+.a4-totales {
+  margin-left: auto;
+  width: 45%;
+}
+.a4-fila-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.15rem 0;
+}
+.a4-total-final {
+  border-top: 1px solid #111;
+  font-weight: 700;
+  font-size: 12pt;
+  margin-top: 0.3rem;
+}
+.a4-pagos {
+  margin-top: 1rem;
+  width: 45%;
+}
+.a4-subtitulo {
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+.a4-footer {
+  margin-top: 2rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #ccc;
+  font-size: 10pt;
+  text-align: center;
 }
 
 /* Celular/tablet angosto: el ticket (380px fijo) no entra al lado de la

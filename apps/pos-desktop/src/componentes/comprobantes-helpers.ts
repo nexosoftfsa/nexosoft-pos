@@ -2,6 +2,9 @@
  * Lógica pura de comprobantes (Fase 7.6): etiquetas de tipo y medio de pago,
  * número formateado y reglas de anulación.
  */
+import { Cantidad, etiquetaCondicionIva, Money } from "@nexosoft/domain";
+import type { DatosTicket } from "@nexosoft/hardware";
+import type { ConfiguracionComercio } from "@nexosoft/app";
 import type { Comprobante } from "../sync/cliente-ventas";
 
 const ETIQUETAS_TIPO: Record<string, string> = {
@@ -53,4 +56,43 @@ export function esFiscal(tipo: string | null): boolean {
 /** Un comprobante es anulable si no está anulado y no es una Nota de Crédito. */
 export function esAnulable(c: Comprobante): boolean {
   return c.estado !== "ANULADA" && !esNotaCredito(c.tipoComprobante);
+}
+
+/**
+ * Fase 10.4: arma los `DatosTicket` para reimprimir un comprobante en A4.
+ * OJO: el cloud-api no persiste el desglose de IVA por alícuota ni la
+ * condición del receptor por venta — `subtotalesIva` queda vacío (el total ya
+ * incluye el IVA, solo no se puede discriminar en la reimpresión).
+ */
+export function datosTicketDeComprobante(
+  c: Comprobante,
+  config: ConfiguracionComercio,
+): DatosTicket {
+  return {
+    razonSocial: config.razonSocial,
+    cuit: config.cuit,
+    condicionIvaEmisor: etiquetaCondicionIva(config.condicionIvaEmisor),
+    puntoDeVenta: config.puntoDeVenta,
+    tipoComprobante: etiquetaTipoComprobante(c.tipoComprobante),
+    numero: c.numeroComprobante ?? 0,
+    fecha: new Date(c.creadaEn),
+    condicionIvaReceptor: "",
+    esFiscal: esFiscal(c.tipoComprobante),
+    lineas: c.items.map((it) => ({
+      descripcion: it.producto?.nombre ?? it.producto?.codigo ?? "Ítem",
+      cantidad: Cantidad.de(it.cantidad),
+      precioUnitario: Money.desde(it.precioUnitario),
+      importe: Money.desde(it.subtotal),
+    })),
+    subtotalesIva: [],
+    descuento: Money.desde(c.descuento),
+    total: Money.desde(c.total),
+    formasDePago: (c.pagos ?? []).map((p) => ({
+      etiqueta: etiquetaMedioPago(p.medioPago),
+      monto: Money.desde(p.monto),
+    })),
+    vuelto: Money.cero(),
+    ...(c.cae !== null ? { cae: c.cae } : {}),
+    ...(c.caeFechaVto !== null ? { vencimientoCae: new Date(c.caeFechaVto) } : {}),
+  };
 }
