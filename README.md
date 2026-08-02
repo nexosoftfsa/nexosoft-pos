@@ -104,6 +104,10 @@ corepack pnpm --filter @nexosoft/cloud-api verify:e2e
 | 10   | **Primeros pasos con un cliente real**: ajustes que surgen de instalar NexoSoft en un comercio concreto. **10.1 ✅** modo de venta **sin alta en ARCA** (ticket interno sin CAE ni numeración fiscal, activable/desactivable desde `PantallaConfig` — ver [ADR-0041](docs/adr/0041-modo-de-venta-sin-arca.md)) · **10.2 ✅** importador de catálogo (`pnpm --filter @nexosoft/cloud-api importar:catalogo`, lee Excel por nombre de columna, idempotente; 711/711 artículos reales importados sin errores — ver [ADR-0042](docs/adr/0042-importador-de-catalogo.md)) · **10.4 ✅** impresión A4 del comprobante (`window.print()` + layout dedicado, desde la venta recién confirmada y desde la reimpresión de comprobantes — ver [ADR-0043](docs/adr/0043-impresion-a4-del-comprobante.md)) · **10.5 ✅** etiquetas de góndola (pantalla de selección + código de barras EAN-13 propio sin dependencias nuevas + impresión en grilla A4 — ver [ADR-0044](docs/adr/0044-etiquetas-de-gondola.md)) · 10.3 impresora térmica real (ESC/POS físico, **bloqueada**: falta marca/modelo de la impresora del cliente) | 🚧 |
 | —    | Pendientes posteriores: CAE real ARCA (se integra con el primer cliente), deploy (Railway), multi-sucursal cloud | ⏳ |
 
+## Herramientas de negocio (no ligadas a un cliente puntual)
+
+- **Padrón de artículos multi-comercio** (`apps/cloud-api/scripts/padron/`): **28.908 artículos** reales extraídos de 85 comercios (tablas FoxPro), deduplicados por código de barras — pool de productos precargados para acelerar el alta de un cliente nuevo, reusando el importador de la Fase 10.2 sin modificarlo. Ver [ADR-0045](docs/adr/0045-padron-de-articulos-multi-comercio.md).
+
 ### Qué incluye la Fase 5 (propuesta)
 
 El POS hoy corre en el navegador con datos en memoria y un cliente de sync
