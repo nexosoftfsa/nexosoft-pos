@@ -27,6 +27,7 @@ import { StockAbm } from "../componentes/StockAbm";
 import { CajaPanel } from "../componentes/CajaPanel";
 import { CuentasCorrientes } from "../componentes/CuentasCorrientes";
 import { Comprobantes } from "../componentes/Comprobantes";
+import { EtiquetasGondola } from "../componentes/EtiquetasGondola";
 import { ReportesPos } from "../componentes/ReportesPos";
 import { Presupuestos } from "../componentes/Presupuestos";
 import { Remitos } from "../componentes/Remitos";
@@ -261,6 +262,8 @@ export function Shell({
             <PantallaPos entorno={entorno} sync={sync} clientes={clientesVenta} />
           ) : activo?.id === "catalogo" && clienteCatalogo ? (
             <CatalogoAbm cliente={clienteCatalogo} />
+          ) : activo?.id === "etiquetas" && clienteCatalogo ? (
+            <EtiquetasGondola cliente={clienteCatalogo} />
           ) : activo?.id === "stock" && clienteStock ? (
             <StockAbm cliente={clienteStock} />
           ) : activo?.id === "caja" && clienteCaja && terminalId ? (

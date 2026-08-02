@@ -38,7 +38,7 @@ describe("modulosVisibles", () => {
 
   it("el CAJERO no ve gestión, reportes ni configuración", () => {
     const ids = modulosVisibles("CAJERO").map((m) => m.id);
-    for (const oculto of ["catalogo", "stock", "ctacte", "reportes", "ia", "config"]) {
+    for (const oculto of ["catalogo", "stock", "ctacte", "etiquetas", "reportes", "ia", "config"]) {
       expect(ids).not.toContain(oculto);
     }
   });

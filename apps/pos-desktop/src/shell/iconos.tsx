@@ -69,6 +69,15 @@ export function IconoCtaCte() {
   );
 }
 
+export function IconoEtiqueta() {
+  return (
+    <Svg>
+      <path d="M12.6 3H4v8.6L14.4 22 22 14.4z" />
+      <circle cx="7.5" cy="7.5" r="1.3" />
+    </Svg>
+  );
+}
+
 export function IconoReportes() {
   return (
     <Svg>

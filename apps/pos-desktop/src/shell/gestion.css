@@ -234,6 +234,51 @@
   white-space: nowrap;
 }
 
+/* ---------- Etiquetas de góndola (Fase 10.5) ---------- */
+.etiquetas-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .etiquetas-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.etiquetas-seleccion .primario {
+  width: 100%;
+  margin-top: 12px;
+}
+.etiquetas-lista-seleccion {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.etiquetas-lista-seleccion li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+}
+.etiquetas-cantidad {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.etiquetas-cantidad button {
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  padding: 0;
+}
+
 /* ---------- Badges (complementa las de shell.css) ---------- */
 .badge--ok {
   background: var(--ok-soft);

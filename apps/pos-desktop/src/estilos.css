@@ -524,6 +524,22 @@ body {
     top: 0;
     width: 100%;
   }
+
+  /* Fase 10.5: hoja de etiquetas de góndola — mismo patrón que .hoja-a4. */
+  body.modo-impresion-etiquetas * {
+    visibility: hidden;
+  }
+  body.modo-impresion-etiquetas .hoja-etiquetas,
+  body.modo-impresion-etiquetas .hoja-etiquetas * {
+    visibility: visible;
+  }
+  body.modo-impresion-etiquetas .hoja-etiquetas {
+    display: grid;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
 }
 
 @page {
@@ -610,6 +626,46 @@ body {
   border-top: 1px solid #ccc;
   font-size: 10pt;
   text-align: center;
+}
+
+/* Hoja de etiquetas de góndola (Fase 10.5) — oculta en pantalla, ver
+   @media print de arriba. Grilla de 3 columnas pensada para recortar con
+   tijera; ajustar si el comercio usa papel autoadhesivo pre-troquelado. */
+.hoja-etiquetas {
+  display: none;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3mm;
+}
+.etiqueta {
+  border: 1px dashed #999;
+  padding: 2mm 3mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  page-break-inside: avoid;
+  font-family: Arial, sans-serif;
+}
+.etiqueta-nombre {
+  font-size: 9pt;
+  font-weight: 700;
+  line-height: 1.15;
+  max-height: 2.3em;
+  overflow: hidden;
+}
+.etiqueta-precio {
+  font-size: 15pt;
+  font-weight: 700;
+  margin: 1mm 0;
+}
+.etiqueta-barras {
+  margin: 1mm 0;
+}
+.etiqueta-codigo {
+  font-size: 7pt;
+  color: #444;
+  letter-spacing: 0.5px;
 }
 
 /* Celular/tablet angosto: el ticket (380px fijo) no entra al lado de la
