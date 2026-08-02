@@ -62,3 +62,4 @@ Consecuencias y Alternativas consideradas.
 | 0043 | [Impresión A4 del comprobante](0043-impresion-a4-del-comprobante.md) | Aceptada |
 | 0044 | [Etiquetas de góndola](0044-etiquetas-de-gondola.md) | Aceptada |
 | 0045 | [Padrón de artículos multi-comercio (herramienta de negocio)](0045-padron-de-articulos-multi-comercio.md) | Aceptada |
+| 0046 | [Catálogo demo con datos reales del cliente + buscador en la venta](0046-catalogo-demo-con-datos-reales.md) | Aceptada |

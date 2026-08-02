@@ -52,7 +52,7 @@ describe("bootstrap-tauri — siembra", () => {
     const { ejecutor } = await montar();
 
     const arts = await ejecutor.consultar<{ n: number }>("SELECT COUNT(*) AS n FROM articulo");
-    expect(Number(arts[0]?.n)).toBe(8);
+    expect(Number(arts[0]?.n)).toBe(711);
 
     const config = await leerConfig(ejecutor);
     expect(config.cuit).toBe("30-71234567-8");
@@ -76,7 +76,7 @@ describe("bootstrap-tauri — siembra", () => {
     await sembrarSiVacio(ejecutor, repos); // segunda corrida
 
     const arts = await ejecutor.consultar<{ n: number }>("SELECT COUNT(*) AS n FROM articulo");
-    expect(Number(arts[0]?.n)).toBe(8);
+    expect(Number(arts[0]?.n)).toBe(711);
   });
 });
 
@@ -86,10 +86,10 @@ describe("bootstrap-tauri — leerCatalogo", () => {
     const config = await leerConfig(ejecutor);
 
     const catalogo = await leerCatalogo(ejecutor, repos, config);
-    expect(catalogo).toHaveLength(8);
+    expect(catalogo).toHaveLength(711);
 
     const gaseosa = catalogo.find((p) => p.articulo.id === "gaseosa");
-    expect(gaseosa?.precioFinal.aDecimalString()).toBe("1850.00");
+    expect(gaseosa?.precioFinal.aDecimalString()).toBe("3200.00");
   });
 });
 
@@ -108,7 +108,7 @@ describe("bootstrap-tauri — ServicioDeVentaTransaccional", () => {
     const venta = await servicio.confirmarVenta({
       items: [{ articuloId: "gaseosa", cantidad: Cantidad.de("2") }],
       condicionReceptor: CondicionIva.ConsumidorFinal,
-      pagos: [{ forma: FormaDePago.Efectivo, monto: Money.desde("5000") }],
+      pagos: [{ forma: FormaDePago.Efectivo, monto: Money.desde("7000") }],
     });
 
     expect(venta.tipoComprobante).toBe(TipoComprobante.FacturaB);
@@ -116,8 +116,8 @@ describe("bootstrap-tauri — ServicioDeVentaTransaccional", () => {
     const ventas = await ejecutor.consultar<{ n: number }>("SELECT COUNT(*) AS n FROM venta");
     expect(Number(ventas[0]?.n)).toBe(1);
 
-    // Gaseosa: stock demo 40 → 38, persistido.
+    // Gaseosa (Coca Cola Retornable 1.5L, catálogo real del cliente): stock 5 → 3, persistido.
     const existencia = await repos.existencias.obtener("gaseosa", config.depositoPorDefectoId);
-    expect(existencia?.cantidad.aDecimalString(0)).toBe("38");
+    expect(existencia?.cantidad.aDecimalString(0)).toBe("3");
   });
 });

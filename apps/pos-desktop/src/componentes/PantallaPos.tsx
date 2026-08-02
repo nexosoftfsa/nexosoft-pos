@@ -20,6 +20,7 @@ import { etiquetaComprobante, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
 import { ComprobanteA4 } from "./ComprobanteA4";
+import { filtrarCatalogoVenta } from "./pos-helpers";
 import {
   descuentoDeLinea,
   descuentoPorcentajeLinea,
@@ -112,6 +113,7 @@ export function PantallaPos({
   const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
 
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
+  const [busquedaProducto, setBusquedaProducto] = useState("");
   const [condicionReceptor, setCondicionReceptor] = useState<CondicionIva>(
     CondicionIva.ConsumidorFinal,
   );
@@ -415,17 +417,30 @@ export function PantallaPos({
   }
 
   const puedeConfirmar = preview !== null && preview.cobro.cancelada;
+  const catalogoFiltrado = filtrarCatalogoVenta(catalogo, busquedaProducto);
 
   return (
     <div className="pos">
       <main className="cuerpo">
         <section className="catalogo">
-          {catalogo.map((p) => (
-            <button key={p.articulo.id} className="producto" onClick={() => agregar(p)}>
-              <span className="producto-desc">{p.articulo.descripcion}</span>
-              <span className="producto-precio">{pesos(p.precioFinal)}</span>
-            </button>
-          ))}
+          <input
+            type="text"
+            className="catalogo-buscador"
+            placeholder="Buscar producto por nombre o código…"
+            value={busquedaProducto}
+            onChange={(e) => setBusquedaProducto(e.target.value)}
+          />
+          <div className="catalogo-grilla">
+            {catalogoFiltrado.map((p) => (
+              <button key={p.articulo.id} className="producto" onClick={() => agregar(p)}>
+                <span className="producto-desc">{p.articulo.descripcion}</span>
+                <span className="producto-precio">{pesos(p.precioFinal)}</span>
+              </button>
+            ))}
+            {catalogoFiltrado.length === 0 && (
+              <div className="catalogo-vacio">Sin resultados para "{busquedaProducto}".</div>
+            )}
+          </div>
         </section>
 
         <aside className="ticket-panel">

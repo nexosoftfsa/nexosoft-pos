@@ -7,7 +7,7 @@
  */
 import { ALICUOTAS_IVA, type AlicuotaIva } from "@nexosoft/domain";
 
-import { DEFS } from "../datos/bootstrap";
+import { DEFS, rubroASlug } from "../datos/bootstrap";
 import {
   ErrorCatalogoAdmin,
   type CategoriaAdmin,
@@ -25,30 +25,17 @@ function tipoIvaDeAlicuota(a: AlicuotaIva): TipoIvaRemoto {
   return "IVA_21";
 }
 
+/** Categorías = rubros reales distintos del catálogo demo (Fase 10, 711 artículos del cliente). */
 const CATEGORIAS_DEMO: readonly CategoriaAdmin[] = [
-  { id: "cat-bebidas", nombre: "Bebidas" },
-  { id: "cat-almacen", nombre: "Almacén" },
-  { id: "cat-panaderia", nombre: "Panadería" },
-];
+  ...new Map(DEFS.map((d) => [rubroASlug(d.rubro), d.rubro])),
+].map(([id, nombre]) => ({ id, nombre }));
 
 /** Productos demo que se gestionan por lotes (perecederos). */
 const PERECEDEROS = new Set(["leche", "pan"]);
 
-const CATEGORIA_POR_PRODUCTO: Record<string, string> = {
-  gaseosa: "cat-bebidas",
-  agua: "cat-bebidas",
-  alfajor: "cat-almacen",
-  cafe: "cat-almacen",
-  leche: "cat-almacen",
-  pan: "cat-panaderia",
-  yerba: "cat-almacen",
-  galletitas: "cat-panaderia",
-};
-
 function sembrarProductos(): ProductoAdmin[] {
   const simples = DEFS.map((d): ProductoAdmin => {
-    const catId = CATEGORIA_POR_PRODUCTO[d.id];
-    const categoria = CATEGORIAS_DEMO.find((c) => c.id === catId) ?? null;
+    const categoria = CATEGORIAS_DEMO.find((c) => c.id === rubroASlug(d.rubro)) ?? null;
     return {
       id: d.id,
       codigo: d.codigo,

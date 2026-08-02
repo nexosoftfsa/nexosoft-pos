@@ -24,6 +24,7 @@ import { ClienteSyncSimulado } from "../sync/cliente-sync-simulado";
 import type { SyncPos } from "../sync/useSync";
 import {
   ALICUOTAS_IVA,
+  alicuotaPorPorcentaje,
   Cantidad,
   CondicionIva,
   crearArticulo,
@@ -37,6 +38,7 @@ import {
   type Existencia,
   type PrecioArticulo,
 } from "@nexosoft/domain";
+import catalogoDemo711 from "./catalogo-demo-711.json";
 
 export const DEPOSITO = "principal";
 export const LISTA = "minorista";
@@ -50,82 +52,55 @@ export interface DefProducto {
   readonly costo: string;
   readonly alicuota: AlicuotaIva;
   readonly stock: string;
+  readonly rubro: string;
 }
 
-export const DEFS: readonly DefProducto[] = [
-  {
-    id: "gaseosa",
-    codigo: "7790001",
-    descripcion: "Gaseosa 1,5 L",
-    precio: "1850.00",
-    costo: "1100",
-    alicuota: ALICUOTAS_IVA.VEINTIUNO,
-    stock: "40",
-  },
-  {
-    id: "agua",
-    codigo: "7790002",
-    descripcion: "Agua mineral 500 ml",
-    precio: "900.00",
-    costo: "520",
-    alicuota: ALICUOTAS_IVA.VEINTIUNO,
-    stock: "60",
-  },
-  {
-    id: "alfajor",
-    codigo: "7790003",
-    descripcion: "Alfajor triple",
-    precio: "1200.00",
-    costo: "700",
-    alicuota: ALICUOTAS_IVA.VEINTIUNO,
-    stock: "50",
-  },
-  {
-    id: "cafe",
-    codigo: "7790004",
-    descripcion: "Café molido 250 g",
-    precio: "4300.00",
-    costo: "2800",
-    alicuota: ALICUOTAS_IVA.VEINTIUNO,
-    stock: "25",
-  },
-  {
-    id: "leche",
-    codigo: "7790005",
-    descripcion: "Leche entera 1 L",
-    precio: "1350.00",
-    costo: "900",
-    alicuota: ALICUOTAS_IVA.DIEZ_CON_CINCO,
-    stock: "35",
-  },
-  {
-    id: "pan",
-    codigo: "7790006",
-    descripcion: "Pan lactal",
-    precio: "2100.00",
-    costo: "1300",
-    alicuota: ALICUOTAS_IVA.DIEZ_CON_CINCO,
-    stock: "20",
-  },
-  {
-    id: "yerba",
-    codigo: "7790007",
-    descripcion: "Yerba mate 1 kg",
-    precio: "3800.00",
-    costo: "2500",
-    alicuota: ALICUOTAS_IVA.VEINTIUNO,
-    stock: "30",
-  },
-  {
-    id: "galletitas",
-    codigo: "7790008",
-    descripcion: "Galletitas dulces",
-    precio: "1500.00",
-    costo: "850",
-    alicuota: ALICUOTAS_IVA.VEINTIUNO,
-    stock: "45",
-  },
-];
+/** Id estable derivado de un nombre de rubro (para agrupar sin depender de una tabla aparte). */
+export function rubroASlug(rubro: string): string {
+  return rubro
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "") // saca acentos (NFD los separa en marcas combinantes)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+interface DefProductoCrudo {
+  readonly id: string;
+  readonly codigo: string;
+  readonly descripcion: string;
+  readonly precio: string;
+  readonly costo: string;
+  readonly porcentajeIva: number;
+  readonly stock: string;
+  readonly rubro: string;
+}
+
+/**
+ * Catálogo demo = los 711 artículos REALES del cliente de la Fase 10 (su
+ * propio Excel exportado, ver `Migrar Articulos.xlsx` y el importador de la
+ * 10.2), no data inventada. `catalogo-demo-711.json` se genera con
+ * `scripts/generar-catalogo-demo.py` (Python, mismo patrón que
+ * `apps/cloud-api/scripts/padron/`) y ya viene con 5 ids especiales
+ * ("alfajor"/"gaseosa"/"cafe"/"leche"/"pan") apuntando a productos reales
+ * (Alfajor Genio Triple Negro, Coca Cola Retornable 1.5L, Café La Virginia,
+ * Leche Entera Baggio, Pan Lactal La Reina) para no romper el combo demo
+ * (`combo-merienda`), `PROMOS_DEMO` (`componentes/promos.ts`) ni los
+ * perecederos con lotes de `cliente-stock-simulado.ts` /
+ * `cliente-catalogo-admin-simulado.ts`, que referencian esos ids.
+ */
+export const DEFS: readonly DefProducto[] = (catalogoDemo711 as readonly DefProductoCrudo[]).map(
+  (d) => ({
+    id: d.id,
+    codigo: d.codigo,
+    descripcion: d.descripcion,
+    precio: d.precio,
+    costo: d.costo,
+    alicuota: alicuotaPorPorcentaje(d.porcentajeIva) ?? ALICUOTAS_IVA.VEINTIUNO,
+    stock: d.stock,
+    rubro: d.rubro,
+  }),
+);
 
 export interface ProductoCatalogo {
   readonly articulo: Articulo;
@@ -180,6 +155,7 @@ export function construirSemillaDemo(): {
         unidadDeMedida: UnidadDeMedida.Unidad,
         costoNeto: Money.desde(d.costo),
         alicuotaIva: d.alicuota,
+        rubroId: rubroASlug(d.rubro),
       }),
     );
     precios.push({

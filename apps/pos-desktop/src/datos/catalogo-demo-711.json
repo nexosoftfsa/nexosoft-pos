@@ -1,0 +1,7112 @@
+[
+  {
+    "id": "7792321003169",
+    "codigo": "7792321003169",
+    "descripcion": "317 CASTAÑO",
+    "precio": "4000.00",
+    "costo": "2726.19",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7790310985113",
+    "codigo": "7790310985113",
+    "descripcion": "3D QUESO 43GR",
+    "precio": "2100.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7790310985830",
+    "codigo": "7790310985830",
+    "descripcion": "3D QUESO 85GR",
+    "precio": "3500.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7790036004914",
+    "codigo": "7790036004914",
+    "descripcion": "7 DIAS PURE DE TOM 210G",
+    "precio": "800.00",
+    "costo": "481.00",
+    "porcentajeIva": 0,
+    "stock": "17",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791813444381",
+    "codigo": "7791813444381",
+    "descripcion": "7UP 500CC",
+    "precio": "1500.00",
+    "costo": "1350.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790070012050",
+    "codigo": "7790070012050",
+    "descripcion": "AC. COCINERO GIRASOL 900 ML",
+    "precio": "4000.00",
+    "costo": "3300.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792180001665",
+    "codigo": "7792180001665",
+    "descripcion": "ACEITE CAÑUELAS GIRASOL 1,5 LTS",
+    "precio": "6500.00",
+    "costo": "5250.00",
+    "porcentajeIva": 0,
+    "stock": "100",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792180001641",
+    "codigo": "7792180001641",
+    "descripcion": "ACEITE CAÑUELAS GIRASOL BOTELLA 900 ML",
+    "precio": "4200.00",
+    "costo": "3300.00",
+    "porcentajeIva": 0,
+    "stock": "94",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790060023684",
+    "codigo": "7790060023684",
+    "descripcion": "ACEITE COCINERO GIRASOL BOTELLA 1,5 LTS",
+    "precio": "6500.00",
+    "costo": "5300.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792180000569",
+    "codigo": "7792180000569",
+    "descripcion": "ACEITE FLOR. GIRASOL 900ML",
+    "precio": "4000.00",
+    "costo": "3200.00",
+    "porcentajeIva": 0,
+    "stock": "100",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792180000583",
+    "codigo": "7792180000583",
+    "descripcion": "ACEITE GIRASOL FLORENCIA X 1,5L",
+    "precio": "6300.00",
+    "costo": "5249.56",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790127000665",
+    "codigo": "7790127000665",
+    "descripcion": "ACEITUNAS VANOLI VERDES      80 GRS",
+    "precio": "1500.00",
+    "costo": "1076.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791293045863",
+    "codigo": "7791293045863",
+    "descripcion": "ACONDICIONADOR SEDAL",
+    "precio": "3500.00",
+    "costo": "2650.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7791293051451",
+    "codigo": "7791293051451",
+    "descripcion": "ACONDICIONADOR SEDAL LUMINOUS 190ML",
+    "precio": "3500.00",
+    "costo": "2300.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7798113301215",
+    "codigo": "7798113301215",
+    "descripcion": "AGUA CORAZON 500ML",
+    "precio": "1000.00",
+    "costo": "434.00",
+    "porcentajeIva": 0,
+    "stock": "12",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790036002118",
+    "codigo": "7790036002118",
+    "descripcion": "AGUA SABORIZADA VIDA NARANJA 1.5L",
+    "precio": "1500.00",
+    "costo": "1084.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7798113301611",
+    "codigo": "7798113301611",
+    "descripcion": "AGUA VILLAMANAOS 2L",
+    "precio": "1500.00",
+    "costo": "867.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7798318340132",
+    "codigo": "7798318340132",
+    "descripcion": "AISOL DURAZNOS EN TROZOS X 485G",
+    "precio": "4000.00",
+    "costo": "2850.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791290794313",
+    "codigo": "7791290794313",
+    "descripcion": "ALA DET. OCEANO 300ML",
+    "precio": "2100.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791290792012",
+    "codigo": "7791290792012",
+    "descripcion": "ALA JAB LIQ 800ML",
+    "precio": "3500.00",
+    "costo": "2440.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791290792098",
+    "codigo": "7791290792098",
+    "descripcion": "ALA PVO MATIC 400G",
+    "precio": "2200.00",
+    "costo": "1358.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791290792081",
+    "codigo": "7791290792081",
+    "descripcion": "ALA PVO MATIC 800G",
+    "precio": "4000.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7798005730055",
+    "codigo": "7798005730055",
+    "descripcion": "ALBOR MAIZ PISINGALLO 400G",
+    "precio": "1200.00",
+    "costo": "748.50",
+    "porcentajeIva": 0,
+    "stock": "20",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7795422000099",
+    "codigo": "7795422000099",
+    "descripcion": "ALCOHOL ETILICO X 500G",
+    "precio": "2500.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7795422000082",
+    "codigo": "7795422000082",
+    "descripcion": "ALCOHOL ETILICO X250",
+    "precio": "1500.00",
+    "costo": "1000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "77991584",
+    "codigo": "77991584",
+    "descripcion": "ALF FANTOCHE TRIP BLANCO X85G",
+    "precio": "1000.00",
+    "costo": "676.21",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "77991577",
+    "codigo": "77991577",
+    "descripcion": "ALF FANTOCHE TRIP NEGRO X85G",
+    "precio": "1000.00",
+    "costo": "676.21",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798397440013",
+    "codigo": "7798397440013",
+    "descripcion": "ALF. RASTA BLANCO 70G",
+    "precio": "1700.00",
+    "costo": "1166.00",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040375000",
+    "codigo": "7790040375000",
+    "descripcion": "ALFAJOR BAGLEY B&N 73,5 GRS",
+    "precio": "1500.00",
+    "costo": "700.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "alfajor",
+    "codigo": "7798094220956",
+    "descripcion": "ALFAJOR GENIO TRIPLE NEGRO",
+    "precio": "600.00",
+    "costo": "392.00",
+    "porcentajeIva": 0,
+    "stock": "24",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "77980281",
+    "codigo": "77980281",
+    "descripcion": "ALFAJOR GUAYMALLEN 70G MEMBRILLO",
+    "precio": "1000.00",
+    "costo": "600.00",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "77917805",
+    "codigo": "77917805",
+    "descripcion": "ALFAJOR LAS COLONIAS BLANCO 65G",
+    "precio": "600.00",
+    "costo": "442.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "77917812",
+    "codigo": "77917812",
+    "descripcion": "ALFAJOR LAS COLONIAS NEGRO 65G",
+    "precio": "600.00",
+    "costo": "441.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798397444202",
+    "codigo": "7798397444202",
+    "descripcion": "ALFAJOR NEGRO RASTA 70G",
+    "precio": "1700.00",
+    "costo": "1167.00",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798073620678",
+    "codigo": "7798073620678",
+    "descripcion": "ALFAJOR SUPER TINCHO 60GRS",
+    "precio": "1000.00",
+    "costo": "625.00",
+    "porcentajeIva": 0,
+    "stock": "12",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040405608",
+    "codigo": "7790040405608",
+    "descripcion": "ALFAJOR TATIN NEGRO 60 GRS",
+    "precio": "1200.00",
+    "costo": "670.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798073620272",
+    "codigo": "7798073620272",
+    "descripcion": "ALFAJOR TINCHO NEGRO 38GR",
+    "precio": "400.00",
+    "costo": "225.00",
+    "porcentajeIva": 0,
+    "stock": "38",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798094220963",
+    "codigo": "7798094220963",
+    "descripcion": "ALFAJOR TRIPLE GENIO BLANCO",
+    "precio": "600.00",
+    "costo": "392.00",
+    "porcentajeIva": 0,
+    "stock": "23",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "77917157",
+    "codigo": "77917157",
+    "descripcion": "ALFAJOR TRIPLE MINYO",
+    "precio": "600.00",
+    "costo": "329.16",
+    "porcentajeIva": 0,
+    "stock": "22",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790150564844",
+    "codigo": "7790150564844",
+    "descripcion": "ALICANTA PIMENTON 25G",
+    "precio": "1500.00",
+    "costo": "1000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "26",
+    "codigo": "26",
+    "descripcion": "ALITA",
+    "precio": "3500.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7790240042108",
+    "codigo": "7790240042108",
+    "descripcion": "ALMA MORA FINCA MALBEC 750 ML",
+    "precio": "6000.00",
+    "costo": "4400.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790950000191",
+    "codigo": "7790950000191",
+    "descripcion": "AMERICANO GANCIA 450 CC",
+    "precio": "5500.00",
+    "costo": "3900.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790950000160",
+    "codigo": "7790950000160",
+    "descripcion": "AMERICANO GANCIA 950 CC",
+    "precio": "9500.00",
+    "costo": "7200.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792798999866",
+    "codigo": "7792798999866",
+    "descripcion": "ANDES RUBIA 473CC",
+    "precio": "3000.00",
+    "costo": "2138.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790150420331",
+    "codigo": "7790150420331",
+    "descripcion": "ANIS EN GRANO 25GR",
+    "precio": "1200.00",
+    "costo": "850.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Varios"
+  },
+  {
+    "id": "7790895640483",
+    "codigo": "7790895640483",
+    "descripcion": "AQUARIUS MANZANA 1,5 LTS",
+    "precio": "2500.00",
+    "costo": "1750.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895004971",
+    "codigo": "7790895004971",
+    "descripcion": "AQUARIUS POM ROSADO 2.25L",
+    "precio": "3000.00",
+    "costo": "2094.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895004049",
+    "codigo": "7790895004049",
+    "descripcion": "AQUARIUS POMELO ROSADO 1.5 L",
+    "precio": "2500.00",
+    "costo": "1750.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7792710001523",
+    "codigo": "7792710001523",
+    "descripcion": "ARROZ  LARG FINO AMANDA 1KG",
+    "precio": "2000.00",
+    "costo": "1312.70",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792710001578",
+    "codigo": "7792710001578",
+    "descripcion": "ARROZ AMANDA L,F X500G",
+    "precio": "1200.00",
+    "costo": "694.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793722000054",
+    "codigo": "7793722000054",
+    "descripcion": "ARROZ OKITA 0000 1KG",
+    "precio": "1300.00",
+    "costo": "941.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798082970092",
+    "codigo": "7798082970092",
+    "descripcion": "ARROZ SAN JAVIER 00000 1KG",
+    "precio": "1500.00",
+    "costo": "1058.00",
+    "porcentajeIva": 0,
+    "stock": "21",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798082970108",
+    "codigo": "7798082970108",
+    "descripcion": "ARROZ SAN JAVIER 00000 500GR",
+    "precio": "1000.00",
+    "costo": "600.00",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790790120257",
+    "codigo": "7790790120257",
+    "descripcion": "ARVEJAS INCA 350 GRS",
+    "precio": "1000.00",
+    "costo": "700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792170555505",
+    "codigo": "7792170555505",
+    "descripcion": "AVENA INSTANTANEA QUAKER 280GR",
+    "precio": "2500.00",
+    "costo": "1900.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792170555499",
+    "codigo": "7792170555499",
+    "descripcion": "AVENA TRADICIONAL QUAKER 280G",
+    "precio": "2500.00",
+    "costo": "1900.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7909189346844",
+    "codigo": "7909189346844",
+    "descripcion": "AVON 300 KM/H BOOST",
+    "precio": "5000.00",
+    "costo": "3000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7909189364176",
+    "codigo": "7909189364176",
+    "descripcion": "AVON MUSK FOR MEN",
+    "precio": "5000.00",
+    "costo": "3000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7909189290642",
+    "codigo": "7909189290642",
+    "descripcion": "AVON ROLL-ON 300KM",
+    "precio": "5000.00",
+    "costo": "3000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7909189213214",
+    "codigo": "7909189213214",
+    "descripcion": "AVON ROLL-ON SWEET HONESTY",
+    "precio": "5000.00",
+    "costo": "3000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7909189182596",
+    "codigo": "7909189182596",
+    "descripcion": "AVON SWEET HONESTY",
+    "precio": "5000.00",
+    "costo": "3000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7909189283996",
+    "codigo": "7909189283996",
+    "descripcion": "AVON SWEET HONESTY AEROSOL 75ML",
+    "precio": "7000.00",
+    "costo": "4500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7793253005467",
+    "codigo": "7793253005467",
+    "descripcion": "AYUDIN ANTIHONGOS 450ML",
+    "precio": "3500.00",
+    "costo": "2300.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793253005283",
+    "codigo": "7793253005283",
+    "descripcion": "AYUDIN ANTISARRO BAÑO 450ML",
+    "precio": "3500.00",
+    "costo": "2300.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793253003234",
+    "codigo": "7793253003234",
+    "descripcion": "AYUDIN COLORES VIVOS 400ML",
+    "precio": "2500.00",
+    "costo": "1825.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7799086000389",
+    "codigo": "7799086000389",
+    "descripcion": "AZUCAR DOMINO 1KG",
+    "precio": "1500.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798425860011",
+    "codigo": "7798425860011",
+    "descripcion": "AZUCAR DULCY 1KG",
+    "precio": "1500.00",
+    "costo": "1138.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792540260138",
+    "codigo": "7792540260138",
+    "descripcion": "AZUCAR LEDESMA 1KG",
+    "precio": "1700.00",
+    "costo": "1355.00",
+    "porcentajeIva": 0,
+    "stock": "14",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790250040750",
+    "codigo": "7790250040750",
+    "descripcion": "BABYSEC ULTRA SOFT",
+    "precio": "4000.00",
+    "costo": "2885.20",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790250040774",
+    "codigo": "7790250040774",
+    "descripcion": "BABYSEC ULTRA SOFT G",
+    "precio": "4000.00",
+    "costo": "2885.20",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790036000619",
+    "codigo": "7790036000619",
+    "descripcion": "BAGGIO MULTIFRUTA 200 ML",
+    "precio": "800.00",
+    "costo": "479.83",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790036002125",
+    "codigo": "7790036002125",
+    "descripcion": "BAGGIO VIDA S/GAS POMELO 1,5 LTS",
+    "precio": "1500.00",
+    "costo": "1190.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790040143517",
+    "codigo": "7790040143517",
+    "descripcion": "BAGLEY RUMBA 110G",
+    "precio": "1700.00",
+    "costo": "1146.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580143800",
+    "codigo": "7790580143800",
+    "descripcion": "BARRA COFLER BLOCK 45G",
+    "precio": "2500.00",
+    "costo": "1350.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790895647703",
+    "codigo": "7790895647703",
+    "descripcion": "BENEDICTINO AGUA 2L",
+    "precio": "2000.00",
+    "costo": "1383.40",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "70330709485",
+    "codigo": "70330709485",
+    "descripcion": "BIC COMFORT 2",
+    "precio": "1500.00",
+    "costo": "750.00",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "70330717572",
+    "codigo": "70330717572",
+    "descripcion": "BIC COMFORT 3",
+    "precio": "2500.00",
+    "costo": "1667.00",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "70330731806",
+    "codigo": "70330731806",
+    "descripcion": "BIC SOLEIL 3 HOJAS",
+    "precio": "2500.00",
+    "costo": "1812.00",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7799155000135",
+    "codigo": "7799155000135",
+    "descripcion": "BIDON DE AGUA V DEL SUR",
+    "precio": "3000.00",
+    "costo": "2395.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798287610328",
+    "codigo": "7798287610328",
+    "descripcion": "BIG CHEF CHOCLO 300G",
+    "precio": "2500.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792200000128",
+    "codigo": "7792200000128",
+    "descripcion": "BIZCOCHOS 9 DE ORO AGRIDULCES 200 GRS",
+    "precio": "1700.00",
+    "costo": "1106.47",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7792200000159",
+    "codigo": "7792200000159",
+    "descripcion": "BIZCOCHOS 9 DE ORO CLASICO 200 GRS",
+    "precio": "1700.00",
+    "costo": "1106.47",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7795735000335",
+    "codigo": "7795735000335",
+    "descripcion": "BIZCOCHOS DON SATUR DULCES 200 GRS",
+    "precio": "1800.00",
+    "costo": "1227.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7840638000279",
+    "codigo": "7840638000279",
+    "descripcion": "BIZCOCHOS TIPPY 360GR",
+    "precio": "2000.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070432995",
+    "codigo": "7790070432995",
+    "descripcion": "BIZCOCHUELO EXQUISITA LIMON",
+    "precio": "4000.00",
+    "costo": "3100.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7790070562180",
+    "codigo": "7790070562180",
+    "descripcion": "BLANCAFLOR LEUDANTE 1KG",
+    "precio": "2000.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "2",
+    "codigo": "2",
+    "descripcion": "BOCADITO",
+    "precio": "1500.00",
+    "costo": "0.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7790580136482",
+    "codigo": "7790580136482",
+    "descripcion": "BOCADITOS CHOCOMANI ARCOR",
+    "precio": "200.00",
+    "costo": "124.74",
+    "porcentajeIva": 0,
+    "stock": "70",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "691044677619",
+    "codigo": "691044677619",
+    "descripcion": "BOLSA DE RESIDUOS 45X60",
+    "precio": "3000.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "727373017220",
+    "codigo": "727373017220",
+    "descripcion": "BOLSA DE RESIDUOS 90X120",
+    "precio": "6500.00",
+    "costo": "5000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791625008733",
+    "codigo": "7791625008733",
+    "descripcion": "BOLSA PARA RESIDOUOS 45X60CM",
+    "precio": "1700.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "77956712",
+    "codigo": "77956712",
+    "descripcion": "BOMB CHOCOLINAS",
+    "precio": "600.00",
+    "costo": "475.40",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "77959041",
+    "codigo": "77959041",
+    "descripcion": "BOMB HAMLET LECHE",
+    "precio": "1000.00",
+    "costo": "534.59",
+    "porcentajeIva": 0,
+    "stock": "46",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "77961815",
+    "codigo": "77961815",
+    "descripcion": "BON O BON BLANCO",
+    "precio": "600.00",
+    "costo": "475.40",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580346614",
+    "codigo": "7790580346614",
+    "descripcion": "BON O BON OBLEA BLANCO 30G",
+    "precio": "1200.00",
+    "costo": "810.15",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580346515",
+    "codigo": "7790580346515",
+    "descripcion": "BON O BON OBLEA LECHE 30 GRS",
+    "precio": "1200.00",
+    "costo": "810.15",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580119126",
+    "codigo": "7790580119126",
+    "descripcion": "BON O BON SURTIDO",
+    "precio": "12000.00",
+    "costo": "8727.20",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040148840",
+    "codigo": "7790040148840",
+    "descripcion": "BON O BON X3 60G",
+    "precio": "1700.00",
+    "costo": "1228.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040152748",
+    "codigo": "7790040152748",
+    "descripcion": "BON O BON X3 BLANCO 60G",
+    "precio": "1700.00",
+    "costo": "1222.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7792798005888",
+    "codigo": "7792798005888",
+    "descripcion": "BRAHMA CERVEZA LATA 473 CC",
+    "precio": "2500.00",
+    "costo": "1760.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792798015061",
+    "codigo": "7792798015061",
+    "descripcion": "BRAHMA CHOPP 710 CM3",
+    "precio": "3400.00",
+    "costo": "1966.16",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7798017931495",
+    "codigo": "7798017931495",
+    "descripcion": "BROCHES RAYITA PLASTICO X12U",
+    "precio": "2600.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790349851076",
+    "codigo": "7790349851076",
+    "descripcion": "BUDIN ZUPAY FRUTAS 170GR",
+    "precio": "1000.00",
+    "costo": "500.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7792798013357",
+    "codigo": "7792798013357",
+    "descripcion": "BUDWEISER 710CC",
+    "precio": "3100.00",
+    "costo": "2508.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790748235064",
+    "codigo": "7790748235064",
+    "descripcion": "CABALLA PUGLISI EN ACEITE 380 GRS",
+    "precio": "5000.00",
+    "costo": "4300.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "8445291121867",
+    "codigo": "8445291121867",
+    "descripcion": "CACAO NESQUIK X 180G",
+    "precio": "2800.00",
+    "costo": "2100.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7790170903937",
+    "codigo": "7790170903937",
+    "descripcion": "CAFE LA MORENITA X 20 SAQUITOS",
+    "precio": "5500.00",
+    "costo": "3900.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150079904",
+    "codigo": "7790150079904",
+    "descripcion": "CAFE LA VIRGINIA TORRADO EQ. X20",
+    "precio": "6000.00",
+    "costo": "4200.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "cafe",
+    "codigo": "7790150100677",
+    "descripcion": "CAFE LV CLASICO INS 50G",
+    "precio": "3500.00",
+    "costo": "2600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150101773",
+    "codigo": "7790150101773",
+    "descripcion": "CAFE LV INSTANTANEA SUAVE 100G",
+    "precio": "6500.00",
+    "costo": "4400.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150100783",
+    "codigo": "7790150100783",
+    "descripcion": "CAFE LV INSTANTANEO CLASICO 100G",
+    "precio": "6500.00",
+    "costo": "4400.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000008571",
+    "codigo": "7794000008571",
+    "descripcion": "CALDO SABOR GALL X 2CUBOS",
+    "precio": "1000.00",
+    "costo": "475.00",
+    "porcentajeIva": 0,
+    "stock": "16",
+    "rubro": "Verdulería"
+  },
+  {
+    "id": "7840045042275",
+    "codigo": "7840045042275",
+    "descripcion": "CALF CORNED BEEF 340G",
+    "precio": "4000.00",
+    "costo": "2800.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793249102927",
+    "codigo": "7793249102927",
+    "descripcion": "CALIFORNIA TINTO DULCE 750CC",
+    "precio": "5000.00",
+    "costo": "3410.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7798108834179",
+    "codigo": "7798108834179",
+    "descripcion": "CALLIA TARDIO VINO ROS/DULCE",
+    "precio": "5000.00",
+    "costo": "3406.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7798108833950",
+    "codigo": "7798108833950",
+    "descripcion": "CALLIA VINO MALBEC 750CC",
+    "precio": "5500.00",
+    "costo": "3520.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790314080142",
+    "codigo": "7790314080142",
+    "descripcion": "CANCILLER RED BLEND 1125ML",
+    "precio": "4000.00",
+    "costo": "2750.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "41",
+    "codigo": "41",
+    "descripcion": "CANDADO LION 60MM",
+    "precio": "10000.00",
+    "costo": "5950.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bazar"
+  },
+  {
+    "id": "51",
+    "codigo": "51",
+    "descripcion": "CARCASA",
+    "precio": "1500.00",
+    "costo": "900.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7790360974020",
+    "codigo": "7790360974020",
+    "descripcion": "CARNE PICADA SWIFT 500G",
+    "precio": "7500.00",
+    "costo": "6254.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7891111333322",
+    "codigo": "7891111333322",
+    "descripcion": "CARTAS DE LOBA",
+    "precio": "3000.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bazar"
+  },
+  {
+    "id": "7798079932102",
+    "codigo": "7798079932102",
+    "descripcion": "CATINI LENTEJAS 500G",
+    "precio": "3200.00",
+    "costo": "2278.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "78400528",
+    "codigo": "78400528",
+    "descripcion": "CAÑA FORTIN 200ML",
+    "precio": "1000.00",
+    "costo": "708.00",
+    "porcentajeIva": 0,
+    "stock": "15",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7791625007897",
+    "codigo": "7791625007897",
+    "descripcion": "CEPILLO DE ROPA",
+    "precio": "2500.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7891024184608",
+    "codigo": "7891024184608",
+    "descripcion": "CEPILLO DENTAL COLGATE CLASIC  X 1",
+    "precio": "1500.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "6910021007206",
+    "codigo": "6910021007206",
+    "descripcion": "CEPILLO DENTAL COLGATE PREMIER ULTRA 1 U",
+    "precio": "1600.00",
+    "costo": "1107.15",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7796851809369",
+    "codigo": "7796851809369",
+    "descripcion": "CEPILLOS DE DIENTES INF.",
+    "precio": "1200.00",
+    "costo": "795.00",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790045001607",
+    "codigo": "7790045001607",
+    "descripcion": "CEREAL SKARCHITOS COPOS DE MAIZ AZUCARADOS 240 GRS",
+    "precio": "2100.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792798014972",
+    "codigo": "7792798014972",
+    "descripcion": "CERVEZA ANDES ORIGEN RUBIA ORO 1L",
+    "precio": "5000.00",
+    "costo": "2514.00",
+    "porcentajeIva": 0,
+    "stock": "16",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792798007493",
+    "codigo": "7792798007493",
+    "descripcion": "CERVEZA BRAHMA 1 L",
+    "precio": "3700.00",
+    "costo": "2916.91",
+    "porcentajeIva": 0,
+    "stock": "42",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792798005871",
+    "codigo": "7792798005871",
+    "descripcion": "CERVEZA BRAHMA LATA 354 CC",
+    "precio": "1200.00",
+    "costo": "794.00",
+    "porcentajeIva": 0,
+    "stock": "14",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7891149108718",
+    "codigo": "7891149108718",
+    "descripcion": "CERVEZA CORONA 330ML",
+    "precio": "2500.00",
+    "costo": "1758.50",
+    "porcentajeIva": 0,
+    "stock": "24",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7791234020249",
+    "codigo": "7791234020249",
+    "descripcion": "CERVEZA GOLDEN SAFT 1L",
+    "precio": "2000.00",
+    "costo": "1300.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7898295301505",
+    "codigo": "7898295301505",
+    "descripcion": "CERVEZA LATA BURGUESA 473ML",
+    "precio": "1500.00",
+    "costo": "833.00",
+    "porcentajeIva": 0,
+    "stock": "12",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7898295300942",
+    "codigo": "7898295300942",
+    "descripcion": "CERVEZA LATA CONTI 473ML",
+    "precio": "1500.00",
+    "costo": "867.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7898942054037",
+    "codigo": "7898942054037",
+    "descripcion": "CERVEZA LATA MOEMA 473ML",
+    "precio": "1500.00",
+    "costo": "1000.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7898295300195",
+    "codigo": "7898295300195",
+    "descripcion": "CERVEZA LATA SAMBA 473ML",
+    "precio": "1500.00",
+    "costo": "867.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7898032910281",
+    "codigo": "7898032910281",
+    "descripcion": "CERVEZA MILLER LIFE",
+    "precio": "4000.00",
+    "costo": "3166.66",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7793147570088",
+    "codigo": "7793147570088",
+    "descripcion": "CERVEZA MILLER RET 1L",
+    "precio": "4000.00",
+    "costo": "3026.26",
+    "porcentajeIva": 0,
+    "stock": "13",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792798075515",
+    "codigo": "7792798075515",
+    "descripcion": "CERVEZA QUILME 1890 710CM3",
+    "precio": "2500.00",
+    "costo": "1966.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792798015528",
+    "codigo": "7792798015528",
+    "descripcion": "CERVEZA QUILME BAJO CERO 710CM3",
+    "precio": "2500.00",
+    "costo": "1966.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7840050008884",
+    "codigo": "7840050008884",
+    "descripcion": "CERVEZA SKQL",
+    "precio": "2000.00",
+    "costo": "1283.35",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7802100005809",
+    "codigo": "7802100005809",
+    "descripcion": "CERVEZA SOL 650 ML",
+    "precio": "3600.00",
+    "costo": "2916.66",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790310985274",
+    "codigo": "7790310985274",
+    "descripcion": "CHEETOS QUESO 43GR",
+    "precio": "2100.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7790310985809",
+    "codigo": "7790310985809",
+    "descripcion": "CHEETOS QUESO 85GR",
+    "precio": "3500.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7794612065719",
+    "codigo": "7794612065719",
+    "descripcion": "CHOC HAMLET ALM/MANI X45G",
+    "precio": "1500.00",
+    "costo": "807.50",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7794612066310",
+    "codigo": "7794612066310",
+    "descripcion": "CHOC HAMLET BLAN/COOKIES X45G",
+    "precio": "1500.00",
+    "costo": "807.50",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790036972602",
+    "codigo": "7790036972602",
+    "descripcion": "CHOCOLATADA BAGGIO 200 ML",
+    "precio": "1000.00",
+    "costo": "583.90",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "77922120",
+    "codigo": "77922120",
+    "descripcion": "CHOCOLATE COFLER BLOCK 110G",
+    "precio": "5500.00",
+    "costo": "3700.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040143227",
+    "codigo": "7790040143227",
+    "descripcion": "CHOCOLINAS 170 G",
+    "precio": "2000.00",
+    "costo": "1396.29",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "28",
+    "codigo": "28",
+    "descripcion": "CHORIZO GRANALIER 1KG",
+    "precio": "8000.00",
+    "costo": "5967.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7791290794238",
+    "codigo": "7791290794238",
+    "descripcion": "CIF CREMA MULTIUSO 250ML",
+    "precio": "2800.00",
+    "costo": "1995.25",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791290794115",
+    "codigo": "7791290794115",
+    "descripcion": "CIF DT BIOACTIVE LIMA 500ML",
+    "precio": "4000.00",
+    "costo": "2700.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791290794054",
+    "codigo": "7791290794054",
+    "descripcion": "CIF DT LIMON 300ML",
+    "precio": "2500.00",
+    "costo": "1763.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "78400924",
+    "codigo": "78400924",
+    "descripcion": "CIGARRILLOS EIGHT COMUN",
+    "precio": "1000.00",
+    "costo": "580.00",
+    "porcentajeIva": 0,
+    "stock": "99997",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "78401068",
+    "codigo": "78401068",
+    "descripcion": "CIGARRILLOS RODEO X20U COMUN",
+    "precio": "1000.00",
+    "costo": "587.51",
+    "porcentajeIva": 0,
+    "stock": "99998",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "78412408",
+    "codigo": "78412408",
+    "descripcion": "CIGARRILOS CHISTERFIELD REMIX FRESH",
+    "precio": "3000.00",
+    "costo": "2200.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "78413948",
+    "codigo": "78413948",
+    "descripcion": "CIGARRILOS EIGHT CONVERT",
+    "precio": "1000.00",
+    "costo": "680.00",
+    "porcentajeIva": 0,
+    "stock": "99974",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "42",
+    "codigo": "42",
+    "descripcion": "CINTA DE EMB. TRANS 50 MTS",
+    "precio": "3500.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7840058009449",
+    "codigo": "7840058009449",
+    "descripcion": "COCA COLA 1L",
+    "precio": "2500.00",
+    "costo": "1875.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895000997",
+    "codigo": "7790895000997",
+    "descripcion": "COCA COLA 2,25 LTS",
+    "precio": "5500.00",
+    "costo": "3700.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895002656",
+    "codigo": "7790895002656",
+    "descripcion": "COCA COLA 375ML",
+    "precio": "1700.00",
+    "costo": "1094.00",
+    "porcentajeIva": 0,
+    "stock": "15",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895642081",
+    "codigo": "7790895642081",
+    "descripcion": "COCA COLA LATA 220ML",
+    "precio": "1500.00",
+    "costo": "961.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "gaseosa",
+    "codigo": "7790895005916",
+    "descripcion": "COCA COLA RETORNABLE 1.5L",
+    "precio": "3200.00",
+    "costo": "2613.15",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895639937",
+    "codigo": "7790895639937",
+    "descripcion": "COCA COLA ZERO RETORNABLE 1.5L",
+    "precio": "3200.00",
+    "costo": "2650.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790580103415",
+    "codigo": "7790580103415",
+    "descripcion": "COFLER 55G AIR BLANCO",
+    "precio": "4300.00",
+    "costo": "3117.16",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580033408",
+    "codigo": "7790580033408",
+    "descripcion": "COFLER 55G AIR LECHE",
+    "precio": "4300.00",
+    "costo": "3117.16",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580115562",
+    "codigo": "7790580115562",
+    "descripcion": "COFLER AIREADO BON O BON 67G",
+    "precio": "4300.00",
+    "costo": "3117.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "77953124",
+    "codigo": "77953124",
+    "descripcion": "COFLER BLOCK 38G",
+    "precio": "2000.00",
+    "costo": "1250.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040659605",
+    "codigo": "7790040659605",
+    "descripcion": "COFLER BLOCK ALFAJOR 60G",
+    "precio": "1800.00",
+    "costo": "1100.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7891024134702",
+    "codigo": "7891024134702",
+    "descripcion": "COLGATE CREMA DENTAL 90G",
+    "precio": "2500.00",
+    "costo": "1917.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790168904649",
+    "codigo": "7790168904649",
+    "descripcion": "COLON SELEC DULCE DURAZNO 750ML",
+    "precio": "6500.00",
+    "costo": "4816.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790150465479",
+    "codigo": "7790150465479",
+    "descripcion": "COMINO MOLIDO ALICANTE 50G",
+    "precio": "1000.00",
+    "costo": "480.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150470350",
+    "codigo": "7790150470350",
+    "descripcion": "CONDIMENTO PARA ARROZ 25G",
+    "precio": "2000.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Verdulería"
+  },
+  {
+    "id": "7790150490334",
+    "codigo": "7790150490334",
+    "descripcion": "CONDIMENTO PARA PIZZA 25G",
+    "precio": "2000.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Verdulería"
+  },
+  {
+    "id": "7790580421007",
+    "codigo": "7790580421007",
+    "descripcion": "CONFITES ROCKLETS CHOCOLATE 20 GRS",
+    "precio": "1000.00",
+    "costo": "686.00",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7792319972248",
+    "codigo": "7792319972248",
+    "descripcion": "COS TARDIA VINO ROS. DULCE",
+    "precio": "5500.00",
+    "costo": "3800.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792319972231",
+    "codigo": "7792319972231",
+    "descripcion": "COS. TARDIA VINO TINTO DULCE",
+    "precio": "5500.00",
+    "costo": "3907.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792319972224",
+    "codigo": "7792319972224",
+    "descripcion": "COSECHA TARDIA BLA/DULCE",
+    "precio": "5500.00",
+    "costo": "3907.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "35",
+    "codigo": "35",
+    "descripcion": "COSTILLA NOVILLITO",
+    "precio": "15000.00",
+    "costo": "12431.25",
+    "porcentajeIva": 0,
+    "stock": "12",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7622201705480",
+    "codigo": "7622201705480",
+    "descripcion": "CREMA CHANTILLY ROYAL 50G",
+    "precio": "2000.00",
+    "costo": "1510.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798001560175",
+    "codigo": "7798001560175",
+    "descripcion": "CREMA DE LECHE CREMIGAL 190GR",
+    "precio": "3000.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7790742141606",
+    "codigo": "7790742141606",
+    "descripcion": "CREMA DE LECHE PARA COCINAR X 200ML",
+    "precio": "3500.00",
+    "costo": "2600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793913013436",
+    "codigo": "7793913013436",
+    "descripcion": "CREMA DE LECHE TREGAR 200CC",
+    "precio": "3000.00",
+    "costo": "2018.59",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7509546695518",
+    "codigo": "7509546695518",
+    "descripcion": "CREMA DENTAL COLGATE HERBAL 90G",
+    "precio": "3500.00",
+    "costo": "2850.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7802130003585",
+    "codigo": "7802130003585",
+    "descripcion": "CREVEZA CORONA 620 ML",
+    "precio": "5000.00",
+    "costo": "3916.66",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792410517348",
+    "codigo": "7792410517348",
+    "descripcion": "CUSENIER GRANADINA",
+    "precio": "5000.00",
+    "costo": "3500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790742104809",
+    "codigo": "7790742104809",
+    "descripcion": "D. DE LECHE LA SERENISIMA CL 250G",
+    "precio": "2500.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "16",
+    "codigo": "16",
+    "descripcion": "D.D BATATA C/CHOCOLATE",
+    "precio": "4500.00",
+    "costo": "1589.99",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "15",
+    "codigo": "15",
+    "descripcion": "D.D MEMBRILLO",
+    "precio": "5000.00",
+    "costo": "2700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798113151599",
+    "codigo": "7798113151599",
+    "descripcion": "DALE MARIA X145GR VAINILLA",
+    "precio": "1000.00",
+    "costo": "539.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790520996930",
+    "codigo": "7790520996930",
+    "descripcion": "DES AER LYSOF LAVANDA 207G",
+    "precio": "4500.00",
+    "costo": "3500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790520996947",
+    "codigo": "7790520996947",
+    "descripcion": "DES AER. LYSOFORM ORIG 207G",
+    "precio": "5000.00",
+    "costo": "3770.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790520995308",
+    "codigo": "7790520995308",
+    "descripcion": "DESINF AEROS LYSOFORM BEBE 257G",
+    "precio": "5000.00",
+    "costo": "3770.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7798184680257",
+    "codigo": "7798184680257",
+    "descripcion": "DESODORANTE SAPHIRUS 280CC FANTASIA",
+    "precio": "7000.00",
+    "costo": "5150.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7798184680516",
+    "codigo": "7798184680516",
+    "descripcion": "DESODORANTE SAPHIRUS 280CC LOLA",
+    "precio": "7000.00",
+    "costo": "5150.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7798444553574",
+    "codigo": "7798444553574",
+    "descripcion": "DESODORANTE SAPHIRUS CELESTIAL WINGS 280CC",
+    "precio": "7000.00",
+    "costo": "5150.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7790990004012",
+    "codigo": "7790990004012",
+    "descripcion": "DET MAGISTRAL X5 300ML",
+    "precio": "3600.00",
+    "costo": "2600.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790990003022",
+    "codigo": "7790990003022",
+    "descripcion": "DETERGENTE MAGISTRAL X5 300ML",
+    "precio": "3600.00",
+    "costo": "2600.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790314079726",
+    "codigo": "7790314079726",
+    "descripcion": "DILEMA VINO BCO/DULCE 750ML",
+    "precio": "5000.00",
+    "costo": "3340.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "46",
+    "codigo": "46",
+    "descripcion": "DISCOS LA REINA FRE/HOR",
+    "precio": "1000.00",
+    "costo": "590.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7792410527897",
+    "codigo": "7792410527897",
+    "descripcion": "DOBLE V ETIQUETA NEGRA 200ML",
+    "precio": "2500.00",
+    "costo": "1839.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7791599014495",
+    "codigo": "7791599014495",
+    "descripcion": "DON GUIDO FID CARACOL GUISERO 500G",
+    "precio": "1300.00",
+    "costo": "894.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791599014525",
+    "codigo": "7791599014525",
+    "descripcion": "DON GUIDO SPAGHETTI 500G",
+    "precio": "1500.00",
+    "costo": "894.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790310985267",
+    "codigo": "7790310985267",
+    "descripcion": "DORITOS  QUESO 40G",
+    "precio": "2100.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7790310985649",
+    "codigo": "7790310985649",
+    "descripcion": "DORITOS QUESO 77GR",
+    "precio": "3500.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7798350089006",
+    "codigo": "7798350089006",
+    "descripcion": "DUFFY TOALLITAS HUMEDAS X48",
+    "precio": "3000.00",
+    "costo": "2100.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "43",
+    "codigo": "43",
+    "descripcion": "DULCE DE BATATA X KILO",
+    "precio": "4000.00",
+    "costo": "0.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7791058010747",
+    "codigo": "7791058010747",
+    "descripcion": "DULCE DE LECHE GRANJA DE ORO 200GR",
+    "precio": "2000.00",
+    "costo": "937.75",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793913001945",
+    "codigo": "7793913001945",
+    "descripcion": "DULCE DE LECHE TREGAR 200G",
+    "precio": "2500.00",
+    "costo": "1516.79",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793913000931",
+    "codigo": "7793913000931",
+    "descripcion": "DULCE DE LECHE. TREGAR TRADICIONAL  400 GRS",
+    "precio": "4000.00",
+    "costo": "2830.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793046008071",
+    "codigo": "7793046008071",
+    "descripcion": "DULCOR MERMELADA CIRUELA 500G",
+    "precio": "2000.00",
+    "costo": "1400.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793046008057",
+    "codigo": "7793046008057",
+    "descripcion": "DULCOR MERMELADA DE DAMASCO",
+    "precio": "2000.00",
+    "costo": "1400.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793046008095",
+    "codigo": "7793046008095",
+    "descripcion": "DULCOR MERMELADA DE FRUTILLA 500G",
+    "precio": "2000.00",
+    "costo": "1400.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793046008033",
+    "codigo": "7793046008033",
+    "descripcion": "DULCOR MERMELADA DE NARANJA 500G",
+    "precio": "2000.00",
+    "costo": "1400.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791113005480",
+    "codigo": "7791113005480",
+    "descripcion": "EMETH CACAO X 400G",
+    "precio": "2300.00",
+    "costo": "1900.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7791113001604",
+    "codigo": "7791113001604",
+    "descripcion": "EMETH POSTRE DULCE DE LECHE",
+    "precio": "1500.00",
+    "costo": "900.00",
+    "porcentajeIva": 21,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791113001611",
+    "codigo": "7791113001611",
+    "descripcion": "EMETH POSTRE VAINILLA",
+    "precio": "1500.00",
+    "costo": "900.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "6902004095218",
+    "codigo": "6902004095218",
+    "descripcion": "ENCENDEDOR CANDELA PIEDRA",
+    "precio": "1000.00",
+    "costo": "320.00",
+    "porcentajeIva": 0,
+    "stock": "22",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "36",
+    "codigo": "36",
+    "descripcion": "ESCARBADIENTES IMPACTO 50UN",
+    "precio": "1200.00",
+    "costo": "800.00",
+    "porcentajeIva": 0,
+    "stock": "12",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791625007156",
+    "codigo": "7791625007156",
+    "descripcion": "ESCOBILLON ESQUINERO",
+    "precio": "6000.00",
+    "costo": "4500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791625007293",
+    "codigo": "7791625007293",
+    "descripcion": "ESCOBILLON ESQUINERO ECOO",
+    "precio": "6000.00",
+    "costo": "4000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790047000196",
+    "codigo": "7790047000196",
+    "descripcion": "ESCUDO AER. REPELENTE 130G",
+    "precio": "3500.00",
+    "costo": "2020.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Varios"
+  },
+  {
+    "id": "7790150610305",
+    "codigo": "7790150610305",
+    "descripcion": "ESENCIA ARTIFICIAL DE VAINILLA 10CM",
+    "precio": "2000.00",
+    "costo": "1421.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792389081277",
+    "codigo": "7792389081277",
+    "descripcion": "ESPIRAL X5 X4UN",
+    "precio": "1000.00",
+    "costo": "530.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793253385712",
+    "codigo": "7793253385712",
+    "descripcion": "ESPONJA DE BRONCE",
+    "precio": "1700.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790560000246",
+    "codigo": "7790560000246",
+    "descripcion": "ESPONJA SED METAL ACERO",
+    "precio": "1500.00",
+    "costo": "1008.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790314066436",
+    "codigo": "7790314066436",
+    "descripcion": "EST MENDOZA CABER/MALBEC 1125ML",
+    "precio": "6000.00",
+    "costo": "4550.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790064104655",
+    "codigo": "7790064104655",
+    "descripcion": "EST PAÑAL HIPERPACK JUNIOR X30",
+    "precio": "18000.00",
+    "costo": "11382.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790314080159",
+    "codigo": "7790314080159",
+    "descripcion": "EST. MENDOZA MALBEC 750ML",
+    "precio": "4000.00",
+    "costo": "2779.90",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790064004139",
+    "codigo": "7790064004139",
+    "descripcion": "ESTRELLA HIPERPACK 34 XXG",
+    "precio": "16000.00",
+    "costo": "11382.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790070432971",
+    "codigo": "7790070432971",
+    "descripcion": "EXQUISITA CHOCOLATE 540G",
+    "precio": "4500.00",
+    "costo": "3243.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070432988",
+    "codigo": "7790070432988",
+    "descripcion": "EXQUISITA NARANJA 540G",
+    "precio": "4000.00",
+    "costo": "3100.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7790070433008",
+    "codigo": "7790070433008",
+    "descripcion": "EXQUISITA SABOR COCO 540G",
+    "precio": "4000.00",
+    "costo": "3100.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070432964",
+    "codigo": "7790070432964",
+    "descripcion": "EXQUISITA VAINILLA 540G",
+    "precio": "4000.00",
+    "costo": "3100.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000005198",
+    "codigo": "7794000005198",
+    "descripcion": "FANACOA KETCHUP 250G",
+    "precio": "1700.00",
+    "costo": "1144.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790895062971",
+    "codigo": "7790895062971",
+    "descripcion": "FANTA RETORNABLE 1.5L",
+    "precio": "3200.00",
+    "costo": "0.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7792389081451",
+    "codigo": "7792389081451",
+    "descripcion": "FAROLITO VELAS CORTAS  X4",
+    "precio": "1000.00",
+    "costo": "580.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790628000034",
+    "codigo": "7790628000034",
+    "descripcion": "FAUNA MAURI 400G",
+    "precio": "2300.00",
+    "costo": "1598.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790070320322",
+    "codigo": "7790070320322",
+    "descripcion": "FAVORITA FID CODITO 500G",
+    "precio": "1200.00",
+    "costo": "834.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070320315",
+    "codigo": "7790070320315",
+    "descripcion": "FAVORITA FID MOSTACHOL 500G",
+    "precio": "1200.00",
+    "costo": "834.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070320308",
+    "codigo": "7790070320308",
+    "descripcion": "FAVORITA FID TIRABUZON 500G",
+    "precio": "1200.00",
+    "costo": "834.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070562258",
+    "codigo": "7790070562258",
+    "descripcion": "FAVORITA HARINA 000 1KG",
+    "precio": "1300.00",
+    "costo": "890.00",
+    "porcentajeIva": 0,
+    "stock": "24",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070433312",
+    "codigo": "7790070433312",
+    "descripcion": "FAVORITA PAN RALLADO 450GR",
+    "precio": "1400.00",
+    "costo": "910.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790139002886",
+    "codigo": "7790139002886",
+    "descripcion": "FERNET 1882  450 ML",
+    "precio": "7500.00",
+    "costo": "5072.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790139002879",
+    "codigo": "7790139002879",
+    "descripcion": "FERNET 1882 750 ML",
+    "precio": "11000.00",
+    "costo": "7489.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790290001179",
+    "codigo": "7790290001179",
+    "descripcion": "FERNET BRANCA 450 CC",
+    "precio": "13000.00",
+    "costo": "9500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790290101602",
+    "codigo": "7790290101602",
+    "descripcion": "FERNET BRANCA X 750",
+    "precio": "20000.00",
+    "costo": "15500.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790290101817",
+    "codigo": "7790290101817",
+    "descripcion": "FERNET BRANCA/DORADA 750CC",
+    "precio": "21500.00",
+    "costo": "17521.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792410779630",
+    "codigo": "7792410779630",
+    "descripcion": "FERNET BUHERO NEGRO 450ML",
+    "precio": "6500.00",
+    "costo": "4116.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792410523165",
+    "codigo": "7792410523165",
+    "descripcion": "FERNET BUHERO NEGRO 700ML",
+    "precio": "10000.00",
+    "costo": "5820.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7791625001420",
+    "codigo": "7791625001420",
+    "descripcion": "FIBRA ESPONJA O.K",
+    "precio": "700.00",
+    "costo": "550.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7798141970414",
+    "codigo": "7798141970414",
+    "descripcion": "FID MOÑO LA-PROVIDENCIA X500G",
+    "precio": "1600.00",
+    "costo": "1150.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798141970346",
+    "codigo": "7798141970346",
+    "descripcion": "FID SPAGUETTI LA-PROVIDENCIA X500G",
+    "precio": "1300.00",
+    "costo": "780.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798141972616",
+    "codigo": "7798141972616",
+    "descripcion": "FID. LA PROV CELENTANO 500G",
+    "precio": "1300.00",
+    "costo": "761.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791599014648",
+    "codigo": "7791599014648",
+    "descripcion": "FIDEO GUISERO TORINO 500G",
+    "precio": "1000.00",
+    "costo": "500.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070336385",
+    "codigo": "7790070336385",
+    "descripcion": "FIDEO LUCCHETTI SPAGHETTI 500GR",
+    "precio": "1600.00",
+    "costo": "1100.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070336149",
+    "codigo": "7790070336149",
+    "descripcion": "FIDEO LUCHETTI MOSTACHOL X500G",
+    "precio": "1500.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798141971404",
+    "codigo": "7798141971404",
+    "descripcion": "FIDEO SECO LA MPROVIDENCIA NIDOS TAGLIATELLE 500G",
+    "precio": "1600.00",
+    "costo": "1080.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798141970391",
+    "codigo": "7798141970391",
+    "descripcion": "FIDEO SECO LA PROVIDENCIA CODOS 500G",
+    "precio": "1300.00",
+    "costo": "761.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798141971411",
+    "codigo": "7798141971411",
+    "descripcion": "FIDEO SECO LA PROVIDENCIA NIDOS CABELLO DE ANGEL 500G",
+    "precio": "1600.00",
+    "costo": "1080.00",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7798141971114",
+    "codigo": "7798141971114",
+    "descripcion": "FIDEOS LA PROV DEDAL 500G",
+    "precio": "1300.00",
+    "costo": "761.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798141970421",
+    "codigo": "7798141970421",
+    "descripcion": "FIDEOS LA PROV DEDALITO 500G",
+    "precio": "1300.00",
+    "costo": "761.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798141971398",
+    "codigo": "7798141971398",
+    "descripcion": "FIDEOS NIDOS SPAGHETTI LA PROVIDENCIA X 500G",
+    "precio": "1600.00",
+    "costo": "1150.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798141971152",
+    "codigo": "7798141971152",
+    "descripcion": "FIDEOS PAMPERO LA PROVIDENCIA X 500G",
+    "precio": "1300.00",
+    "costo": "800.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Alimentos Congelados"
+  },
+  {
+    "id": "77989499",
+    "codigo": "77989499",
+    "descripcion": "FLYNN PAFF TUTI FRUTI",
+    "precio": "150.00",
+    "costo": "99.36",
+    "porcentajeIva": 0,
+    "stock": "58",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798347080849",
+    "codigo": "7798347080849",
+    "descripcion": "FOCOS DE 15 W LED",
+    "precio": "2000.00",
+    "costo": "1300.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790580199913",
+    "codigo": "7790580199913",
+    "descripcion": "FRUTIGELATIN OSITOS 30G",
+    "precio": "800.00",
+    "costo": "505.65",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "33",
+    "codigo": "33",
+    "descripcion": "FYNN PAFF FRUTILLA",
+    "precio": "150.00",
+    "costo": "89.00",
+    "porcentajeIva": 0,
+    "stock": "50",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790953000341",
+    "codigo": "7790953000341",
+    "descripcion": "GALL BICHITOS CONFITADOS 400G",
+    "precio": "2200.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790628102714",
+    "codigo": "7790628102714",
+    "descripcion": "GALL DULCES SURTIDAS FAUNA 150G",
+    "precio": "1000.00",
+    "costo": "617.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7793123160272",
+    "codigo": "7793123160272",
+    "descripcion": "GALL OBLITA S/FRUT X96G",
+    "precio": "1000.00",
+    "costo": "1000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7622202839962",
+    "codigo": "7622202839962",
+    "descripcion": "GALL TERRABUSI VARIEDAD 390GRS",
+    "precio": "3000.00",
+    "costo": "2058.88",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040143364",
+    "codigo": "7790040143364",
+    "descripcion": "GALLETITA DIVERSION SURTIDO X 400G",
+    "precio": "3200.00",
+    "costo": "2185.20",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040143548",
+    "codigo": "7790040143548",
+    "descripcion": "GALLETITA MELLIZAS 110GR",
+    "precio": "2000.00",
+    "costo": "1400.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7622201735296",
+    "codigo": "7622201735296",
+    "descripcion": "GALLETITA OREO ORIGINAL 118GRS",
+    "precio": "2300.00",
+    "costo": "1651.29",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790953000013",
+    "codigo": "7790953000013",
+    "descripcion": "GALLETITAS CRACKERS RICK´S 130GR",
+    "precio": "700.00",
+    "costo": "464.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790953000426",
+    "codigo": "7790953000426",
+    "descripcion": "GALLETITAS CRACKERS RICK´S 330GR",
+    "precio": "1500.00",
+    "costo": "1112.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7896022086442",
+    "codigo": "7896022086442",
+    "descripcion": "GALLETITAS ISABELA 140GRS",
+    "precio": "1500.00",
+    "costo": "1020.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798141972364",
+    "codigo": "7798141972364",
+    "descripcion": "GALLETITAS LA PROVIDENCIA 101G",
+    "precio": "600.00",
+    "costo": "390.67",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040003606",
+    "codigo": "7790040003606",
+    "descripcion": "GALLETITAS REX KESITAS 75 GRS",
+    "precio": "1700.00",
+    "costo": "1220.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040719804",
+    "codigo": "7790040719804",
+    "descripcion": "GALLETITAS REX ORIGINAL 125 GRS",
+    "precio": "2500.00",
+    "costo": "1990.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040003569",
+    "codigo": "7790040003569",
+    "descripcion": "GALLETITAS REX ORIGINAL 75 GRS",
+    "precio": "1700.00",
+    "costo": "1220.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580716806",
+    "codigo": "7790580716806",
+    "descripcion": "GALLETITAS SALADIX CALABRESA 100 GRS",
+    "precio": "2000.00",
+    "costo": "1253.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580716707",
+    "codigo": "7790580716707",
+    "descripcion": "GALLETITAS SALADIX JAMON 100 GRS",
+    "precio": "2000.00",
+    "costo": "1584.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580697303",
+    "codigo": "7790580697303",
+    "descripcion": "GALLETITAS SALADIX PIZZA 100 GRS",
+    "precio": "2000.00",
+    "costo": "1253.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040704909",
+    "codigo": "7790040704909",
+    "descripcion": "GALLETITAS SERRANAS SANDWICH 336 GRS 3 UN",
+    "precio": "2500.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040133488",
+    "codigo": "7790040133488",
+    "descripcion": "GALLETITAS SONRISAS 108GR",
+    "precio": "1800.00",
+    "costo": "1400.00",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798126070931",
+    "codigo": "7798126070931",
+    "descripcion": "GAONA OBLEAS CLASICAS 100GR",
+    "precio": "1500.00",
+    "costo": "912.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790895006418",
+    "codigo": "7790895006418",
+    "descripcion": "GASEOSA COCA COLA 3 L",
+    "precio": "6500.00",
+    "costo": "4569.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895001000",
+    "codigo": "7790895001000",
+    "descripcion": "GASEOSA SPRITE 2,25 LTS",
+    "precio": "5500.00",
+    "costo": "4200.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813434016",
+    "codigo": "7791813434016",
+    "descripcion": "GATORADE 400ML",
+    "precio": "1200.00",
+    "costo": "617.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813434023",
+    "codigo": "7791813434023",
+    "descripcion": "GATORADE MORAS 400ML",
+    "precio": "1200.00",
+    "costo": "617.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7891151029438",
+    "codigo": "7891151029438",
+    "descripcion": "GOMITA GOMUTCHO",
+    "precio": "500.00",
+    "costo": "240.66",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798186033570",
+    "codigo": "7798186033570",
+    "descripcion": "GONGYS FRUTILLA 28GRS",
+    "precio": "700.00",
+    "costo": "390.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798186030593",
+    "codigo": "7798186030593",
+    "descripcion": "GONGYS VAINILLA 28GRS",
+    "precio": "700.00",
+    "costo": "390.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580111755",
+    "codigo": "7790580111755",
+    "descripcion": "GRAFFITI",
+    "precio": "2000.00",
+    "costo": "1434.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790580123741",
+    "codigo": "7790580123741",
+    "descripcion": "GRAFFITI BLANCO 45G",
+    "precio": "2000.00",
+    "costo": "1434.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7791290795143",
+    "codigo": "7791290795143",
+    "descripcion": "GRANBY JAB LIQ 800ML",
+    "precio": "2700.00",
+    "costo": "1929.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7798060460102",
+    "codigo": "7798060460102",
+    "descripcion": "GRASA BOVINA REFINADA INSUGNA 1KG",
+    "precio": "5500.00",
+    "costo": "4000.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793405000111",
+    "codigo": "7793405000111",
+    "descripcion": "GRASA VACUNA 500GRS",
+    "precio": "2000.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "4",
+    "codigo": "4",
+    "descripcion": "GRISINES",
+    "precio": "1500.00",
+    "costo": "1300.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "3",
+    "codigo": "3",
+    "descripcion": "GRISINES INTEGRALES",
+    "precio": "2000.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7791813403029",
+    "codigo": "7791813403029",
+    "descripcion": "H2OH LIMONADA 1.5L",
+    "precio": "2500.00",
+    "costo": "1632.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813403036",
+    "codigo": "7791813403036",
+    "descripcion": "H2OH MANZANA 1.5L",
+    "precio": "2500.00",
+    "costo": "1632.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813000723",
+    "codigo": "7791813000723",
+    "descripcion": "H2OH NARANJA 1.5L",
+    "precio": "2500.00",
+    "costo": "1632.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813403012",
+    "codigo": "7791813403012",
+    "descripcion": "H2OH POMELO ROSADO 1.5L",
+    "precio": "2500.00",
+    "costo": "1632.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791819000789",
+    "codigo": "7791819000789",
+    "descripcion": "HADIBELL NEGRO 1",
+    "precio": "3500.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791819000772",
+    "codigo": "7791819000772",
+    "descripcion": "HADIBELL NEGRO MUY AZULADO 0",
+    "precio": "3500.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791819000888",
+    "codigo": "7791819000888",
+    "descripcion": "HADIBELL RUBIO CENIZA 7/1",
+    "precio": "3500.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7796862000069",
+    "codigo": "7796862000069",
+    "descripcion": "HAMBURGUESAS FINEXCOR X2 160G",
+    "precio": "3000.00",
+    "costo": "2450.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Alimentos Congelados"
+  },
+  {
+    "id": "7796862191781",
+    "codigo": "7796862191781",
+    "descripcion": "HAMBURGUESAS FINEXCOR X4 100% C.VAC",
+    "precio": "6500.00",
+    "costo": "4680.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794612491013",
+    "codigo": "7794612491013",
+    "descripcion": "HAMLET BICOLOR 42G",
+    "precio": "1500.00",
+    "costo": "731.00",
+    "porcentajeIva": 0,
+    "stock": "16",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7792180139320",
+    "codigo": "7792180139320",
+    "descripcion": "HARINA CAÑUELAS 000",
+    "precio": "1100.00",
+    "costo": "760.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7798039790018",
+    "codigo": "7798039790018",
+    "descripcion": "HARINA DE MAIZ VILLAFAÑE",
+    "precio": "1500.00",
+    "costo": "910.00",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7797237000028",
+    "codigo": "7797237000028",
+    "descripcion": "HARINA FLORENCIA 000",
+    "precio": "1000.00",
+    "costo": "750.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7797237000080",
+    "codigo": "7797237000080",
+    "descripcion": "HARINA FLORENCIA 0000",
+    "precio": "1500.00",
+    "costo": "1050.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7797237001377",
+    "codigo": "7797237001377",
+    "descripcion": "HARINA FLORENCIA PIZZA CASERA",
+    "precio": "1400.00",
+    "costo": "950.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7792180140708",
+    "codigo": "7792180140708",
+    "descripcion": "HARINA LEUDANTE PUREZA",
+    "precio": "1700.00",
+    "costo": "1250.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792180004567",
+    "codigo": "7792180004567",
+    "descripcion": "HARINA PUREZA C/LEVADURA PIZZA CASERA 1 KG",
+    "precio": "2000.00",
+    "costo": "1450.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000006072",
+    "codigo": "7794000006072",
+    "descripcion": "HELLMANN´S MAYONESA 475G",
+    "precio": "3000.00",
+    "costo": "2100.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000006065",
+    "codigo": "7794000006065",
+    "descripcion": "HELLMANS MAYONESA CLASICA 250G",
+    "precio": "2000.00",
+    "costo": "1332.15",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "29",
+    "codigo": "29",
+    "descripcion": "HUEVOS N° 3",
+    "precio": "1000.00",
+    "costo": "533.40",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Otros Rubros"
+  },
+  {
+    "id": "7794626015007",
+    "codigo": "7794626015007",
+    "descripcion": "HUGGIES CLASSIC M",
+    "precio": "3500.00",
+    "costo": "2438.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7799175025859",
+    "codigo": "7799175025859",
+    "descripcion": "ILUMINARTE- GRANADA MED 200ML",
+    "precio": "6000.00",
+    "costo": "5000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7798321941210",
+    "codigo": "7798321941210",
+    "descripcion": "INTERELEC LAM. LED 9W",
+    "precio": "1500.00",
+    "costo": "1000.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798321942521",
+    "codigo": "7798321942521",
+    "descripcion": "INTERELEC LAMP. LED 12W",
+    "precio": "1800.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798321941265",
+    "codigo": "7798321941265",
+    "descripcion": "INTERELEC LAMP. LED 15W",
+    "precio": "2000.00",
+    "costo": "1350.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792389080850",
+    "codigo": "7792389080850",
+    "descripcion": "JAB LIQ BORITA 800ML",
+    "precio": "3500.00",
+    "costo": "2308.35",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7792389081086",
+    "codigo": "7792389081086",
+    "descripcion": "JAB LIQ ECODAILY BORITA 800CC",
+    "precio": "3000.00",
+    "costo": "1983.15",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7798124362229",
+    "codigo": "7798124362229",
+    "descripcion": "JAB LIQ ECOVITA 800ML",
+    "precio": "2000.00",
+    "costo": "1162.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7794218106960",
+    "codigo": "7794218106960",
+    "descripcion": "JAB ST TROPEZ FLORES 120GR",
+    "precio": "1000.00",
+    "costo": "640.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7794218106984",
+    "codigo": "7794218106984",
+    "descripcion": "JAB TROPEZ BR PRIMAVERA",
+    "precio": "1000.00",
+    "costo": "640.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7794218000176",
+    "codigo": "7794218000176",
+    "descripcion": "JAB TROPEZ BR PRIMAVERA X3",
+    "precio": "2500.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7794218000152",
+    "codigo": "7794218000152",
+    "descripcion": "JAB TROPEZ BRILLO Y LUZ X3",
+    "precio": "2500.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7794218107011",
+    "codigo": "7794218107011",
+    "descripcion": "JAB TROPEZ HIDR INTENSA 120G",
+    "precio": "1000.00",
+    "costo": "640.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7794218106564",
+    "codigo": "7794218106564",
+    "descripcion": "JAB TROPEZ HIDR INTENSA X3",
+    "precio": "2500.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790990001769",
+    "codigo": "7790990001769",
+    "descripcion": "JABON BLANCO ZORRO 150GR",
+    "precio": "1400.00",
+    "costo": "1012.40",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7794218106328",
+    "codigo": "7794218106328",
+    "descripcion": "JABON EN PAN ARGENTINO BLANCO 200 GRS",
+    "precio": "1200.00",
+    "costo": "800.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7798372610028",
+    "codigo": "7798372610028",
+    "descripcion": "JABON EN PAN BLANCO ASTRO",
+    "precio": "1000.00",
+    "costo": "700.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791290792067",
+    "codigo": "7791290792067",
+    "descripcion": "JABON EN POLVO ALA X 400G  LAVADO A MANO",
+    "precio": "2000.00",
+    "costo": "1400.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790990001370",
+    "codigo": "7790990001370",
+    "descripcion": "JABON LIMZUL 800G",
+    "precio": "2500.00",
+    "costo": "1757.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7798134070688",
+    "codigo": "7798134070688",
+    "descripcion": "JABON SIGNO BLANCO 150GR",
+    "precio": "1000.00",
+    "costo": "650.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7794218000046",
+    "codigo": "7794218000046",
+    "descripcion": "JABON ST. TROPEZ TOCADOR",
+    "precio": "2500.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "17",
+    "codigo": "17",
+    "descripcion": "JAMON COCIDO PAMP",
+    "precio": "15000.00",
+    "costo": "5300.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "7792389000698",
+    "codigo": "7792389000698",
+    "descripcion": "JARDIN ARPEGE DESINF 900ML",
+    "precio": "2000.00",
+    "costo": "1314.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7792389000711",
+    "codigo": "7792389000711",
+    "descripcion": "JARDIN JAZMIN DESINF 900ML",
+    "precio": "1800.00",
+    "costo": "1241.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7792389000728",
+    "codigo": "7792389000728",
+    "descripcion": "JARDIN LAVANDA DESINF 900ML",
+    "precio": "2000.00",
+    "costo": "1314.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790036000343",
+    "codigo": "7790036000343",
+    "descripcion": "JUGO BAGGIO DURAZNO 1 L",
+    "precio": "2500.00",
+    "costo": "1624.86",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790036000589",
+    "codigo": "7790036000589",
+    "descripcion": "JUGO BAGGIO DURAZNO 200 ML",
+    "precio": "800.00",
+    "costo": "439.11",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790036000466",
+    "codigo": "7790036000466",
+    "descripcion": "JUGO BAGGIO MULTIFRUTA 1 L",
+    "precio": "2500.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895641534",
+    "codigo": "7790895641534",
+    "descripcion": "JUGO CEPITA DURAZNO 1,5 LTS",
+    "precio": "4000.00",
+    "costo": "2590.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895000720",
+    "codigo": "7790895000720",
+    "descripcion": "JUGO CEPITA MANZANA 200 ML",
+    "precio": "1000.00",
+    "costo": "640.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7798000978025",
+    "codigo": "7798000978025",
+    "descripcion": "JUGO JUVIN V/SABORES",
+    "precio": "2000.00",
+    "costo": "1330.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791620187631",
+    "codigo": "7791620187631",
+    "descripcion": "KETCHUP FIESTA 220G",
+    "precio": "1800.00",
+    "costo": "1150.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000006188",
+    "codigo": "7794000006188",
+    "descripcion": "KETCHUP HELLMANN´S 250G",
+    "precio": "2500.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791866000381",
+    "codigo": "7791866000381",
+    "descripcion": "KETCHUP NATURA DOY PACK 250 GRS",
+    "precio": "2300.00",
+    "costo": "1633.52",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7841554000176",
+    "codigo": "7841554000176",
+    "descripcion": "KIT PARRILLERO",
+    "precio": "15000.00",
+    "costo": "12500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "22",
+    "codigo": "22",
+    "descripcion": "KIT- BEAUTY GOODS",
+    "precio": "3000.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7794000008588",
+    "codigo": "7794000008588",
+    "descripcion": "KNORR CALDO DE VERDURAS X2",
+    "precio": "1000.00",
+    "costo": "473.46",
+    "porcentajeIva": 0,
+    "stock": "22",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000008564",
+    "codigo": "7794000008564",
+    "descripcion": "KNORR CALDO SAB. CARNE X2",
+    "precio": "1000.00",
+    "costo": "473.50",
+    "porcentajeIva": 0,
+    "stock": "23",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000006362",
+    "codigo": "7794000006362",
+    "descripcion": "KNORR PURE DE PAPAS LISTO 125G",
+    "precio": "3000.00",
+    "costo": "2176.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000007987",
+    "codigo": "7794000007987",
+    "descripcion": "KNORR SALSA PIZZA 340G",
+    "precio": "1800.00",
+    "costo": "1308.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791664000453",
+    "codigo": "7791664000453",
+    "descripcion": "LA ITALIANA ÑOQUIS DE PAPA",
+    "precio": "3500.00",
+    "costo": "2566.74",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7794000007451",
+    "codigo": "7794000007451",
+    "descripcion": "LA ORIGINAL MAIZENA X220G",
+    "precio": "2800.00",
+    "costo": "2100.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7798141970353",
+    "codigo": "7798141970353",
+    "descripcion": "LA PROVIDENCIA TALLARIN 500G",
+    "precio": "1300.00",
+    "costo": "761.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792882029448",
+    "codigo": "7792882029448",
+    "descripcion": "LA QUESERA RALLADO 40GR",
+    "precio": "1000.00",
+    "costo": "595.00",
+    "porcentajeIva": 0,
+    "stock": "22",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798335250209",
+    "codigo": "7798335250209",
+    "descripcion": "LA REINA GRISINES 200G",
+    "precio": "2000.00",
+    "costo": "1327.30",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "pan",
+    "codigo": "7798335250087",
+    "descripcion": "LA REINA PAN LACTAL BLANCO",
+    "precio": "2500.00",
+    "costo": "1718.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7798335250094",
+    "codigo": "7798335250094",
+    "descripcion": "LA REINA PAN LACTAL SALVADO",
+    "precio": "2500.00",
+    "costo": "1718.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7790150310267",
+    "codigo": "7790150310267",
+    "descripcion": "LA VIRGINIA BOLDO",
+    "precio": "2500.00",
+    "costo": "1650.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150830444",
+    "codigo": "7790150830444",
+    "descripcion": "LA VIRGINIA CHOCOLINO 180G",
+    "precio": "2300.00",
+    "costo": "1875.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791625004940",
+    "codigo": "7791625004940",
+    "descripcion": "LANA DE ACERO 30G",
+    "precio": "1200.00",
+    "costo": "650.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7798170001028",
+    "codigo": "7798170001028",
+    "descripcion": "LAS ELVIRAS ESPECIAS",
+    "precio": "1400.00",
+    "costo": "1000.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Verdulería"
+  },
+  {
+    "id": "7790132098459",
+    "codigo": "7790132098459",
+    "descripcion": "LAVANDINA AYUDÍN 1 L",
+    "precio": "1500.00",
+    "costo": "920.30",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793699045959",
+    "codigo": "7793699045959",
+    "descripcion": "LAVANDINA SEDILE 1L",
+    "precio": "1200.00",
+    "costo": "780.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7792389080744",
+    "codigo": "7792389080744",
+    "descripcion": "LAVANDINA X5 1L",
+    "precio": "1500.00",
+    "costo": "1100.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793699045423",
+    "codigo": "7793699045423",
+    "descripcion": "LAVAVAJ  ESENC GLICERINA X750CM",
+    "precio": "1700.00",
+    "costo": "1150.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793699045454",
+    "codigo": "7793699045454",
+    "descripcion": "LAVAVAJ  ESENC LIMON X750CM",
+    "precio": "1700.00",
+    "costo": "1221.88",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793699045430",
+    "codigo": "7793699045430",
+    "descripcion": "LAVAVAJ ESENC ALOE VERA X750CM",
+    "precio": "1700.00",
+    "costo": "1150.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790310983614",
+    "codigo": "7790310983614",
+    "descripcion": "LAYS CLASICAS 20GR",
+    "precio": "1200.00",
+    "costo": "857.14",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7790310985236",
+    "codigo": "7790310985236",
+    "descripcion": "LAYS CLASICAS 40GR",
+    "precio": "2100.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7790310985458",
+    "codigo": "7790310985458",
+    "descripcion": "LAYS CLASICAS 85GR",
+    "precio": "3100.00",
+    "costo": "2214.30",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7798338290479",
+    "codigo": "7798338290479",
+    "descripcion": "LECHE APOSTOLES 1L",
+    "precio": "2500.00",
+    "costo": "1957.26",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7790036948294",
+    "codigo": "7790036948294",
+    "descripcion": "LECHE CHOCOLATADA BAGGIO LATTE 1 L",
+    "precio": "3000.00",
+    "costo": "2100.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798095171363",
+    "codigo": "7798095171363",
+    "descripcion": "LECHE EN POLVO PURISIMA 800GR",
+    "precio": "9800.00",
+    "costo": "8050.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798113470515",
+    "codigo": "7798113470515",
+    "descripcion": "LECHE EN POLVO SANTA ELENE 800GR",
+    "precio": "6500.00",
+    "costo": "4275.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798312320666",
+    "codigo": "7798312320666",
+    "descripcion": "LECHE EN PVO SANTA CLARA 800G",
+    "precio": "9500.00",
+    "costo": "7228.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "leche",
+    "codigo": "7790036001326",
+    "descripcion": "LECHE ENTERA BAGGIO LATTE 1 L",
+    "precio": "2000.00",
+    "costo": "1350.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798001562599",
+    "codigo": "7798001562599",
+    "descripcion": "LECHE ENTERA CREMIGAL 1L",
+    "precio": "2000.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798338291469",
+    "codigo": "7798338291469",
+    "descripcion": "LECHE LAS 3 NIÑAS",
+    "precio": "2300.00",
+    "costo": "1761.00",
+    "porcentajeIva": 0,
+    "stock": "23",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "8445290999559",
+    "codigo": "8445290999559",
+    "descripcion": "LECHE NIDO FORTIGROW 750GR",
+    "precio": "10000.00",
+    "costo": "8700.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798125300992",
+    "codigo": "7798125300992",
+    "descripcion": "LECHE REINA DEL PRADO 1L",
+    "precio": "2000.00",
+    "costo": "1675.00",
+    "porcentajeIva": 0,
+    "stock": "16",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793913001822",
+    "codigo": "7793913001822",
+    "descripcion": "LECHE TREGAR X 1L",
+    "precio": "2500.00",
+    "costo": "1728.00",
+    "porcentajeIva": 0,
+    "stock": "20",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798089020028",
+    "codigo": "7798089020028",
+    "descripcion": "LENTEJA GARRISON X400GR",
+    "precio": "2000.00",
+    "costo": "1490.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793360132445",
+    "codigo": "7793360132445",
+    "descripcion": "LENTEJAS LA CAMPAGNOLA 300G",
+    "precio": "2500.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798018850184",
+    "codigo": "7798018850184",
+    "descripcion": "LEV. LEVEX EN SOBRES 10G X2 UN",
+    "precio": "1500.00",
+    "costo": "950.00",
+    "porcentajeIva": 0,
+    "stock": "17",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790813110401",
+    "codigo": "7790813110401",
+    "descripcion": "LEVADURA CALSA 50 GRS",
+    "precio": "1000.00",
+    "costo": "527.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "77988058",
+    "codigo": "77988058",
+    "descripcion": "LEVADURA GOLONDRINA 50 GRS",
+    "precio": "1000.00",
+    "costo": "600.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7792410008105",
+    "codigo": "7792410008105",
+    "descripcion": "LICOR CUSENIER CHOCOLATE 700 CC",
+    "precio": "8500.00",
+    "costo": "6072.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7793253005313",
+    "codigo": "7793253005313",
+    "descripcion": "LIMPIADOR DE COCINA AYUDIN 450ML",
+    "precio": "3500.00",
+    "costo": "2300.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790070336361",
+    "codigo": "7790070336361",
+    "descripcion": "LUCC FID PENNE RIGATE 500G",
+    "precio": "1800.00",
+    "costo": "1310.40",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070336057",
+    "codigo": "7790070336057",
+    "descripcion": "LUCC FID VEG TIRABUZON",
+    "precio": "2200.00",
+    "costo": "1556.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070431493",
+    "codigo": "7790070431493",
+    "descripcion": "LUCCHETTI ARROZ 500G",
+    "precio": "1200.00",
+    "costo": "807.33",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070318343",
+    "codigo": "7790070318343",
+    "descripcion": "LUCCHETTI FIDEO CODITO 500G",
+    "precio": "1700.00",
+    "costo": "1235.25",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070433275",
+    "codigo": "7790070433275",
+    "descripcion": "LUCCHETTI PAN RALLADO 500G",
+    "precio": "1700.00",
+    "costo": "1175.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7790070562074",
+    "codigo": "7790070562074",
+    "descripcion": "LUCCHETTI PREMEZCLA CHIPA 400G",
+    "precio": "6000.00",
+    "costo": "4359.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791293050850",
+    "codigo": "7791293050850",
+    "descripcion": "LUX JAB LIRIO AZUL 120G",
+    "precio": "1500.00",
+    "costo": "1100.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790520995292",
+    "codigo": "7790520995292",
+    "descripcion": "LYSOFORM AIRE DE MONTAÑA",
+    "precio": "5000.00",
+    "costo": "3770.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798172410385",
+    "codigo": "7798172410385",
+    "descripcion": "MAFALDA BIZCOCHOS 150G",
+    "precio": "1500.00",
+    "costo": "960.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7797470128121",
+    "codigo": "7797470128121",
+    "descripcion": "MAIZ PISADO BCO MAROLIO X400G",
+    "precio": "2500.00",
+    "costo": "1900.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792665001074",
+    "codigo": "7792665001074",
+    "descripcion": "MAIZ PISINGALLO MONARCA 400GR",
+    "precio": "800.00",
+    "costo": "460.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "39",
+    "codigo": "39",
+    "descripcion": "MAMADERA DECORADA",
+    "precio": "5000.00",
+    "costo": "1650.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790040151901",
+    "codigo": "7790040151901",
+    "descripcion": "MANA ACARAMELADA 145GR",
+    "precio": "1500.00",
+    "costo": "1120.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040137813",
+    "codigo": "7790040137813",
+    "descripcion": "MANA CON LECHE 136GRS",
+    "precio": "1500.00",
+    "costo": "1120.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040137820",
+    "codigo": "7790040137820",
+    "descripcion": "MANA LIMON 136GR",
+    "precio": "1500.00",
+    "costo": "1120.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040133266",
+    "codigo": "7790040133266",
+    "descripcion": "MANA RELLENA DE FRUTILLA 152G",
+    "precio": "2000.00",
+    "costo": "1217.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040133235",
+    "codigo": "7790040133235",
+    "descripcion": "MANA RELLENA SABOR VAINILLA",
+    "precio": "2000.00",
+    "costo": "1217.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040137837",
+    "codigo": "7790040137837",
+    "descripcion": "MANA VAINILLA 136GR",
+    "precio": "1500.00",
+    "costo": "1120.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040137844",
+    "codigo": "7790040137844",
+    "descripcion": "MANA VAINILLA X3 408GR",
+    "precio": "3500.00",
+    "costo": "2900.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798113301246",
+    "codigo": "7798113301246",
+    "descripcion": "MANAOS COLA 3L",
+    "precio": "2300.00",
+    "costo": "1750.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7798113301253",
+    "codigo": "7798113301253",
+    "descripcion": "MANAOS LIMA LIMON 3L",
+    "precio": "2300.00",
+    "costo": "1750.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7798113301260",
+    "codigo": "7798113301260",
+    "descripcion": "MANAOS NARANJA 3L",
+    "precio": "2300.00",
+    "costo": "1750.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7798113301277",
+    "codigo": "7798113301277",
+    "descripcion": "MANAOS POMELO BLANCO 3L",
+    "precio": "2300.00",
+    "costo": "1750.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791058790663",
+    "codigo": "7791058790663",
+    "descripcion": "MANFREY YOGURCON TROZOS DE FRUTAS",
+    "precio": "1500.00",
+    "costo": "1043.51",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7790310983874",
+    "codigo": "7790310983874",
+    "descripcion": "MANI PELADO PEHUAMAR 75G",
+    "precio": "2200.00",
+    "costo": "1571.50",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790310987841",
+    "codigo": "7790310987841",
+    "descripcion": "MANI TUBULAR 40GR",
+    "precio": "1200.00",
+    "costo": "857.15",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7798001562919",
+    "codigo": "7798001562919",
+    "descripcion": "MANT CREMIGAL 100G",
+    "precio": "2000.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798001562902",
+    "codigo": "7798001562902",
+    "descripcion": "MANT CREMIGAL 200G",
+    "precio": "3500.00",
+    "costo": "2900.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798060850026",
+    "codigo": "7798060850026",
+    "descripcion": "MANTECA TONADITA 200 GRS",
+    "precio": "4000.00",
+    "costo": "2813.62",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7501009222729",
+    "codigo": "7501009222729",
+    "descripcion": "MAQUINA DE AFEITAR GILLETTE PRESTOBARBA ULTRAGRIP 1 UN",
+    "precio": "1600.00",
+    "costo": "1300.00",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7790411002092",
+    "codigo": "7790411002092",
+    "descripcion": "MATE COCIDO ROSAMONTE X25",
+    "precio": "1500.00",
+    "costo": "900.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790387800050",
+    "codigo": "7790387800050",
+    "descripcion": "MATE COCIDO TARAGUI",
+    "precio": "1600.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790387800081",
+    "codigo": "7790387800081",
+    "descripcion": "MATE COCIDO UNION  X25",
+    "precio": "1800.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790070412126",
+    "codigo": "7790070412126",
+    "descripcion": "MAXIMO ARROZ 00000 1KG",
+    "precio": "2000.00",
+    "costo": "1336.50",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791620002255",
+    "codigo": "7791620002255",
+    "descripcion": "MAYONESA DANICA FIESTA SACHET 100 GRS",
+    "precio": "1000.00",
+    "costo": "534.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791620187723",
+    "codigo": "7791620187723",
+    "descripcion": "MAYONESA D´FIESTA 250G",
+    "precio": "1500.00",
+    "costo": "950.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000006096",
+    "codigo": "7794000006096",
+    "descripcion": "MAYONESA HELLMANNS X120",
+    "precio": "1500.00",
+    "costo": "630.00",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791866001203",
+    "codigo": "7791866001203",
+    "descripcion": "MAYONESA NATURA 250",
+    "precio": "2000.00",
+    "costo": "1550.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791866001197",
+    "codigo": "7791866001197",
+    "descripcion": "MAYONESA NATURA SACHET 125 CC",
+    "precio": "1200.00",
+    "costo": "604.75",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7796862711736",
+    "codigo": "7796862711736",
+    "descripcion": "MEDALLONES X4 CARNE/SOJA SIERRAS ARG",
+    "precio": "3000.00",
+    "costo": "2024.14",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Alimentos Congelados"
+  },
+  {
+    "id": "7790522118033",
+    "codigo": "7790522118033",
+    "descripcion": "MENDIA RAV 4 QUESOS 1KG",
+    "precio": "7000.00",
+    "costo": "4864.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790522002493",
+    "codigo": "7790522002493",
+    "descripcion": "MENDIA RAV 4 QUESOS 500G",
+    "precio": "3800.00",
+    "costo": "2658.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790522002516",
+    "codigo": "7790522002516",
+    "descripcion": "MENDIA RAV JAM/MUZZ 500G",
+    "precio": "3800.00",
+    "costo": "2658.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790522118040",
+    "codigo": "7790522118040",
+    "descripcion": "MENDIA RAV JAM/MUZZA 1KG",
+    "precio": "7000.00",
+    "costo": "4864.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790522002875",
+    "codigo": "7790522002875",
+    "descripcion": "MENDIA RAV POLLO/VERD 1KG",
+    "precio": "7000.00",
+    "costo": "4864.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790522002509",
+    "codigo": "7790522002509",
+    "descripcion": "MENDIA RAV POLLO/VERD 500G",
+    "precio": "3800.00",
+    "costo": "2659.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790522002882",
+    "codigo": "7790522002882",
+    "descripcion": "MENDIA RAV RICOTA 1KG",
+    "precio": "7000.00",
+    "costo": "4864.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790522002851",
+    "codigo": "7790522002851",
+    "descripcion": "MENDIA RAV RICOTA 500G",
+    "precio": "3800.00",
+    "costo": "2690.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790522002769",
+    "codigo": "7790522002769",
+    "descripcion": "MENDIA ÑOQUIS DE PAPAS 500G",
+    "precio": "3400.00",
+    "costo": "2380.15",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790040139657",
+    "codigo": "7790040139657",
+    "descripcion": "MERENGADAS 88G",
+    "precio": "1700.00",
+    "costo": "1146.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "23",
+    "codigo": "23",
+    "descripcion": "MILANESA DE POLLO",
+    "precio": "7000.00",
+    "costo": "4700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7622202328947",
+    "codigo": "7622202328947",
+    "descripcion": "MILKA LECHE 55G",
+    "precio": "4000.00",
+    "costo": "2999.76",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7622210745132",
+    "codigo": "7622210745132",
+    "descripcion": "MILKA OREO",
+    "precio": "4000.00",
+    "costo": "2999.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "6970814406456",
+    "codigo": "6970814406456",
+    "descripcion": "MINI BROCHES DE MADERA 35MM X50",
+    "precio": "7500.00",
+    "costo": "6000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bazar"
+  },
+  {
+    "id": "7622201761288",
+    "codigo": "7622201761288",
+    "descripcion": "MINI OREO 50G",
+    "precio": "1300.00",
+    "costo": "809.06",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7622201740399",
+    "codigo": "7622201740399",
+    "descripcion": "MINI PEPITOS 50G",
+    "precio": "1300.00",
+    "costo": "777.82",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798335250063",
+    "codigo": "7798335250063",
+    "descripcion": "MINI PIZZETAS LA REINA",
+    "precio": "2000.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7791813423317",
+    "codigo": "7791813423317",
+    "descripcion": "MIRINDA MANZANA 2.25L",
+    "precio": "2500.00",
+    "costo": "1549.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813420323",
+    "codigo": "7791813420323",
+    "descripcion": "MIRINDA MANZANA 500ML",
+    "precio": "2000.00",
+    "costo": "1196.20",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813333029",
+    "codigo": "7791813333029",
+    "descripcion": "MIRINDA NARANJA LATA 354ML",
+    "precio": "2000.00",
+    "costo": "1196.20",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790580602000",
+    "codigo": "7790580602000",
+    "descripcion": "MOGUL GOMITAS FRUTALES 35G",
+    "precio": "700.00",
+    "costo": "469.60",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790263119658",
+    "codigo": "7790263119658",
+    "descripcion": "MOLINO NATURAL 10 SEMILLAS 231G",
+    "precio": "2700.00",
+    "costo": "1915.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790263119641",
+    "codigo": "7790263119641",
+    "descripcion": "MOLINO NATURAL AVENA/PASAS 232G",
+    "precio": "2700.00",
+    "costo": "1915.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798422620014",
+    "codigo": "7798422620014",
+    "descripcion": "MONSTER ENERGY GREEN 473 ML",
+    "precio": "3500.00",
+    "costo": "2900.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7798422620298",
+    "codigo": "7798422620298",
+    "descripcion": "MONSTER ENERGY ULTRA PEACHY KEEN 473ML",
+    "precio": "3500.00",
+    "costo": "2900.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "34",
+    "codigo": "34",
+    "descripcion": "MORCILLA LARIO X4 UN",
+    "precio": "4500.00",
+    "costo": "3193.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "30",
+    "codigo": "30",
+    "descripcion": "MORCILLA PIAMONTESA X4 UNID",
+    "precio": "3500.00",
+    "costo": "2380.47",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "19",
+    "codigo": "19",
+    "descripcion": "MORTADELA PIAMONTESA",
+    "precio": "14000.00",
+    "costo": "7350.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "24",
+    "codigo": "24",
+    "descripcion": "MUSLO",
+    "precio": "3500.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7793913013634",
+    "codigo": "7793913013634",
+    "descripcion": "NAUFCHATEL SALAME TREGAR 180GR",
+    "precio": "2500.00",
+    "costo": "1908.23",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793913013610",
+    "codigo": "7793913013610",
+    "descripcion": "NEUFCHATEL CLASICO TREGAR 190GR",
+    "precio": "2500.00",
+    "costo": "1908.25",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793913013627",
+    "codigo": "7793913013627",
+    "descripcion": "NEUFCHATEL JAMON TREGAR 180GR",
+    "precio": "2500.00",
+    "costo": "1908.25",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793913013641",
+    "codigo": "7793913013641",
+    "descripcion": "NEUFCHATEL LIGHT TREGAR 180GR",
+    "precio": "2500.00",
+    "costo": "1908.25",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "12",
+    "codigo": "12",
+    "descripcion": "NINO- DISCOS P/FREIR",
+    "precio": "1100.00",
+    "costo": "820.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "11",
+    "codigo": "11",
+    "descripcion": "NINO- DISCOS P/HORNO",
+    "precio": "1200.00",
+    "costo": "820.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "13",
+    "codigo": "13",
+    "descripcion": "NINO- TAPA P/PASTELITO",
+    "precio": "1300.00",
+    "costo": "820.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7795184132403",
+    "codigo": "7795184132403",
+    "descripcion": "NOEL ARVEJAS 300G",
+    "precio": "1300.00",
+    "costo": "906.34",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7795184132434",
+    "codigo": "7795184132434",
+    "descripcion": "NOEL CHOCLO AM ENTERO 300G",
+    "precio": "2000.00",
+    "costo": "1290.52",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792600000896",
+    "codigo": "7792600000896",
+    "descripcion": "NOTABLE HARINA 0000 1KG",
+    "precio": "1600.00",
+    "costo": "1150.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793123160289",
+    "codigo": "7793123160289",
+    "descripcion": "OBLEAS OBLITA DDL 100GR",
+    "precio": "1000.00",
+    "costo": "720.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798126072232",
+    "codigo": "7798126072232",
+    "descripcion": "OBLEAS SINFONIA FRUTILLA 100GR",
+    "precio": "1500.00",
+    "costo": "912.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7793209000331",
+    "codigo": "7793209000331",
+    "descripcion": "OBLEAS TYM FRUTILLA 100G",
+    "precio": "1000.00",
+    "costo": "630.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7793209000348",
+    "codigo": "7793209000348",
+    "descripcion": "OBLEAS TYM VAINILLA 100G",
+    "precio": "1000.00",
+    "costo": "630.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7793123013431",
+    "codigo": "7793123013431",
+    "descripcion": "OBLITA FRITILLA 50G",
+    "precio": "600.00",
+    "costo": "390.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7793123160012",
+    "codigo": "7793123160012",
+    "descripcion": "OBLITA VAINILLA 50GR",
+    "precio": "600.00",
+    "costo": "390.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "44",
+    "codigo": "44",
+    "descripcion": "OCHSI CON QUESO X1KG",
+    "precio": "16000.00",
+    "costo": "13500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7790150540183",
+    "codigo": "7790150540183",
+    "descripcion": "OREGANO ALICANTE X25GR",
+    "precio": "1700.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Verdulería"
+  },
+  {
+    "id": "7622202830020",
+    "codigo": "7622202830020",
+    "descripcion": "OREO BTS 118GR",
+    "precio": "2300.00",
+    "costo": "1651.29",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7622202049057",
+    "codigo": "7622202049057",
+    "descripcion": "OREO FRUTILLA 118GR",
+    "precio": "2300.00",
+    "costo": "1651.29",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798241799144",
+    "codigo": "7798241799144",
+    "descripcion": "PALA CON CABO PLAST Y GOMA",
+    "precio": "8000.00",
+    "costo": "5000.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "1",
+    "codigo": "1",
+    "descripcion": "PAN",
+    "precio": "1000.00",
+    "costo": "750.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7793890259322",
+    "codigo": "7793890259322",
+    "descripcion": "PAN BRIOSH DE PANCHO X6",
+    "precio": "2000.00",
+    "costo": "973.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "6",
+    "codigo": "6",
+    "descripcion": "PAN DE HAMBUERQUESA X6",
+    "precio": "2000.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "5",
+    "codigo": "5",
+    "descripcion": "PAN DE HAMBURGUESA X 4",
+    "precio": "1500.00",
+    "costo": "800.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7798335250032",
+    "codigo": "7798335250032",
+    "descripcion": "PAN DE PANCHO LA REINA X6",
+    "precio": "1600.00",
+    "costo": "1124.50",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7792082091757",
+    "codigo": "7792082091757",
+    "descripcion": "PAN DULCE COLONIAL",
+    "precio": "2500.00",
+    "costo": "1250.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7793890259070",
+    "codigo": "7793890259070",
+    "descripcion": "PAN HAMB. BIMBO X4",
+    "precio": "2500.00",
+    "costo": "1945.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7793890261233",
+    "codigo": "7793890261233",
+    "descripcion": "PAN LACTAL BCO BIMBO",
+    "precio": "4000.00",
+    "costo": "2894.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7798335250162",
+    "codigo": "7798335250162",
+    "descripcion": "PAN P/HAMBUR LA REINA X4",
+    "precio": "1500.00",
+    "costo": "1054.30",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "14",
+    "codigo": "14",
+    "descripcion": "PAN P/HAMBURGUESA X6",
+    "precio": "2000.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7790070433237",
+    "codigo": "7790070433237",
+    "descripcion": "PAN RALLADO AJO Y PEREJIL X500G",
+    "precio": "2500.00",
+    "costo": "1940.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7506309803784",
+    "codigo": "7506309803784",
+    "descripcion": "PANTENE ACOND. 10ML",
+    "precio": "1000.00",
+    "costo": "600.00",
+    "porcentajeIva": 0,
+    "stock": "14",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7791664000477",
+    "codigo": "7791664000477",
+    "descripcion": "PANZOTTIS LA ITALIANA POLLO Y VERDURA 700 GRS",
+    "precio": "4000.00",
+    "costo": "3300.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7793344904150",
+    "codigo": "7793344904150",
+    "descripcion": "PAP HIG ELEGANTE S/HOJA  6X30M",
+    "precio": "2800.00",
+    "costo": "2300.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793344904143",
+    "codigo": "7793344904143",
+    "descripcion": "PAP HIG ELEGANTE S/HOJA 4X30M",
+    "precio": "2300.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790310987742",
+    "codigo": "7790310987742",
+    "descripcion": "PAPAS ACANALADAS PEHUAMAR",
+    "precio": "2500.00",
+    "costo": "1785.72",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7790040153165",
+    "codigo": "7790040153165",
+    "descripcion": "PAPAS SALADIX ORIGINAL 80G",
+    "precio": "2500.00",
+    "costo": "1862.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "8",
+    "codigo": "8",
+    "descripcion": "PASCUALINAS",
+    "precio": "1800.00",
+    "costo": "1300.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "45",
+    "codigo": "45",
+    "descripcion": "PASCUALINAS LA REINA S/HOJ",
+    "precio": "1500.00",
+    "costo": "900.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790250044239",
+    "codigo": "7790250044239",
+    "descripcion": "PAÑAL BABYSEC ULTRA SEC XG 8UN",
+    "precio": "4000.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Mamás y Bebés"
+  },
+  {
+    "id": "7790250044246",
+    "codigo": "7790250044246",
+    "descripcion": "PAÑAL BABYSEC ULTRA SEC XXG 8UN",
+    "precio": "4300.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Mamás y Bebés"
+  },
+  {
+    "id": "7790250040798",
+    "codigo": "7790250040798",
+    "descripcion": "PAÑAL BABYSEC ULTRA SOFT XXG 8UN",
+    "precio": "4300.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Mamás y Bebés"
+  },
+  {
+    "id": "7790064104983",
+    "codigo": "7790064104983",
+    "descripcion": "PAÑAL ESTRELLA JUNIOR X50",
+    "precio": "25000.00",
+    "costo": "17891.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790064005525",
+    "codigo": "7790064005525",
+    "descripcion": "PAÑAL ESTRELLA XXG X50",
+    "precio": "24000.00",
+    "costo": "17891.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "27",
+    "codigo": "27",
+    "descripcion": "PECHITO DE CERDO GRANALIER 1KG",
+    "precio": "10000.00",
+    "costo": "7607.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7790310984352",
+    "codigo": "7790310984352",
+    "descripcion": "PEHUAMAR PALITOS SALADOS",
+    "precio": "2400.00",
+    "costo": "1714.29",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Kiosco"
+  },
+  {
+    "id": "7622201735906",
+    "codigo": "7622201735906",
+    "descripcion": "PEPITOS CLASICAS 119G",
+    "precio": "2500.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7791813888468",
+    "codigo": "7791813888468",
+    "descripcion": "PEPSI 2L",
+    "precio": "3000.00",
+    "costo": "2432.30",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813828372",
+    "codigo": "7791813828372",
+    "descripcion": "PEPSI BLACK 354 ML",
+    "precio": "2000.00",
+    "costo": "1069.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791813888376",
+    "codigo": "7791813888376",
+    "descripcion": "PEPSI LATA 354ML",
+    "precio": "2000.00",
+    "costo": "1069.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "31",
+    "codigo": "31",
+    "descripcion": "PERFILADORES X3",
+    "precio": "4000.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Panadería"
+  },
+  {
+    "id": "7794763000133",
+    "codigo": "7794763000133",
+    "descripcion": "PH BARBARO 50M",
+    "precio": "1000.00",
+    "costo": "500.00",
+    "porcentajeIva": 0,
+    "stock": "48",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7896053410346",
+    "codigo": "7896053410346",
+    "descripcion": "PH FOFINHO FRAGANCIA BEBE 4X30",
+    "precio": "1700.00",
+    "costo": "1151.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7896053410025",
+    "codigo": "7896053410025",
+    "descripcion": "PH FOFINHO NEUTRO 4X30",
+    "precio": "1700.00",
+    "costo": "1151.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798130889178",
+    "codigo": "7798130889178",
+    "descripcion": "PH VUAL X50 MTS",
+    "precio": "1000.00",
+    "costo": "542.00",
+    "porcentajeIva": 0,
+    "stock": "19",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7790920008707",
+    "codigo": "7790920008707",
+    "descripcion": "PICADILLO DE CARNE X 90G",
+    "precio": "1000.00",
+    "costo": "625.00",
+    "porcentajeIva": 0,
+    "stock": "18",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "6820241145797",
+    "codigo": "6820241145797",
+    "descripcion": "PILAS AA HM POWER",
+    "precio": "2000.00",
+    "costo": "434.00",
+    "porcentajeIva": 0,
+    "stock": "29",
+    "rubro": "Varios"
+  },
+  {
+    "id": "6820241145803",
+    "codigo": "6820241145803",
+    "descripcion": "PILAS AAA HM POWER",
+    "precio": "1500.00",
+    "costo": "234.00",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Varios"
+  },
+  {
+    "id": "7798125300367",
+    "codigo": "7798125300367",
+    "descripcion": "PLENTY LECHE ENTERA 1L",
+    "precio": "2000.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793253003548",
+    "codigo": "7793253003548",
+    "descripcion": "POETT FLORES DE PRIMAVERA 900ML",
+    "precio": "2200.00",
+    "costo": "1650.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793253003500",
+    "codigo": "7793253003500",
+    "descripcion": "POETT FRESCURA DE LAVANDA 900ML",
+    "precio": "2300.00",
+    "costo": "1650.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793253001667",
+    "codigo": "7793253001667",
+    "descripcion": "POETT PASTILLA LAVANDA 25G",
+    "precio": "2500.00",
+    "costo": "1821.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793253001674",
+    "codigo": "7793253001674",
+    "descripcion": "POETT PASTLLA BRISA POLAR 25G",
+    "precio": "2500.00",
+    "costo": "1821.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790580138721",
+    "codigo": "7790580138721",
+    "descripcion": "POLENTA ARCOR PRESTO PRONTA X 730G",
+    "precio": "2400.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790580138738",
+    "codigo": "7790580138738",
+    "descripcion": "POLENTA PRESTO PRONTA ARCOR X 490G",
+    "precio": "1700.00",
+    "costo": "1450.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "53",
+    "codigo": "53",
+    "descripcion": "POLLO ENTERO POR KG",
+    "precio": "4000.00",
+    "costo": "2700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7790040139169",
+    "codigo": "7790040139169",
+    "descripcion": "POLVORITA X 81G",
+    "precio": "1000.00",
+    "costo": "500.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040139183",
+    "codigo": "7790040139183",
+    "descripcion": "POLVORITA X81G",
+    "precio": "1000.00",
+    "costo": "500.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790895641183",
+    "codigo": "7790895641183",
+    "descripcion": "POWERADE FRUTAS TROPICALES 500 ML",
+    "precio": "3000.00",
+    "costo": "2341.30",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895640025",
+    "codigo": "7790895640025",
+    "descripcion": "POWERADE MOUNTAIN BLAST 500 ML",
+    "precio": "3000.00",
+    "costo": "2341.30",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7",
+    "codigo": "7",
+    "descripcion": "PREPIZZA",
+    "precio": "1500.00",
+    "costo": "923.08",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790770602285",
+    "codigo": "7790770602285",
+    "descripcion": "PROT DIARIO CALIPSO X20",
+    "precio": "1300.00",
+    "costo": "900.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790770602964",
+    "codigo": "7790770602964",
+    "descripcion": "PROT DIARIO NOS X20",
+    "precio": "1500.00",
+    "costo": "1040.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790250097495",
+    "codigo": "7790250097495",
+    "descripcion": "PROT DIARIOS LADYSOFT X20",
+    "precio": "2000.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790150570180",
+    "codigo": "7790150570180",
+    "descripcion": "PROVENZAL ALICANTE 25G",
+    "precio": "1500.00",
+    "costo": "1050.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Verdulería"
+  },
+  {
+    "id": "7790036973357",
+    "codigo": "7790036973357",
+    "descripcion": "PURE DE TOMATE 7 DIAS 530 GRS",
+    "precio": "1300.00",
+    "costo": "842.00",
+    "porcentajeIva": 0,
+    "stock": "11",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790036567440",
+    "codigo": "7790036567440",
+    "descripcion": "PURE DE TOMATE DE LA HUERTA 530 GRS",
+    "precio": "1500.00",
+    "costo": "1000.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790036973036",
+    "codigo": "7790036973036",
+    "descripcion": "PURE DE TOMATE LA HUERTA 210 GRS",
+    "precio": "800.00",
+    "costo": "486.40",
+    "porcentajeIva": 0,
+    "stock": "21",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7797470199121",
+    "codigo": "7797470199121",
+    "descripcion": "PURE DE TOMATES MAROLIO 520GR",
+    "precio": "1000.00",
+    "costo": "686.22",
+    "porcentajeIva": 0,
+    "stock": "19",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "18",
+    "codigo": "18",
+    "descripcion": "QUESO BARRA NOAL",
+    "precio": "18000.00",
+    "costo": "10500.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "7793913013207",
+    "codigo": "7793913013207",
+    "descripcion": "QUESO CREMA CLASICO TREGAR 190G",
+    "precio": "3500.00",
+    "costo": "2311.42",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "20",
+    "codigo": "20",
+    "descripcion": "QUESO CREMOSO LA PAULINA",
+    "precio": "3000.00",
+    "costo": "1821.38",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "7793913000139",
+    "codigo": "7793913000139",
+    "descripcion": "QUESO RALLADO TREGAR X40G",
+    "precio": "1800.00",
+    "costo": "1302.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790520028655",
+    "codigo": "7790520028655",
+    "descripcion": "RAID MATA MOSCAS/MOSQ Y ZANCUDOS",
+    "precio": "9800.00",
+    "costo": "6900.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Jardinería"
+  },
+  {
+    "id": "7790580149963",
+    "codigo": "7790580149963",
+    "descripcion": "RAMEN SABOR A POLLO 70GR",
+    "precio": "1700.00",
+    "costo": "1165.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790580149970",
+    "codigo": "7790580149970",
+    "descripcion": "RAMEN SABOR CARNE 70GR",
+    "precio": "1700.00",
+    "costo": "1165.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798397444271",
+    "codigo": "7798397444271",
+    "descripcion": "RASTA ARGEN-TRICO 100G",
+    "precio": "2500.00",
+    "costo": "1700.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790070621870",
+    "codigo": "7790070621870",
+    "descripcion": "RAV JAMON Y MUZZA SALTEÑA",
+    "precio": "4500.00",
+    "costo": "3600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7790070621856",
+    "codigo": "7790070621856",
+    "descripcion": "RAV POLLO Y ESP SALTEÑA",
+    "precio": "4500.00",
+    "costo": "3600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7791664000644",
+    "codigo": "7791664000644",
+    "descripcion": "RAVIOLES LA ITALIANA POLLO/VERDURA 500 GRS",
+    "precio": "3500.00",
+    "costo": "2700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7791293050966",
+    "codigo": "7791293050966",
+    "descripcion": "REXONA JAB SENSIBLE 120G",
+    "precio": "1500.00",
+    "costo": "1129.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7896053470180",
+    "codigo": "7896053470180",
+    "descripcion": "ROLLO COCINA BEST",
+    "precio": "2000.00",
+    "costo": "1284.30",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793344904013",
+    "codigo": "7793344904013",
+    "descripcion": "ROLLOS DE COCINA ELEGANTE X3",
+    "precio": "2500.00",
+    "costo": "1650.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790936000030",
+    "codigo": "7790936000030",
+    "descripcion": "SAL FINA TRESAL X 500 GR",
+    "precio": "700.00",
+    "costo": "450.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790936000054",
+    "codigo": "7790936000054",
+    "descripcion": "SAL TRESAL ENTREFINA X 1 KG",
+    "precio": "1200.00",
+    "costo": "750.00",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790040153158",
+    "codigo": "7790040153158",
+    "descripcion": "SALADIX PAPAS FRITAS CHEDDAR 72G",
+    "precio": "2500.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790040153141",
+    "codigo": "7790040153141",
+    "descripcion": "SALADIX PAPAS FRITAS CYCEB 72G",
+    "precio": "2500.00",
+    "costo": "1500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "21",
+    "codigo": "21",
+    "descripcion": "SALAME MILAN PIAMONTESA",
+    "precio": "30000.00",
+    "costo": "17600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "32",
+    "codigo": "32",
+    "descripcion": "SALAMIN 66 PICADO FINO",
+    "precio": "5000.00",
+    "costo": "2788.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "37",
+    "codigo": "37",
+    "descripcion": "SALAMIN MINI PIAMONTESA PF",
+    "precio": "5000.00",
+    "costo": "3590.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "47",
+    "codigo": "47",
+    "descripcion": "SALAMIN P/F GRANALIER",
+    "precio": "4000.00",
+    "costo": "2466.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "7793040096593",
+    "codigo": "7793040096593",
+    "descripcion": "SALCHICHA FRIAR 190 G",
+    "precio": "1800.00",
+    "costo": "1213.39",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "7790079000317",
+    "codigo": "7790079000317",
+    "descripcion": "SALCHICHAS FELA 6 UN",
+    "precio": "2000.00",
+    "costo": "1434.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "7793893001966",
+    "codigo": "7793893001966",
+    "descripcion": "SALCHICHAS PANCHIN 6 U",
+    "precio": "1600.00",
+    "costo": "1100.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "7790580133153",
+    "codigo": "7790580133153",
+    "descripcion": "SALSA LISTA PIZZA ARCOR 340G",
+    "precio": "1500.00",
+    "costo": "1022.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790040136250",
+    "codigo": "7790040136250",
+    "descripcion": "SALVADO BAGLEY 169GR",
+    "precio": "1700.00",
+    "costo": "1181.50",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798184680110",
+    "codigo": "7798184680110",
+    "descripcion": "SAPHIRUS COCO VAI 250ML",
+    "precio": "7000.00",
+    "costo": "6000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7792750001675",
+    "codigo": "7792750001675",
+    "descripcion": "SARDINAS MARBELLA AC/VEG",
+    "precio": "3000.00",
+    "costo": "2100.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798121880153",
+    "codigo": "7798121880153",
+    "descripcion": "SARDINAS SAN REMO AC VEG/AGUA 125GR",
+    "precio": "3000.00",
+    "costo": "2100.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7794000006478",
+    "codigo": "7794000006478",
+    "descripcion": "SAVORA MOSTAZA 250G",
+    "precio": "2000.00",
+    "costo": "1363.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798241799311",
+    "codigo": "7798241799311",
+    "descripcion": "SECADOR PISO GAETA PREMIUN 41CM",
+    "precio": "3500.00",
+    "costo": "2400.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7792758013038",
+    "codigo": "7792758013038",
+    "descripcion": "SECCO NARANJA 3L",
+    "precio": "2500.00",
+    "costo": "1716.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7792758012291",
+    "codigo": "7792758012291",
+    "descripcion": "SECCO X2.25L MULTIFRUTAL",
+    "precio": "2000.00",
+    "costo": "1484.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7793699045737",
+    "codigo": "7793699045737",
+    "descripcion": "SEDILE DESIN. CHERRY 900ML",
+    "precio": "1500.00",
+    "costo": "880.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793699045706",
+    "codigo": "7793699045706",
+    "descripcion": "SEDILE DESIN. PINO 900ML",
+    "precio": "1500.00",
+    "costo": "880.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793699001320",
+    "codigo": "7793699001320",
+    "descripcion": "SEDILE JAB LIQUIDO 800ML BOT",
+    "precio": "2000.00",
+    "costo": "1425.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793699001931",
+    "codigo": "7793699001931",
+    "descripcion": "SEDILE PRIMAVERA 900ML",
+    "precio": "1500.00",
+    "costo": "880.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790040704800",
+    "codigo": "7790040704800",
+    "descripcion": "SERRANAS SANDWICH 112 GRS",
+    "precio": "1000.00",
+    "costo": "750.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040143609",
+    "codigo": "7790040143609",
+    "descripcion": "SERRANITAS ARCOR 105GR",
+    "precio": "700.00",
+    "costo": "429.63",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040143616",
+    "codigo": "7790040143616",
+    "descripcion": "SERRANITAS ARCOR 315GR",
+    "precio": "2000.00",
+    "costo": "1361.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7791813777021",
+    "codigo": "7791813777021",
+    "descripcion": "SEVEN-UP 354 ML",
+    "precio": "1500.00",
+    "costo": "1069.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7791293045658",
+    "codigo": "7791293045658",
+    "descripcion": "SHAMPOO SEDAL CERAMIDAS 190 ML",
+    "precio": "3500.00",
+    "costo": "2300.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791293045665",
+    "codigo": "7791293045665",
+    "descripcion": "SHAMPOO SEDAL X 190ML",
+    "precio": "3500.00",
+    "costo": "2650.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "77983992",
+    "codigo": "77983992",
+    "descripcion": "SHOT BLACO",
+    "precio": "1500.00",
+    "costo": "1037.66",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798126071273",
+    "codigo": "7798126071273",
+    "descripcion": "SINFONIA OBLEAS DE CHOCOLATE",
+    "precio": "1500.00",
+    "costo": "912.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798126072256",
+    "codigo": "7798126072256",
+    "descripcion": "SINFONIA OBLEAS SAB. DOS CHOCOLATES",
+    "precio": "1500.00",
+    "costo": "912.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7791290792814",
+    "codigo": "7791290792814",
+    "descripcion": "SKIP EXPERT JAB LIQ 800ML",
+    "precio": "4500.00",
+    "costo": "3130.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791200200859",
+    "codigo": "7791200200859",
+    "descripcion": "SKYY INF PINEAPPLE 700ML",
+    "precio": "12000.00",
+    "costo": "8865.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7791200200873",
+    "codigo": "7791200200873",
+    "descripcion": "SKYY INFUSION APRICOT X 700ML",
+    "precio": "12000.00",
+    "costo": "8800.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791200200866",
+    "codigo": "7791200200866",
+    "descripcion": "SKYY INFUSIONS X700ML",
+    "precio": "12000.00",
+    "costo": "8865.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7791200200835",
+    "codigo": "7791200200835",
+    "descripcion": "SKYY INFUSON COSMIC X 700ML",
+    "precio": "12000.00",
+    "costo": "8295.00",
+    "porcentajeIva": 0,
+    "stock": "16",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7791200200828",
+    "codigo": "7791200200828",
+    "descripcion": "SKYY VODKA 700ML",
+    "precio": "10500.00",
+    "costo": "7982.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7791120104886",
+    "codigo": "7791120104886",
+    "descripcion": "SNACKS DE QUESO 80GR",
+    "precio": "2500.00",
+    "costo": "1785.00",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798113301529",
+    "codigo": "7798113301529",
+    "descripcion": "SODA MANAOS 2 LTS",
+    "precio": "2500.00",
+    "costo": "1900.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790150441343",
+    "codigo": "7790150441343",
+    "descripcion": "SOPA CAMPESTRE FID Y VEG",
+    "precio": "2500.00",
+    "costo": "1712.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150440131",
+    "codigo": "7790150440131",
+    "descripcion": "SOPA CREMA DE CHOCLO",
+    "precio": "2500.00",
+    "costo": "1712.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150440193",
+    "codigo": "7790150440193",
+    "descripcion": "SOPA CREMA DE ZAPALLO",
+    "precio": "2500.00",
+    "costo": "1712.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150441282",
+    "codigo": "7790150441282",
+    "descripcion": "SOPA DE ARROZ CON P. Y VEG",
+    "precio": "2500.00",
+    "costo": "1712.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798119220183",
+    "codigo": "7798119220183",
+    "descripcion": "SPEED 473ML",
+    "precio": "3000.00",
+    "costo": "2100.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790895062964",
+    "codigo": "7790895062964",
+    "descripcion": "SPRITE RETORNABLE 1.5L",
+    "precio": "3200.00",
+    "costo": "2250.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7794218106533",
+    "codigo": "7794218106533",
+    "descripcion": "ST TROPEZ JAB TOCADOR 125GR",
+    "precio": "1000.00",
+    "costo": "640.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7794218000190",
+    "codigo": "7794218000190",
+    "descripcion": "ST TROPEZ JAB TOCADOR X3",
+    "precio": "2500.00",
+    "costo": "1570.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7794218106540",
+    "codigo": "7794218106540",
+    "descripcion": "ST TROPEZ JAB TOCADOR X3",
+    "precio": "2500.00",
+    "costo": "1570.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7792798010578",
+    "codigo": "7792798010578",
+    "descripcion": "STELLA ARTOIS 330CC",
+    "precio": "4000.00",
+    "costo": "2741.50",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792798010615",
+    "codigo": "7792798010615",
+    "descripcion": "STELLA ARTOIS 473CC",
+    "precio": "3700.00",
+    "costo": "2817.50",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792389079373",
+    "codigo": "7792389079373",
+    "descripcion": "SUAV BORITA AR. BEBE 900ML",
+    "precio": "3500.00",
+    "costo": "2650.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7792389000452",
+    "codigo": "7792389000452",
+    "descripcion": "SUAV BORITA CD MAMA 900ML",
+    "precio": "3500.00",
+    "costo": "2650.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7792389021501",
+    "codigo": "7792389021501",
+    "descripcion": "SUAV BORITA TRAD 900ML",
+    "precio": "3000.00",
+    "costo": "1700.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7791293050423",
+    "codigo": "7791293050423",
+    "descripcion": "SUAVE AC. CERAMIDAS 930ML",
+    "precio": "5000.00",
+    "costo": "3700.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791293050454",
+    "codigo": "7791293050454",
+    "descripcion": "SUAVE ACOND BOMBA DELICIOSA X930ML",
+    "precio": "5000.00",
+    "costo": "3700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791293050430",
+    "codigo": "7791293050430",
+    "descripcion": "SUAVE ACOND BOMBA JAZMIN X930ML",
+    "precio": "5000.00",
+    "costo": "3700.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791293050447",
+    "codigo": "7791293050447",
+    "descripcion": "SUAVE ACONDICIONADOR X 930ML",
+    "precio": "5000.00",
+    "costo": "3700.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791293050409",
+    "codigo": "7791293050409",
+    "descripcion": "SUAVE SAMPOO X 930ML",
+    "precio": "5000.00",
+    "costo": "3700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791293050416",
+    "codigo": "7791293050416",
+    "descripcion": "SUAVE SHAM. BOMBA DELICIOSA X930ML",
+    "precio": "5000.00",
+    "costo": "3700.00",
+    "porcentajeIva": 21,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791293050393",
+    "codigo": "7791293050393",
+    "descripcion": "SUAVE SHAMPOO BOMBA JAZMIN X 930ML",
+    "precio": "5000.00",
+    "costo": "3699.87",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "48",
+    "codigo": "48",
+    "descripcion": "SUPREMA",
+    "precio": "11000.00",
+    "costo": "7000.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "7790040147720",
+    "codigo": "7790040147720",
+    "descripcion": "SURTIDO BAGLEY 400GRS",
+    "precio": "3800.00",
+    "costo": "2695.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790250057093",
+    "codigo": "7790250057093",
+    "descripcion": "SUSSEX ROLLO COCINA X3",
+    "precio": "3000.00",
+    "costo": "2085.17",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798342711427",
+    "codigo": "7798342711427",
+    "descripcion": "SY P   ATUN DEMENUZADO EN ACEITE Y AGUA X 140G",
+    "precio": "2000.00",
+    "costo": "1400.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798342712110",
+    "codigo": "7798342712110",
+    "descripcion": "SYP CHOCLO AMARRILLO EN GRANO",
+    "precio": "1600.00",
+    "costo": "1200.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7798342717191",
+    "codigo": "7798342717191",
+    "descripcion": "SYP CHOCLO AMARILLO CREMOSO X300G",
+    "precio": "1200.00",
+    "costo": "900.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798335250131",
+    "codigo": "7798335250131",
+    "descripcion": "TAPAS EMP FREIR LA REYNA",
+    "precio": "1500.00",
+    "costo": "980.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7798335250117",
+    "codigo": "7798335250117",
+    "descripcion": "TAPAS EMP HORNO HOJALDRE",
+    "precio": "1800.00",
+    "costo": "1250.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7795722013201",
+    "codigo": "7795722013201",
+    "descripcion": "TARTERA DESMON N°24",
+    "precio": "6500.00",
+    "costo": "4900.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bazar"
+  },
+  {
+    "id": "7795722013218",
+    "codigo": "7795722013218",
+    "descripcion": "TARTERA DESMON N°26",
+    "precio": "7000.00",
+    "costo": "5000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bazar"
+  },
+  {
+    "id": "7790040331303",
+    "codigo": "7790040331303",
+    "descripcion": "TATIN ALFAJOR BLANCO 33G",
+    "precio": "600.00",
+    "costo": "404.00",
+    "porcentajeIva": 0,
+    "stock": "20",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790040331204",
+    "codigo": "7790040331204",
+    "descripcion": "TATIN ALFAJOR NEGRO 33G",
+    "precio": "600.00",
+    "costo": "404.00",
+    "porcentajeIva": 0,
+    "stock": "35",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790170926646",
+    "codigo": "7790170926646",
+    "descripcion": "TE LA MORENITA MEZ X20",
+    "precio": "1800.00",
+    "costo": "1150.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150331088",
+    "codigo": "7790150331088",
+    "descripcion": "TE LV MANZANILLA C/ANIS",
+    "precio": "2500.00",
+    "costo": "1630.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790150211908",
+    "codigo": "7790150211908",
+    "descripcion": "TE NEGRO LA VIRGINIA X 25 SAQUITOS",
+    "precio": "1500.00",
+    "costo": "850.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790411000142",
+    "codigo": "7790411000142",
+    "descripcion": "TE ROSAMONTE EN SAQUITOS 25 UN",
+    "precio": "1200.00",
+    "costo": "700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "38",
+    "codigo": "38",
+    "descripcion": "TETINAS BEBYS",
+    "precio": "1000.00",
+    "costo": "195.00",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7798184680882",
+    "codigo": "7798184680882",
+    "descripcion": "TEXTIL SAPHIRUS DANIEL 250ML",
+    "precio": "5500.00",
+    "costo": "3950.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7798184688963",
+    "codigo": "7798184688963",
+    "descripcion": "TEXTIL SAPHIRUS FAMA 250ML",
+    "precio": "5500.00",
+    "costo": "3950.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7798184681148",
+    "codigo": "7798184681148",
+    "descripcion": "TEXTIL SAPHIRUS NINA 250ML",
+    "precio": "5500.00",
+    "costo": "3950.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Perfumería"
+  },
+  {
+    "id": "7790770602070",
+    "codigo": "7790770602070",
+    "descripcion": "TOALL FEM CALIPSO X8",
+    "precio": "1300.00",
+    "costo": "700.00",
+    "porcentajeIva": 0,
+    "stock": "8",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790250097617",
+    "codigo": "7790250097617",
+    "descripcion": "TOALL FEM LADYSOFT X8",
+    "precio": "1500.00",
+    "costo": "860.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790250097648",
+    "codigo": "7790250097648",
+    "descripcion": "TOALL FEM LADYSOFT X8",
+    "precio": "1500.00",
+    "costo": "860.00",
+    "porcentajeIva": 0,
+    "stock": "9",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790770601950",
+    "codigo": "7790770601950",
+    "descripcion": "TOALL FEM NOSOTRAS CLAS X8",
+    "precio": "1700.00",
+    "costo": "1050.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790770602148",
+    "codigo": "7790770602148",
+    "descripcion": "TOALL FEM. CALIPSO X8",
+    "precio": "1500.00",
+    "costo": "940.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7790770601899",
+    "codigo": "7790770601899",
+    "descripcion": "TOALLITAS NOSOTRAS X16",
+    "precio": "4000.00",
+    "costo": "3040.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Farmacia"
+  },
+  {
+    "id": "7791954004079",
+    "codigo": "7791954004079",
+    "descripcion": "TOCOÑATO PEPAS X 300G",
+    "precio": "1500.00",
+    "costo": "1064.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7790380023418",
+    "codigo": "7790380023418",
+    "descripcion": "TODDY 360G",
+    "precio": "3500.00",
+    "costo": "1667.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "77931764",
+    "codigo": "77931764",
+    "descripcion": "TOPLINE MINE X7U",
+    "precio": "1000.00",
+    "costo": "748.00",
+    "porcentajeIva": 0,
+    "stock": "10",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798024450118",
+    "codigo": "7798024450118",
+    "descripcion": "TRAPO DE PISO MISTER TRAPO GRIS 62 X 48 CM",
+    "precio": "2500.00",
+    "costo": "1800.00",
+    "porcentajeIva": 0,
+    "stock": "7",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7793913013535",
+    "codigo": "7793913013535",
+    "descripcion": "TREGAR  YOGUR CREMOSO VAINILLA 125G",
+    "precio": "1000.00",
+    "costo": "607.75",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793913013368",
+    "codigo": "7793913013368",
+    "descripcion": "TREGAR YOGUR DURAZNO 900G",
+    "precio": "2500.00",
+    "costo": "2015.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793913013573",
+    "codigo": "7793913013573",
+    "descripcion": "TREGAR YOGUR FRUTILLA 900G",
+    "precio": "2500.00",
+    "costo": "2015.05",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7793913013580",
+    "codigo": "7793913013580",
+    "descripcion": "TREGAR YOGUR VAINILLA 900G",
+    "precio": "2500.00",
+    "costo": "2015.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "40",
+    "codigo": "40",
+    "descripcion": "TROMPOS",
+    "precio": "2000.00",
+    "costo": "895.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Juguetería"
+  },
+  {
+    "id": "25",
+    "codigo": "25",
+    "descripcion": "TROZADO",
+    "precio": "4000.00",
+    "costo": "2500.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Carnicería"
+  },
+  {
+    "id": "77940131",
+    "codigo": "77940131",
+    "descripcion": "TURRON DE MANI ARCOR 25 GRS",
+    "precio": "500.00",
+    "costo": "318.20",
+    "porcentajeIva": 0,
+    "stock": "19",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "77940148",
+    "codigo": "77940148",
+    "descripcion": "TURRON DE MANI MISKY 25 GRS",
+    "precio": "400.00",
+    "costo": "201.00",
+    "porcentajeIva": 0,
+    "stock": "49",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "9",
+    "codigo": "9",
+    "descripcion": "TUTTI- DISCOS P/FREIR",
+    "precio": "1000.00",
+    "costo": "700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "10",
+    "codigo": "10",
+    "descripcion": "TUTTI- DISCOS P/HORNO",
+    "precio": "1300.00",
+    "costo": "800.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Pastas y Pizzas"
+  },
+  {
+    "id": "7791058790588",
+    "codigo": "7791058790588",
+    "descripcion": "UNTABLE CHEDAR MANFREY X180G",
+    "precio": "3000.00",
+    "costo": "2046.06",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7791058002476",
+    "codigo": "7791058002476",
+    "descripcion": "UNTABLE SALAME MANFREY X180G",
+    "precio": "3000.00",
+    "costo": "2046.06",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7790628102684",
+    "codigo": "7790628102684",
+    "descripcion": "VAINILLAS MAURI 80 GRS",
+    "precio": "1000.00",
+    "costo": "450.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7791787100283",
+    "codigo": "7791787100283",
+    "descripcion": "VARIETTE TRIO X500G",
+    "precio": "2800.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Galletitas y Golosinas"
+  },
+  {
+    "id": "7798372610073",
+    "codigo": "7798372610073",
+    "descripcion": "VELAS CHICAS ASTRO X4",
+    "precio": "1000.00",
+    "costo": "600.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798291600155",
+    "codigo": "7798291600155",
+    "descripcion": "VELAS LARGAS ASTRO X4",
+    "precio": "1500.00",
+    "costo": "900.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790036002163",
+    "codigo": "7790036002163",
+    "descripcion": "VIDA BAGGIO MIX FRUTAL 1.5 L",
+    "precio": "1500.00",
+    "costo": "1007.47",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Bebidas sin Alcohol"
+  },
+  {
+    "id": "7790130000058",
+    "codigo": "7790130000058",
+    "descripcion": "VINAGRE DE ALCOHOL MENOYO 1 L",
+    "precio": "0.00",
+    "costo": "0.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7795422000303",
+    "codigo": "7795422000303",
+    "descripcion": "VINAGREDE MANZANA 500 CC",
+    "precio": "2000.00",
+    "costo": "1333.80",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790036846262",
+    "codigo": "7790036846262",
+    "descripcion": "VINO TALACASTO TINTO 1 L",
+    "precio": "2000.00",
+    "costo": "1417.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7790703204968",
+    "codigo": "7790703204968",
+    "descripcion": "VINO TINTO DON VALENTIN LACRADO",
+    "precio": "3700.00",
+    "costo": "2916.66",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7791853000196",
+    "codigo": "7791853000196",
+    "descripcion": "VINO TORNAGHI CLASICO 1125ML",
+    "precio": "3500.00",
+    "costo": "3000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792114000900",
+    "codigo": "7792114000900",
+    "descripcion": "VINO VIEJA MENDOZA TINTO",
+    "precio": "2500.00",
+    "costo": "2166.66",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7791843008294",
+    "codigo": "7791843008294",
+    "descripcion": "VINO VIÑAS DE BALBO CLASICO TINTO",
+    "precio": "3000.00",
+    "costo": "2533.33",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "77975225",
+    "codigo": "77975225",
+    "descripcion": "WHISKY CRIADORES 195ML",
+    "precio": "3500.00",
+    "costo": "2800.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Bebidas con Alcohol"
+  },
+  {
+    "id": "7792710000175",
+    "codigo": "7792710000175",
+    "descripcion": "YERBA M. AMANDA TRADICIONAL 1 KG",
+    "precio": "5000.00",
+    "costo": "3700.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792710000182",
+    "codigo": "7792710000182",
+    "descripcion": "YERBA M. AMANDA TRADICIONAL 500 GRS",
+    "precio": "2500.00",
+    "costo": "2000.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793670000076",
+    "codigo": "7793670000076",
+    "descripcion": "YERBA M. VERDEFLOR 1KG",
+    "precio": "4000.00",
+    "costo": "3200.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793670000052",
+    "codigo": "7793670000052",
+    "descripcion": "YERBA M. VERDEFLOR 500GR",
+    "precio": "2500.00",
+    "costo": "1600.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792280005686",
+    "codigo": "7792280005686",
+    "descripcion": "YERBA MATE CACHAMATE HIERBAS DIGESTIVAS 500GR",
+    "precio": "2300.00",
+    "costo": "1647.50",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792280005693",
+    "codigo": "7792280005693",
+    "descripcion": "YERBA MATE CACHAMATE HIERBAS DIGESTIVAS 500GR",
+    "precio": "2300.00",
+    "costo": "1647.50",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792280005730",
+    "codigo": "7792280005730",
+    "descripcion": "YERBA MATE CACHAMATE HIERBAS SERRANAS 500GR",
+    "precio": "2300.00",
+    "costo": "1647.50",
+    "porcentajeIva": 21,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7792280000612",
+    "codigo": "7792280000612",
+    "descripcion": "YERBA MATE CACHAMATE HIERBAS SERRANAS 500GR",
+    "precio": "2350.00",
+    "costo": "1647.50",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793934000057",
+    "codigo": "7793934000057",
+    "descripcion": "YERBA MATE CLAREANDO 1KG",
+    "precio": "3700.00",
+    "costo": "2478.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793934000040",
+    "codigo": "7793934000040",
+    "descripcion": "YERBA MATE CLAREANDO 500 GR",
+    "precio": "2000.00",
+    "costo": "1395.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793704000911",
+    "codigo": "7793704000911",
+    "descripcion": "YERBA MATE PLAYADITO 500GR",
+    "precio": "2600.00",
+    "costo": "1942.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790802000010",
+    "codigo": "7790802000010",
+    "descripcion": "YERBA MATE ROMANCE 500 GRS",
+    "precio": "2100.00",
+    "costo": "1501.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790411001507",
+    "codigo": "7790411001507",
+    "descripcion": "YERBA MATE ROS. PLUS 500 GRS",
+    "precio": "2500.00",
+    "costo": "1807.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790411001514",
+    "codigo": "7790411001514",
+    "descripcion": "YERBA MATE ROS. PLUS SUAVE  1 KG",
+    "precio": "4800.00",
+    "costo": "3664.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790411001491",
+    "codigo": "7790411001491",
+    "descripcion": "YERBA MATE ROSAMONTE PLUS 1 KG",
+    "precio": "4800.00",
+    "costo": "3417.00",
+    "porcentajeIva": 0,
+    "stock": "6",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793704000928",
+    "codigo": "7793704000928",
+    "descripcion": "YERBA PLAYADITO 1KG",
+    "precio": "5200.00",
+    "costo": "3633.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7790802000027",
+    "codigo": "7790802000027",
+    "descripcion": "YERBA ROMANCE 1 KG",
+    "precio": "4000.00",
+    "costo": "2829.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7798001563053",
+    "codigo": "7798001563053",
+    "descripcion": "YOGUR CREM FRUTILLA 900G",
+    "precio": "2000.00",
+    "costo": "1320.00",
+    "porcentajeIva": 0,
+    "stock": "2",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798001563077",
+    "codigo": "7798001563077",
+    "descripcion": "YOGUR CREMIGAL DURAZNO 900G",
+    "precio": "2000.00",
+    "costo": "1320.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798001563084",
+    "codigo": "7798001563084",
+    "descripcion": "YOGUR CREMIGAL FR TROPICALES 900 GR",
+    "precio": "2000.00",
+    "costo": "1320.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798001563060",
+    "codigo": "7798001563060",
+    "descripcion": "YOGUR CREMIGAL VAINILLA 900G",
+    "precio": "2000.00",
+    "costo": "1350.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798001562858",
+    "codigo": "7798001562858",
+    "descripcion": "YOGUR CREMIGAL X120G",
+    "precio": "700.00",
+    "costo": "420.00",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Almacén"
+  },
+  {
+    "id": "7793913013528",
+    "codigo": "7793913013528",
+    "descripcion": "YOGUR CREMOSO FRUTILLA 125G",
+    "precio": "1000.00",
+    "costo": "607.75",
+    "porcentajeIva": 0,
+    "stock": "5",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7791337009684",
+    "codigo": "7791337009684",
+    "descripcion": "YOGUR LA SERENISIMA FRUTILLA 900G",
+    "precio": "2000.00",
+    "costo": "1277.00",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7791337009691",
+    "codigo": "7791337009691",
+    "descripcion": "YOGUR LA SERENISIMA VAINILLA 900G",
+    "precio": "2000.00",
+    "costo": "1277.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Lácteos"
+  },
+  {
+    "id": "7798186032627",
+    "codigo": "7798186032627",
+    "descripcion": "YUMMY OSITOS 30GRS",
+    "precio": "700.00",
+    "costo": "455.30",
+    "porcentajeIva": 0,
+    "stock": "1",
+    "rubro": "Fiambrería"
+  },
+  {
+    "id": "7790990002261",
+    "codigo": "7790990002261",
+    "descripcion": "ZORRO LAVADO MATIC 800G",
+    "precio": "3000.00",
+    "costo": "2400.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Limpieza"
+  },
+  {
+    "id": "7790040139176",
+    "codigo": "7790040139176",
+    "descripcion": "POLVORITA X 180G",
+    "precio": "1000.00",
+    "costo": "500.00",
+    "porcentajeIva": 0,
+    "stock": "3",
+    "rubro": "Sin Clasificar"
+  },
+  {
+    "id": "7792389000551",
+    "codigo": "7792389000551",
+    "descripcion": "X5 INSECTICIDA MATA MOSCA Y MOSQUITO Y ZANCUDOS",
+    "precio": "5500.00",
+    "costo": "4035.00",
+    "porcentajeIva": 0,
+    "stock": "4",
+    "rubro": "Jardinería"
+  }
+]
