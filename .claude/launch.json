@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "maqueta",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["E:\\Nexosoft\\Proyecto 1\\prototipo\\serve.js"],
+      "port": 5173
+    },
+    {
+      "name": "pos",
+      "runtimeExecutable": "corepack",
+      "runtimeArgs": ["pnpm", "-C", "E:\\Nexosoft\\Proyecto 1\\apps\\pos-desktop", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "admin-web",
+      "runtimeExecutable": "corepack",
+      "runtimeArgs": ["pnpm", "-C", "E:\\Nexosoft\\Proyecto 1\\apps\\admin-web", "dev"],
+      "port": 5174
+    }
+  ]
+}
