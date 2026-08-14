@@ -47,6 +47,10 @@ sincronizan al recuperar la red (Fase 4.5).
 Todos los endpoints (salvo `auth` y `health`) requieren **JWT** y quedan
 automáticamente acotados a la **sucursal** del token.
 
+`POST /auth/register` solo queda abierto sin sesión mientras no exista ningún
+usuario (alta del primer ADMIN al instalar). Con al menos un usuario creado,
+exige sesión de ADMIN — ver [ADR-0047](../../docs/adr/0047-registro-cerrado-salvo-alta-de-primer-admin.md).
+
 ## Asistente IA (Google Gemini)
 
 `POST /asistente/preguntar` responde preguntas en lenguaje natural sobre el

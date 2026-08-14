@@ -4,11 +4,13 @@ import { RegistroDto } from './dto/registro.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { RegistroGuard } from './registro.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UseGuards(RegistroGuard)
   @Post('register')
   registrar(@Body() dto: RegistroDto) {
     return this.authService.registrar(dto);
