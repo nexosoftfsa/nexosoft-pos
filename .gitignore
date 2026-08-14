@@ -61,3 +61,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# Claude Code: config local (rutas/permisos de esta PC), no se comparte
+.claude/settings.local.json
