@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 
 import type { TerminalRemota } from "../sync/cliente-terminales-http";
 
@@ -6,13 +6,24 @@ import type { TerminalRemota } from "../sync/cliente-terminales-http";
 export function PantallaTerminal({
   listar,
   onElegir,
+  crear,
 }: {
   listar: () => Promise<TerminalRemota[]>;
   onElegir: (id: string, nombre: string) => Promise<void>;
+  /** Si se pasa (ADMIN/SUPERVISOR), habilita el alta de una terminal nueva. */
+  crear?: (nombre: string) => Promise<TerminalRemota>;
 }) {
   const [terminales, setTerminales] = useState<TerminalRemota[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [eligiendo, setEligiendo] = useState(false);
+  const [nombreNueva, setNombreNueva] = useState("");
+  const [creando, setCreando] = useState(false);
+
+  const recargar = useCallback(() => {
+    return listar()
+      .then((ts) => setTerminales(ts))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+  }, [listar]);
 
   useEffect(() => {
     let activo = true;
@@ -39,6 +50,21 @@ export function PantallaTerminal({
     }
   }
 
+  async function crearNueva() {
+    if (crear === undefined || nombreNueva.trim() === "") return;
+    setError(null);
+    setCreando(true);
+    try {
+      await crear(nombreNueva.trim());
+      setNombreNueva("");
+      await recargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setCreando(false);
+    }
+  }
+
   return (
     <div style={fondo}>
       <div style={tarjeta}>
@@ -57,6 +83,26 @@ export function PantallaTerminal({
             {t.nombre}
           </button>
         ))}
+
+        {crear !== undefined && (
+          <div style={filaNueva}>
+            <input
+              style={campo}
+              placeholder="Nombre (ej. Depósito, Oficina)"
+              value={nombreNueva}
+              onChange={(e) => setNombreNueva(e.target.value)}
+              disabled={creando}
+            />
+            <button
+              type="button"
+              style={botonNueva}
+              disabled={creando || nombreNueva.trim() === ""}
+              onClick={() => void crearNueva()}
+            >
+              {creando ? "…" : "+ Agregar"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -99,4 +145,29 @@ const aviso: CSSProperties = {
   padding: "0.5rem 0.7rem",
   borderRadius: "8px",
   fontSize: "0.85rem",
+};
+const filaNueva: CSSProperties = {
+  display: "flex",
+  gap: "0.5rem",
+  marginTop: "0.5rem",
+  paddingTop: "0.7rem",
+  borderTop: "1px dashed #cbd5e1",
+};
+const campo: CSSProperties = {
+  flex: 1,
+  padding: "0.55rem 0.7rem",
+  borderRadius: "8px",
+  border: "1px solid #cbd5e1",
+  fontSize: "0.9rem",
+};
+const botonNueva: CSSProperties = {
+  padding: "0.55rem 0.8rem",
+  borderRadius: "8px",
+  border: "none",
+  background: "#2563eb",
+  color: "#fff",
+  fontSize: "0.85rem",
+  fontWeight: 600,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
 };

@@ -326,9 +326,14 @@ function AppTauri() {
     [inicializar],
   );
 
-  const listarTerminales = useCallback(
-    () => new ClienteTerminalesHttp(baseUrlRef.current, () => sesionRef.current?.obtenerToken() ?? null).listar(),
+  const clienteTerminales = useCallback(
+    () => new ClienteTerminalesHttp(baseUrlRef.current, () => sesionRef.current?.obtenerToken() ?? null),
     [],
+  );
+  const listarTerminales = useCallback(() => clienteTerminales().listar(), [clienteTerminales]);
+  const crearTerminal = useCallback(
+    (nombre: string) => clienteTerminales().crear(nombre),
+    [clienteTerminales],
   );
 
   // Modo demo autocontenido (sin backend), disparado desde el login.
@@ -377,7 +382,17 @@ function AppTauri() {
         {...(logoDataUrl !== undefined ? { logoDataUrl } : {})}
       />
     );
-  if (fase === "terminal") return <PantallaTerminal listar={listarTerminales} onElegir={onElegirTerminal} />;
+  if (fase === "terminal") {
+    const rol = sesionRef.current?.rol;
+    const puedeCrearTerminal = rol === "ADMIN" || rol === "SUPERVISOR";
+    return (
+      <PantallaTerminal
+        listar={listarTerminales}
+        onElegir={onElegirTerminal}
+        {...(puedeCrearTerminal ? { crear: crearTerminal } : {})}
+      />
+    );
+  }
   if (fase === "listo" && entorno !== null) {
     return (
       <Shell
