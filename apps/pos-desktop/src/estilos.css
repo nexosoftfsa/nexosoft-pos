@@ -511,20 +511,24 @@ body {
 }
 
 @media print {
-  body:not(.modo-impresion-a4) * {
+  /* Fallback: imprimir la tarjeta de confirmación tal cual se ve en pantalla,
+     SOLO cuando ningún modo especial (A4/ticket/etiquetas) está activo — si no,
+     queda visible al mismo tiempo que el template especial y se superponen
+     (ambos con position:absolute; top:0; left:0). */
+  body:not(.modo-impresion-a4):not(.modo-impresion-ticket):not(.modo-impresion-etiquetas) * {
     visibility: hidden;
   }
-  body:not(.modo-impresion-a4) .ticket,
-  body:not(.modo-impresion-a4) .ticket * {
+  body:not(.modo-impresion-a4):not(.modo-impresion-ticket):not(.modo-impresion-etiquetas) .ticket,
+  body:not(.modo-impresion-a4):not(.modo-impresion-ticket):not(.modo-impresion-etiquetas) .ticket * {
     visibility: visible;
   }
-  body:not(.modo-impresion-a4) .ticket {
+  body:not(.modo-impresion-a4):not(.modo-impresion-ticket):not(.modo-impresion-etiquetas) .ticket {
     position: absolute;
     left: 0;
     top: 0;
     box-shadow: none;
   }
-  body:not(.modo-impresion-a4) .ticket-acciones {
+  body:not(.modo-impresion-a4):not(.modo-impresion-ticket):not(.modo-impresion-etiquetas) .ticket-acciones {
     display: none;
   }
 
