@@ -186,6 +186,7 @@ export function PantallaConfig({
 
 const fondo: CSSProperties = {
   display: "flex",
+  flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
   minHeight: "100vh",

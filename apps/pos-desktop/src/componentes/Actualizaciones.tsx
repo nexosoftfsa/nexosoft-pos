@@ -2,7 +2,7 @@
  * Buscar/instalar actualizaciones del POS (solo ADMIN, solo Tauri). Ver
  * `datos/actualizaciones.ts`. Instalar reinicia la app — se avisa antes.
  */
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import { estaEnTauri } from "../datos/ejecutor-sql-tauri";
 import {
@@ -11,8 +11,6 @@ import {
   type InfoActualizacion,
   type ProgresoDescarga,
 } from "../datos/actualizaciones";
-
-const VERSION_ACTUAL = "0.1.0"; // mantener sincronizado con src-tauri/tauri.conf.json
 
 type Estado =
   | { fase: "inicial" }
@@ -24,6 +22,19 @@ type Estado =
 
 export function Actualizaciones() {
   const [estado, setEstado] = useState<Estado>({ fase: "inicial" });
+  const [versionActual, setVersionActual] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!estaEnTauri()) return;
+    let vivo = true;
+    import("@tauri-apps/api/app")
+      .then(({ getVersion }) => getVersion())
+      .then((v) => vivo && setVersionActual(v))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   async function buscar() {
     setEstado({ fase: "buscando" });
@@ -53,7 +64,7 @@ export function Actualizaciones() {
   return (
     <div style={caja}>
       <div style={titulo}>Actualizaciones</div>
-      <div style={version}>Versión instalada: {VERSION_ACTUAL}</div>
+      <div style={version}>Versión instalada: {versionActual ?? "…"}</div>
 
       {estado.fase === "inicial" && (
         <button type="button" style={boton} onClick={() => void buscar()}>
