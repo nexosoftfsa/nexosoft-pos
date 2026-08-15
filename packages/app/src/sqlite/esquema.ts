@@ -135,12 +135,19 @@ export async function crearEsquema(ejecutor: EjecutorSql): Promise<void> {
 
 /**
  * `CREATE TABLE IF NOT EXISTS` no agrega columnas a una tabla que ya existe de
- * una instalación anterior. Para columnas sumadas después del alta inicial
- * (como `logo_base64`), se agregan acá con `ALTER TABLE`, ignorando el error
- * si la columna ya existe (SQLite no tiene `ADD COLUMN IF NOT EXISTS`).
+ * una instalación anterior. Todas las columnas de `comercio_config` sumadas
+ * después del alta inicial (Fase 1: `id`..`lista_predeterminada`) se repiten
+ * acá con `ALTER TABLE`, ignorando el error si la columna ya existe (SQLite
+ * no tiene `ADD COLUMN IF NOT EXISTS`). Idempotente y seguro correrlo en cada
+ * arranque, sin importar de qué versión venga la base instalada.
  */
 async function agregarColumnasNuevas(ejecutor: EjecutorSql): Promise<void> {
-  const alteraciones = [`ALTER TABLE comercio_config ADD COLUMN logo_base64 TEXT`];
+  const alteraciones = [
+    `ALTER TABLE comercio_config ADD COLUMN precios_incluyen_iva INTEGER NOT NULL DEFAULT 1 CHECK (precios_incluyen_iva IN (0,1))`,
+    `ALTER TABLE comercio_config ADD COLUMN permitir_stock_negativo INTEGER NOT NULL DEFAULT 0 CHECK (permitir_stock_negativo IN (0,1))`,
+    `ALTER TABLE comercio_config ADD COLUMN emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1))`,
+    `ALTER TABLE comercio_config ADD COLUMN logo_base64 TEXT`,
+  ];
   for (const sentencia of alteraciones) {
     try {
       await ejecutor.ejecutar(sentencia);
