@@ -1,8 +1,12 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { RolUsuario } from '@prisma/client';
 
 export class RegistroDto {
-  @IsEmail()
+  // Nombre de usuario para loguearse. Se guarda en la columna `email` (nunca
+  // se envía nada a esta casilla: no hay verificación ni recupero de clave
+  // por correo), pero no exige formato de email — cualquier texto sirve.
+  @IsString()
+  @MinLength(3)
   email!: string;
 
   @IsString()

@@ -6,7 +6,7 @@ import { ErrorApi } from "../api/cliente-http";
 export function PantallaLogin() {
   const { login } = useSesion();
   const navegar = useNavigate();
-  const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -16,7 +16,7 @@ export function PantallaLogin() {
     setError(null);
     setCargando(true);
     try {
-      await login({ email, password });
+      await login({ email: usuario, password });
       navegar("/", { replace: true });
     } catch (err) {
       if (err instanceof ErrorApi) {
@@ -36,11 +36,11 @@ export function PantallaLogin() {
         <p className="login__subtitulo">Panel de reportes</p>
 
         <label className="campo">
-          <span>Email</span>
+          <span>Usuario</span>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
             autoComplete="username"
             required
           />

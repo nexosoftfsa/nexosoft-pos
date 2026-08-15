@@ -16,7 +16,7 @@ export function PantallaLogin({
   /** Logo del comercio (ver `ConfiguracionComercio.logoDataUrl`). Sin esto, se ve la marca de NexoSoft. */
   logoDataUrl?: string;
 }) {
-  const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -26,7 +26,7 @@ export function PantallaLogin({
     setError(null);
     setCargando(true);
     try {
-      await onLogin({ email: email.trim(), password });
+      await onLogin({ email: usuario.trim(), password });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -34,7 +34,7 @@ export function PantallaLogin({
     }
   }
 
-  const deshabilitado = cargando || email.trim() === "" || password === "";
+  const deshabilitado = cargando || usuario.trim() === "" || password === "";
 
   return (
     <div style={fondo}>
@@ -49,14 +49,15 @@ export function PantallaLogin({
         <p style={subtitulo}>Iniciá sesión para abrir la caja</p>
 
         <label style={etiqueta}>
-          Email
+          Usuario
           <input
             style={campo}
-            type="email"
+            type="text"
             autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="cajero@comercio.com"
+            autoComplete="username"
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
+            placeholder="cajero1"
           />
         </label>
         <label style={etiqueta}>

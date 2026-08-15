@@ -94,7 +94,7 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Email</th>
+                <th>Usuario</th>
                 <th>Rol</th>
                 <th>Estado</th>
                 <th>Alta</th>
@@ -191,7 +191,7 @@ function ModalNuevoUsuario({
   onCerrar: () => void;
   onCreado: () => void;
 }) {
-  const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [nombreDisplay, setNombreDisplay] = useState("");
   const [password, setPassword] = useState("");
   const [rol, setRol] = useState<RolUsuario>("CAJERO");
@@ -200,14 +200,14 @@ function ModalNuevoUsuario({
 
   async function guardar() {
     const e: string[] = [];
-    if (email.trim() === "") e.push("Falta el email.");
+    if (usuario.trim().length < 3) e.push("El usuario debe tener al menos 3 caracteres.");
     if (nombreDisplay.trim() === "") e.push("Falta el nombre.");
     if (password.length < 8) e.push("La contraseña debe tener al menos 8 caracteres.");
     if (e.length > 0) {
       setErrores(e);
       return;
     }
-    const datos: NuevoUsuario = { email: email.trim(), nombreDisplay: nombreDisplay.trim(), password, rol };
+    const datos: NuevoUsuario = { email: usuario.trim(), nombreDisplay: nombreDisplay.trim(), password, rol };
     setGuardando(true);
     setErrores([]);
     try {
@@ -235,13 +235,13 @@ function ModalNuevoUsuario({
             <input className="input" value={nombreDisplay} onChange={(e) => setNombreDisplay(e.target.value)} />
           </div>
           <div className="field">
-            <label>Email</label>
+            <label>Nombre de usuario</label>
             <input
               className="input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="empleado@comercio.com"
+              type="text"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
+              placeholder="ej. deposito, oficina, cajero2"
             />
           </div>
           <div className="modal__row">
