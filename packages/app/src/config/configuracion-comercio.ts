@@ -24,4 +24,7 @@ export interface ConfiguracionComercio {
    * probando el sistema o recién inició el trámite de alta en ARCA.
    */
   readonly emiteComprobantesFiscales?: boolean;
+  /** Logo del comercio como data URL (ej. `data:image/png;base64,...`), para el
+   *  login, la barra lateral y los comprobantes impresos. Opcional. */
+  readonly logoDataUrl?: string;
 }

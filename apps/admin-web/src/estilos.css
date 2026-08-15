@@ -131,6 +131,11 @@ body {
   margin-bottom: 1.5rem;
   padding-left: 0.5rem;
 }
+.layout__logo {
+  max-height: 40px;
+  max-width: 100%;
+  object-fit: contain;
+}
 .layout__nav nav {
   display: flex;
   flex-direction: column;

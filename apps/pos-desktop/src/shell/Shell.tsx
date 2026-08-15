@@ -171,15 +171,24 @@ export function Shell({
     <div className="app-shell">
       <aside className={`sidebar${navAbierto ? " sidebar--open" : ""}`}>
         <div className="sidebar__brand">
-          <div className="logo">
-            <div className="logo__mark">NS</div>
-            <div className="logo__text">
-              <span className="logo__name">
-                NEXO<b>SOFT</b>
-              </span>
-              <span className="logo__tag">Conectamos tu negocio</span>
+          {entorno.config.logoDataUrl !== undefined ? (
+            <div className="logo">
+              <img src={entorno.config.logoDataUrl} alt="Logo" className="logo__img" />
+              <div className="logo__text">
+                <span className="logo__name">{entorno.config.razonSocial}</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="logo">
+              <div className="logo__mark">NS</div>
+              <div className="logo__text">
+                <span className="logo__name">
+                  NEXO<b>SOFT</b>
+                </span>
+                <span className="logo__tag">Conectamos tu negocio</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <nav className="nav">

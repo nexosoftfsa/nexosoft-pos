@@ -22,6 +22,9 @@ export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
     <div className="hoja-a4">
       <header className="a4-header">
         <div className="a4-emisor">
+          {datos.logoDataUrl !== undefined && (
+            <img src={datos.logoDataUrl} alt="Logo" className="a4-logo" />
+          )}
           <div className="a4-razon-social">{datos.razonSocial}</div>
           <div>CUIT {datos.cuit}</div>
           <div>{datos.condicionIvaEmisor}</div>

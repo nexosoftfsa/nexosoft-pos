@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 
 import { CondicionIva } from "@nexosoft/domain";
 
@@ -10,6 +10,20 @@ export interface ValoresConfig {
   readonly puntoDeVenta: number;
   /** Fase 10.1: si el comercio ya está de alta en ARCA y emite Factura A/B/C. */
   readonly emiteComprobantesFiscales: boolean;
+  /** Logo del comercio como data URL. Ver `ConfiguracionComercio.logoDataUrl`. */
+  readonly logoDataUrl?: string;
+}
+
+/** Tamaño máximo del archivo de logo (queda embebido en SQLite y viaja en cada impresión). */
+const LOGO_MAX_BYTES = 300 * 1024;
+
+function leerComoDataUrl(archivo: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const lector = new FileReader();
+    lector.onload = () => resolve(String(lector.result));
+    lector.onerror = () => reject(new Error("No se pudo leer el archivo."));
+    lector.readAsDataURL(archivo);
+  });
 }
 
 const EMISORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
@@ -33,8 +47,25 @@ export function PantallaConfig({
   const [condicion, setCondicion] = useState<CondicionIva>(valores.condicionIvaEmisor);
   const [puntoDeVenta, setPuntoDeVenta] = useState(String(valores.puntoDeVenta));
   const [emiteFiscal, setEmiteFiscal] = useState(valores.emiteComprobantesFiscales);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(valores.logoDataUrl);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+
+  async function elegirLogo(e: ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    e.target.value = "";
+    if (!archivo) return;
+    if (archivo.size > LOGO_MAX_BYTES) {
+      setError(`El logo no puede pesar más de ${Math.round(LOGO_MAX_BYTES / 1024)} KB.`);
+      return;
+    }
+    try {
+      setLogoDataUrl(await leerComoDataUrl(archivo));
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
@@ -57,6 +88,7 @@ export function PantallaConfig({
         condicionIvaEmisor: condicion,
         puntoDeVenta: pv,
         emiteComprobantesFiscales: emiteFiscal,
+        ...(logoDataUrl !== undefined ? { logoDataUrl } : {}),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -94,6 +126,20 @@ export function PantallaConfig({
               </option>
             ))}
           </select>
+        </label>
+        <label style={etiqueta}>
+          Logo del comercio
+          <div style={{ display: "flex", alignItems: "center", gap: "0.7rem" }}>
+            {logoDataUrl !== undefined && (
+              <img src={logoDataUrl} alt="Logo" style={{ height: 40, maxWidth: 120, objectFit: "contain" }} />
+            )}
+            <input style={{ ...campo, padding: "0.4rem" }} type="file" accept="image/*" onChange={(e) => void elegirLogo(e)} />
+            {logoDataUrl !== undefined && (
+              <button type="button" style={enlace} onClick={() => setLogoDataUrl(undefined)}>
+                Quitar
+              </button>
+            )}
+          </div>
         </label>
         <label style={etiqueta}>
           Punto de venta
@@ -203,4 +249,12 @@ const ayuda: CSSProperties = {
   padding: "0.5rem 0.7rem",
   borderRadius: "8px",
   fontSize: "0.8rem",
+};
+const enlace: CSSProperties = {
+  background: "none",
+  border: "none",
+  color: "#2563eb",
+  fontSize: "0.85rem",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
 };

@@ -35,6 +35,14 @@
   align-items: center;
   gap: 12px;
 }
+.logo__img {
+  max-width: 42px;
+  max-height: 42px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  padding: 2px;
+}
 .logo__mark {
   display: grid;
   place-items: center;

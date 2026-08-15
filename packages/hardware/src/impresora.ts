@@ -37,6 +37,8 @@ export interface DatosTicket {
   readonly cuit: string;
   readonly condicionIvaEmisor: string;
   readonly puntoDeVenta: number;
+  /** Logo del comercio como data URL. Solo se usa en la impresión A4 (HTML). */
+  readonly logoDataUrl?: string;
 
   // Comprobante
   readonly tipoComprobante: string; // ej. "Factura B"

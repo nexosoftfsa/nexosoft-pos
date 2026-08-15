@@ -19,7 +19,8 @@ export const SENTENCIAS_ESQUEMA: readonly string[] = [
     lista_predeterminada TEXT NOT NULL,
     precios_incluyen_iva INTEGER NOT NULL DEFAULT 1 CHECK (precios_incluyen_iva IN (0,1)),
     permitir_stock_negativo INTEGER NOT NULL DEFAULT 0 CHECK (permitir_stock_negativo IN (0,1)),
-    emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1))
+    emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1)),
+    logo_base64 TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS articulo (
     id TEXT PRIMARY KEY,
@@ -128,5 +129,24 @@ export const SENTENCIAS_ESQUEMA: readonly string[] = [
 export async function crearEsquema(ejecutor: EjecutorSql): Promise<void> {
   for (const sentencia of SENTENCIAS_ESQUEMA) {
     await ejecutor.ejecutar(sentencia);
+  }
+  await agregarColumnasNuevas(ejecutor);
+}
+
+/**
+ * `CREATE TABLE IF NOT EXISTS` no agrega columnas a una tabla que ya existe de
+ * una instalación anterior. Para columnas sumadas después del alta inicial
+ * (como `logo_base64`), se agregan acá con `ALTER TABLE`, ignorando el error
+ * si la columna ya existe (SQLite no tiene `ADD COLUMN IF NOT EXISTS`).
+ */
+async function agregarColumnasNuevas(ejecutor: EjecutorSql): Promise<void> {
+  const alteraciones = [`ALTER TABLE comercio_config ADD COLUMN logo_base64 TEXT`];
+  for (const sentencia of alteraciones) {
+    try {
+      await ejecutor.ejecutar(sentencia);
+    } catch (e) {
+      const mensaje = e instanceof Error ? e.message : String(e);
+      if (!mensaje.toLowerCase().includes('duplicate column')) throw e;
+    }
   }
 }

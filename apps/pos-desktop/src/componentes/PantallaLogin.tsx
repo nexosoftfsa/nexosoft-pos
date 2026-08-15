@@ -7,11 +7,14 @@ export function PantallaLogin({
   onLogin,
   onConfig,
   onModoDemo,
+  logoDataUrl,
 }: {
   onLogin: (c: Credenciales) => Promise<void>;
   onConfig?: () => void;
   /** Arranca el POS en modo demo autocontenido (sin backend). */
   onModoDemo?: () => void;
+  /** Logo del comercio (ver `ConfiguracionComercio.logoDataUrl`). Sin esto, se ve la marca de NexoSoft. */
+  logoDataUrl?: string;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,9 +39,13 @@ export function PantallaLogin({
   return (
     <div style={fondo}>
       <form style={tarjeta} onSubmit={enviar}>
-        <div style={marca}>
-          Nexo<span style={{ color: "#2563eb" }}>Soft</span> POS
-        </div>
+        {logoDataUrl !== undefined ? (
+          <img src={logoDataUrl} alt="Logo del comercio" style={logoImg} />
+        ) : (
+          <div style={marca}>
+            Nexo<span style={{ color: "#2563eb" }}>Soft</span> POS
+          </div>
+        )}
         <p style={subtitulo}>Iniciá sesión para abrir la caja</p>
 
         <label style={etiqueta}>
@@ -102,6 +109,7 @@ const tarjeta: CSSProperties = {
   boxShadow: "0 10px 30px rgba(15, 23, 42, 0.12)",
 };
 const marca: CSSProperties = { fontSize: "1.6rem", fontWeight: 700, color: "#0f172a" };
+const logoImg: CSSProperties = { maxHeight: 64, maxWidth: "100%", objectFit: "contain", alignSelf: "center" };
 const subtitulo: CSSProperties = { margin: 0, color: "#64748b", fontSize: "0.9rem" };
 const etiqueta: CSSProperties = {
   display: "flex",

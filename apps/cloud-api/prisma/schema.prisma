@@ -17,6 +17,9 @@ model ConfiguracionSistema {
   id            Int      @id @default(1)
   geminiApiKey  String?
   geminiModel   String?
+  /// Logo del comercio como data URL (ver ADR del panel/branding). Lo sirve
+  /// admin-web; el POS tiene su propia copia local (SQLite, independiente).
+  logoBase64    String?
   actualizadoEn DateTime @updatedAt
 
   @@map("configuracion_sistema")

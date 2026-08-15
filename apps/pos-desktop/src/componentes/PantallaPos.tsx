@@ -732,6 +732,7 @@ function construirDatosTicket(
     cuit: config.cuit,
     condicionIvaEmisor: etiquetaCondicionIva(config.condicionIvaEmisor),
     puntoDeVenta: config.puntoDeVenta,
+    ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
     tipoComprobante: etiquetaComprobante(venta.tipoComprobante),
     numero: venta.numero,
     fecha: new Date(),

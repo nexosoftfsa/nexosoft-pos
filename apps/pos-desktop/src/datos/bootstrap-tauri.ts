@@ -86,6 +86,7 @@ interface FilaConfig extends Fila {
   precios_incluyen_iva: number;
   permitir_stock_negativo: number;
   emite_comprobantes_fiscales: number;
+  logo_base64: string | null;
 }
 
 /** Guarda (alta/actualización) la configuración del comercio (fila única id=1). */
@@ -97,14 +98,14 @@ export async function guardarConfig(
     `INSERT INTO comercio_config
        (id, cuit, razon_social, condicion_iva_emisor, punto_de_venta,
         deposito_por_defecto, lista_predeterminada, precios_incluyen_iva, permitir_stock_negativo,
-        emite_comprobantes_fiscales)
-     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        emite_comprobantes_fiscales, logo_base64)
+     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        cuit=excluded.cuit, razon_social=excluded.razon_social,
        condicion_iva_emisor=excluded.condicion_iva_emisor, punto_de_venta=excluded.punto_de_venta,
        deposito_por_defecto=excluded.deposito_por_defecto, lista_predeterminada=excluded.lista_predeterminada,
        precios_incluyen_iva=excluded.precios_incluyen_iva, permitir_stock_negativo=excluded.permitir_stock_negativo,
-       emite_comprobantes_fiscales=excluded.emite_comprobantes_fiscales`,
+       emite_comprobantes_fiscales=excluded.emite_comprobantes_fiscales, logo_base64=excluded.logo_base64`,
     [
       config.cuit,
       config.razonSocial,
@@ -115,6 +116,7 @@ export async function guardarConfig(
       config.preciosIncluyenIva ? 1 : 0,
       config.permitirStockNegativo ? 1 : 0,
       config.emiteComprobantesFiscales === false ? 0 : 1,
+      config.logoDataUrl ?? null,
     ],
   );
 }
@@ -136,6 +138,7 @@ export async function leerConfig(ejecutor: EjecutorSql): Promise<ConfiguracionCo
     preciosIncluyenIva: f.precios_incluyen_iva === 1,
     permitirStockNegativo: f.permitir_stock_negativo === 1,
     emiteComprobantesFiscales: f.emite_comprobantes_fiscales === 1,
+    ...(f.logo_base64 !== null ? { logoDataUrl: f.logo_base64 } : {}),
   };
 }
 

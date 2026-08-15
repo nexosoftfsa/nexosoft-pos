@@ -73,6 +73,7 @@ export function datosTicketDeComprobante(
     cuit: config.cuit,
     condicionIvaEmisor: etiquetaCondicionIva(config.condicionIvaEmisor),
     puntoDeVenta: config.puntoDeVenta,
+    ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
     tipoComprobante: etiquetaTipoComprobante(c.tipoComprobante),
     numero: c.numeroComprobante ?? 0,
     fecha: new Date(c.creadaEn),

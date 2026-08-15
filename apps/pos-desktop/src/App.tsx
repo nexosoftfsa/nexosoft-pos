@@ -18,6 +18,7 @@ import { EjecutorSqlTauri, estaEnTauri } from "./datos/ejecutor-sql-tauri";
 import { SesionManager } from "./datos/sesion";
 import { ClienteAuthHttp, ErrorAuth, type Credenciales } from "./sync/cliente-auth-http";
 import { ClienteTerminalesHttp } from "./sync/cliente-terminales-http";
+import { ClienteComercioHttp } from "./sync/cliente-comercio-http";
 import type { ClienteCatalogoAdmin } from "./sync/cliente-catalogo-admin";
 import { ClienteCatalogoAdminHttp } from "./sync/cliente-catalogo-admin";
 import { ClienteCatalogoAdminSimulado } from "./sync/cliente-catalogo-admin-simulado";
@@ -149,6 +150,7 @@ function AppTauri() {
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
   const [valoresConfig, setValoresConfig] = useState<ValoresConfig | null>(null);
   const [modoDemo, setModoDemo] = useState(false);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined);
 
   const fallar = useCallback((e: unknown) => {
     setError(e instanceof Error ? e.message : String(e));
@@ -217,6 +219,7 @@ function AppTauri() {
       ejecutorRef.current = ejecutor;
       await asegurarMaestros(ejecutor);
       baseUrlRef.current = await leerServidorUrl(ejecutor);
+      setLogoDataUrl((await leerConfig(ejecutor)).logoDataUrl);
       const sesion = await SesionManager.cargar(ejecutor, new ClienteAuthHttp(baseUrlRef.current));
       sesionRef.current = sesion;
       avanzar(sesion);
@@ -269,6 +272,7 @@ function AppTauri() {
         condicionIvaEmisor: config.condicionIvaEmisor,
         puntoDeVenta: config.puntoDeVenta,
         emiteComprobantesFiscales: config.emiteComprobantesFiscales ?? true,
+        ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
       });
       setFase("config");
     } catch (e) {
@@ -280,16 +284,23 @@ function AppTauri() {
     async (v: ValoresConfig) => {
       const ejecutor = ejecutorRef.current;
       if (ejecutor === null) return;
-      const actual = await leerConfig(ejecutor);
+      const { logoDataUrl: _logoActual, ...actualSinLogo } = await leerConfig(ejecutor);
       await guardarConfig(ejecutor, {
-        ...actual,
+        ...actualSinLogo,
         razonSocial: v.razonSocial,
         cuit: v.cuit,
         condicionIvaEmisor: v.condicionIvaEmisor,
         puntoDeVenta: v.puntoDeVenta,
         emiteComprobantesFiscales: v.emiteComprobantesFiscales,
+        // Sin spread de `undefined`: si el usuario sacó el logo, se omite la
+        // clave (guardarConfig la persiste como NULL) en vez de asignarla a
+        // `undefined`, que `exactOptionalPropertyTypes` no permite.
+        ...(v.logoDataUrl !== undefined ? { logoDataUrl: v.logoDataUrl } : {}),
       });
       await guardarServidorUrl(ejecutor, v.servidorUrl);
+      void new ClienteComercioHttp(v.servidorUrl, () => sesionRef.current?.obtenerToken() ?? null).actualizarLogo(
+        v.logoDataUrl ?? "",
+      );
       await inicializar(); // re-lee la URL, reconstruye el cliente y reevalúa la fase
     },
     [inicializar],
@@ -343,6 +354,7 @@ function AppTauri() {
         onLogin={onLogin}
         onConfig={() => void onAbrirConfig()}
         onModoDemo={() => setModoDemo(true)}
+        {...(logoDataUrl !== undefined ? { logoDataUrl } : {})}
       />
     );
   if (fase === "terminal") return <PantallaTerminal listar={listarTerminales} onElegir={onElegirTerminal} />;
