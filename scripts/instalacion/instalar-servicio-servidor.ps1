@@ -1,4 +1,4 @@
-# Corre esto UNA VEZ en la PC que va a ser el servidor (la de la Caja), como
+﻿# Corre esto UNA VEZ en la PC que va a ser el servidor (la de la Caja), como
 # Administrador, DESPUES de:
 #   1. Copiar/clonar el repo ahi.
 #   2. corepack pnpm install

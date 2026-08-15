@@ -1,4 +1,4 @@
-# Corre esto UNA VEZ en la PC que va a ser el servidor (la de la Caja), como
+﻿# Corre esto UNA VEZ en la PC que va a ser el servidor (la de la Caja), como
 # Administrador (clic derecho > "Ejecutar como administrador" o desde una
 # PowerShell elevada). Abre el puerto 3000 solo para la red privada/local, para
 # que las PCs de Depósito y Oficina puedan llegar al cloud-api por la LAN.

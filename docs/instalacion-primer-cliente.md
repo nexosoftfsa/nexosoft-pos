@@ -3,6 +3,21 @@
 Checklist para instalar NexoSoft en la PC de Caja del cliente (que además
 hace de servidor — ver [ADR-0019](adr/0019-topologia-servidor-de-sucursal-lan.md)).
 
+## Dos lecciones de la primera instalación (no repetir)
+
+- **Nunca copiar la carpeta del proyecto completa por USB.** `node_modules`
+  tiene decenas de miles de archivos chiquitos: copiarlo por USB tarda
+  muchísimo (casi una hora para "solo" 2GB la primera vez) y sus rutas
+  superan el límite de Windows, lo que hace fallar la copia de subcarpetas
+  a mitad de camino y deja una instalación a medio armar. **Siempre `git
+  clone`** (paso 1) — el código fuente son unos pocos MB, `node_modules` se
+  reinstala fresco en cada máquina con `pnpm install`. El pendrive es solo
+  para los instaladores de Node/Git/PostgreSQL/WebView2 y el `.exe` del
+  POS ya compilado — nunca para el código.
+- **Los comandos sueltos, bajo presión de tiempo, se pierden.** Por eso los
+  pasos 2 a 6 de abajo ahora son **un solo script**
+  (`instalar-servidor-completo.ps1`) en vez de ~20 comandos a mano.
+
 ## 0. Prerrequisitos en la PC de Caja
 
 Instalar (en este orden, next-next salvo donde se aclara):
@@ -11,116 +26,71 @@ Instalar (en este orden, next-next salvo donde se aclara):
 2. **Git para Windows** — https://git-scm.com/download/win
 3. **PostgreSQL 16** — https://www.postgresql.org/download/windows/
    **Anotar la contraseña del superusuario `postgres`** que se define durante
-   la instalación — hace falta más abajo.
+   la instalación — el script del paso 2 la va a pedir.
 4. **WebView2 Runtime** (si Windows no lo trae ya) — https://developer.microsoft.com/microsoft-edge/webview2/
 
 Si no hay internet en el local, usar los instaladores del pendrive.
 
 ## 1. Traer el código
 
-Abrir PowerShell y correr:
+```powershell
+git clone https://github.com/nexosoftfsa/nexosoft-pos.git C:\NexoSoft
+cd C:\NexoSoft
+```
+
+(Nada de copiar carpetas — ver la lección de arriba.)
+
+## 2. Servidor completo, en un solo comando
+
+**Como Administrador** (clic derecho sobre PowerShell → Ejecutar como
+administrador), parado en `C:\NexoSoft`:
+
+```powershell
+.\scripts\instalacion\instalar-servidor-completo.ps1 -NombreComercio "Nombre real del comercio" -AdminUsuario "admin" -AdminPassword "elegir-una-buena"
+```
+
+Va a pedir la contraseña de `postgres` una vez, y de ahí en más hace todo
+solo: habilita rutas largas de Windows, `pnpm install`, crea el rol/base
+`nexosoft`, genera `.env` con secretos aleatorios, migra, compila
+`cloud-api` y el panel web, registra el servicio de Windows (arranca solo,
+se reinicia solo), abre el firewall, y da de alta la sucursal + el primer
+ADMIN. Al final imprime la IP de la PC (hace falta para Depósito/Oficina).
+
+**Verificar**: abrir `http://localhost:3000/api/v1/health` — tiene que
+decir `{"status":"ok"}`.
+
+### Si el script falla a mitad de camino
+
+Es más o menos idempotente: se puede volver a correr y salta lo que ya
+esté hecho (rol/base existentes, `.env` existente). Si hay que hacer algo
+suelto a mano, esto es lo que hace por dentro, en orden:
 
 ```powershell
 corepack enable
-git clone https://github.com/nexosoftfsa/nexosoft-pos.git C:\NexoSoft
-cd C:\NexoSoft
 corepack pnpm install
-```
-
-## 2. Configurar `.env`
-
-```powershell
-Copy-Item .env.example apps\cloud-api\.env
-notepad apps\cloud-api\.env
-```
-
-Completar como mínimo:
-- `DATABASE_URL=postgresql://postgres:<password-que-pusiste>@localhost:5432/nexosoft`
-  (o crear un rol dedicado `nexosoft`, como se hizo en las pruebas — ver
-  `git log` del commit `8b47f8b` para el procedimiento si hace falta).
-- `JWT_SECRET` y `JWT_REFRESH_SECRET`: cualquier cadena larga random (no
-  usar las de `.env.example`). Se pueden generar así:
-  ```powershell
-  -join ((48..57)+(65..90)+(97..122) | Get-Random -Count 48 | ForEach-Object {[char]$_})
-  ```
-- El resto (`ARCA_ENV`, `GEMINI_API_KEY`, `PAGOS_PROVIDER`, etc.) puede
-  quedar como está en `.env.example` — no hace falta para vender hoy.
-
-## 3. Base de datos
-
-```powershell
-cd C:\NexoSoft\apps\cloud-api
-& "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -h localhost -c "CREATE DATABASE nexosoft;"
-corepack pnpm prisma:generate
-corepack pnpm exec prisma migrate deploy
-corepack pnpm build
-```
-
-## 4. Panel web de reportes
-
-El panel (`admin-web`) lo sirve el mismo `cloud-api`, no hace falta nada
-aparte. Ojo con `VITE_API_URL`: se graba FIJO adentro del panel al
-compilarlo — si se pone `http://localhost:3000/api/v1`, el panel deja de
-andar para cualquiera que entre desde OTRA PC o el celular (su "localhost"
-sería el celular, no el servidor). Por eso se usa una ruta relativa:
-
-```powershell
-cd C:\NexoSoft
+# crear rol+base "nexosoft" en Postgres, completar apps\cloud-api\.env
+corepack pnpm --filter @nexosoft/cloud-api prisma:generate
+corepack pnpm --filter @nexosoft/cloud-api exec prisma migrate deploy
+corepack pnpm --filter @nexosoft/cloud-api build
 $env:VITE_API_URL = "/api/v1"
 corepack pnpm --filter @nexosoft/admin-web build
-New-Item -ItemType Directory -Force apps\cloud-api\panel | Out-Null
 Copy-Item apps\admin-web\dist\* apps\cloud-api\panel -Recurse -Force
-```
-
-Con eso, el panel queda disponible en `http://localhost:3000/` (o
-`http://<IP-de-la-caja>:3000/` desde cualquier otra PC/celular en la
-misma red) — login con el usuario ADMIN.
-
-## 5. Servidor como servicio de Windows (arranca solo, se reinicia solo)
-
-**Como Administrador:**
-
-```powershell
-cd C:\NexoSoft
 .\scripts\instalacion\instalar-servicio-servidor.ps1
 .\scripts\instalacion\abrir-firewall-servidor.ps1
+corepack pnpm --filter @nexosoft/cloud-api crear:sucursal -- --nombre "..."
+# POST /auth/register con el id de la sucursal (ver el script para el body exacto)
 ```
 
-El segundo script muestra la IP de esta PC en la red local — **anotarla**,
-hace falta para configurar Depósito/Oficina.
-
-Verificar que responda: abrir `http://localhost:3000/api/v1/health` en el
-navegador — tiene que decir `{"status":"ok"}`.
-
-## 6. Dar de alta el comercio
+## 3. Catálogo real
 
 ```powershell
 cd C:\NexoSoft\apps\cloud-api
-corepack pnpm crear:sucursal -- --nombre "Nombre real del comercio"
-```
-
-Copiar el `id` que devuelve, y con eso el primer ADMIN:
-
-```powershell
-$body = @{
-  email = "admin"          # o el usuario que prefieran, sin @ (no hace falta)
-  nombreDisplay = "Nombre del dueño"
-  password = "elegir-una-buena"
-  rol = "ADMIN"
-  sucursalId = "PEGAR_EL_ID_DE_ARRIBA"
-} | ConvertTo-Json
-Invoke-RestMethod -Uri "http://localhost:3000/api/v1/auth/register" -Method Post -Body $body -ContentType "application/json"
-```
-
-## 7. Catálogo real
-
-```powershell
 corepack pnpm importar:catalogo -- --archivo "RUTA\AL\Migrar Articulos.xlsx" --email admin --password "la-de-arriba" --dry-run
 ```
 
 Revisar que no haya sorpresas y correr de nuevo **sin** `--dry-run`.
 
-## 8. Instalar el POS
+## 4. Instalar el POS
 
 Copiar `NexoSoft POS_0.1.0_x64-setup.exe` a la PC (ya viene compilado, no
 hace falta Rust ni nada acá) e instalarlo. Repetir en Depósito y Oficina si
@@ -134,7 +104,7 @@ En cada instalación, al loguearse por primera vez:
 - Elegir/crear la terminal ("Caja 1", "Depósito", "Oficina" — el botón
   "+ Agregar" en esa pantalla lo hace sin volver a Postman/curl).
 
-## 9. Prueba final
+## 5. Prueba final
 
 Una venta de prueba, imprimir A4 y ticket chico, confirmar que el catálogo
 completo está (711 artículos), y que el panel (`http://localhost:3000/`)
