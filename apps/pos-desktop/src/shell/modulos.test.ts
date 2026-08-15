@@ -27,8 +27,15 @@ describe("modulosVisibles", () => {
     expect(modulosVisibles("ADMIN")).toHaveLength(MODULOS.length);
   });
 
-  it("el SUPERVISOR ve todos los módulos", () => {
-    expect(modulosVisibles("SUPERVISOR")).toHaveLength(MODULOS.length);
+  it("el SUPERVISOR ve todos los módulos salvo Usuarios (solo ADMIN)", () => {
+    expect(modulosVisibles("SUPERVISOR")).toHaveLength(MODULOS.length - 1);
+    expect(modulosVisibles("SUPERVISOR").map((m) => m.id)).not.toContain("usuarios");
+  });
+
+  it("solo el ADMIN ve Usuarios", () => {
+    expect(modulosVisibles("ADMIN").map((m) => m.id)).toContain("usuarios");
+    expect(modulosVisibles("SUPERVISOR").map((m) => m.id)).not.toContain("usuarios");
+    expect(modulosVisibles("CAJERO").map((m) => m.id)).not.toContain("usuarios");
   });
 
   it("el CAJERO solo ve la operación (inicio, ventas, caja, comprobantes, presupuestos)", () => {

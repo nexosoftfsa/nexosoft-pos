@@ -18,6 +18,7 @@ import { PresupuestosModule } from './presupuestos/presupuestos.module';
 import { RemitosModule } from './remitos/remitos.module';
 import { AsistenteModule } from './asistente/asistente.module';
 import { ComercioModule } from './comercio/comercio.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ComercioModule } from './comercio/comercio.module';
     RemitosModule,
     AsistenteModule,
     ComercioModule,
+    UsuariosModule,
   ],
 })
 export class AppModule {}

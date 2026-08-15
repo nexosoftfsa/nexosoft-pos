@@ -24,6 +24,7 @@ import {
   IconoRemito,
   IconoReportes,
   IconoStock,
+  IconoUsuarios,
 } from "./iconos";
 
 export type Rol = "ADMIN" | "SUPERVISOR" | "CAJERO";
@@ -58,6 +59,8 @@ export interface DefinicionModulo {
 
 const TODOS: readonly Rol[] = ["ADMIN", "SUPERVISOR", "CAJERO"];
 const GESTION: readonly Rol[] = ["ADMIN", "SUPERVISOR"];
+// Gestión de usuarios (rol/permisos) es más sensible que el resto: solo ADMIN.
+const SOLO_ADMIN: readonly Rol[] = ["ADMIN"];
 
 export const MODULOS: readonly DefinicionModulo[] = [
   { id: "inicio", titulo: "Inicio", crumb: "Panel general", seccion: "Operación", icono: IconoInicio, roles: TODOS },
@@ -72,7 +75,8 @@ export const MODULOS: readonly DefinicionModulo[] = [
   { id: "etiquetas", titulo: "Etiquetas de góndola", crumb: "Precio + código de barras", seccion: "Gestión", icono: IconoEtiqueta, roles: GESTION },
   { id: "reportes", titulo: "Reportes y Estadísticas", crumb: "Tablero", seccion: "Inteligencia", icono: IconoReportes, roles: GESTION },
   { id: "ia", titulo: "Asistente IA", crumb: "OCR + Métricas", seccion: "Inteligencia", icono: IconoIa, roles: GESTION, badge: "Nuevo" },
-  { id: "config", titulo: "Configuración", crumb: "Empresa · Fiscal · Usuarios", seccion: "Sistema", icono: IconoConfig, roles: GESTION, externo: true },
+  { id: "usuarios", titulo: "Usuarios", crumb: "Altas, roles y permisos", seccion: "Sistema", icono: IconoUsuarios, roles: SOLO_ADMIN },
+  { id: "config", titulo: "Configuración", crumb: "Empresa · Fiscal", seccion: "Sistema", icono: IconoConfig, roles: GESTION, externo: true },
 ];
 
 export const ETIQUETA_ROL: Record<Rol, string> = {

@@ -47,6 +47,8 @@ import type { AsistenteIA } from "./sync/cliente-ia";
 import { AsistenteIAHttp } from "./sync/cliente-ia";
 import type { ClienteAsistenteConfig } from "./sync/cliente-asistente-config";
 import { ClienteAsistenteConfigHttp } from "./sync/cliente-asistente-config";
+import type { ClienteUsuarios } from "./sync/cliente-usuarios-http";
+import { ClienteUsuariosHttp } from "./sync/cliente-usuarios-http";
 
 /** Aviso a pantalla completa para estados de carga/error. */
 function Aviso({ children }: { children: ReactNode }) {
@@ -145,6 +147,7 @@ function AppTauri() {
   const clienteRemitosRef = useRef<ClienteRemitos | null>(null);
   const clienteIARef = useRef<AsistenteIA | null>(null);
   const clienteAsistenteConfigRef = useRef<ClienteAsistenteConfig | null>(null);
+  const clienteUsuariosRef = useRef<ClienteUsuarios | null>(null);
   const [fase, setFase] = useState<Fase>("cargando");
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
@@ -186,6 +189,11 @@ function AppTauri() {
       clienteAsistenteConfigRef.current = new ClienteAsistenteConfigHttp(
         baseUrlRef.current,
         () => sesion.obtenerToken(),
+      );
+      clienteUsuariosRef.current = new ClienteUsuariosHttp(
+        baseUrlRef.current,
+        () => sesion.obtenerToken(),
+        sesion.sucursalId ?? "",
       );
       setEntorno(env);
       setFase("listo");
@@ -398,6 +406,7 @@ function AppTauri() {
       <Shell
         entorno={entorno}
         usuario={{
+          ...(sesionRef.current?.usuarioId !== undefined ? { id: sesionRef.current.usuarioId } : {}),
           ...(sesionRef.current?.email !== undefined ? { email: sesionRef.current.email } : {}),
           ...(sesionRef.current?.rol !== undefined ? { rol: sesionRef.current.rol } : {}),
         }}
@@ -413,6 +422,7 @@ function AppTauri() {
         {...(clienteAsistenteConfigRef.current !== null
           ? { clienteAsistenteConfig: clienteAsistenteConfigRef.current }
           : {})}
+        {...(clienteUsuariosRef.current !== null ? { clienteUsuarios: clienteUsuariosRef.current } : {})}
         {...(sesionRef.current?.terminalId !== undefined ? { terminalId: sesionRef.current.terminalId } : {})}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }

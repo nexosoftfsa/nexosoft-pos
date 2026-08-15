@@ -96,6 +96,16 @@ export function IconoIa() {
   );
 }
 
+export function IconoUsuarios() {
+  return (
+    <Svg>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
+      <path d="M19.5 8.5l1.2 1.2 2-2" />
+    </Svg>
+  );
+}
+
 export function IconoConfig() {
   return (
     <Svg>
