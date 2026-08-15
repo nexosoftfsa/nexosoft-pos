@@ -56,7 +56,27 @@ corepack pnpm exec prisma migrate deploy
 corepack pnpm build
 ```
 
-## 4. Servidor como servicio de Windows (arranca solo, se reinicia solo)
+## 4. Panel web de reportes
+
+El panel (`admin-web`) lo sirve el mismo `cloud-api`, no hace falta nada
+aparte. Ojo con `VITE_API_URL`: se graba FIJO adentro del panel al
+compilarlo — si se pone `http://localhost:3000/api/v1`, el panel deja de
+andar para cualquiera que entre desde OTRA PC o el celular (su "localhost"
+sería el celular, no el servidor). Por eso se usa una ruta relativa:
+
+```powershell
+cd C:\NexoSoft
+$env:VITE_API_URL = "/api/v1"
+corepack pnpm --filter @nexosoft/admin-web build
+New-Item -ItemType Directory -Force apps\cloud-api\panel | Out-Null
+Copy-Item apps\admin-web\dist\* apps\cloud-api\panel -Recurse -Force
+```
+
+Con eso, el panel queda disponible en `http://localhost:3000/` (o
+`http://<IP-de-la-caja>:3000/` desde cualquier otra PC/celular en la
+misma red) — login con el usuario ADMIN.
+
+## 5. Servidor como servicio de Windows (arranca solo, se reinicia solo)
 
 **Como Administrador:**
 
@@ -72,7 +92,7 @@ hace falta para configurar Depósito/Oficina.
 Verificar que responda: abrir `http://localhost:3000/api/v1/health` en el
 navegador — tiene que decir `{"status":"ok"}`.
 
-## 5. Dar de alta el comercio
+## 6. Dar de alta el comercio
 
 ```powershell
 cd C:\NexoSoft\apps\cloud-api
@@ -92,7 +112,7 @@ $body = @{
 Invoke-RestMethod -Uri "http://localhost:3000/api/v1/auth/register" -Method Post -Body $body -ContentType "application/json"
 ```
 
-## 6. Catálogo real
+## 7. Catálogo real
 
 ```powershell
 corepack pnpm importar:catalogo -- --archivo "RUTA\AL\Migrar Articulos.xlsx" --email admin --password "la-de-arriba" --dry-run
@@ -100,7 +120,7 @@ corepack pnpm importar:catalogo -- --archivo "RUTA\AL\Migrar Articulos.xlsx" --e
 
 Revisar que no haya sorpresas y correr de nuevo **sin** `--dry-run`.
 
-## 7. Instalar el POS
+## 8. Instalar el POS
 
 Copiar `NexoSoft POS_0.1.0_x64-setup.exe` a la PC (ya viene compilado, no
 hace falta Rust ni nada acá) e instalarlo. Repetir en Depósito y Oficina si
@@ -114,7 +134,7 @@ En cada instalación, al loguearse por primera vez:
 - Elegir/crear la terminal ("Caja 1", "Depósito", "Oficina" — el botón
   "+ Agregar" en esa pantalla lo hace sin volver a Postman/curl).
 
-## 8. Prueba final
+## 9. Prueba final
 
 Una venta de prueba, imprimir A4 y ticket chico, confirmar que el catálogo
 completo está (711 artículos), y que el panel (`http://localhost:3000/`)
