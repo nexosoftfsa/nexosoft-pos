@@ -55,8 +55,15 @@ corepack pnpm tauri:build
 Set-Location $raiz
 
 $bundleDir = "apps\pos-desktop\src-tauri\target\release\bundle\nsis"
-$exeOriginal = Get-ChildItem "$bundleDir\*.exe" | Where-Object { $_.Name -notmatch '^NexoSoft-POS' } | Select-Object -First 1
-if (-not $exeOriginal) { Write-Error "No encontré el instalador recién compilado en $bundleDir"; exit 1 }
+# Match EXACTO por la version que se acaba de compilar (no "el mas nuevo" ni
+# "el que no matchee tal patron": el directorio de bundle no se limpia entre
+# builds y queda con instaladores de versiones viejas — un filtro ambiguo
+# termina agarrando el archivo equivocado, como paso la primera vez.
+$exeOriginal = Get-Item "$bundleDir\NexoSoft POS_${Version}_x64-setup.exe" -ErrorAction SilentlyContinue
+if (-not $exeOriginal) {
+    Write-Error "No encontré 'NexoSoft POS_${Version}_x64-setup.exe' recien compilado en $bundleDir"
+    exit 1
+}
 $exeSinEspacios = "$bundleDir\NexoSoft-POS_${Version}_x64-setup.exe"
 Copy-Item $exeOriginal.FullName $exeSinEspacios -Force
 

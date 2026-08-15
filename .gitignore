@@ -64,3 +64,7 @@ Thumbs.db
 
 # Claude Code: config local (rutas/permisos de esta PC), no se comparte
 .claude/settings.local.json
+
+# Clave de firma del updater del POS (NUNCA versionar: quien la tenga puede
+# firmar "actualizaciones" falsas que todos los clientes instalarian solos)
+*.key.password.txt
