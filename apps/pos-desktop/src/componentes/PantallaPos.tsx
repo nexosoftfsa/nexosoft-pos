@@ -633,7 +633,11 @@ export function PantallaPos({
             ) : ultimaVenta.tipoComprobante === TipoComprobante.TicketNoFiscal ? (
               <div className="ticket-estado">No válido como factura</div>
             ) : (
-              <div className="ticket-estado">{ultimaVenta.estadoCae}</div>
+              <div className="ticket-estado">
+                {ultimaVenta.estadoCae === EstadoCae.Rechazada
+                  ? "Rechazada por ARCA"
+                  : "Pendiente de autorización de ARCA"}
+              </div>
             )}
             <ul className="ticket-items">
               {ultimaVenta.items.map((it, i) => (
