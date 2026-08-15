@@ -49,10 +49,21 @@ y testeados; se enchufan al cambiar la fábrica del entorno, sin tocar la UI.
 
 ## Estado
 
-- ✅ Fase 1 (catálogo + stock + POS offline + SQLite)
-- ✅ Fase 2 (fiscal: CAE + Notas de Crédito/Débito)
-- ✅ Fase 3 (Tauri nativo + hardware + pagos)
-- ✅ Fase 4.6 (cola de sync + indicador de estado en la UI)
-- 🔜 Conectar adaptadores reales (SQLite/HTTP) dentro de Tauri + login + selección de terminal
+- ✅ Fases 1-9 (catálogo, stock, fiscal, hardware, sync, shell/gestión completo,
+  caja, cuentas corrientes, combos/lotes, promociones, presupuestos/remitos,
+  asistente IA, impresión A4 y de etiquetas)
+- ✅ Fase 10 (modo sin ARCA / `TicketNoFiscal`, importador de catálogo real,
+  padrón multi-comercio, catálogo demo con datos reales del cliente)
+- ✅ Fase 11 (instalación del primer cliente, agosto 2026): logo del comercio
+  (login/sidebar/impresión/panel), gestión de usuarios desde la app (alta,
+  rol, activar/desactivar — ver [ADR-0047](../../docs/adr/0047-registro-cerrado-salvo-alta-de-primer-admin.md)),
+  alta de terminal desde la app, renovación periódica del access token
+  (antes solo se pedía al loguearse — un turno largo terminaba en 401),
+  vista previa imprimible del ticket chico (`ComprobanteTicket`, formato
+  térmico ~80mm), reintento manual de operaciones de sync `fallida`
+  (antes el botón "Sincronizar" las ignoraba para siempre), compatibilidad
+  de esquema SQLite para bases instaladas antes de columnas nuevas.
 
-**14 tests** (cola SQLite, clientes, mapeo).
+**208 tests** (cola SQLite, clientes HTTP, sesión/token, mapeo, helpers de
+UI). Ver [`docs/instalacion-primer-cliente.md`](../../docs/instalacion-primer-cliente.md)
+para el paso a paso de instalación en un comercio nuevo.

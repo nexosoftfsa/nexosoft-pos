@@ -121,13 +121,22 @@ completo tras cada venta (default `false`: en alto volumen es caro). Ver
 DEMO_KEEPALIVE=1 pnpm --filter @nexosoft/cloud-api seed:demo
 ```
 
-## Estado (Fase 4)
+## Estado
 
-- ✅ 4.1 Scaffold + auth JWT
-- ✅ 4.2 Catálogo + stock
-- ✅ 4.3 Capa de respaldo a nube propia
-- ✅ 4.4 Ventas + libro Excel + respaldo por venta
-- ✅ 4.5 Sync terminal↔servidor (cola + ingesta + `terminalId`)
-- 🔜 4.6 Integración de la sync en el POS (cola SQLite, cliente HTTP, UI)
+- ✅ Fases 4-9: scaffold + auth JWT, catálogo/stock, respaldo a nube propia,
+  ventas + libro Excel, sync terminal↔servidor, caja, clientes/cuenta
+  corriente, presupuestos/remitos, asistente IA (Gemini), combos y
+  lotes/vencimientos (FEFO), promociones, impresión (A4/etiquetas).
+- ✅ Fase 10: modo sin ARCA (`TicketNoFiscal`, ver [ADR-0041](../../docs/adr/0041-modo-de-venta-sin-arca.md)),
+  importador de catálogo real, padrón multi-comercio.
+- ✅ Fase 11 (instalación del primer cliente, agosto 2026): `POST /auth/register`
+  cerrado salvo alta del primer ADMIN ([ADR-0047](../../docs/adr/0047-registro-cerrado-salvo-alta-de-primer-admin.md)),
+  módulo `usuarios` (listar/cambiar rol/activar-desactivar, con protección
+  contra que un ADMIN se bloquee a sí mismo), módulo `comercio` (logo para
+  el panel), `scripts/crear-sucursal.mjs` (antes no había forma de dar de
+  alta una Sucursal fuera de los seeds de demo), primera migración de
+  Prisma generada (`prisma/migrations/`, no existía hasta ahora).
 
-**61 tests** (cloud-api) **+ 10** (`@nexosoft/sync`), typecheck limpio, e2e verde.
+**192 tests** (cloud-api) **+ 11** (`@nexosoft/sync`), typecheck limpio,
+e2e verde. Ver [`docs/instalacion-primer-cliente.md`](../../docs/instalacion-primer-cliente.md)
+para el paso a paso de instalación en un comercio nuevo.
