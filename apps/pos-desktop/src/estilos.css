@@ -560,11 +560,34 @@ body {
     top: 0;
     width: 100%;
   }
+
+  /* Ticket chico (vista previa del formato rollo térmico) — mismo patrón que .hoja-a4. */
+  body.modo-impresion-ticket * {
+    visibility: hidden;
+  }
+  body.modo-impresion-ticket .hoja-ticket,
+  body.modo-impresion-ticket .hoja-ticket * {
+    visibility: visible;
+  }
+  body.modo-impresion-ticket .hoja-ticket {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+  }
 }
 
 @page {
   size: A4;
   margin: 15mm;
+}
+/* Página angosta para el ticket chico (soportado en navegadores Chromium,
+   como el WebView2 de la app instalada). Si el navegador no soporta páginas
+   con nombre, imprime igual, solo que en A4 con margen blanco alrededor. */
+@page ticket-chico {
+  size: 80mm auto;
+  margin: 3mm;
 }
 
 /* Factura A4 (oculta en pantalla; ver regla @media print de arriba) */
@@ -652,6 +675,49 @@ body {
   border-top: 1px solid #ccc;
   font-size: 10pt;
   text-align: center;
+}
+
+/* Ticket chico (oculto en pantalla; ver regla @media print de arriba) */
+.hoja-ticket {
+  display: none;
+  page: ticket-chico;
+  width: 80mm;
+  font-family: "Courier New", monospace;
+  font-size: 9pt;
+  line-height: 1.35;
+  color: #000;
+}
+.ticket-print-logo {
+  display: block;
+  max-height: 40px;
+  max-width: 100%;
+  object-fit: contain;
+  margin: 0 auto 4px;
+}
+.ticket-print-centro {
+  text-align: center;
+}
+.ticket-print-tipo {
+  font-weight: 700;
+}
+.ticket-print-aviso {
+  font-weight: 700;
+}
+.ticket-print-sep {
+  border-top: 1px dashed #000;
+  margin: 4px 0;
+}
+.ticket-print-linea {
+  margin-bottom: 2px;
+}
+.ticket-print-fila {
+  display: flex;
+  justify-content: space-between;
+}
+.ticket-print-total {
+  font-weight: 700;
+  font-size: 11pt;
+  margin-top: 2px;
 }
 
 /* Hoja de etiquetas de góndola (Fase 10.5) — oculta en pantalla, ver

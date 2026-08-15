@@ -20,6 +20,7 @@ import { etiquetaComprobante, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
 import { ComprobanteA4 } from "./ComprobanteA4";
+import { ComprobanteTicket } from "./ComprobanteTicket";
 import { filtrarCatalogoVenta } from "./pos-helpers";
 import {
   descuentoDeLinea,
@@ -28,6 +29,7 @@ import {
   promoAplicable,
 } from "./promos";
 import { useImpresionA4 } from "./usar-impresion-a4";
+import { useImpresionTicket } from "./usar-impresion-ticket";
 
 interface ItemCarrito {
   readonly producto: ProductoCatalogo;
@@ -129,6 +131,7 @@ export function PantallaPos({
   const [pagoElectronico, setPagoElectronico] = useState<IntentoPago | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { datosA4, imprimirA4 } = useImpresionA4();
+  const { datosTicket, imprimirTicketPreview } = useImpresionTicket();
 
   // ----- Lector de barras HID -----
   // Los lectores HID se comportan como teclado: acumulamos teclas hasta Enter.
@@ -383,7 +386,11 @@ export function PantallaPos({
     setImprimiendo(true);
     try {
       const datos = construirDatosTicket(venta, config, catalogo, pagos);
+      // La térmica real todavía no existe (mock, ver packages/hardware): igual
+      // se registra el trabajo (para cuando haya driver) y se muestra la vista
+      // previa imprimible en formato rollo, así el "Imprimir" no queda mudo.
       await impresora.imprimirTicket(datos);
+      imprimirTicketPreview(datos);
     } catch (e) {
       setError(`Error al imprimir: ${mensajeError(e)}`);
     } finally {
@@ -700,6 +707,7 @@ export function PantallaPos({
       )}
 
       {datosA4 && <ComprobanteA4 datos={datosA4} />}
+      {datosTicket && <ComprobanteTicket datos={datosTicket} />}
     </div>
   );
 }

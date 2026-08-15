@@ -11,6 +11,7 @@ import type { ConfiguracionComercio } from "@nexosoft/app";
 import { ErrorVentas, type Comprobante, type ClienteVentas } from "../sync/cliente-ventas";
 import { pesos } from "../formato";
 import { ComprobanteA4 } from "./ComprobanteA4";
+import { ComprobanteTicket } from "./ComprobanteTicket";
 import {
   datosTicketDeComprobante,
   esAnulable,
@@ -21,6 +22,7 @@ import {
   numeroComprobante,
 } from "./comprobantes-helpers";
 import { useImpresionA4 } from "./usar-impresion-a4";
+import { useImpresionTicket } from "./usar-impresion-ticket";
 
 function mensajeError(e: unknown): string {
   if (e instanceof ErrorVentas) return e.message;
@@ -222,6 +224,7 @@ function ModalReimpresion({
   onCerrar: () => void;
 }) {
   const { datosA4, imprimirA4 } = useImpresionA4();
+  const { datosTicket, imprimirTicketPreview } = useImpresionTicket();
   return (
     <div className="overlay" onClick={onCerrar}>
       <div className="ticket" onClick={(e) => e.stopPropagation()}>
@@ -259,7 +262,9 @@ function ModalReimpresion({
           </ul>
         )}
         <div className="ticket-acciones">
-          <button onClick={() => window.print()}>Imprimir</button>
+          <button onClick={() => imprimirTicketPreview(datosTicketDeComprobante(comprobante, config))}>
+            Imprimir
+          </button>
           <button onClick={() => imprimirA4(datosTicketDeComprobante(comprobante, config))}>
             Imprimir A4
           </button>
@@ -269,6 +274,7 @@ function ModalReimpresion({
         </div>
       </div>
       {datosA4 && <ComprobanteA4 datos={datosA4} />}
+      {datosTicket && <ComprobanteTicket datos={datosTicket} />}
     </div>
   );
 }
