@@ -35,6 +35,23 @@ describe("AlmacenEnMemoria", () => {
     expect(todas).toHaveLength(1);
     expect(todas[0]?.estado).toBe("completada"); // no se pisó
   });
+
+  it("reintentarFallidas vuelve a pendiente solo las fallidas, resetea intentos y limpia el error", async () => {
+    const almacen = new AlmacenEnMemoria();
+    await almacen.encolar(op("op-1"));
+    await almacen.encolar(op("op-2"));
+    await almacen.marcar("op-1", "fallida", { intentos: 5, ultimoError: "Sync HTTP 401" });
+    await almacen.marcar("op-2", "completada");
+
+    const n = await almacen.reintentarFallidas();
+
+    expect(n).toBe(1);
+    const op1 = await almacen.obtener("op-1");
+    expect(op1?.estado).toBe("pendiente");
+    expect(op1?.intentos).toBe(0);
+    expect(op1?.ultimoError).toBeUndefined();
+    expect((await almacen.obtener("op-2"))?.estado).toBe("completada");
+  });
 });
 
 describe("MotorDeSincronizacion", () => {

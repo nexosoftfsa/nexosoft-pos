@@ -106,4 +106,18 @@ export class AlmacenSqlite implements AlmacenDeOperaciones {
     );
     return filas.map(aOperacion);
   }
+
+  async reintentarFallidas(): Promise<number> {
+    const previas = await this.ejecutor.consultar<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM operacion_sync WHERE estado = 'fallida'`,
+    );
+    const n = Number(previas[0]?.n ?? 0);
+    if (n > 0) {
+      await this.ejecutor.ejecutar(
+        `UPDATE operacion_sync SET estado = 'pendiente', intentos = 0, ultimo_error = NULL
+         WHERE estado = 'fallida'`,
+      );
+    }
+    return n;
+  }
 }

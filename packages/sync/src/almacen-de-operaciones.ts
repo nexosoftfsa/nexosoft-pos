@@ -23,4 +23,15 @@ export interface AlmacenDeOperaciones {
   obtener(operacionId: string): Promise<OperacionEnCola | undefined>;
 
   todas(): Promise<OperacionEnCola[]>;
+
+  /**
+   * Vuelve a poner en `pendiente` (intentos en 0) las operaciones `fallida`
+   * — las que agotaron los reintentos automáticos y quedaron sin ninguna
+   * forma de reintentarse. Pensado para un reintento MANUAL (botón
+   * "Sincronizar"), no automático: una operación rota de verdad (ej. un
+   * conflicto de datos) volvería a fallar sola en la próxima corrida
+   * periódica si esto se llamara automáticamente, sin que nadie se entere.
+   * Devuelve cuántas operaciones se reactivaron.
+   */
+  reintentarFallidas(): Promise<number>;
 }

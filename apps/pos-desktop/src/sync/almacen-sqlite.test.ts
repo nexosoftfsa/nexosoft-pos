@@ -100,4 +100,30 @@ describe("AlmacenSqlite", () => {
     const pend = await almacen.pendientes();
     expect(pend.map((o) => o.operacionId)).toEqual(["op-2"]);
   });
+
+  describe("reintentarFallidas", () => {
+    it("vuelve a pendiente las fallidas, resetea intentos y limpia el error", async () => {
+      await almacen.encolar(op("op-1"));
+      await almacen.encolar(op("op-2"));
+      await almacen.marcar("op-1", "fallida", { intentos: 5, ultimoError: "Sync HTTP 401" });
+      await almacen.marcar("op-2", "completada");
+
+      const n = await almacen.reintentarFallidas();
+
+      expect(n).toBe(1);
+      const o1 = await almacen.obtener("op-1");
+      expect(o1?.estado).toBe("pendiente");
+      expect(o1?.intentos).toBe(0);
+      expect(o1?.ultimoError).toBeUndefined();
+      const o2 = await almacen.obtener("op-2");
+      expect(o2?.estado).toBe("completada"); // no la toca
+    });
+
+    it("devuelve 0 sin tocar nada si no hay fallidas", async () => {
+      await almacen.encolar(op("op-1"));
+      const n = await almacen.reintentarFallidas();
+      expect(n).toBe(0);
+      expect((await almacen.obtener("op-1"))?.estado).toBe("pendiente");
+    });
+  });
 });

@@ -2,7 +2,7 @@ import type { EstadoSync } from "./useSync";
 
 /** Píldora de estado de sincronización para la barra superior. */
 export function IndicadorSync({ estado }: { estado: EstadoSync }) {
-  const { online, sincronizando, pendientes, fallidas, sincronizarAhora } = estado;
+  const { online, sincronizando, pendientes, fallidas, sincronizarAhora, reintentarFallidasYSincronizar } = estado;
 
   let clase = "sync-ok";
   let texto = "Sincronizado";
@@ -27,8 +27,11 @@ export function IndicadorSync({ estado }: { estado: EstadoSync }) {
       <span className="sync-dot" aria-hidden />
       <span className="sync-texto">{texto}</span>
       {mostrarBoton && (
-        <button className="sync-boton" onClick={() => void sincronizarAhora()}>
-          Sincronizar
+        <button
+          className="sync-boton"
+          onClick={() => void (fallidas > 0 ? reintentarFallidasYSincronizar() : sincronizarAhora())}
+        >
+          {fallidas > 0 ? "Reintentar" : "Sincronizar"}
         </button>
       )}
     </div>

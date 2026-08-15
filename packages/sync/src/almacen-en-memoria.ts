@@ -42,4 +42,17 @@ export class AlmacenEnMemoria implements AlmacenDeOperaciones {
   todas(): Promise<OperacionEnCola[]> {
     return Promise.resolve([...this.cola.values()]);
   }
+
+  reintentarFallidas(): Promise<number> {
+    let n = 0;
+    for (const op of this.cola.values()) {
+      if (op.estado === "fallida") {
+        op.estado = "pendiente";
+        op.intentos = 0;
+        delete op.ultimoError;
+        n++;
+      }
+    }
+    return Promise.resolve(n);
+  }
 }

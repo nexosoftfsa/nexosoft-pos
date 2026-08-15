@@ -17,6 +17,8 @@ export interface EstadoSync {
   readonly error: string | null;
   readonly encolar: (op: OperacionSync) => Promise<void>;
   readonly sincronizarAhora: () => Promise<void>;
+  /** Reactiva las operaciones `fallida` (agotaron los reintentos automáticos) y sincroniza. Acción manual (botón). */
+  readonly reintentarFallidasYSincronizar: () => Promise<void>;
 }
 
 const INTERVALO_MS = 15_000;
@@ -63,6 +65,11 @@ export function useSync(sync: SyncPos): EstadoSync {
     [motor, refrescar, sincronizarAhora],
   );
 
+  const reintentarFallidasYSincronizar = useCallback(async () => {
+    await almacen.reintentarFallidas();
+    await sincronizarAhora();
+  }, [almacen, sincronizarAhora]);
+
   useEffect(() => {
     const alConectar = () => {
       setOnline(true);
@@ -83,5 +90,14 @@ export function useSync(sync: SyncPos): EstadoSync {
     return () => clearInterval(id);
   }, [refrescar, sincronizarAhora]);
 
-  return { pendientes, fallidas, sincronizando, online, error, encolar, sincronizarAhora };
+  return {
+    pendientes,
+    fallidas,
+    sincronizando,
+    online,
+    error,
+    encolar,
+    sincronizarAhora,
+    reintentarFallidasYSincronizar,
+  };
 }
