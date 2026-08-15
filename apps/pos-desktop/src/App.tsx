@@ -232,6 +232,26 @@ function AppTauri() {
     void inicializar();
   }, [inicializar]);
 
+  // El access token dura minutos (JWT_ACCESS_EXPIRY); sin este chequeo periódico
+  // solo se renueva una vez, al loguearse — cualquier acción después de que
+  // venza responde 401 "Unauthorized" hasta reiniciar la app. Se fija cada
+  // minuto (bien por debajo del margen de refresh de asegurarTokenVigente) para
+  // no dejar pasar la ventana en la que conviene renovar.
+  useEffect(() => {
+    const id = setInterval(() => {
+      const sesion = sesionRef.current;
+      if (sesion === null) return;
+      void sesion.asegurarTokenVigente().catch((e: unknown) => {
+        // Refresh token también vencido/inválido: no hay forma de seguir sin
+        // reloguear. Igual que el 401 de construirEntorno, se vuelve al login.
+        if (e instanceof ErrorAuth && e.status === 401) {
+          void sesion.cerrar().then(() => setFase("login"));
+        }
+      });
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   const onLogin = useCallback(
     async (cred: Credenciales) => {
       const sesion = sesionRef.current;
