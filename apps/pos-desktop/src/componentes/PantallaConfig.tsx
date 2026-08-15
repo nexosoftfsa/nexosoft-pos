@@ -188,7 +188,9 @@ const fondo: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  height: "100vh",
+  minHeight: "100vh",
+  overflowY: "auto",
+  padding: "2rem 0",
   background: "#f1f5f9",
   fontFamily: "system-ui, sans-serif",
 };
