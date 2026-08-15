@@ -170,6 +170,8 @@ export function PantallaConfig({
 
         {error !== null && <div style={aviso}>{error}</div>}
 
+        <Actualizaciones />
+
         <div style={{ display: "flex", gap: "0.6rem", marginTop: "0.4rem" }}>
           <button type="button" style={botonSec} onClick={onCancelar} disabled={guardando}>
             Cancelar
@@ -179,7 +181,6 @@ export function PantallaConfig({
           </button>
         </div>
       </form>
-      <Actualizaciones />
     </div>
   );
 }
