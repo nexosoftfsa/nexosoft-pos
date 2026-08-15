@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 
 import { CondicionIva } from "@nexosoft/domain";
+import { Actualizaciones } from "./Actualizaciones";
 
 export interface ValoresConfig {
   readonly servidorUrl: string;
@@ -178,6 +179,7 @@ export function PantallaConfig({
           </button>
         </div>
       </form>
+      <Actualizaciones />
     </div>
   );
 }
