@@ -44,6 +44,7 @@ model Sucursal {
   clientes Cliente[]
   movimientosCuentaCorriente MovimientoCuentaCorriente[]
   proveedores Proveedor[]
+  tarjetasConfig TarjetaConfig[]
   presupuestos Presupuesto[]
   remitos Remito[]
   lotes Lote[]
@@ -449,6 +450,40 @@ model Proveedor {
   sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
 
   @@map("proveedores")
+}
+
+// ─── Medios de pago: tarjetas por banco con tasas por cuotas ───────────────────
+
+enum TipoTarjeta {
+  DEBITO
+  CREDITO
+}
+
+model TarjetaConfig {
+  id        String      @id @default(cuid())
+  banco     String
+  tipo      TipoTarjeta
+  marca     String? // "Visa", "Mastercard", etc. (opcional)
+  activo    Boolean     @default(true)
+  creadoEn  DateTime    @default(now())
+
+  sucursalId String
+  sucursal   Sucursal    @relation(fields: [sucursalId], references: [id])
+  tasas      TasaCuota[]
+
+  @@map("tarjetas_config")
+}
+
+model TasaCuota {
+  id                String  @id @default(cuid())
+  cantidadCuotas    Int
+  recargoPorcentaje Decimal @db.Decimal(5, 2)
+
+  tarjetaConfigId String
+  tarjetaConfig   TarjetaConfig @relation(fields: [tarjetaConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([tarjetaConfigId, cantidadCuotas])
+  @@map("tasas_cuota")
 }
 
 // ─── Presupuestos (comprobante NO fiscal) ──────────────────────────────────────

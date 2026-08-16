@@ -15,6 +15,7 @@ import { ReportesModule } from './reportes/reportes.module';
 import { CajaModule } from './caja/caja.module';
 import { ClientesModule } from './clientes/clientes.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
+import { MediosPagoModule } from './medios-pago/medios-pago.module';
 import { PresupuestosModule } from './presupuestos/presupuestos.module';
 import { RemitosModule } from './remitos/remitos.module';
 import { AsistenteModule } from './asistente/asistente.module';
@@ -44,6 +45,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     CajaModule,
     ClientesModule,
     ProveedoresModule,
+    MediosPagoModule,
     PresupuestosModule,
     RemitosModule,
     AsistenteModule,
