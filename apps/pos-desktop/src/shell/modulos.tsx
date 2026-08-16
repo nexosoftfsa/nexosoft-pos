@@ -72,7 +72,7 @@ export const MODULOS: readonly DefinicionModulo[] = [
   { id: "catalogo", titulo: "Catálogo y Precios", crumb: "Artículos y listas", seccion: "Gestión", icono: IconoCatalogo, roles: GESTION },
   { id: "stock", titulo: "Stock e Inventario", crumb: "Existencias", seccion: "Gestión", icono: IconoStock, roles: GESTION },
   { id: "ctacte", titulo: "Cuentas Corrientes", crumb: "Clientes y proveedores", seccion: "Gestión", icono: IconoCtaCte, roles: GESTION },
-  { id: "etiquetas", titulo: "Etiquetas de góndola", crumb: "Precio + código de barras", seccion: "Gestión", icono: IconoEtiqueta, roles: GESTION },
+  { id: "etiquetas", titulo: "Etiquetas de góndola", crumb: "Buscar o escanear, exportar a Excel", seccion: "Gestión", icono: IconoEtiqueta, roles: GESTION },
   { id: "reportes", titulo: "Reportes y Estadísticas", crumb: "Tablero", seccion: "Inteligencia", icono: IconoReportes, roles: GESTION },
   { id: "ia", titulo: "Asistente IA", crumb: "OCR + Métricas", seccion: "Inteligencia", icono: IconoIa, roles: GESTION, badge: "Nuevo" },
   { id: "usuarios", titulo: "Usuarios", crumb: "Altas, roles y permisos", seccion: "Sistema", icono: IconoUsuarios, roles: SOLO_ADMIN },

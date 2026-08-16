@@ -1,8 +1,14 @@
-/** Fase 10.5: lógica pura de la pantalla de etiquetas de góndola. */
+/** Fase 10.5 (Fase 12: sin código de barras, export a Excel): lógica pura de la pantalla de etiquetas de góndola. */
 import type { ProductoAdmin } from "../sync/cliente-catalogo-admin";
-import type { EtiquetaAImprimir } from "./EtiquetaGondola";
 
-/** Arma la lista plana a imprimir: una entrada por copia pedida de cada producto seleccionado. */
+/** Una etiqueta a exportar: solo nombre y precio (sin código de barras, pedido del cliente en Fase 12). */
+export interface EtiquetaAImprimir {
+  readonly codigo: string;
+  readonly nombre: string;
+  readonly precio: string; // decimal string, ej. "1850.00"
+}
+
+/** Arma la lista plana a exportar: una entrada por copia pedida de cada producto seleccionado. */
 export function armarEtiquetas(
   productos: readonly ProductoAdmin[],
   seleccion: ReadonlyMap<string, number>,

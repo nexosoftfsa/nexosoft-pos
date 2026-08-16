@@ -278,7 +278,7 @@ export function Shell({
           ) : activo?.id === "catalogo" && clienteCatalogo ? (
             <CatalogoAbm cliente={clienteCatalogo} />
           ) : activo?.id === "etiquetas" && clienteCatalogo ? (
-            <EtiquetasGondola cliente={clienteCatalogo} />
+            <EtiquetasGondola cliente={clienteCatalogo} lector={entorno.lector} />
           ) : activo?.id === "stock" && clienteStock ? (
             <StockAbm cliente={clienteStock} />
           ) : activo?.id === "caja" && clienteCaja && terminalId ? (
