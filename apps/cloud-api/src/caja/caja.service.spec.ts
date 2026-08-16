@@ -115,6 +115,48 @@ describe('CajaService', () => {
     });
   });
 
+  describe('listarTurnos', () => {
+    it('incluye terminal y usuario, ordenado por apertura descendente', async () => {
+      mockTurno.findMany.mockResolvedValue([
+        { ...turnoAbierto(), terminal: { nombre: 'Caja 1' }, usuario: { email: 'cajero@nexo.com' } },
+      ]);
+
+      const r = await service.listarTurnos(SUCURSAL);
+
+      expect(r).toHaveLength(1);
+      expect(r[0]!.terminal.nombre).toBe('Caja 1');
+      expect(r[0]!.usuario.email).toBe('cajero@nexo.com');
+      const args = mockTurno.findMany.mock.calls[0]![0];
+      expect(args.where.sucursalId).toBe(SUCURSAL);
+      expect(args.orderBy).toEqual({ abiertoEn: 'desc' });
+      expect(args.include.terminal.select.nombre).toBe(true);
+      expect(args.include.usuario.select.email).toBe(true);
+    });
+
+    it('filtra por terminalId cuando se pasa', async () => {
+      mockTurno.findMany.mockResolvedValue([]);
+      await service.listarTurnos(SUCURSAL, { terminalId: TERMINAL });
+      const args = mockTurno.findMany.mock.calls[0]![0];
+      expect(args.where.terminalId).toBe(TERMINAL);
+    });
+
+    it('no filtra por terminal cuando no se pasa', async () => {
+      mockTurno.findMany.mockResolvedValue([]);
+      await service.listarTurnos(SUCURSAL);
+      const args = mockTurno.findMany.mock.calls[0]![0];
+      expect(args.where.terminalId).toBeUndefined();
+    });
+
+    it('capa el limite a 100 y respeta el minimo de 1', async () => {
+      mockTurno.findMany.mockResolvedValue([]);
+      await service.listarTurnos(SUCURSAL, { limite: 500 });
+      expect(mockTurno.findMany.mock.calls[0]![0].take).toBe(100);
+
+      await service.listarTurnos(SUCURSAL, { limite: -5 });
+      expect(mockTurno.findMany.mock.calls[1]![0].take).toBe(1);
+    });
+  });
+
   describe('turnoActual', () => {
     it('devuelve null si no hay turno abierto', async () => {
       mockTurno.findFirst.mockResolvedValue(null);

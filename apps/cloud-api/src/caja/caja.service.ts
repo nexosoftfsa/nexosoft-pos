@@ -66,11 +66,20 @@ export class CajaService {
     return this.conResumen(turno);
   }
 
-  async listarTurnos(sucursalId: string, limite = 30) {
+  /** Historial de turnos (más reciente primero), con terminal y cajero. */
+  async listarTurnos(
+    sucursalId: string,
+    opciones: { limite?: number; terminalId?: string } = {},
+  ) {
+    const limite = opciones.limite ?? 30;
     const turnos = await this.prisma.turnoCaja.findMany({
-      where: { sucursalId },
+      where: { sucursalId, ...(opciones.terminalId ? { terminalId: opciones.terminalId } : {}) },
       orderBy: { abiertoEn: 'desc' },
       take: Math.min(Math.max(limite, 1), 100),
+      include: {
+        terminal: { select: { nombre: true } },
+        usuario: { select: { email: true } },
+      },
     });
     return turnos;
   }

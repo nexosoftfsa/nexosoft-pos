@@ -36,8 +36,15 @@ export class CajaController {
   }
 
   @Get('turnos')
-  historial(@Request() req: { user: UsuarioJwt }, @Query('limite') limite?: string) {
-    return this.cajaService.listarTurnos(req.user.sucursalId, limite ? Number(limite) : undefined);
+  historial(
+    @Request() req: { user: UsuarioJwt },
+    @Query('limite') limite?: string,
+    @Query('terminalId') terminalId?: string,
+  ) {
+    return this.cajaService.listarTurnos(req.user.sucursalId, {
+      ...(limite ? { limite: Number(limite) } : {}),
+      ...(terminalId ? { terminalId } : {}),
+    });
   }
 
   @Get('turnos/:id')
