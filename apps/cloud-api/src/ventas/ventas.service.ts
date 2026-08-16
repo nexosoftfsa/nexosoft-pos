@@ -242,7 +242,17 @@ export class VentasService {
           clienteId: dto.clienteId ?? null,
           items: { create: itemsData },
           ...(pagos.length > 0
-            ? { pagos: { create: pagos.map((p) => ({ medioPago: p.medioPago, monto: new Decimal(p.monto) })) } }
+            ? {
+                pagos: {
+                  create: pagos.map((p) => ({
+                    medioPago: p.medioPago,
+                    monto: new Decimal(p.monto),
+                    ...(p.tarjetaConfigId !== undefined ? { tarjetaConfigId: p.tarjetaConfigId } : {}),
+                    ...(p.cuotas !== undefined ? { cuotas: p.cuotas } : {}),
+                    ...(p.recargo !== undefined ? { recargo: new Decimal(p.recargo) } : {}),
+                  })),
+                },
+              }
             : {}),
         },
         include: {

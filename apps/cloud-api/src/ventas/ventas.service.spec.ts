@@ -128,6 +128,30 @@ describe('VentasService', () => {
       expect(items[1].costoUnitario).toBeNull();
     });
 
+    it('persiste tarjetaConfigId/cuotas/recargo por pago cuando vienen del POS (ADR-0050)', async () => {
+      await service.registrar(USUARIO, {
+        ...DTO,
+        pagos: [
+          {
+            medioPago: 'TARJETA_CREDITO',
+            monto: '110',
+            tarjetaConfigId: 'tar-1',
+            cuotas: 6,
+            recargo: '10',
+          },
+          { medioPago: 'EFECTIVO', monto: '130' },
+        ],
+      });
+
+      const pagos = tx.venta.create.mock.calls[0]![0].data.pagos.create;
+      expect(pagos[0].tarjetaConfigId).toBe('tar-1');
+      expect(pagos[0].cuotas).toBe(6);
+      expect(pagos[0].recargo.toString()).toBe('10');
+      expect(pagos[1].tarjetaConfigId).toBeUndefined();
+      expect(pagos[1].cuotas).toBeUndefined();
+      expect(pagos[1].recargo).toBeUndefined();
+    });
+
     it('pide CAE con el total calculado', async () => {
       await service.registrar(USUARIO, DTO);
       expect(cae.autorizar).toHaveBeenCalledWith(

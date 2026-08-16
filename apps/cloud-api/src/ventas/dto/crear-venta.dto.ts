@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsOptional,
   IsNumberString,
+  IsInt,
   IsArray,
   ArrayMinSize,
   ValidateNested,
@@ -43,6 +44,22 @@ export class PagoVentaDto {
 
   @IsNumberString()
   monto!: string;
+
+  /**
+   * Trazabilidad de tarjeta configurada (Fase 12.E, ADR-0050): qué tarjeta y
+   * cuántas cuotas eligió el cajero, y el recargo ya incluido en `monto`.
+   */
+  @IsString()
+  @IsOptional()
+  tarjetaConfigId?: string;
+
+  @IsInt()
+  @IsOptional()
+  cuotas?: number;
+
+  @IsNumberString()
+  @IsOptional()
+  recargo?: string;
 }
 
 export class CrearVentaDto {

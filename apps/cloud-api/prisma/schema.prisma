@@ -312,6 +312,14 @@ model Pago {
   ventaId   String
   venta     Venta     @relation(fields: [ventaId], references: [id], onDelete: Cascade)
 
+  /// Trazabilidad de tarjeta configurada (Fase 12.E, ADR-0050). Nullable:
+  /// no todos los pagos usan una tarjeta configurada.
+  cuotas          Int?
+  /// Recargo de esta tarjeta ya incluido en `monto`.
+  recargo         Decimal?       @db.Decimal(12, 2)
+  tarjetaConfigId String?
+  tarjetaConfig   TarjetaConfig? @relation(fields: [tarjetaConfigId], references: [id], onDelete: SetNull)
+
   @@map("pagos")
 }
 
@@ -470,6 +478,7 @@ model TarjetaConfig {
   sucursalId String
   sucursal   Sucursal    @relation(fields: [sucursalId], references: [id])
   tasas      TasaCuota[]
+  pagos      Pago[]
 
   @@map("tarjetas_config")
 }
