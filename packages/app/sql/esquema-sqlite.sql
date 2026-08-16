@@ -129,7 +129,8 @@ CREATE TABLE IF NOT EXISTS item_venta (
   precio_unitario_cent INTEGER NOT NULL,
   alicuota_iva        TEXT NOT NULL,
   descuento_porcentaje TEXT,
-  importe_cent        INTEGER NOT NULL
+  importe_cent        INTEGER NOT NULL,
+  costo_neto_cent     INTEGER            -- snapshot del costo al momento de la venta (ADR-0048), nullable
 );
 CREATE INDEX IF NOT EXISTS idx_item_venta ON item_venta (venta_id);
 

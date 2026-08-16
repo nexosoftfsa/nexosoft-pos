@@ -26,6 +26,14 @@ export class ItemVentaDto {
   @IsNumberString()
   @IsOptional()
   descuento?: string;
+
+  /**
+   * Costo neto del producto al momento de la venta (snapshot, ADR-0048). Igual
+   * que `precioUnitario`, la venta ya ocurrió: no se recalcula server-side.
+   */
+  @IsNumberString()
+  @IsOptional()
+  costoUnitario?: string;
 }
 
 /** Un pago de la venta (pago combinado: varios medios en una misma venta). */

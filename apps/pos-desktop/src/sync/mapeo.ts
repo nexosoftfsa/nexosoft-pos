@@ -26,6 +26,8 @@ export interface ItemVentaSync {
   readonly precioUnitario: string;
   /** Descuento del ítem (monto, ej. por promoción). Opcional. */
   readonly descuento?: string;
+  /** Costo neto del artículo al momento de la venta, snapshot (ADR-0048). */
+  readonly costoUnitario?: string;
 }
 
 /** Un pago de la venta (pago combinado). */
@@ -70,6 +72,7 @@ export function construirOperacionVenta(args: {
         ...(i.descuento !== undefined && i.descuento !== "0.00"
           ? { descuento: i.descuento }
           : {}),
+        ...(i.costoUnitario !== undefined ? { costoUnitario: i.costoUnitario } : {}),
       })),
       ...(args.pagos !== undefined && args.pagos.length > 0
         ? { pagos: args.pagos.map((p) => ({ medioPago: p.medioPago, monto: p.monto })) }

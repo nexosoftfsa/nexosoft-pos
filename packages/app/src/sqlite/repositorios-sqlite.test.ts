@@ -204,6 +204,7 @@ describe("Adaptador SQLite — ServicioDeVenta persiste de verdad", () => {
     const items = await ctx.ejecutor.consultar("SELECT * FROM item_venta");
     expect(items).toHaveLength(1);
     expect(Number(items[0]?.importe_cent)).toBe(242000);
+    expect(Number(items[0]?.costo_neto_cent)).toBe(50000); // costoNeto del articulo "art" (500.00), snapshot ADR-0048
 
     const pagos = await ctx.ejecutor.consultar("SELECT * FROM pago");
     expect(pagos).toHaveLength(1);

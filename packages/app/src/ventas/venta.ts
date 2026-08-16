@@ -23,6 +23,8 @@ export interface ItemVenta {
   readonly precioUnitario: Money;
   readonly alicuota: AlicuotaIva;
   readonly descuentoPorcentaje?: number;
+  /** Costo neto del artículo al momento de la venta (para calcular ganancia real, ver ADR-0048). */
+  readonly costoNeto: Money;
 }
 
 export interface VentaConfirmada {

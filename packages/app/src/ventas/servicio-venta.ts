@@ -254,6 +254,7 @@ export class ServicioDeVenta {
         cantidad: entrada.cantidad,
         precioUnitario,
         alicuota: articulo.alicuotaIva,
+        costoNeto: articulo.costoNeto,
         ...(entrada.descuentoPorcentaje !== undefined
           ? { descuentoPorcentaje: entrada.descuentoPorcentaje }
           : {}),

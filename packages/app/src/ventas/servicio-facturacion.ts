@@ -62,6 +62,8 @@ function lineasAItems(lineas: readonly LineaVenta[]): ItemVenta[] {
     cantidad: Cantidad.de(String(l.cantidad)),
     precioUnitario: l.precioUnitario,
     alicuota: l.alicuota,
+    // Nota de Débito: cargos/intereses, no productos con costo asociado.
+    costoNeto: Money.cero(),
     ...(l.descuentoPorcentaje !== undefined ? { descuentoPorcentaje: l.descuentoPorcentaje } : {}),
   }));
 }

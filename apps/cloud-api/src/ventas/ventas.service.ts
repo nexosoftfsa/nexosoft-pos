@@ -168,7 +168,14 @@ export class VentasService {
       const descuento = new Decimal(it.descuento ?? '0');
       const subItem = cantidad.mul(precioUnitario).sub(descuento);
       subtotal = subtotal.add(subItem);
-      return { cantidad, precioUnitario, descuento, subtotal: subItem, productoId: it.productoId };
+      return {
+        cantidad,
+        precioUnitario,
+        descuento,
+        subtotal: subItem,
+        productoId: it.productoId,
+        costoUnitario: it.costoUnitario !== undefined ? new Decimal(it.costoUnitario) : null,
+      };
     });
 
     const descuentoGlobal = new Decimal(dto.descuento ?? '0');

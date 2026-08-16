@@ -331,6 +331,7 @@ export function PantallaPos({
             cantidad: c.cantidad,
             precioUnitario: c.producto.precioFinal.aDecimalString(2),
             ...(desc.esPositivo() ? { descuento: desc.aDecimalString(2) } : {}),
+            costoUnitario: c.producto.articulo.costoNeto.aDecimalString(2),
           };
         });
         // Pago combinado: viaja el desglose (un pago por medio) y el resumen.

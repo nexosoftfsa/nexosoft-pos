@@ -109,7 +109,8 @@ export const SENTENCIAS_ESQUEMA: readonly string[] = [
     precio_unitario_cent INTEGER NOT NULL,
     alicuota_iva TEXT NOT NULL,
     descuento_porcentaje TEXT,
-    importe_cent INTEGER NOT NULL
+    importe_cent INTEGER NOT NULL,
+    costo_neto_cent INTEGER
   )`,
   `CREATE TABLE IF NOT EXISTS pago (
     id TEXT PRIMARY KEY,
@@ -147,6 +148,7 @@ async function agregarColumnasNuevas(ejecutor: EjecutorSql): Promise<void> {
     `ALTER TABLE comercio_config ADD COLUMN permitir_stock_negativo INTEGER NOT NULL DEFAULT 0 CHECK (permitir_stock_negativo IN (0,1))`,
     `ALTER TABLE comercio_config ADD COLUMN emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1))`,
     `ALTER TABLE comercio_config ADD COLUMN logo_base64 TEXT`,
+    `ALTER TABLE item_venta ADD COLUMN costo_neto_cent INTEGER`,
   ];
   for (const sentencia of alteraciones) {
     try {

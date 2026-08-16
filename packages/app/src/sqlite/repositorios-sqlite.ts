@@ -205,8 +205,8 @@ export class RepositorioVentasSqlite implements RepositorioVentas {
       const linea = v.resultado.lineas[i];
       if (item === undefined || linea === undefined) continue;
       await this.db.ejecutar(
-        `INSERT INTO item_venta (id, venta_id, articulo_id, descripcion, cantidad, precio_unitario_cent, alicuota_iva, descuento_porcentaje, importe_cent)
-         VALUES (?,?,?,?,?,?,?,?,?)`,
+        `INSERT INTO item_venta (id, venta_id, articulo_id, descripcion, cantidad, precio_unitario_cent, alicuota_iva, descuento_porcentaje, importe_cent, costo_neto_cent)
+         VALUES (?,?,?,?,?,?,?,?,?,?)`,
         [
           nuevoId(),
           v.id,
@@ -217,6 +217,7 @@ export class RepositorioVentasSqlite implements RepositorioVentas {
           String(item.alicuota.porcentaje),
           item.descuentoPorcentaje !== undefined ? String(item.descuentoPorcentaje) : null,
           linea.importe.aCentavos(),
+          item.costoNeto.aCentavos(),
         ],
       );
     }

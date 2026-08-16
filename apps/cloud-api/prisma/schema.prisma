@@ -319,6 +319,9 @@ model ItemVenta {
   precioUnitario Decimal @db.Decimal(12, 2)
   descuento    Decimal  @db.Decimal(12, 2) @default(0)
   subtotal     Decimal  @db.Decimal(12, 2)
+  /// Costo neto del producto al momento de la venta (snapshot, ADR-0048).
+  /// Nullable: las ventas sincronizadas antes de este campo no lo traen.
+  costoUnitario Decimal? @db.Decimal(12, 2)
 
   ventaId      String
   venta        Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)

@@ -35,6 +35,16 @@ describe("construirOperacionVenta", () => {
     expect(payload.items[0]?.cantidad).toBe("3"); // cantidad como string
   });
 
+  it("incluye el costoUnitario del ítem cuando viene el snapshot (ADR-0048)", () => {
+    const op = construirOperacionVenta({
+      terminalId: "caja-1",
+      medioPago: "EFECTIVO",
+      items: [{ productoId: "p1", cantidad: 1, precioUnitario: "1850.00", costoUnitario: "900.00" }],
+    });
+    const payload = op.payload as { items: Array<{ costoUnitario?: string }> };
+    expect(payload.items[0]?.costoUnitario).toBe("900.00");
+  });
+
   it("genera operacionId distinto en cada venta", () => {
     const a = construirOperacionVenta({ terminalId: "t", medioPago: "EFECTIVO", items: [] });
     const b = construirOperacionVenta({ terminalId: "t", medioPago: "EFECTIVO", items: [] });

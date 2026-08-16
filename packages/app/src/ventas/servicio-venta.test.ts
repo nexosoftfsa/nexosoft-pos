@@ -150,6 +150,9 @@ describe("ServicioDeVenta — confirmarVenta (camino feliz)", () => {
     expect(venta.resultado.total.aDecimalString()).toBe("2420.00");
     expect(venta.vuelto.aDecimalString()).toBe("580.00");
 
+    // Snapshot del costo del artículo al momento de la venta (ADR-0048).
+    expect(venta.items[0]?.costoNeto.aDecimalString()).toBe("500.00");
+
     // Stock 10 → 8 y queda un movimiento de venta.
     const e = await repos.existencias.obtener("art", "DEP");
     expect(e?.cantidad.aDecimalString(0)).toBe("8");

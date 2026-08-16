@@ -114,6 +114,20 @@ describe('VentasService', () => {
       expect(data.total.toString()).toBe('240');
     });
 
+    it('snapshotea el costoUnitario de cada ítem cuando viene del POS (ADR-0048)', async () => {
+      await service.registrar(USUARIO, {
+        ...DTO,
+        items: [
+          { productoId: 'p1', cantidad: '2', precioUnitario: '100', costoUnitario: '60' },
+          { productoId: 'p2', cantidad: '1', precioUnitario: '50', descuento: '10' },
+        ],
+      });
+
+      const items = tx.venta.create.mock.calls[0]![0].data.items.create;
+      expect(items[0].costoUnitario.toString()).toBe('60');
+      expect(items[1].costoUnitario).toBeNull();
+    });
+
     it('pide CAE con el total calculado', async () => {
       await service.registrar(USUARIO, DTO);
       expect(cae.autorizar).toHaveBeenCalledWith(
