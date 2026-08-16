@@ -69,6 +69,17 @@ export function IconoCtaCte() {
   );
 }
 
+export function IconoProveedor() {
+  return (
+    <Svg>
+      <path d="M14 18V6a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1" />
+      <path d="M14 9h4l4 4v4a1 1 0 0 1-1 1h-2" />
+      <circle cx="7" cy="18" r="2" />
+      <circle cx="17" cy="18" r="2" />
+    </Svg>
+  );
+}
+
 export function IconoEtiqueta() {
   return (
     <Svg>

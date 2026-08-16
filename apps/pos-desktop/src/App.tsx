@@ -43,6 +43,9 @@ import { ClientePresupuestosSimulado } from "./sync/cliente-presupuestos-simulad
 import type { ClienteRemitos } from "./sync/cliente-remitos";
 import { ClienteRemitosHttp } from "./sync/cliente-remitos";
 import { ClienteRemitosSimulado } from "./sync/cliente-remitos-simulado";
+import type { ClienteProveedores } from "./sync/cliente-proveedores";
+import { ClienteProveedoresHttp } from "./sync/cliente-proveedores";
+import { ClienteProveedoresSimulado } from "./sync/cliente-proveedores-simulado";
 import type { AsistenteIA } from "./sync/cliente-ia";
 import { AsistenteIAHttp } from "./sync/cliente-ia";
 import type { ClienteAsistenteConfig } from "./sync/cliente-asistente-config";
@@ -98,6 +101,7 @@ function AppDemo({ onSalir }: { onSalir?: () => void } = {}) {
   const clienteReportesRef = useRef<ClienteReportes | null>(null);
   const clientePresupuestosRef = useRef<ClientePresupuestos | null>(null);
   const clienteRemitosRef = useRef<ClienteRemitos | null>(null);
+  const clienteProveedoresRef = useRef<ClienteProveedores | null>(null);
   useEffect(() => {
     setEntorno(crearEntornoPos());
     clienteCatalogoRef.current = new ClienteCatalogoAdminSimulado();
@@ -108,6 +112,7 @@ function AppDemo({ onSalir }: { onSalir?: () => void } = {}) {
     clienteReportesRef.current = new ClienteReportesSimulado();
     clientePresupuestosRef.current = new ClientePresupuestosSimulado();
     clienteRemitosRef.current = new ClienteRemitosSimulado();
+    clienteProveedoresRef.current = new ClienteProveedoresSimulado();
   }, []);
   if (entorno === null) return <Aviso>Iniciando NexoSoft POS…</Aviso>;
   // En desarrollo (navegador) no hay login: mostramos el shell completo como ADMIN
@@ -125,6 +130,7 @@ function AppDemo({ onSalir }: { onSalir?: () => void } = {}) {
       {...(clienteReportesRef.current !== null ? { clienteReportes: clienteReportesRef.current } : {})}
       {...(clientePresupuestosRef.current !== null ? { clientePresupuestos: clientePresupuestosRef.current } : {})}
       {...(clienteRemitosRef.current !== null ? { clienteRemitos: clienteRemitosRef.current } : {})}
+      {...(clienteProveedoresRef.current !== null ? { clienteProveedores: clienteProveedoresRef.current } : {})}
       {...(onSalir ? { onCerrarSesion: onSalir, tituloCerrarSesion: "Salir del modo demo" } : {})}
     />
   );
@@ -145,6 +151,7 @@ function AppTauri() {
   const clienteReportesRef = useRef<ClienteReportes | null>(null);
   const clientePresupuestosRef = useRef<ClientePresupuestos | null>(null);
   const clienteRemitosRef = useRef<ClienteRemitos | null>(null);
+  const clienteProveedoresRef = useRef<ClienteProveedores | null>(null);
   const clienteIARef = useRef<AsistenteIA | null>(null);
   const clienteAsistenteConfigRef = useRef<ClienteAsistenteConfig | null>(null);
   const clienteUsuariosRef = useRef<ClienteUsuarios | null>(null);
@@ -185,6 +192,7 @@ function AppTauri() {
       clienteReportesRef.current = new ClienteReportesHttp(baseUrlRef.current, () => sesion.obtenerToken());
       clientePresupuestosRef.current = new ClientePresupuestosHttp(baseUrlRef.current, () => sesion.obtenerToken());
       clienteRemitosRef.current = new ClienteRemitosHttp(baseUrlRef.current, () => sesion.obtenerToken());
+      clienteProveedoresRef.current = new ClienteProveedoresHttp(baseUrlRef.current, () => sesion.obtenerToken());
       clienteIARef.current = new AsistenteIAHttp(baseUrlRef.current, () => sesion.obtenerToken());
       clienteAsistenteConfigRef.current = new ClienteAsistenteConfigHttp(
         baseUrlRef.current,
@@ -420,6 +428,7 @@ function AppTauri() {
         {...(clienteReportesRef.current !== null ? { clienteReportes: clienteReportesRef.current } : {})}
         {...(clientePresupuestosRef.current !== null ? { clientePresupuestos: clientePresupuestosRef.current } : {})}
         {...(clienteRemitosRef.current !== null ? { clienteRemitos: clienteRemitosRef.current } : {})}
+        {...(clienteProveedoresRef.current !== null ? { clienteProveedores: clienteProveedoresRef.current } : {})}
         {...(clienteIARef.current !== null ? { clienteIA: clienteIARef.current } : {})}
         {...(clienteAsistenteConfigRef.current !== null
           ? { clienteAsistenteConfig: clienteAsistenteConfigRef.current }
