@@ -18,6 +18,12 @@
       "runtimeExecutable": "corepack",
       "runtimeArgs": ["pnpm", "-C", "E:\\Nexosoft\\Proyecto 1\\apps\\admin-web", "dev"],
       "port": 5174
+    },
+    {
+      "name": "cloud-api",
+      "runtimeExecutable": "corepack",
+      "runtimeArgs": ["pnpm", "-C", "E:\\Nexosoft\\Proyecto 1\\apps\\cloud-api", "dev"],
+      "port": 3000
     }
   ]
 }
