@@ -190,6 +190,42 @@ export class ReportesService {
       .slice(0, limite);
   }
 
+  /**
+   * Ganancia bruta del período: ventas − costo de lo vendido. El costo de cada
+   * ítem es el snapshot tomado al momento de la venta (`costoUnitario`,
+   * ADR-0048); si no está (ventas sincronizadas antes de esa migración), se usa
+   * el costo ACTUAL del producto como aproximación documentada.
+   */
+  async rentabilidad(sucursalId: string, rango: RangoFechasDto) {
+    const { gte, lt } = this.calcularRango(rango);
+    const items = await this.prisma.itemVenta.findMany({
+      where: {
+        venta: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
+      },
+      select: {
+        cantidad: true,
+        subtotal: true,
+        costoUnitario: true,
+        producto: { select: { precioCosto: true } },
+      },
+    });
+
+    let ventasTotal = new Decimal(0);
+    let costoTotal = new Decimal(0);
+    for (const it of items) {
+      const costoEfectivo = it.costoUnitario ?? it.producto.precioCosto;
+      ventasTotal = ventasTotal.add(it.subtotal);
+      costoTotal = costoTotal.add(it.cantidad.mul(costoEfectivo));
+    }
+    const gananciaBruta = ventasTotal.sub(costoTotal);
+
+    return {
+      ventasTotal: ventasTotal.toFixed(2),
+      costoTotal: costoTotal.toFixed(2),
+      gananciaBruta: gananciaBruta.toFixed(2),
+    };
+  }
+
   /** Productos activos cuyo saldo de stock está en o por debajo del umbral. */
   async stockBajo(sucursalId: string, umbral = UMBRAL_STOCK_POR_DEFECTO) {
     const productos = await this.prisma.producto.findMany({
@@ -238,21 +274,35 @@ export class ReportesService {
   }
 
   /**
-   * Resuelve el rango efectivo. `desde`/`hasta` vienen como `YYYY-MM-DD` y se
-   * interpretan como días de calendario en **hora Argentina** (medianoche AR =
-   * 03:00 UTC); `hasta` es INCLUSIVE (se suma un día para el `lt`). Sin parámetros:
-   * los últimos {@link DIAS_POR_DEFECTO} días hasta hoy (AR) inclusive.
+   * Resuelve el rango efectivo. `desde`/`hasta` aceptan `YYYY-MM-DD` (día de
+   * calendario) o `YYYY-MM-DDTHH:mm` (instante exacto), siempre en **hora
+   * Argentina**. Sin componente de hora, `hasta` es INCLUSIVE (se suma un día
+   * completo para el `lt`); con hora, `hasta` es el límite exacto elegido por
+   * el usuario (sin sumar un día). Sin parámetros: los últimos
+   * {@link DIAS_POR_DEFECTO} días hasta hoy (AR) inclusive.
    */
   private calcularRango(rango: RangoFechasDto): { gte: Date; lt: Date } {
     const hoy = this.diaLocal(new Date());
     const desde = rango.desde ?? this.sumarDias(hoy, -DIAS_POR_DEFECTO);
     const hasta = rango.hasta ?? hoy;
 
-    const gte = new Date(`${desde}T00:00:00.000${OFFSET_AR}`);
-    const lt = new Date(`${hasta}T00:00:00.000${OFFSET_AR}`);
-    lt.setUTCDate(lt.getUTCDate() + 1); // hasta inclusive (día local completo)
+    const gte = this.aInstanteAr(desde);
+    const lt = this.aInstanteAr(hasta);
+    if (!hasta.includes('T')) {
+      lt.setUTCDate(lt.getUTCDate() + 1); // hasta inclusive (día local completo)
+    }
 
     return { gte, lt };
+  }
+
+  /**
+   * Convierte `YYYY-MM-DD` o `YYYY-MM-DDTHH:mm[:ss]` (hora Argentina) al
+   * instante UTC correspondiente. Sin hora, se toma la medianoche AR de ese día.
+   */
+  private aInstanteAr(valor: string): Date {
+    const conHora = valor.includes('T') ? valor : `${valor}T00:00:00`;
+    const conSegundos = /T\d{2}:\d{2}$/.test(conHora) ? `${conHora}:00` : conHora;
+    return new Date(`${conSegundos}.000${OFFSET_AR}`);
   }
 
   /** Día de calendario en hora Argentina (UTC-3) de una fecha, como YYYY-MM-DD. */

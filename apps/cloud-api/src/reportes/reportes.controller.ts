@@ -50,6 +50,11 @@ export class ReportesController {
     return this.reportesService.porTerminal(req.user.sucursalId, rango);
   }
 
+  @Get('ventas/rentabilidad')
+  rentabilidad(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
+    return this.reportesService.rentabilidad(req.user.sucursalId, rango);
+  }
+
   @Get('productos/top')
   topProductos(@Request() req: { user: UsuarioJwt }, @Query() consulta: TopProductosDto) {
     return this.reportesService.topProductos(

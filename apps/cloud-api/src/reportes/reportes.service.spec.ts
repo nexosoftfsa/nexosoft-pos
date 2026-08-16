@@ -88,6 +88,27 @@ describe('ReportesService', () => {
     });
   });
 
+  describe('rango con hora (calcularRango)', () => {
+    it('con desde/hasta con hora, usa el instante exacto en AR sin sumar un día', async () => {
+      mockVenta.findMany.mockResolvedValue([]);
+      await service.resumenVentas(SUCURSAL, {
+        desde: '2026-08-15T09:00',
+        hasta: '2026-08-15T13:00',
+      });
+      const where = mockVenta.findMany.mock.calls[0][0].where;
+      expect(where.creadaEn.gte.toISOString()).toBe('2026-08-15T12:00:00.000Z'); // 09:00 AR
+      expect(where.creadaEn.lt.toISOString()).toBe('2026-08-15T16:00:00.000Z'); // 13:00 AR, sin +1 día
+    });
+
+    it('solo "hasta" con hora: "desde" sin hora sigue siendo la medianoche AR de ese día', async () => {
+      mockVenta.findMany.mockResolvedValue([]);
+      await service.resumenVentas(SUCURSAL, { desde: '2026-08-15', hasta: '2026-08-15T18:30' });
+      const where = mockVenta.findMany.mock.calls[0][0].where;
+      expect(where.creadaEn.gte.toISOString()).toBe('2026-08-15T03:00:00.000Z');
+      expect(where.creadaEn.lt.toISOString()).toBe('2026-08-15T21:30:00.000Z');
+    });
+  });
+
   describe('serieDiaria', () => {
     it('agrupa ventas por día (UTC) sumando total y cantidad', async () => {
       mockVenta.findMany.mockResolvedValue([
@@ -152,6 +173,55 @@ describe('ReportesService', () => {
       expect(r).toEqual([
         { productoId: 'p2', nombre: 'Pan', codigo: 'P1', cantidad: '5', monto: '50.00' },
       ]);
+    });
+  });
+
+  describe('rentabilidad', () => {
+    it('calcula ganancia bruta con el costoUnitario snapshot del ítem', async () => {
+      mockItemVenta.findMany.mockResolvedValue([
+        {
+          cantidad: new Decimal('2'),
+          subtotal: new Decimal('200.00'),
+          costoUnitario: new Decimal('60.00'),
+          producto: { precioCosto: new Decimal('999.00') }, // no debe usarse: hay snapshot
+        },
+        {
+          cantidad: new Decimal('1'),
+          subtotal: new Decimal('50.00'),
+          costoUnitario: new Decimal('20.00'),
+          producto: { precioCosto: new Decimal('999.00') },
+        },
+      ]);
+
+      const r = await service.rentabilidad(SUCURSAL, RANGO);
+
+      // ventas: 200+50=250 | costo: 2*60 + 1*20 = 140 | ganancia: 110
+      expect(r.ventasTotal).toBe('250.00');
+      expect(r.costoTotal).toBe('140.00');
+      expect(r.gananciaBruta).toBe('110.00');
+    });
+
+    it('usa el costo ACTUAL del producto como fallback cuando falta el snapshot (ventas previas al ADR-0048)', async () => {
+      mockItemVenta.findMany.mockResolvedValue([
+        {
+          cantidad: new Decimal('3'),
+          subtotal: new Decimal('300.00'),
+          costoUnitario: null,
+          producto: { precioCosto: new Decimal('50.00') },
+        },
+      ]);
+
+      const r = await service.rentabilidad(SUCURSAL, RANGO);
+
+      // costo: 3*50 (fallback al precioCosto actual) = 150 | ganancia: 150
+      expect(r.costoTotal).toBe('150.00');
+      expect(r.gananciaBruta).toBe('150.00');
+    });
+
+    it('devuelve ceros sin ventas en el período', async () => {
+      mockItemVenta.findMany.mockResolvedValue([]);
+      const r = await service.rentabilidad(SUCURSAL, RANGO);
+      expect(r).toEqual({ ventasTotal: '0.00', costoTotal: '0.00', gananciaBruta: '0.00' });
     });
   });
 
