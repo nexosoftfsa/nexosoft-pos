@@ -80,6 +80,16 @@ export function IconoProveedor() {
   );
 }
 
+export function IconoTarjeta() {
+  return (
+    <Svg>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M2 10h20" />
+      <path d="M6 15h4" />
+    </Svg>
+  );
+}
+
 export function IconoEtiqueta() {
   return (
     <Svg>

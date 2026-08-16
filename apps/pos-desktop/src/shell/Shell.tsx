@@ -20,6 +20,7 @@ import type { ClienteReportes } from "../sync/cliente-reportes";
 import type { ClientePresupuestos } from "../sync/cliente-presupuestos";
 import type { ClienteRemitos } from "../sync/cliente-remitos";
 import type { ClienteProveedores } from "../sync/cliente-proveedores";
+import type { ClienteMediosPago } from "../sync/cliente-medios-pago";
 import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
@@ -33,6 +34,7 @@ import { ReportesPos } from "../componentes/ReportesPos";
 import { Presupuestos } from "../componentes/Presupuestos";
 import { Remitos } from "../componentes/Remitos";
 import { Proveedores } from "../componentes/Proveedores";
+import { MediosDePago } from "../componentes/MediosDePago";
 import { Inicio } from "../componentes/Inicio";
 import { AsistenteIA as PantallaAsistenteIA } from "../componentes/AsistenteIA";
 import { AsistenteIACompuesto, AsistenteIAMock, type AsistenteIA } from "../sync/cliente-ia";
@@ -77,6 +79,7 @@ export function Shell({
   clientePresupuestos,
   clienteRemitos,
   clienteProveedores,
+  clienteMediosPago,
   clienteIA,
   clienteAsistenteConfig,
   clienteUsuarios,
@@ -106,6 +109,8 @@ export function Shell({
   clienteRemitos?: ClienteRemitos;
   /** Cliente de proveedores (HTTP en Tauri, simulado en el navegador). */
   clienteProveedores?: ClienteProveedores;
+  /** Cliente de medios de pago (HTTP en Tauri, simulado en el navegador). */
+  clienteMediosPago?: ClienteMediosPago;
   /** Asistente con LLM real (Gemini vía el servidor). Sin esto, solo responde con datos. */
   clienteIA?: AsistenteIA;
   /** Config del asistente (cargar/editar la clave de Gemini). Solo ADMIN, solo Tauri conectado. */
@@ -292,6 +297,8 @@ export function Shell({
             <CuentasCorrientes cliente={clienteCtaCte} />
           ) : activo?.id === "proveedores" && clienteProveedores ? (
             <Proveedores cliente={clienteProveedores} />
+          ) : activo?.id === "medios-pago" && clienteMediosPago ? (
+            <MediosDePago cliente={clienteMediosPago} />
           ) : activo?.id === "comprobantes" && clienteVentas ? (
             <Comprobantes cliente={clienteVentas} config={entorno.config} />
           ) : activo?.id === "reportes" && clienteReportes ? (
