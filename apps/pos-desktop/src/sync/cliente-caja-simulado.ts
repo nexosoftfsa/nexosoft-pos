@@ -12,7 +12,11 @@ import {
   type ResumenCaja,
   type TipoMovimientoCaja,
   type TurnoCaja,
+  type TurnoCajaResumen,
 } from "./cliente-caja";
+
+const TERMINAL_DEMO = { id: "caja-demo", nombre: "Caja demo" };
+const USUARIO_DEMO = "demo@nexosoft.local";
 
 function fmt(n: number): string {
   return n.toFixed(2);
@@ -22,6 +26,7 @@ export class ClienteCajaSimulado implements ClienteCaja {
   private turno: {
     id: string;
     estado: "ABIERTO" | "CERRADO";
+    terminalId: string;
     fondoApertura: number;
     abiertoEn: string;
     cerradoEn: string | null;
@@ -30,6 +35,8 @@ export class ClienteCajaSimulado implements ClienteCaja {
     observaciones: string | null;
     movimientos: MovimientoCaja[];
   } | null = null;
+  /** Turnos cerrados, más reciente primero (Fase 12: historial). */
+  private historial: Array<TurnoCaja & { terminalId: string }> = [];
   private secuencia = 0;
 
   private resumen(): ResumenCaja {
@@ -72,8 +79,7 @@ export class ClienteCajaSimulado implements ClienteCaja {
     return this.turno !== null && this.turno.estado === "ABIERTO" ? this.aTurnoCaja() : null;
   }
 
-  async abrirTurno(_terminalId: string, fondoApertura: string): Promise<TurnoCaja> {
-    void _terminalId;
+  async abrirTurno(terminalId: string, fondoApertura: string): Promise<TurnoCaja> {
     if (this.turno !== null && this.turno.estado === "ABIERTO") {
       throw new ErrorCaja("Ya hay un turno de caja abierto en esta terminal", 409);
     }
@@ -84,6 +90,7 @@ export class ClienteCajaSimulado implements ClienteCaja {
     this.turno = {
       id: `turno-${++this.secuencia}`,
       estado: "ABIERTO",
+      terminalId,
       fondoApertura: fondo,
       abiertoEn: new Date().toISOString(),
       cerradoEn: null,
@@ -133,7 +140,40 @@ export class ClienteCajaSimulado implements ClienteCaja {
     t.observaciones = observaciones ?? null;
     t.estado = "CERRADO";
     t.cerradoEn = new Date().toISOString();
-    return this.aTurnoCaja();
+    const cerrado = this.aTurnoCaja();
+    this.historial.unshift({ ...cerrado, terminalId: t.terminalId });
+    return cerrado;
+  }
+
+  async listarTurnos(
+    opciones: { limite?: number; terminalId?: string } = {},
+  ): Promise<TurnoCajaResumen[]> {
+    const items =
+      opciones.terminalId !== undefined
+        ? this.historial.filter((t) => t.terminalId === opciones.terminalId)
+        : this.historial;
+    const limite = Math.min(Math.max(opciones.limite ?? 30, 1), 100);
+    return items.slice(0, limite).map((t) => ({
+      id: t.id,
+      estado: t.estado,
+      fondoApertura: t.fondoApertura,
+      abiertoEn: t.abiertoEn,
+      cerradoEn: t.cerradoEn,
+      montoContado: t.resumen.montoContado,
+      diferencia: t.resumen.diferencia,
+      observaciones: t.observaciones,
+      terminalId: t.terminalId,
+      terminal: { nombre: t.terminalId === TERMINAL_DEMO.id ? TERMINAL_DEMO.nombre : t.terminalId },
+      usuario: { email: USUARIO_DEMO },
+    }));
+  }
+
+  async obtenerTurno(id: string): Promise<TurnoCaja> {
+    if (this.turno !== null && this.turno.id === id) return this.aTurnoCaja();
+    const encontrado = this.historial.find((t) => t.id === id);
+    if (!encontrado) throw new ErrorCaja(`Turno ${id} no encontrado`, 404);
+    const { terminalId: _terminalId, ...turno } = encontrado;
+    return turno;
   }
 
   private turnoAbierto(turnoId: string) {

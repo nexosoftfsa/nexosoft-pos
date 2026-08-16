@@ -15,7 +15,13 @@ import {
   type TurnoCaja,
 } from "../sync/cliente-caja";
 import { pesos } from "../formato";
-import { importeNoNegativo, importePositivo, leerDiferencia, normalizarImporte } from "./caja-helpers";
+import {
+  importeNoNegativo,
+  importePositivo,
+  leerDiferencia,
+  normalizarImporte,
+} from "./caja-helpers";
+import { HistorialCaja } from "./HistorialCaja";
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorCaja) return e.message;
@@ -44,6 +50,7 @@ export function CajaPanel({ cliente, terminalId }: { cliente: ClienteCaja; termi
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState<null | TipoMovimientoCaja | "arqueo">(null);
+  const [vista, setVista] = useState<"actual" | "historial">("actual");
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -71,44 +78,69 @@ export function CajaPanel({ cliente, terminalId }: { cliente: ClienteCaja; termi
 
   return (
     <div className="gestion">
-      {error !== null && <div className="error">{error}</div>}
+      <div className="toolbar">
+        <span className="seg">
+          <button
+            type="button"
+            className={vista === "actual" ? "on" : ""}
+            onClick={() => setVista("actual")}
+          >
+            Turno actual
+          </button>
+          <button
+            type="button"
+            className={vista === "historial" ? "on" : ""}
+            onClick={() => setVista("historial")}
+          >
+            Historial
+          </button>
+        </span>
+      </div>
 
-      {cierre !== null ? (
-        <ResumenCierre turno={cierre} onCerrar={() => setCierre(null)} />
-      ) : turno === null ? (
-        <AbrirCaja
-          cliente={cliente}
-          terminalId={terminalId}
-          onAbierto={(t) => setTurno(t)}
-        />
+      {vista === "historial" ? (
+        <HistorialCaja cliente={cliente} />
       ) : (
-        <PanelTurno turno={turno} onMover={(tipo) => setModal(tipo)} onArqueo={() => setModal("arqueo")} />
-      )}
+        <>
+          {error !== null && <div className="error">{error}</div>}
 
-      {modal !== null && modal !== "arqueo" && turno !== null && (
-        <ModalMovimiento
-          cliente={cliente}
-          turnoId={turno.id}
-          tipo={modal}
-          onCerrar={() => setModal(null)}
-          onHecho={(t) => {
-            setTurno(t);
-            setModal(null);
-          }}
-        />
-      )}
+          {cierre !== null ? (
+            <ResumenCierre turno={cierre} onCerrar={() => setCierre(null)} />
+          ) : turno === null ? (
+            <AbrirCaja cliente={cliente} terminalId={terminalId} onAbierto={(t) => setTurno(t)} />
+          ) : (
+            <PanelTurno
+              turno={turno}
+              onMover={(tipo) => setModal(tipo)}
+              onArqueo={() => setModal("arqueo")}
+            />
+          )}
 
-      {modal === "arqueo" && turno !== null && (
-        <ModalArqueo
-          cliente={cliente}
-          turno={turno}
-          onCerrar={() => setModal(null)}
-          onCerrado={(t) => {
-            setModal(null);
-            setTurno(null);
-            setCierre(t);
-          }}
-        />
+          {modal !== null && modal !== "arqueo" && turno !== null && (
+            <ModalMovimiento
+              cliente={cliente}
+              turnoId={turno.id}
+              tipo={modal}
+              onCerrar={() => setModal(null)}
+              onHecho={(t) => {
+                setTurno(t);
+                setModal(null);
+              }}
+            />
+          )}
+
+          {modal === "arqueo" && turno !== null && (
+            <ModalArqueo
+              cliente={cliente}
+              turno={turno}
+              onCerrar={() => setModal(null)}
+              onCerrado={(t) => {
+                setModal(null);
+                setTurno(null);
+                setCierre(t);
+              }}
+            />
+          )}
+        </>
       )}
     </div>
   );
@@ -148,7 +180,9 @@ function AbrirCaja({
       <div className="section-title" style={{ marginTop: 0 }}>
         Caja cerrada
       </div>
-      <p className="muted">No hay un turno de caja abierto en esta terminal. Abrí uno para empezar.</p>
+      <p className="muted">
+        No hay un turno de caja abierto en esta terminal. Abrí uno para empezar.
+      </p>
       <div className="field" style={{ maxWidth: 260 }}>
         <label>Fondo de apertura (efectivo inicial)</label>
         <input
@@ -163,7 +197,12 @@ function AbrirCaja({
         />
       </div>
       {error !== null && <div className="error">{error}</div>}
-      <button type="button" className="pill-btn pill-btn--primary" onClick={() => void abrir()} disabled={abriendo}>
+      <button
+        type="button"
+        className="pill-btn pill-btn--primary"
+        onClick={() => void abrir()}
+        disabled={abriendo}
+      >
         {abriendo ? "Abriendo…" : "Abrir caja"}
       </button>
     </div>
@@ -251,7 +290,9 @@ function PanelTurno({
                   <td>{m.tipo === "INGRESO" ? "Ingreso" : "Egreso"}</td>
                   <td
                     className="num strong"
-                    style={{ color: m.tipo === "INGRESO" ? "var(--ok-fuerte)" : "var(--peligro, #e5484d)" }}
+                    style={{
+                      color: m.tipo === "INGRESO" ? "var(--ok-fuerte)" : "var(--peligro, #e5484d)",
+                    }}
                   >
                     {m.tipo === "INGRESO" ? "+" : "−"}
                     {money(m.monto)}
@@ -345,7 +386,12 @@ function ModalMovimiento({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Registrar"}
           </button>
         </div>
@@ -424,7 +470,11 @@ function ModalArqueo({
           {diferenciaPreview !== null && (
             <div className="kv">
               <span>Diferencia</span>
-              <b style={{ color: diferenciaPreview < 0 ? "var(--peligro, #e5484d)" : "var(--ok-fuerte)" }}>
+              <b
+                style={{
+                  color: diferenciaPreview < 0 ? "var(--peligro, #e5484d)" : "var(--ok-fuerte)",
+                }}
+              >
                 {diferenciaPreview > 0 ? "+" : ""}
                 {money(diferenciaPreview.toFixed(2))}
               </b>
@@ -444,7 +494,12 @@ function ModalArqueo({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={cerrando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void cerrar()} disabled={cerrando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void cerrar()}
+            disabled={cerrando}
+          >
             {cerrando ? "Cerrando…" : "Cerrar caja"}
           </button>
         </div>
@@ -484,7 +539,12 @@ function ResumenCierre({ turno, onCerrar }: { turno: TurnoCaja; onCerrar: () => 
           {r.diferencia !== null && dif?.signo !== "exacto" ? ` · ${money(r.diferencia)}` : ""}
         </b>
       </div>
-      <button type="button" className="pill-btn pill-btn--primary" style={{ marginTop: 16 }} onClick={onCerrar}>
+      <button
+        type="button"
+        className="pill-btn pill-btn--primary"
+        style={{ marginTop: 16 }}
+        onClick={onCerrar}
+      >
         Abrir nueva caja
       </button>
     </div>

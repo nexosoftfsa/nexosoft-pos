@@ -40,6 +40,21 @@ export interface TurnoCaja {
   readonly resumen: ResumenCaja;
 }
 
+/** Fila de historial (Fase 12): sin `movimientos`/`resumen`, eso lo trae `obtenerTurno`. */
+export interface TurnoCajaResumen {
+  readonly id: string;
+  readonly estado: EstadoTurno;
+  readonly fondoApertura: string;
+  readonly abiertoEn: string;
+  readonly cerradoEn: string | null;
+  readonly montoContado: string | null;
+  readonly diferencia: string | null;
+  readonly observaciones: string | null;
+  readonly terminalId: string;
+  readonly terminal: { readonly nombre: string };
+  readonly usuario: { readonly email: string };
+}
+
 export interface ClienteCaja {
   turnoActual(terminalId: string): Promise<TurnoCaja | null>;
   abrirTurno(terminalId: string, fondoApertura: string): Promise<TurnoCaja>;
@@ -50,6 +65,10 @@ export interface ClienteCaja {
     concepto?: string,
   ): Promise<TurnoCaja>;
   cerrarTurno(turnoId: string, montoContado: string, observaciones?: string): Promise<TurnoCaja>;
+  /** Historial de turnos (más reciente primero). Ver `TurnoCajaResumen`. */
+  listarTurnos(opciones?: { limite?: number; terminalId?: string }): Promise<TurnoCajaResumen[]>;
+  /** Detalle completo de un turno (pasado o actual), con movimientos y resumen. */
+  obtenerTurno(id: string): Promise<TurnoCaja>;
 }
 
 export class ErrorCaja extends Error {
@@ -97,6 +116,18 @@ export class ClienteCajaHttp implements ClienteCaja {
       montoContado,
       ...(observaciones !== undefined ? { observaciones } : {}),
     });
+  }
+
+  listarTurnos(opciones?: { limite?: number; terminalId?: string }): Promise<TurnoCajaResumen[]> {
+    const p = new URLSearchParams();
+    if (opciones?.limite !== undefined) p.set("limite", String(opciones.limite));
+    if (opciones?.terminalId !== undefined) p.set("terminalId", opciones.terminalId);
+    const query = p.toString();
+    return this.pedir<TurnoCajaResumen[]>("GET", `/caja/turnos${query ? `?${query}` : ""}`);
+  }
+
+  obtenerTurno(id: string): Promise<TurnoCaja> {
+    return this.pedir<TurnoCaja>("GET", `/caja/turnos/${id}`);
   }
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
