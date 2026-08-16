@@ -43,6 +43,7 @@ model Sucursal {
   movimientosCaja MovimientoCaja[]
   clientes Cliente[]
   movimientosCuentaCorriente MovimientoCuentaCorriente[]
+  proveedores Proveedor[]
   presupuestos Presupuesto[]
   remitos Remito[]
   lotes Lote[]
@@ -429,6 +430,25 @@ model MovimientoCuentaCorriente {
   sucursal    Sucursal             @relation(fields: [sucursalId], references: [id])
 
   @@map("movimientos_cuenta_corriente")
+}
+
+// ─── Proveedores (ABM simple, sin cuenta corriente) ────────────────────────────
+
+model Proveedor {
+  id        String   @id @default(cuid())
+  nombre    String
+  cuit      String?
+  contacto  String?
+  email     String?
+  telefono  String?
+  direccion String?
+  activo    Boolean  @default(true)
+  creadoEn  DateTime @default(now())
+
+  sucursalId String
+  sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
+
+  @@map("proveedores")
 }
 
 // ─── Presupuestos (comprobante NO fiscal) ──────────────────────────────────────
