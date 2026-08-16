@@ -11,6 +11,8 @@ export interface ValoresConfig {
   readonly puntoDeVenta: number;
   /** Fase 10.1: si el comercio ya está de alta en ARCA y emite Factura A/B/C. */
   readonly emiteComprobantesFiscales: boolean;
+  /** Si se permite vender sin stock suficiente (queda en negativo, ADR-0015). */
+  readonly permitirStockNegativo: boolean;
   /** Logo del comercio como data URL. Ver `ConfiguracionComercio.logoDataUrl`. */
   readonly logoDataUrl?: string;
 }
@@ -48,6 +50,7 @@ export function PantallaConfig({
   const [condicion, setCondicion] = useState<CondicionIva>(valores.condicionIvaEmisor);
   const [puntoDeVenta, setPuntoDeVenta] = useState(String(valores.puntoDeVenta));
   const [emiteFiscal, setEmiteFiscal] = useState(valores.emiteComprobantesFiscales);
+  const [stockNegativo, setStockNegativo] = useState(valores.permitirStockNegativo);
   const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(valores.logoDataUrl);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
@@ -89,6 +92,7 @@ export function PantallaConfig({
         condicionIvaEmisor: condicion,
         puntoDeVenta: pv,
         emiteComprobantesFiscales: emiteFiscal,
+        permitirStockNegativo: stockNegativo,
         ...(logoDataUrl !== undefined ? { logoDataUrl } : {}),
       });
     } catch (err) {
@@ -165,6 +169,22 @@ export function PantallaConfig({
             Mientras esté desmarcado, el sistema vende con un ticket interno sin
             CAE ni numeración fiscal. Activalo cuando el comercio complete el
             alta en ARCA.
+          </div>
+        )}
+
+        <label style={{ ...etiqueta, flexDirection: "row", alignItems: "center", gap: "0.5rem" }}>
+          <input
+            type="checkbox"
+            checked={stockNegativo}
+            onChange={(e) => setStockNegativo(e.target.checked)}
+          />
+          Permitir vender sin stock suficiente (queda en negativo)
+        </label>
+        {stockNegativo && (
+          <div style={ayuda}>
+            Útil si el stock de productos de mucha rotación no se actualiza a
+            tiempo: la venta no se bloquea aunque figure stock cero o
+            insuficiente, y el saldo queda en negativo hasta el próximo ajuste.
           </div>
         )}
 

@@ -300,6 +300,7 @@ function AppTauri() {
         condicionIvaEmisor: config.condicionIvaEmisor,
         puntoDeVenta: config.puntoDeVenta,
         emiteComprobantesFiscales: config.emiteComprobantesFiscales ?? true,
+        permitirStockNegativo: config.permitirStockNegativo,
         ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
       });
       setFase("config");
@@ -320,6 +321,7 @@ function AppTauri() {
         condicionIvaEmisor: v.condicionIvaEmisor,
         puntoDeVenta: v.puntoDeVenta,
         emiteComprobantesFiscales: v.emiteComprobantesFiscales,
+        permitirStockNegativo: v.permitirStockNegativo,
         // Sin spread de `undefined`: si el usuario sacó el logo, se omite la
         // clave (guardarConfig la persiste como NULL) en vez de asignarla a
         // `undefined`, que `exactOptionalPropertyTypes` no permite.
