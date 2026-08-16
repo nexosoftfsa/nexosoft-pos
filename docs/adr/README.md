@@ -65,3 +65,4 @@ Consecuencias y Alternativas consideradas.
 | 0046 | [Catálogo demo con datos reales del cliente + buscador en la venta](0046-catalogo-demo-con-datos-reales.md) | Aceptada |
 | 0047 | [`POST /auth/register` cerrado salvo alta del primer ADMIN](0047-registro-cerrado-salvo-alta-de-primer-admin.md) | Aceptada |
 | 0048 | [Snapshot del costo en el ítem de venta, para ganancia real en reportes](0048-snapshot-de-costo-en-item-de-venta.md) | Aceptada |
+| 0049 | [Etiquetas de góndola por escaneo, export a Excel, sin código de barras](0049-etiquetas-por-escaneo-y-export-excel.md) | Aceptada |
