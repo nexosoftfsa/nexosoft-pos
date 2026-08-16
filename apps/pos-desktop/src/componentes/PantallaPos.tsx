@@ -30,6 +30,7 @@ import {
 } from "./promos";
 import { useImpresionA4 } from "./usar-impresion-a4";
 import { useImpresionTicket } from "./usar-impresion-ticket";
+import { useLectorTeclado } from "./usar-lector-teclado";
 
 interface ItemCarrito {
   readonly producto: ProductoCatalogo;
@@ -133,9 +134,7 @@ export function PantallaPos({
   const { datosA4, imprimirA4 } = useImpresionA4();
   const { datosTicket, imprimirTicketPreview } = useImpresionTicket();
 
-  // ----- Lector de barras HID -----
-  // Los lectores HID se comportan como teclado: acumulamos teclas hasta Enter.
-  const bufferLector = useRef("");
+  // ----- Lector de barras -----
   const buscarPorCodigo = useCallback(
     (codigo: string) => {
       const prod = catalogo.find(
@@ -147,30 +146,7 @@ export function PantallaPos({
     // agregar se define más abajo, pero es estable porque usa setCarrito funcional
     [catalogo],
   );
-
-  useEffect(() => {
-    // Suscripción al lector (mock o real vía puerto)
-    const unsub = lector.onEscaneo(buscarPorCodigo);
-
-    // Captura teclado global para lectores HID plug-and-play
-    function onKeyDown(e: KeyboardEvent) {
-      // Ignorar si el foco está en un input (el usuario está escribiendo)
-      if (document.activeElement?.tagName === "INPUT") return;
-      if (e.key === "Enter") {
-        const codigo = bufferLector.current.trim();
-        bufferLector.current = "";
-        if (codigo.length > 0) buscarPorCodigo(codigo);
-      } else if (e.key.length === 1) {
-        bufferLector.current += e.key;
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      unsub();
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [lector, buscarPorCodigo]);
+  useLectorTeclado(lector, buscarPorCodigo);
 
   useEffect(() => {
     if (carrito.length === 0) {
