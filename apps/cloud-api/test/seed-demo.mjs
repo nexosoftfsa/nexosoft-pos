@@ -99,10 +99,10 @@ try {
   await api('POST', '/auth/register', null, {
     email: 'duenio@nexo.com', nombreDisplay: 'José (dueño)', password: 'demo1234', sucursalId: sucursal.id, rol: 'ADMIN',
   });
-  await api('POST', '/auth/register', null, {
+  const token = (await api('POST', '/auth/login', null, { email: 'duenio@nexo.com', password: 'demo1234' })).accessToken;
+  await api('POST', '/auth/register', token, {
     email: 'cajera@nexo.com', nombreDisplay: 'Marta (cajera)', password: 'demo1234', sucursalId: sucursal.id, rol: 'CAJERO',
   });
-  const token = (await api('POST', '/auth/login', null, { email: 'duenio@nexo.com', password: 'demo1234' })).accessToken;
   ok('usuarios: duenio@nexo.com (ADMIN) + cajera@nexo.com (CAJERO) — clave demo1234');
 
   // ─── Categorías ───────────────────────────────────────────────────────────
