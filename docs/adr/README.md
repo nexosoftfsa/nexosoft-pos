@@ -63,3 +63,5 @@ Consecuencias y Alternativas consideradas.
 | 0044 | [Etiquetas de góndola](0044-etiquetas-de-gondola.md) | Aceptada |
 | 0045 | [Padrón de artículos multi-comercio (herramienta de negocio)](0045-padron-de-articulos-multi-comercio.md) | Aceptada |
 | 0046 | [Catálogo demo con datos reales del cliente + buscador en la venta](0046-catalogo-demo-con-datos-reales.md) | Aceptada |
+| 0047 | [`POST /auth/register` cerrado salvo alta del primer ADMIN](0047-registro-cerrado-salvo-alta-de-primer-admin.md) | Aceptada |
+| 0048 | [Snapshot del costo en el ítem de venta, para ganancia real en reportes](0048-snapshot-de-costo-en-item-de-venta.md) | Aceptada |
