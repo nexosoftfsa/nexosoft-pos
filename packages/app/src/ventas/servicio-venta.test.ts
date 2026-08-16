@@ -223,6 +223,29 @@ describe("ServicioDeVenta — confirmarVenta (camino feliz)", () => {
     });
     expect(venta.vuelto.aDecimalString()).toBe("80.00");
   });
+
+  it("el recargo de tarjeta (Fase 12.E) se cobra encima del total sin tocar el comprobante fiscal", async () => {
+    const { servicio } = crearEscenario();
+    // Total del comprobante: 2 × 1210 = 2420 (sin cambios).
+    const venta = await servicio.confirmarVenta({
+      items: [{ articuloId: "art", cantidad: Cantidad.de("2") }],
+      condicionReceptor: CondicionIva.ConsumidorFinal,
+      pagos: [
+        {
+          forma: FormaDePago.Tarjeta,
+          monto: Money.desde("1100"), // 1000 base + 100 de recargo
+          tarjetaConfigId: "tar-1",
+          cuotas: 6,
+          recargoAplicado: Money.desde("100"),
+        },
+        efectivo("1500"),
+      ],
+    });
+    // El comprobante fiscal NO incluye el recargo de tarjeta.
+    expect(venta.resultado.total.aDecimalString()).toBe("2420.00");
+    // Pero hay que cubrir 2420 + 100 = 2520; pagado = 1100 + 1500 = 2600 → vuelto 80.
+    expect(venta.vuelto.aDecimalString()).toBe("80.00");
+  });
 });
 
 describe("ServicioDeVenta — combos (Fase 8.1.b)", () => {

@@ -28,11 +28,11 @@ import {
   resolverTipoComprobante,
   TipoComprobante,
   TipoMovimiento,
+  Money,
   type Cantidad,
   type CondicionIva,
   type FormaDePago,
   type LineaVenta,
-  type Money,
   type Pago,
   type ResultadoCobro,
   type ResultadoComprobante,
@@ -52,6 +52,11 @@ export interface PagoComando {
   readonly forma: FormaDePago;
   readonly monto: Money;
   readonly referencia?: string;
+  /** Trazabilidad de tarjeta configurada (Fase 12.E). Ver `Pago` en el dominio. */
+  readonly tarjetaConfigId?: string;
+  readonly cuotas?: number;
+  /** Recargo de esta tarjeta ya incluido en `monto`. */
+  readonly recargoAplicado?: Money;
 }
 
 export interface ComandoVenta {
@@ -287,12 +292,25 @@ export class ServicioDeVenta {
         : {}),
     });
 
-    const pagos = comando.pagos.map((p) => ({
+    const pagos: Pago[] = comando.pagos.map((p) => ({
       forma: p.forma,
       monto: p.monto,
       ...(p.referencia !== undefined ? { referencia: p.referencia } : {}),
+      ...(p.tarjetaConfigId !== undefined ? { tarjetaConfigId: p.tarjetaConfigId } : {}),
+      ...(p.cuotas !== undefined ? { cuotas: p.cuotas } : {}),
+      ...(p.recargoAplicado !== undefined ? { recargoAplicado: p.recargoAplicado } : {}),
     }));
-    const cobro = calcularCobro(resultado.total, pagos);
+    // El recargo de tarjeta (Fase 12.E) se cobra ENCIMA del total fiscal del
+    // comprobante (que no lo incluye, ver ADR-0050): no se re-discrimina IVA
+    // sobre él, es un monto adicional que hay que cubrir con los pagos.
+    const recargoTarjetas = pagos.reduce(
+      (acc, p) => (p.recargoAplicado !== undefined ? acc.sumar(p.recargoAplicado) : acc),
+      Money.cero(),
+    );
+    const totalACobrar = recargoTarjetas.esPositivo()
+      ? resultado.total.sumar(recargoTarjetas)
+      : resultado.total;
+    const cobro = calcularCobro(totalACobrar, pagos);
 
     return { tipoComprobante, items, resultado, cobro, pagos };
   }

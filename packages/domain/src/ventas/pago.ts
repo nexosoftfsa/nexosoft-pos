@@ -32,6 +32,15 @@ export interface Pago {
   readonly monto: Money;
   /** Referencia opcional: id de transacción, últimos 4 dígitos, etc. */
   readonly referencia?: string;
+  /**
+   * Trazabilidad de tarjeta configurada (Fase 12.E, "Medios de pago"): qué
+   * tarjeta/banco y cuántas cuotas eligió el cajero. No afecta el cálculo de
+   * `calcularCobro` (que solo suma `monto`, ya con el recargo incluido).
+   */
+  readonly tarjetaConfigId?: string;
+  readonly cuotas?: number;
+  /** Recargo de esta tarjeta ya incluido en `monto` (informativo/ticket). */
+  readonly recargoAplicado?: Money;
 }
 
 export interface ResultadoCobro {
