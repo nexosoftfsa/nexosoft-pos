@@ -17,6 +17,15 @@ describe("mapearMedioPago", () => {
     // agrupaba ambos medios en uno solo, sin distinguirlos).
     expect(mapearMedioPago(FormaDePago.Transferencia)).toBe("TRANSFERENCIA");
   });
+
+  it("con tarjeta CREDITO configurada mapea a TARJETA_CREDITO (Fase 12.E)", () => {
+    expect(mapearMedioPago(FormaDePago.Tarjeta, "CREDITO")).toBe("TARJETA_CREDITO");
+  });
+
+  it("con tarjeta DEBITO configurada, o sin tarjeta, sigue mandando TARJETA_DEBITO", () => {
+    expect(mapearMedioPago(FormaDePago.Tarjeta, "DEBITO")).toBe("TARJETA_DEBITO");
+    expect(mapearMedioPago(FormaDePago.Tarjeta)).toBe("TARJETA_DEBITO");
+  });
 });
 
 describe("construirOperacionVenta", () => {
@@ -33,6 +42,29 @@ describe("construirOperacionVenta", () => {
     const payload = op.payload as { medioPago: string; items: Array<{ cantidad: string }> };
     expect(payload.medioPago).toBe("EFECTIVO");
     expect(payload.items[0]?.cantidad).toBe("3"); // cantidad como string
+  });
+
+  it("incluye tarjetaConfigId/cuotas/recargo por pago cuando viene una tarjeta configurada (Fase 12.E)", () => {
+    const op = construirOperacionVenta({
+      terminalId: "t",
+      medioPago: "TARJETA_CREDITO",
+      items: [],
+      pagos: [
+        {
+          medioPago: "TARJETA_CREDITO",
+          monto: "110.00",
+          tarjetaConfigId: "tar-1",
+          cuotas: 6,
+          recargo: "10.00",
+        },
+      ],
+    });
+    const payload = op.payload as {
+      pagos: Array<{ tarjetaConfigId?: string; cuotas?: number; recargo?: string }>;
+    };
+    expect(payload.pagos[0]?.tarjetaConfigId).toBe("tar-1");
+    expect(payload.pagos[0]?.cuotas).toBe(6);
+    expect(payload.pagos[0]?.recargo).toBe("10.00");
   });
 
   it("incluye el costoUnitario del ítem cuando viene el snapshot (ADR-0048)", () => {

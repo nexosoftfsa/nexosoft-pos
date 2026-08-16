@@ -284,7 +284,12 @@ export function Shell({
               {...(clienteAsistenteConfig ? { clienteConfig: clienteAsistenteConfig } : {})}
             />
           ) : activo?.id === "pos" ? (
-            <PantallaPos entorno={entorno} sync={sync} clientes={clientesVenta} />
+            <PantallaPos
+              entorno={entorno}
+              sync={sync}
+              clientes={clientesVenta}
+              {...(clienteMediosPago ? { clienteMediosPago } : {})}
+            />
           ) : activo?.id === "catalogo" && clienteCatalogo ? (
             <CatalogoAbm cliente={clienteCatalogo} />
           ) : activo?.id === "etiquetas" && clienteCatalogo ? (

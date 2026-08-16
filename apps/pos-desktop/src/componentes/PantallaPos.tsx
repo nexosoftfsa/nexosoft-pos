@@ -19,6 +19,7 @@ import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { etiquetaComprobante, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
+import type { ClienteMediosPago, Tarjeta } from "../sync/cliente-medios-pago";
 import { ComprobanteA4 } from "./ComprobanteA4";
 import { ComprobanteTicket } from "./ComprobanteTicket";
 import { filtrarCatalogoVenta } from "./pos-helpers";
@@ -39,6 +40,11 @@ interface ItemCarrito {
 interface PagoUi {
   readonly forma: FormaDePago;
   readonly monto: Money;
+  /** Trazabilidad de tarjeta configurada (Fase 12.E). */
+  readonly tarjetaConfigId?: string;
+  readonly cuotas?: number;
+  /** Recargo de esta tarjeta ya incluido en `monto`. */
+  readonly recargoAplicado?: Money;
 }
 
 const RECEPTORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
@@ -96,7 +102,13 @@ function armarComando(
       };
     }),
     condicionReceptor,
-    pagos: pagos.map((p) => ({ forma: p.forma, monto: p.monto })),
+    pagos: pagos.map((p) => ({
+      forma: p.forma,
+      monto: p.monto,
+      ...(p.tarjetaConfigId !== undefined ? { tarjetaConfigId: p.tarjetaConfigId } : {}),
+      ...(p.cuotas !== undefined ? { cuotas: p.cuotas } : {}),
+      ...(p.recargoAplicado !== undefined ? { recargoAplicado: p.recargoAplicado } : {}),
+    })),
     ...(recargoPorcentaje > 0 ? { recargoPorcentaje } : {}),
     ...(clienteId !== undefined ? { clienteId } : {}),
   };
@@ -106,12 +118,15 @@ export function PantallaPos({
   entorno,
   sync,
   clientes = [],
+  clienteMediosPago,
 }: {
   entorno: EntornoPos;
   /** Estado de la cola de sincronización (lo orquesta el shell con `useSync`). */
   sync: EstadoSync;
   /** Clientes para vender en cuenta corriente (fiado). Vacío = sin selector. */
   clientes?: readonly ClienteVenta[];
+  /** Tarjetas configuradas (Fase 12.E), para auto-aplicar su recargo al cobrar. */
+  clienteMediosPago?: ClienteMediosPago;
 }) {
   const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
 
@@ -128,6 +143,9 @@ export function PantallaPos({
   const [error, setError] = useState<string | null>(null);
   const [formaPago, setFormaPago] = useState<FormaDePago>(FormaDePago.Efectivo);
   const [montoPago, setMontoPago] = useState<string>("");
+  const [tarjetas, setTarjetas] = useState<Tarjeta[]>([]);
+  const [tarjetaSeleccionada, setTarjetaSeleccionada] = useState<string>("");
+  const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState<string>("");
   const [imprimiendo, setImprimiendo] = useState(false);
   const [pagoElectronico, setPagoElectronico] = useState<IntentoPago | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -147,6 +165,26 @@ export function PantallaPos({
     [catalogo],
   );
   useLectorTeclado(lector, buscarPorCodigo);
+
+  // ----- Tarjetas configuradas (Fase 12.E) -----
+  useEffect(() => {
+    if (!clienteMediosPago) return;
+    let vivo = true;
+    clienteMediosPago
+      .listar(false)
+      .then((ts) => {
+        if (vivo) setTarjetas(ts);
+      })
+      .catch(() => {
+        // Sin tarjetas configuradas o sin conexión: el cobro manual sigue andando.
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [clienteMediosPago]);
+
+  const tarjetaActual = tarjetas.find((t) => t.id === tarjetaSeleccionada);
+  const tasaActual = tarjetaActual?.tasas.find((t) => t.cantidadCuotas === Number(cuotasSeleccionadas));
 
   useEffect(() => {
     if (carrito.length === 0) {
@@ -207,23 +245,59 @@ export function PantallaPos({
 
   function agregarPago() {
     try {
-      const monto = Money.desde(montoPago.replace(",", "."));
-      if (!monto.esPositivo()) {
+      const montoBase = Money.desde(montoPago.replace(",", "."));
+      if (!montoBase.esPositivo()) {
         setError("El monto del pago debe ser mayor a cero.");
         return;
       }
-      setPagos((prev) => [...prev, { forma: formaPago, monto }]);
+      setPagos((prev) => [...prev, armarPagoUi(montoBase)]);
       setMontoPago("");
+      setTarjetaSeleccionada("");
+      setCuotasSeleccionadas("");
       setError(null);
     } catch {
       setError("Monto de pago inválido.");
     }
   }
 
+  /** Arma el `PagoUi`: si hay tarjeta+cuotas elegida, calcula y suma su recargo. */
+  function armarPagoUi(montoBase: Money): PagoUi {
+    if (tarjetaActual && tasaActual && tasaActual.recargoPorcentaje > 0) {
+      const recargoAplicado = montoBase.porcentaje(tasaActual.recargoPorcentaje);
+      return {
+        forma: formaPago,
+        monto: montoBase.sumar(recargoAplicado),
+        tarjetaConfigId: tarjetaActual.id,
+        cuotas: tasaActual.cantidadCuotas,
+        recargoAplicado,
+      };
+    }
+    return {
+      forma: formaPago,
+      monto: montoBase,
+      ...(tarjetaActual ? { tarjetaConfigId: tarjetaActual.id, cuotas: Number(cuotasSeleccionadas) } : {}),
+    };
+  }
+
   function pagoExacto() {
     if (!preview) return;
     const saldo = preview.cobro.saldoPendiente;
-    if (saldo.esPositivo()) {
+    if (!saldo.esPositivo()) return;
+    if (tarjetaActual && tasaActual && tasaActual.recargoPorcentaje > 0) {
+      // saldo = base + base×tasa% → base = saldo / (1 + tasa/100)
+      const base = saldo.dividirPor(1 + tasaActual.recargoPorcentaje / 100).redondear(2);
+      const recargoAplicado = saldo.restar(base);
+      setPagos((prev) => [
+        ...prev,
+        {
+          forma: formaPago,
+          monto: saldo,
+          tarjetaConfigId: tarjetaActual.id,
+          cuotas: tasaActual.cantidadCuotas,
+          recargoAplicado,
+        },
+      ]);
+    } else {
       setPagos((prev) => [...prev, { forma: formaPago, monto: saldo }]);
     }
   }
@@ -312,8 +386,11 @@ export function PantallaPos({
         });
         // Pago combinado: viaja el desglose (un pago por medio) y el resumen.
         const pagosSync = pagos.map((p) => ({
-          medioPago: mapearMedioPago(p.forma),
+          medioPago: mapearMedioPago(p.forma, tarjetas.find((t) => t.id === p.tarjetaConfigId)?.tipo),
           monto: p.monto.aDecimalString(2),
+          ...(p.tarjetaConfigId !== undefined ? { tarjetaConfigId: p.tarjetaConfigId } : {}),
+          ...(p.cuotas !== undefined ? { cuotas: p.cuotas } : {}),
+          ...(p.recargoAplicado !== undefined ? { recargo: p.recargoAplicado.aDecimalString(2) } : {}),
         }));
         const medioPago = resumenMedioPago(
           pagosSync,
@@ -338,6 +415,8 @@ export function PantallaPos({
       setPagos([]);
       setRecargoPorc(0);
       setClienteId("");
+      setTarjetaSeleccionada("");
+      setCuotasSeleccionadas("");
       setError(null);
     } catch (e) {
       setError(mensajeError(e));
@@ -362,7 +441,7 @@ export function PantallaPos({
     if (imprimiendo) return;
     setImprimiendo(true);
     try {
-      const datos = construirDatosTicket(venta, config, catalogo, pagos);
+      const datos = construirDatosTicket(venta, config, catalogo, pagos, tarjetas);
       // La térmica real todavía no existe (mock, ver packages/hardware): igual
       // se registra el trabajo (para cuando haya driver) y se muestra la vista
       // previa imprimible en formato rollo, así el "Imprimir" no queda mudo.
@@ -402,6 +481,22 @@ export function PantallaPos({
 
   const puedeConfirmar = preview !== null && preview.cobro.cancelada;
   const catalogoFiltrado = filtrarCatalogoVenta(catalogo, busquedaProducto);
+  const recargoTarjetasTotal = pagos.reduce(
+    (acc, p) => (p.recargoAplicado !== undefined ? acc.sumar(p.recargoAplicado) : acc),
+    Money.cero(),
+  );
+  const montoBaseVivo = (() => {
+    try {
+      const m = Money.desde(montoPago.replace(",", "."));
+      return m.esPositivo() ? m : null;
+    } catch {
+      return null;
+    }
+  })();
+  const recargoVivo =
+    montoBaseVivo && tasaActual && tasaActual.recargoPorcentaje > 0
+      ? montoBaseVivo.porcentaje(tasaActual.recargoPorcentaje)
+      : null;
 
   return (
     <div className="pos">
@@ -529,6 +624,16 @@ export function PantallaPos({
                 <Fila etiqueta={`Recargo ${recargoPorc}%`} valor={`+${pesos(preview.resultado.recargo)}`} />
               )}
               <Fila etiqueta="TOTAL" valor={pesos(preview.resultado.total)} destacado />
+              {recargoTarjetasTotal.esPositivo() && (
+                <>
+                  <Fila etiqueta="Recargo tarjeta" valor={`+${pesos(recargoTarjetasTotal)}`} />
+                  <Fila
+                    etiqueta="Total a cobrar"
+                    valor={pesos(preview.resultado.total.sumar(recargoTarjetasTotal))}
+                    destacado
+                  />
+                </>
+              )}
             </div>
           )}
 
@@ -536,7 +641,16 @@ export function PantallaPos({
             <div className="pagos-lista">
               {pagos.map((p, i) => (
                 <div key={i} className="pago">
-                  <span>{FORMAS.find((f) => f.valor === p.forma)?.etiqueta ?? p.forma}</span>
+                  <span>
+                    {FORMAS.find((f) => f.valor === p.forma)?.etiqueta ?? p.forma}
+                    {p.tarjetaConfigId !== undefined && (
+                      <>
+                        {" "}
+                        — {tarjetas.find((t) => t.id === p.tarjetaConfigId)?.banco ?? ""} ({p.cuotas}{" "}
+                        cuota{p.cuotas === 1 ? "" : "s"})
+                      </>
+                    )}
+                  </span>
                   <span>{pesos(p.monto)}</span>
                   <button onClick={() => quitarPago(i)} aria-label="Quitar pago">
                     ×
@@ -547,7 +661,11 @@ export function PantallaPos({
             <div className="pago-nuevo">
               <select
                 value={formaPago}
-                onChange={(e) => setFormaPago(e.target.value as FormaDePago)}
+                onChange={(e) => {
+                  setFormaPago(e.target.value as FormaDePago);
+                  setTarjetaSeleccionada("");
+                  setCuotasSeleccionadas("");
+                }}
               >
                 {FORMAS.map((f) => (
                   <option key={f.valor} value={f.valor}>
@@ -555,6 +673,38 @@ export function PantallaPos({
                   </option>
                 ))}
               </select>
+              {formaPago === FormaDePago.Tarjeta && tarjetas.length > 0 && (
+                <>
+                  <select
+                    value={tarjetaSeleccionada}
+                    onChange={(e) => {
+                      setTarjetaSeleccionada(e.target.value);
+                      setCuotasSeleccionadas("");
+                    }}
+                  >
+                    <option value="">Tarjeta / banco…</option>
+                    {tarjetas.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.banco}
+                        {t.marca ? ` — ${t.marca}` : ""} ({t.tipo === "CREDITO" ? "Crédito" : "Débito"})
+                      </option>
+                    ))}
+                  </select>
+                  {tarjetaActual && (
+                    <select
+                      value={cuotasSeleccionadas}
+                      onChange={(e) => setCuotasSeleccionadas(e.target.value)}
+                    >
+                      <option value="">Cuotas…</option>
+                      {tarjetaActual.tasas.map((t) => (
+                        <option key={t.cantidadCuotas} value={t.cantidadCuotas}>
+                          {t.cantidadCuotas} — {t.recargoPorcentaje}%
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </>
+              )}
               <input
                 type="text"
                 inputMode="decimal"
@@ -565,6 +715,11 @@ export function PantallaPos({
                   if (e.key === "Enter") agregarPago();
                 }}
               />
+              {recargoVivo && (
+                <span className="muted">
+                  + {pesos(recargoVivo)} recargo = {pesos(montoBaseVivo!.sumar(recargoVivo))}
+                </span>
+              )}
               <button onClick={agregarPago}>Agregar</button>
               <button className="exacto" onClick={pagoExacto} disabled={!preview}>
                 Exacto
@@ -652,7 +807,7 @@ export function PantallaPos({
               <button onClick={() => imprimirTicket(ultimaVenta)} disabled={imprimiendo}>
                 {imprimiendo ? "Imprimiendo…" : "Imprimir"}
               </button>
-              <button onClick={() => imprimirA4(construirDatosTicket(ultimaVenta, config, catalogo, pagos))}>
+              <button onClick={() => imprimirA4(construirDatosTicket(ultimaVenta, config, catalogo, pagos, tarjetas))}>
                 Imprimir A4
               </button>
               <button
@@ -715,6 +870,7 @@ function construirDatosTicket(
   config: import("@nexosoft/app").ConfiguracionComercio,
   _catalogo: readonly ProductoCatalogo[],
   pagosUi: readonly PagoUi[],
+  tarjetas: readonly Tarjeta[] = [],
 ): DatosTicket {
   return {
     razonSocial: config.razonSocial,
@@ -740,10 +896,15 @@ function construirDatosTicket(
     })),
     descuento: venta.resultado.descuento,
     total: venta.resultado.total,
-    formasDePago: pagosUi.map((p) => ({
-      etiqueta: FORMAS.find((f) => f.valor === p.forma)?.etiqueta ?? p.forma,
-      monto: p.monto,
-    })),
+    formasDePago: pagosUi.map((p) => {
+      const base = FORMAS.find((f) => f.valor === p.forma)?.etiqueta ?? p.forma;
+      const tarjeta = tarjetas.find((t) => t.id === p.tarjetaConfigId);
+      const etiqueta =
+        tarjeta !== undefined
+          ? `${tarjeta.tipo === "CREDITO" ? "Tarjeta de crédito" : "Tarjeta de débito"} — ${tarjeta.banco} (${p.cuotas} cuota${p.cuotas === 1 ? "" : "s"})`
+          : base;
+      return { etiqueta, monto: p.monto };
+    }),
     vuelto: venta.vuelto,
     ...(venta.cae !== undefined ? { cae: venta.cae } : {}),
     ...(venta.vencimientoCae !== undefined ? { vencimientoCae: venta.vencimientoCae } : {}),

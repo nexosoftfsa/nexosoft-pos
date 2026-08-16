@@ -5,6 +5,7 @@
  */
 import { FormaDePago } from "@nexosoft/domain";
 import type { OperacionSync } from "@nexosoft/sync";
+import type { TipoTarjeta } from "./cliente-medios-pago";
 
 /** Forma de pago del dominio → `MedioPago` del backend. */
 const MEDIOS: Partial<Record<FormaDePago, string>> = {
@@ -15,7 +16,14 @@ const MEDIOS: Partial<Record<FormaDePago, string>> = {
   [FormaDePago.CuentaCorriente]: "CUENTA_CORRIENTE",
 };
 
-export function mapearMedioPago(forma: FormaDePago): string {
+/**
+ * Forma de pago → `MedioPago` del backend. Si es "tarjeta" y se conoce el
+ * tipo de la tarjeta configurada elegida (Fase 12.E), distingue
+ * TARJETA_CREDITO de TARJETA_DEBITO; sin tarjeta elegida, sigue mandando
+ * débito por defecto (comportamiento histórico).
+ */
+export function mapearMedioPago(forma: FormaDePago, tipoTarjeta?: TipoTarjeta): string {
+  if (forma === FormaDePago.Tarjeta && tipoTarjeta === "CREDITO") return "TARJETA_CREDITO";
   return MEDIOS[forma] ?? "EFECTIVO";
 }
 
@@ -35,6 +43,11 @@ export interface PagoSync {
   readonly medioPago: string;
   /** Monto como string decimal, ej. "140.00". */
   readonly monto: string;
+  /** Trazabilidad de tarjeta configurada (Fase 12.E). */
+  readonly tarjetaConfigId?: string;
+  readonly cuotas?: number;
+  /** Recargo de esta tarjeta ya incluido en `monto`, como string decimal. */
+  readonly recargo?: string;
 }
 
 /** Medio de pago resumen: el único medio, o "COMBINADO" si hay varios distintos. */
@@ -75,7 +88,15 @@ export function construirOperacionVenta(args: {
         ...(i.costoUnitario !== undefined ? { costoUnitario: i.costoUnitario } : {}),
       })),
       ...(args.pagos !== undefined && args.pagos.length > 0
-        ? { pagos: args.pagos.map((p) => ({ medioPago: p.medioPago, monto: p.monto })) }
+        ? {
+            pagos: args.pagos.map((p) => ({
+              medioPago: p.medioPago,
+              monto: p.monto,
+              ...(p.tarjetaConfigId !== undefined ? { tarjetaConfigId: p.tarjetaConfigId } : {}),
+              ...(p.cuotas !== undefined ? { cuotas: p.cuotas } : {}),
+              ...(p.recargo !== undefined ? { recargo: p.recargo } : {}),
+            })),
+          }
         : {}),
       ...(args.recargo !== undefined && args.recargo !== "0.00"
         ? { recargo: args.recargo }
