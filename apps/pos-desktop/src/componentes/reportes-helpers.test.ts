@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { aIso, porcentaje, rangoDe } from "./reportes-helpers";
+import { aIso, aIsoFechaHora, porcentaje, rangoDe } from "./reportes-helpers";
 
 const HOY = new Date(2026, 6, 15); // 15/07/2026 (local)
 
 describe("aIso", () => {
   it("formatea una fecha local a YYYY-MM-DD", () => {
     expect(aIso(new Date(2026, 0, 5))).toBe("2026-01-05");
+  });
+});
+
+describe("aIsoFechaHora", () => {
+  it("formatea fecha y hora local a YYYY-MM-DDTHH:mm", () => {
+    expect(aIsoFechaHora(new Date(2026, 0, 5, 9, 5))).toBe("2026-01-05T09:05");
   });
 });
 

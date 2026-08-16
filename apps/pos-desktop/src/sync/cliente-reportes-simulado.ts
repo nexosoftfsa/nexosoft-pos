@@ -7,6 +7,7 @@ import type { RangoFechas } from "../componentes/reportes-helpers";
 import type {
   ClienteReportes,
   PuntoSerie,
+  Rentabilidad,
   ResumenVentas,
   TopProducto,
   VentaPorMedio,
@@ -54,5 +55,10 @@ export class ClienteReportesSimulado implements ClienteReportes {
       { productoId: "leche", nombre: "Leche entera 1 L", codigo: "7790005", cantidad: "15", monto: "20250.00" },
     ];
     return datos.slice(0, limite);
+  }
+
+  async rentabilidad(_rango: RangoFechas): Promise<Rentabilidad> {
+    void _rango;
+    return { ventasTotal: "318500.00", costoTotal: "198200.00", gananciaBruta: "120300.00" };
   }
 }

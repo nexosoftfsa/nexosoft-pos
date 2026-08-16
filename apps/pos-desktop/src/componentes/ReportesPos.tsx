@@ -11,13 +11,28 @@ import {
   ErrorReportes,
   type ClienteReportes,
   type PuntoSerie,
+  type Rentabilidad,
   type ResumenVentas,
   type TopProducto,
   type VentaPorMedio,
 } from "../sync/cliente-reportes";
 import { pesos } from "../formato";
 import { etiquetaMedioPago } from "./comprobantes-helpers";
-import { PRESETS, porcentaje, rangoDe, type PresetRango } from "./reportes-helpers";
+import {
+  aIsoFechaHora,
+  PRESETS,
+  porcentaje,
+  rangoDe,
+  type PresetRango,
+  type RangoFechas,
+} from "./reportes-helpers";
+
+/** Rango personalizado por defecto: desde la medianoche de hoy hasta ahora. */
+function rangoPersonalizadoInicial(): RangoFechas {
+  const ahora = new Date();
+  const medianoche = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+  return { desde: aIsoFechaHora(medianoche), hasta: aIsoFechaHora(ahora) };
+}
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorReportes) return e.message;
@@ -38,27 +53,33 @@ interface Datos {
   serie: PuntoSerie[];
   medios: VentaPorMedio[];
   top: TopProducto[];
+  rentabilidad: Rentabilidad;
 }
 
 export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
   const [preset, setPreset] = useState<PresetRango>("treinta");
+  const [rangoCustom, setRangoCustom] = useState<RangoFechas>(rangoPersonalizadoInicial);
   const [datos, setDatos] = useState<Datos | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const rango = useMemo(() => rangoDe(preset), [preset]);
+  const rango = useMemo(
+    () => (preset === "personalizado" ? rangoCustom : rangoDe(preset)),
+    [preset, rangoCustom],
+  );
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setError(null);
     try {
-      const [resumen, serie, medios, top] = await Promise.all([
+      const [resumen, serie, medios, top, rentabilidad] = await Promise.all([
         cliente.resumen(rango),
         cliente.serie(rango),
         cliente.porMedioPago(rango),
         cliente.topProductos(rango, 10),
+        cliente.rentabilidad(rango),
       ]);
-      setDatos({ resumen, serie, medios, top });
+      setDatos({ resumen, serie, medios, top, rentabilidad });
     } catch (e) {
       setError(mensaje(e));
       setDatos(null);
@@ -94,7 +115,38 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
               {p.etiqueta}
             </button>
           ))}
+          <button
+            type="button"
+            className={preset === "personalizado" ? "on" : ""}
+            onClick={() => setPreset("personalizado")}
+          >
+            Personalizado
+          </button>
         </span>
+        {preset === "personalizado" && (
+          <span className="rango-personalizado">
+            <label>
+              Desde
+              <input
+                type="datetime-local"
+                className="input"
+                value={rangoCustom.desde}
+                max={rangoCustom.hasta}
+                onChange={(e) => setRangoCustom((r) => ({ ...r, desde: e.target.value }))}
+              />
+            </label>
+            <label>
+              Hasta
+              <input
+                type="datetime-local"
+                className="input"
+                value={rangoCustom.hasta}
+                min={rangoCustom.desde}
+                onChange={(e) => setRangoCustom((r) => ({ ...r, hasta: e.target.value }))}
+              />
+            </label>
+          </span>
+        )}
         <div className="spacer" />
         <span className="muted">
           {rango.desde} — {rango.hasta}
@@ -106,7 +158,7 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
 
       {!cargando && datos !== null && (
         <>
-          <div className="kpis kpis--4">
+          <div className="kpis kpis--5">
             <div className="kpi">
               <div className="kpi__label">Total vendido</div>
               <div className="kpi__val">{money(datos.resumen.totalVendido)}</div>
@@ -122,6 +174,10 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
             <div className="kpi">
               <div className="kpi__label">Descuentos</div>
               <div className="kpi__val">{money(datos.resumen.totalDescuentos)}</div>
+            </div>
+            <div className="kpi">
+              <div className="kpi__label">Ganancia</div>
+              <div className="kpi__val">{money(datos.rentabilidad.gananciaBruta)}</div>
             </div>
           </div>
 

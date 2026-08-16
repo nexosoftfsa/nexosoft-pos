@@ -34,11 +34,18 @@ export interface TopProducto {
   readonly monto: string;
 }
 
+export interface Rentabilidad {
+  readonly ventasTotal: string;
+  readonly costoTotal: string;
+  readonly gananciaBruta: string;
+}
+
 export interface ClienteReportes {
   resumen(rango: RangoFechas): Promise<ResumenVentas>;
   serie(rango: RangoFechas): Promise<PuntoSerie[]>;
   porMedioPago(rango: RangoFechas): Promise<VentaPorMedio[]>;
   topProductos(rango: RangoFechas, limite?: number): Promise<TopProducto[]>;
+  rentabilidad(rango: RangoFechas): Promise<Rentabilidad>;
 }
 
 export class ErrorReportes extends Error {
@@ -78,6 +85,10 @@ export class ClienteReportesHttp implements ClienteReportes {
     return this.get<TopProducto[]>(
       `/reportes/productos/top${this.query(rango, { limite: String(limite) })}`,
     );
+  }
+
+  rentabilidad(rango: RangoFechas): Promise<Rentabilidad> {
+    return this.get<Rentabilidad>(`/reportes/ventas/rentabilidad${this.query(rango)}`);
   }
 
   private async get<T>(ruta: string): Promise<T> {

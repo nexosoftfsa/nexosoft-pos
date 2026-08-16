@@ -4,7 +4,7 @@
  * `/reportes` de la Fase 6.
  */
 
-export type PresetRango = "hoy" | "semana" | "treinta" | "mes";
+export type PresetRango = "hoy" | "semana" | "treinta" | "mes" | "personalizado";
 
 export interface RangoFechas {
   readonly desde: string; // YYYY-MM-DD
@@ -24,6 +24,13 @@ export function aIso(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${dd}`;
+}
+
+/** Fecha y hora local a `YYYY-MM-DDTHH:mm` (formato de `<input type="datetime-local">`). */
+export function aIsoFechaHora(d: Date): string {
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${aIso(d)}T${hh}:${mm}`;
 }
 
 /** Devuelve el rango (desde/hasta) de un preset, relativo a `hoy`. */
