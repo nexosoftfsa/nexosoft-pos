@@ -228,6 +228,33 @@
 .gestion .fila-inactiva td {
   opacity: 0.55;
 }
+.gestion th.th-ordenable {
+  padding: 0;
+}
+.gestion .th-ordenable__btn {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 16px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
+  box-sizing: border-box;
+}
+.gestion .th-ordenable__btn:hover {
+  color: var(--texto);
+}
+.gestion .th-ordenable__flecha {
+  font-size: 10px;
+}
+.gestion .th-ordenable.num .th-ordenable__btn {
+  justify-content: flex-end;
+}
 .gestion .acciones {
   display: flex;
   gap: 12px;
