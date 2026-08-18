@@ -101,15 +101,17 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
 
   async function exportar() {
     try {
-      const blob = await exportarExcel(
-        "Stock",
-        [{ titulo: "Código" }, { titulo: "Producto", ancho: 30 }, { titulo: "Saldo" }, { titulo: "Estado" }],
-        saldos.map((s) => {
-          const estado = estadoStock(s.saldo, umbral);
-          const etiqueta = estado === "ok" ? "OK" : estado === "bajo" ? "Bajo mínimo" : "Sin stock";
-          return [s.producto.codigo, s.producto.nombre, s.saldo, etiqueta];
-        }),
-      );
+      const blob = await exportarExcel([
+        {
+          nombre: "Stock",
+          columnas: [{ titulo: "Código" }, { titulo: "Producto", ancho: 30 }, { titulo: "Saldo" }, { titulo: "Estado" }],
+          filas: saldos.map((s) => {
+            const estado = estadoStock(s.saldo, umbral);
+            const etiqueta = estado === "ok" ? "OK" : estado === "bajo" ? "Bajo mínimo" : "Sin stock";
+            return [s.producto.codigo, s.producto.nombre, s.saldo, etiqueta];
+          }),
+        },
+      ]);
       descargarBlob("stock.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));

@@ -120,32 +120,34 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
   async function exportarArticulos() {
     try {
       const todos = await cliente.listarProductos(true);
-      const blob = await exportarExcel(
-        "Artículos",
-        [
-          { titulo: "Código" },
-          { titulo: "Descripción", ancho: 30 },
-          { titulo: "Rubro", ancho: 20 },
-          { titulo: "Costo" },
-          { titulo: "Precio" },
-          { titulo: "IVA" },
-          { titulo: "Utilidad %" },
-          { titulo: "Estado" },
-        ],
-        todos.map((p) => {
-          const margen = margenUtilidad(p.precioVenta, p.precioCosto);
-          return [
-            p.codigo,
-            p.nombre,
-            p.categoria?.nombre ?? "",
-            precio(p.precioCosto),
-            precio(p.precioVenta),
-            etiquetaIva(p.tipoIva),
-            margen === null ? "" : `${margen.toFixed(0)}%`,
-            p.activo ? "Activo" : "Inactivo",
-          ];
-        }),
-      );
+      const blob = await exportarExcel([
+        {
+          nombre: "Artículos",
+          columnas: [
+            { titulo: "Código" },
+            { titulo: "Descripción", ancho: 30 },
+            { titulo: "Rubro", ancho: 20 },
+            { titulo: "Costo" },
+            { titulo: "Precio" },
+            { titulo: "IVA" },
+            { titulo: "Utilidad %" },
+            { titulo: "Estado" },
+          ],
+          filas: todos.map((p) => {
+            const margen = margenUtilidad(p.precioVenta, p.precioCosto);
+            return [
+              p.codigo,
+              p.nombre,
+              p.categoria?.nombre ?? "",
+              precio(p.precioCosto),
+              precio(p.precioVenta),
+              etiquetaIva(p.tipoIva),
+              margen === null ? "" : `${margen.toFixed(0)}%`,
+              p.activo ? "Activo" : "Inactivo",
+            ];
+          }),
+        },
+      ]);
       descargarBlob("articulos.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
@@ -154,11 +156,9 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
 
   async function exportarRubros() {
     try {
-      const blob = await exportarExcel(
-        "Rubros",
-        [{ titulo: "Rubro", ancho: 30 }],
-        categorias.map((c) => [c.nombre]),
-      );
+      const blob = await exportarExcel([
+        { nombre: "Rubros", columnas: [{ titulo: "Rubro", ancho: 30 }], filas: categorias.map((c) => [c.nombre]) },
+      ]);
       descargarBlob("rubros.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));

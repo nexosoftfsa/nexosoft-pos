@@ -85,11 +85,13 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
 
   async function exportar() {
     try {
-      const blob = await exportarExcel(
-        "Usuarios",
-        [{ titulo: "Nombre", ancho: 24 }, { titulo: "Email", ancho: 26 }, { titulo: "Rol" }, { titulo: "Estado" }],
-        usuarios.map((u) => [u.nombreDisplay, u.email, etiquetaRol(u.rol), u.activo ? "Activo" : "Inactivo"]),
-      );
+      const blob = await exportarExcel([
+        {
+          nombre: "Usuarios",
+          columnas: [{ titulo: "Nombre", ancho: 24 }, { titulo: "Email", ancho: 26 }, { titulo: "Rol" }, { titulo: "Estado" }],
+          filas: usuarios.map((u) => [u.nombreDisplay, u.email, etiquetaRol(u.rol), u.activo ? "Activo" : "Inactivo"]),
+        },
+      ]);
       descargarBlob("usuarios.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));

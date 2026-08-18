@@ -13,8 +13,8 @@ async function abrir(blob: Blob, nombreHoja: string) {
 
 describe("exportarExcel", () => {
   it("la primera fila es el encabezado con los títulos de columna", async () => {
-    const blob = await exportarExcel("Proveedores", [{ titulo: "Proveedor" }, { titulo: "CUIT" }], [
-      ["Distribuidora SA", "30-12345678-9"],
+    const blob = await exportarExcel([
+      { nombre: "Proveedores", columnas: [{ titulo: "Proveedor" }, { titulo: "CUIT" }], filas: [["Distribuidora SA", "30-12345678-9"]] },
     ]);
     const hoja = await abrir(blob, "Proveedores");
 
@@ -23,20 +23,22 @@ describe("exportarExcel", () => {
   });
 
   it("el encabezado está en negrita", async () => {
-    const blob = await exportarExcel("Proveedores", [{ titulo: "Proveedor" }], []);
+    const blob = await exportarExcel([{ nombre: "Proveedores", columnas: [{ titulo: "Proveedor" }], filas: [] }]);
     const hoja = await abrir(blob, "Proveedores");
     expect(hoja.getRow(1).getCell(1).font?.bold).toBe(true);
   });
 
   it("cada fila de datos se vuelca tal cual, en orden", async () => {
-    const blob = await exportarExcel(
-      "Stock",
-      [{ titulo: "Código" }, { titulo: "Saldo" }],
-      [
-        ["001", 12],
-        ["002", 0],
-      ],
-    );
+    const blob = await exportarExcel([
+      {
+        nombre: "Stock",
+        columnas: [{ titulo: "Código" }, { titulo: "Saldo" }],
+        filas: [
+          ["001", 12],
+          ["002", 0],
+        ],
+      },
+    ]);
     const hoja = await abrir(blob, "Stock");
 
     expect(hoja.getRow(2).getCell(1).value).toBe("001");
@@ -46,8 +48,20 @@ describe("exportarExcel", () => {
   });
 
   it("sin filas, la hoja sólo tiene el encabezado", async () => {
-    const blob = await exportarExcel("Vacío", [{ titulo: "A" }], []);
+    const blob = await exportarExcel([{ nombre: "Vacío", columnas: [{ titulo: "A" }], filas: [] }]);
     const hoja = await abrir(blob, "Vacío");
     expect(hoja.rowCount).toBe(1);
+  });
+
+  it("varias hojas quedan en el mismo archivo, cada una independiente", async () => {
+    const blob = await exportarExcel([
+      { nombre: "Resumen", columnas: [{ titulo: "Métrica" }, { titulo: "Valor" }], filas: [["Total vendido", 1000]] },
+      { nombre: "Top productos", columnas: [{ titulo: "Producto" }], filas: [["3D Queso"], ["7UP"]] },
+    ]);
+    const resumen = await abrir(blob, "Resumen");
+    const top = await abrir(blob, "Top productos");
+
+    expect(resumen.getRow(2).getCell(1).value).toBe("Total vendido");
+    expect(top.rowCount).toBe(3); // encabezado + 2 filas
   });
 });

@@ -63,18 +63,20 @@ export function Proveedores({ cliente: api }: { cliente: ClienteProveedores }) {
   async function exportar() {
     try {
       const todos = await api.listar(true);
-      const blob = await exportarExcel(
-        "Proveedores",
-        [
-          { titulo: "Proveedor", ancho: 28 },
-          { titulo: "CUIT" },
-          { titulo: "Contacto", ancho: 22 },
-          { titulo: "Teléfono" },
-          { titulo: "Email", ancho: 26 },
-          { titulo: "Estado" },
-        ],
-        todos.map((p) => [p.nombre, p.cuit ?? "", p.contacto ?? "", p.telefono ?? "", p.email ?? "", p.activo ? "Activo" : "Inactivo"]),
-      );
+      const blob = await exportarExcel([
+        {
+          nombre: "Proveedores",
+          columnas: [
+            { titulo: "Proveedor", ancho: 28 },
+            { titulo: "CUIT" },
+            { titulo: "Contacto", ancho: 22 },
+            { titulo: "Teléfono" },
+            { titulo: "Email", ancho: 26 },
+            { titulo: "Estado" },
+          ],
+          filas: todos.map((p) => [p.nombre, p.cuit ?? "", p.contacto ?? "", p.telefono ?? "", p.email ?? "", p.activo ? "Activo" : "Inactivo"]),
+        },
+      ]);
       descargarBlob("proveedores.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));

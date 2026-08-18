@@ -99,25 +99,27 @@ export function CuentasCorrientes({ cliente: api }: { cliente: ClienteCtaCte }) 
   async function exportar() {
     try {
       const todos = await api.listar(true);
-      const blob = await exportarExcel(
-        "Clientes",
-        [
-          { titulo: "Cliente", ancho: 28 },
-          { titulo: "CUIT / DNI" },
-          { titulo: "Condición IVA", ancho: 20 },
-          { titulo: "Saldo" },
-          { titulo: "Límite" },
-          { titulo: "Estado" },
-        ],
-        todos.map((c) => [
-          c.nombre,
-          c.documento ?? "",
-          etiquetaCondicion(c.condicionIva),
-          money(c.saldo),
-          c.limiteCredito === "0.00" || c.limiteCredito === "0" ? "" : money(c.limiteCredito),
-          leerSaldo(c.saldo).etiqueta,
-        ]),
-      );
+      const blob = await exportarExcel([
+        {
+          nombre: "Clientes",
+          columnas: [
+            { titulo: "Cliente", ancho: 28 },
+            { titulo: "CUIT / DNI" },
+            { titulo: "Condición IVA", ancho: 20 },
+            { titulo: "Saldo" },
+            { titulo: "Límite" },
+            { titulo: "Estado" },
+          ],
+          filas: todos.map((c) => [
+            c.nombre,
+            c.documento ?? "",
+            etiquetaCondicion(c.condicionIva),
+            money(c.saldo),
+            c.limiteCredito === "0.00" || c.limiteCredito === "0" ? "" : money(c.limiteCredito),
+            leerSaldo(c.saldo).etiqueta,
+          ]),
+        },
+      ]);
       descargarBlob("clientes.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));

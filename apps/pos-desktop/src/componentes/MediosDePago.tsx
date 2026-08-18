@@ -79,17 +79,19 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
   async function exportar() {
     try {
       const todas = await api.listar(true);
-      const blob = await exportarExcel(
-        "Medios de pago",
-        [
-          { titulo: "Banco", ancho: 22 },
-          { titulo: "Tipo" },
-          { titulo: "Marca" },
-          { titulo: "Tasas por cuotas", ancho: 30 },
-          { titulo: "Estado" },
-        ],
-        todas.map((t) => [t.banco, etiquetaTipo(t.tipo), t.marca ?? "", etiquetaTasas(t), t.activo ? "Activa" : "Inactiva"]),
-      );
+      const blob = await exportarExcel([
+        {
+          nombre: "Medios de pago",
+          columnas: [
+            { titulo: "Banco", ancho: 22 },
+            { titulo: "Tipo" },
+            { titulo: "Marca" },
+            { titulo: "Tasas por cuotas", ancho: 30 },
+            { titulo: "Estado" },
+          ],
+          filas: todas.map((t) => [t.banco, etiquetaTipo(t.tipo), t.marca ?? "", etiquetaTasas(t), t.activo ? "Activa" : "Inactiva"]),
+        },
+      ]);
       descargarBlob("medios-de-pago.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
