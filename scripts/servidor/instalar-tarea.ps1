@@ -16,10 +16,13 @@ if (-not $esAdmin) {
 }
 
 $nombreTarea = "NexoSoft Cloud API"
-$scriptIniciar = Resolve-Path (Join-Path $PSScriptRoot "iniciar-cloud-api.ps1")
+$scriptVbs = Resolve-Path (Join-Path $PSScriptRoot "iniciar-cloud-api-oculto.vbs")
 
-$accion = New-ScheduledTaskAction -Execute "powershell.exe" `
-    -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptIniciar`""
+# Se lanza via wscript.exe (no powershell.exe -WindowStyle Hidden directo):
+# en Windows 11 con Windows Terminal como app de consola por defecto, ese
+# flag no siempre evita que aparezca una ventana. El .vbs usa la API de
+# Windows para correrlo realmente oculto.
+$accion = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$scriptVbs`""
 
 $disparador = New-ScheduledTaskTrigger -AtLogOn
 $config = New-ScheduledTaskSettingsSet `
