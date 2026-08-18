@@ -17,12 +17,14 @@ const ANCHO_COLUMNA_DEFECTO = 18;
 export interface ColumnaExport {
   readonly titulo: string;
   readonly ancho?: number;
+  /** Formato numérico de Excel (`numFmt`), ej. "dd/mm/yyyy" para columnas de fecha. */
+  readonly formato?: string;
 }
 
 export interface HojaExport {
   readonly nombre: string;
   readonly columnas: readonly ColumnaExport[];
-  readonly filas: readonly (string | number)[][];
+  readonly filas: readonly (string | number | Date)[][];
 }
 
 /** Arma un `.xlsx` con una hoja por entrada, cada una con encabezado en negrita y una fila por registro. */
@@ -33,7 +35,9 @@ export async function exportarExcel(hojas: readonly HojaExport[]): Promise<Blob>
     const hoja = workbook.addWorksheet(nombre);
 
     columnas.forEach((c, i) => {
-      hoja.getColumn(i + 1).width = c.ancho ?? ANCHO_COLUMNA_DEFECTO;
+      const columna = hoja.getColumn(i + 1);
+      columna.width = c.ancho ?? ANCHO_COLUMNA_DEFECTO;
+      if (c.formato !== undefined) columna.numFmt = c.formato;
     });
 
     const filaEncabezado = hoja.addRow(columnas.map((c) => c.titulo));

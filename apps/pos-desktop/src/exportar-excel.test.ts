@@ -53,6 +53,23 @@ describe("exportarExcel", () => {
     expect(hoja.rowCount).toBe(1);
   });
 
+  it("una columna con fecha guarda un valor Date real, no texto, con el numFmt pedido", async () => {
+    const fecha = new Date("2026-08-15T12:00:00.000Z");
+    const blob = await exportarExcel([
+      {
+        nombre: "Detalle",
+        columnas: [{ titulo: "FECHA", formato: "dd/mm/yyyy" }],
+        filas: [[fecha]],
+      },
+    ]);
+    const hoja = await abrir(blob, "Detalle");
+
+    const celda = hoja.getRow(2).getCell(1);
+    expect(celda.value).toBeInstanceOf(Date);
+    expect((celda.value as Date).toISOString()).toBe(fecha.toISOString());
+    expect(hoja.getColumn(1).numFmt).toBe("dd/mm/yyyy");
+  });
+
   it("varias hojas quedan en el mismo archivo, cada una independiente", async () => {
     const blob = await exportarExcel([
       { nombre: "Resumen", columnas: [{ titulo: "Métrica" }, { titulo: "Valor" }], filas: [["Total vendido", 1000]] },

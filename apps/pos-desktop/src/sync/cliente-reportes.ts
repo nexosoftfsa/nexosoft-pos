@@ -40,12 +40,29 @@ export interface Rentabilidad {
   readonly gananciaBruta: string;
 }
 
+/** Una línea de venta (un producto vendido), para el export de detalle. */
+export interface LineaDetalleVenta {
+  readonly sucursal: string;
+  /** ISO 8601. */
+  readonly fecha: string;
+  readonly numeroTicket: number | null;
+  readonly codigo: string;
+  readonly descripcion: string;
+  readonly rubro: string | null;
+  readonly cantidad: string;
+  readonly unitario: string;
+  readonly total: string;
+  /** Null si la venta es anterior al snapshot de costo (ADR-0048). */
+  readonly ganancia: string | null;
+}
+
 export interface ClienteReportes {
   resumen(rango: RangoFechas): Promise<ResumenVentas>;
   serie(rango: RangoFechas): Promise<PuntoSerie[]>;
   porMedioPago(rango: RangoFechas): Promise<VentaPorMedio[]>;
   topProductos(rango: RangoFechas, limite?: number): Promise<TopProducto[]>;
   rentabilidad(rango: RangoFechas): Promise<Rentabilidad>;
+  detalleVentas(rango: RangoFechas): Promise<LineaDetalleVenta[]>;
 }
 
 export class ErrorReportes extends Error {
@@ -89,6 +106,10 @@ export class ClienteReportesHttp implements ClienteReportes {
 
   rentabilidad(rango: RangoFechas): Promise<Rentabilidad> {
     return this.get<Rentabilidad>(`/reportes/ventas/rentabilidad${this.query(rango)}`);
+  }
+
+  detalleVentas(rango: RangoFechas): Promise<LineaDetalleVenta[]> {
+    return this.get<LineaDetalleVenta[]>(`/reportes/ventas/detalle${this.query(rango)}`);
   }
 
   private async get<T>(ruta: string): Promise<T> {

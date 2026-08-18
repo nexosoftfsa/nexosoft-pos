@@ -106,7 +106,35 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
   async function exportarResumen() {
     if (datos === null) return;
     try {
+      const detalle = await cliente.detalleVentas(rango);
       const blob = await exportarExcel([
+        {
+          nombre: "Detalle",
+          columnas: [
+            { titulo: "SUCURSAL", ancho: 20 },
+            { titulo: "FECHA", ancho: 14, formato: "dd/mm/yyyy hh:mm" },
+            { titulo: "NRO_TICKET" },
+            { titulo: "CODIGO", ancho: 16 },
+            { titulo: "DESCRIPCIO", ancho: 32 },
+            { titulo: "RUBRO", ancho: 20 },
+            { titulo: "CANTIDAD" },
+            { titulo: "UNITARIO" },
+            { titulo: "TOTAL" },
+            { titulo: "GANANCIA" },
+          ],
+          filas: detalle.map((l) => [
+            l.sucursal,
+            new Date(l.fecha),
+            l.numeroTicket ?? "",
+            l.codigo,
+            l.descripcion,
+            l.rubro ?? "",
+            Number(l.cantidad),
+            Number(l.unitario),
+            Number(l.total),
+            l.ganancia === null ? "" : Number(l.ganancia),
+          ]),
+        },
         {
           nombre: "Resumen",
           columnas: [{ titulo: "Métrica", ancho: 22 }, { titulo: "Valor", ancho: 20 }],

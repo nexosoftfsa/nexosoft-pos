@@ -6,6 +6,7 @@
 import type { RangoFechas } from "../componentes/reportes-helpers";
 import type {
   ClienteReportes,
+  LineaDetalleVenta,
   PuntoSerie,
   Rentabilidad,
   ResumenVentas,
@@ -60,5 +61,59 @@ export class ClienteReportesSimulado implements ClienteReportes {
   async rentabilidad(_rango: RangoFechas): Promise<Rentabilidad> {
     void _rango;
     return { ventasTotal: "318500.00", costoTotal: "198200.00", gananciaBruta: "120300.00" };
+  }
+
+  async detalleVentas(_rango: RangoFechas): Promise<LineaDetalleVenta[]> {
+    void _rango;
+    return [
+      {
+        sucursal: "NexoSoft Almacén (demo)",
+        fecha: "2026-08-15T13:02:00.000Z",
+        numeroTicket: 1,
+        codigo: "7790007",
+        descripcion: "Yerba mate 1 kg",
+        rubro: "Almacén",
+        cantidad: "2",
+        unitario: "3800.00",
+        total: "7600.00",
+        ganancia: "2280.00",
+      },
+      {
+        sucursal: "NexoSoft Almacén (demo)",
+        fecha: "2026-08-15T13:02:00.000Z",
+        numeroTicket: 1,
+        codigo: "7790001",
+        descripcion: "Gaseosa 1,5 L",
+        rubro: "Bebidas",
+        cantidad: "1",
+        unitario: "1850.00",
+        total: "1850.00",
+        ganancia: "555.00",
+      },
+      {
+        sucursal: "NexoSoft Almacén (demo)",
+        fecha: "2026-08-16T10:15:00.000Z",
+        numeroTicket: 2,
+        codigo: "00034",
+        descripcion: "Limón",
+        rubro: "Frutería-Verdulería",
+        cantidad: "0.5",
+        unitario: "1200.00",
+        total: "600.00",
+        ganancia: null, // ejemplo de venta sin snapshot de costo (previa al ADR-0048)
+      },
+      {
+        sucursal: "NexoSoft Almacén (demo)",
+        fecha: "2026-08-18T09:40:00.000Z",
+        numeroTicket: 3,
+        codigo: "7790006",
+        descripcion: "Pan lactal",
+        rubro: null, // ejemplo de producto sin rubro asignado
+        cantidad: "3",
+        unitario: "2100.00",
+        total: "6300.00",
+        ganancia: "1890.00",
+      },
+    ];
   }
 }
