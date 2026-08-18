@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Decimal } from '@prisma/client/runtime/library';
-import { MedioPago } from '@prisma/client';
+import { MedioPago, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MotorDeRespaldo } from '../respaldo/motor-de-respaldo';
 import { SERVICIO_CAE, type ServicioCae } from './cae/servicio-cae';
@@ -28,6 +28,8 @@ interface UsuarioCtx {
   email: string;
   sucursalId: string;
 }
+
+type Tx = Prisma.TransactionClient;
 
 @Injectable()
 export class VentasService {
@@ -89,62 +91,68 @@ export class VentasService {
         })
       : null;
 
-    const notaCredito = await this.prisma.$transaction(async (tx) => {
-      const nc = await tx.venta.create({
-        data: {
-          operacionId: `${original.operacionId}-NC`,
-          estado: 'COMPLETADA',
-          subtotal: original.subtotal,
-          descuento: original.descuento,
-          total: original.total,
-          medioPago: original.medioPago,
-          cae: cae?.cae ?? null,
-          caeFechaVto: cae?.caeFechaVto ?? null,
-          numeroComprobante: cae?.numeroComprobante ?? null,
-          tipoComprobante: cae?.tipoComprobante ?? tipoNc,
-          sucursalId,
-          usuarioId: original.usuarioId,
-          terminalId: original.terminalId,
-          comprobanteAsociadoId: original.id,
-          items: {
-            create: original.items.map((it) => ({
-              cantidad: it.cantidad,
-              precioUnitario: it.precioUnitario,
-              descuento: it.descuento,
-              subtotal: it.subtotal,
-              productoId: it.productoId,
-            })),
-          },
-        },
-        include: { items: true },
-      });
-
-      // La mercadería vuelve al stock. Espejamos los movimientos VENTA reales de
-      // la venta original (no sus ítems): así un combo restaura el stock de sus
-      // componentes exactamente como se descontó, sin depender de la composición
-      // actual del combo (ADR-0033).
-      const movimientosVenta = await tx.movimientoStock.findMany({
-        where: { ventaId: original.id, tipo: 'VENTA' },
-      });
-      const motivo = `Anulación ${original.tipoComprobante ?? ''} ${original.numeroComprobante ?? ''}`.trim();
-      for (const m of movimientosVenta) {
-        await tx.movimientoStock.create({
+    const notaCredito = await this.conNumeroUnico(() =>
+      this.prisma.$transaction(async (tx) => {
+        const tipoFinal = cae?.tipoComprobante ?? tipoNc;
+        const numeroComprobante =
+          cae?.numeroComprobante ??
+          (await this.siguienteNumeroNoFiscal(tx, sucursalId, tipoFinal));
+        const nc = await tx.venta.create({
           data: {
-            tipo: 'ENTRADA',
-            cantidad: m.cantidad,
-            motivo,
-            productoId: m.productoId,
+            operacionId: `${original.operacionId}-NC`,
+            estado: 'COMPLETADA',
+            subtotal: original.subtotal,
+            descuento: original.descuento,
+            total: original.total,
+            medioPago: original.medioPago,
+            cae: cae?.cae ?? null,
+            caeFechaVto: cae?.caeFechaVto ?? null,
+            numeroComprobante,
+            tipoComprobante: tipoFinal,
             sucursalId,
-            ventaId: nc.id,
-            // Devuelve la mercadería al MISMO lote del que salió (perecederos).
-            loteId: m.loteId ?? null,
+            usuarioId: original.usuarioId,
+            terminalId: original.terminalId,
+            comprobanteAsociadoId: original.id,
+            items: {
+              create: original.items.map((it) => ({
+                cantidad: it.cantidad,
+                precioUnitario: it.precioUnitario,
+                descuento: it.descuento,
+                subtotal: it.subtotal,
+                productoId: it.productoId,
+              })),
+            },
           },
+          include: { items: true },
         });
-      }
 
-      await tx.venta.update({ where: { id: original.id }, data: { estado: 'ANULADA' } });
-      return nc;
-    });
+        // La mercadería vuelve al stock. Espejamos los movimientos VENTA reales de
+        // la venta original (no sus ítems): así un combo restaura el stock de sus
+        // componentes exactamente como se descontó, sin depender de la composición
+        // actual del combo (ADR-0033).
+        const movimientosVenta = await tx.movimientoStock.findMany({
+          where: { ventaId: original.id, tipo: 'VENTA' },
+        });
+        const motivo = `Anulación ${original.tipoComprobante ?? ''} ${original.numeroComprobante ?? ''}`.trim();
+        for (const m of movimientosVenta) {
+          await tx.movimientoStock.create({
+            data: {
+              tipo: 'ENTRADA',
+              cantidad: m.cantidad,
+              motivo,
+              productoId: m.productoId,
+              sucursalId,
+              ventaId: nc.id,
+              // Devuelve la mercadería al MISMO lote del que salió (perecederos).
+              loteId: m.loteId ?? null,
+            },
+          });
+        }
+
+        await tx.venta.update({ where: { id: original.id }, data: { estado: 'ANULADA' } });
+        return nc;
+      }),
+    );
 
     return { anulada: await this.obtener(sucursalId, id), notaCredito };
   }
@@ -223,77 +231,85 @@ export class VentasService {
       : null;
 
     // Transacción: venta + ítems + pagos + movimientos de stock VENTA (atómico).
-    const venta = await this.prisma.$transaction(async (tx) => {
-      const v = await tx.venta.create({
-        data: {
-          operacionId: dto.operacionId,
-          estado: 'COMPLETADA',
-          subtotal,
-          descuento: descuentoGlobal,
-          total,
-          medioPago: medioPagoResumen,
-          cae: cae?.cae ?? null,
-          caeFechaVto: cae?.caeFechaVto ?? null,
-          numeroComprobante: cae?.numeroComprobante ?? null,
-          tipoComprobante: cae?.tipoComprobante ?? tipoComprobante,
-          sucursalId: usuario.sucursalId,
-          usuarioId: usuario.id,
-          terminalId: dto.terminalId ?? null,
-          clienteId: dto.clienteId ?? null,
-          items: { create: itemsData },
-          ...(pagos.length > 0
-            ? {
-                pagos: {
-                  create: pagos.map((p) => ({
-                    medioPago: p.medioPago,
-                    monto: new Decimal(p.monto),
-                    ...(p.tarjetaConfigId !== undefined ? { tarjetaConfigId: p.tarjetaConfigId } : {}),
-                    ...(p.cuotas !== undefined ? { cuotas: p.cuotas } : {}),
-                    ...(p.recargo !== undefined ? { recargo: new Decimal(p.recargo) } : {}),
-                  })),
-                },
-              }
-            : {}),
-        },
-        include: {
-          items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } },
-          pagos: true,
-        },
-      });
-
-      // La venta física ya ocurrió: registramos la salida de stock, sin
-      // bloquear por stock insuficiente (control de negativo es informativo).
-      // Combos ya expandidos y lotes ya asignados por FEFO (`tramosStock`).
-      for (const t of tramosStock) {
-        await tx.movimientoStock.create({
+    const venta = await this.conNumeroUnico(() =>
+      this.prisma.$transaction(async (tx) => {
+        const tipoFinal = cae?.tipoComprobante ?? tipoComprobante;
+        const numeroComprobante =
+          cae?.numeroComprobante ??
+          (await this.siguienteNumeroNoFiscal(tx, usuario.sucursalId, tipoFinal));
+        const v = await tx.venta.create({
           data: {
-            tipo: 'VENTA',
-            cantidad: t.cantidad,
-            motivo: `Venta ${dto.operacionId}`,
-            productoId: t.productoId,
+            operacionId: dto.operacionId,
+            estado: 'COMPLETADA',
+            subtotal,
+            descuento: descuentoGlobal,
+            total,
+            medioPago: medioPagoResumen,
+            cae: cae?.cae ?? null,
+            caeFechaVto: cae?.caeFechaVto ?? null,
+            numeroComprobante,
+            tipoComprobante: tipoFinal,
             sucursalId: usuario.sucursalId,
-            ventaId: v.id,
-            loteId: t.loteId,
+            usuarioId: usuario.id,
+            terminalId: dto.terminalId ?? null,
+            clienteId: dto.clienteId ?? null,
+            items: { create: itemsData },
+            ...(pagos.length > 0
+              ? {
+                  pagos: {
+                    create: pagos.map((p) => ({
+                      medioPago: p.medioPago,
+                      monto: new Decimal(p.monto),
+                      ...(p.tarjetaConfigId !== undefined
+                        ? { tarjetaConfigId: p.tarjetaConfigId }
+                        : {}),
+                      ...(p.cuotas !== undefined ? { cuotas: p.cuotas } : {}),
+                      ...(p.recargo !== undefined ? { recargo: new Decimal(p.recargo) } : {}),
+                    })),
+                  },
+                }
+              : {}),
+          },
+          include: {
+            items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } },
+            pagos: true,
           },
         });
-      }
 
-      // Fiado: cargamos la deuda a la cuenta corriente del cliente (sin chequear
-      // el límite: la venta ya se hizo). El control de límite vive en el POS.
-      if (montoCuentaCorriente.gt(0) && dto.clienteId) {
-        await tx.movimientoCuentaCorriente.create({
-          data: {
-            tipo: 'CARGO',
-            monto: montoCuentaCorriente,
-            concepto: `Venta ${dto.operacionId}`,
-            clienteId: dto.clienteId,
-            sucursalId: usuario.sucursalId,
-          },
-        });
-      }
+        // La venta física ya ocurrió: registramos la salida de stock, sin
+        // bloquear por stock insuficiente (control de negativo es informativo).
+        // Combos ya expandidos y lotes ya asignados por FEFO (`tramosStock`).
+        for (const t of tramosStock) {
+          await tx.movimientoStock.create({
+            data: {
+              tipo: 'VENTA',
+              cantidad: t.cantidad,
+              motivo: `Venta ${dto.operacionId}`,
+              productoId: t.productoId,
+              sucursalId: usuario.sucursalId,
+              ventaId: v.id,
+              loteId: t.loteId,
+            },
+          });
+        }
 
-      return v;
-    });
+        // Fiado: cargamos la deuda a la cuenta corriente del cliente (sin chequear
+        // el límite: la venta ya se hizo). El control de límite vive en el POS.
+        if (montoCuentaCorriente.gt(0) && dto.clienteId) {
+          await tx.movimientoCuentaCorriente.create({
+            data: {
+              tipo: 'CARGO',
+              monto: montoCuentaCorriente,
+              concepto: `Venta ${dto.operacionId}`,
+              clienteId: dto.clienteId,
+              sucursalId: usuario.sucursalId,
+            },
+          });
+        }
+
+        return v;
+      }),
+    );
 
     // Efectos posteriores: no deben tumbar una venta ya confirmada.
     await this.registrarEnLibro(venta, usuario.email);
@@ -407,6 +423,46 @@ export class VentasService {
     } catch (error) {
       this.logger.error(`No se pudo actualizar el libro de ventas: ${(error as Error).message}`);
     }
+  }
+
+  /**
+   * Próximo correlativo por (sucursal, tipo de comprobante) para comprobantes
+   * SIN CAE (Fase 12.J): un `TicketNoFiscal` no tiene numeración fiscal, pero
+   * igual necesita un número propio para identificarlo. Los comprobantes CON
+   * CAE siguen numerándose vía `ServicioCae` (ver ADR-0008), sin tocar acá.
+   */
+  private async siguienteNumeroNoFiscal(
+    tx: Tx,
+    sucursalId: string,
+    tipoComprobante: string,
+  ): Promise<number> {
+    const { _max } = await tx.venta.aggregate({
+      where: { sucursalId, tipoComprobante },
+      _max: { numeroComprobante: true },
+    });
+    return (_max.numeroComprobante ?? 0) + 1;
+  }
+
+  /**
+   * `siguienteNumeroNoFiscal` calcula el número dentro de la misma transacción
+   * que el `INSERT`, así que dos ventas concurrentes del mismo tipo podrían
+   * calcular el mismo número antes de que la primera confirme. La restricción
+   * `@@unique` de Prisma lo detecta (P2002); acá se reintenta la transacción
+   * completa con el siguiente número disponible.
+   */
+  private async conNumeroUnico<T>(fn: () => Promise<T>): Promise<T> {
+    const intentosMax = 3;
+    for (let intento = 1; intento <= intentosMax; intento++) {
+      try {
+        return await fn();
+      } catch (error) {
+        const esColisionDeNumero =
+          error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+        if (!esColisionDeNumero || intento === intentosMax) throw error;
+      }
+    }
+    // Inalcanzable: el for siempre retorna o lanza en su última iteración.
+    throw new Error('No se pudo asignar el número de comprobante');
   }
 
   private async respaldarSiCorresponde(): Promise<void> {

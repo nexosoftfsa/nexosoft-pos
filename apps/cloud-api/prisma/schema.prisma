@@ -298,6 +298,8 @@ model Venta {
   movimientosStock MovimientoStock[]
   pagos           Pago[]
 
+  /// Correlativo por sucursal y tipo (fiscal vía CAE, no fiscal generado acá) — evita duplicados.
+  @@unique([sucursalId, tipoComprobante, numeroComprobante])
   @@map("ventas")
 }
 

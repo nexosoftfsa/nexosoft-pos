@@ -71,7 +71,11 @@ describe('VentasService.anular', () => {
     $transaction: ReturnType<typeof vi.fn>;
   };
   let tx: {
-    venta: { create: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
+    venta: {
+      create: ReturnType<typeof vi.fn>;
+      update: ReturnType<typeof vi.fn>;
+      aggregate: ReturnType<typeof vi.fn>;
+    };
     movimientoStock: { create: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
   };
   let cae: { autorizar: ReturnType<typeof vi.fn> };
@@ -79,7 +83,11 @@ describe('VentasService.anular', () => {
 
   beforeEach(() => {
     tx = {
-      venta: { create: vi.fn().mockResolvedValue({ id: 'nc1', items: [] }), update: vi.fn().mockResolvedValue({}) },
+      venta: {
+        create: vi.fn().mockResolvedValue({ id: 'nc1', items: [] }),
+        update: vi.fn().mockResolvedValue({}),
+        aggregate: vi.fn().mockResolvedValue({ _max: { numeroComprobante: null } }),
+      },
       movimientoStock: {
         create: vi.fn().mockResolvedValue({}),
         // La anulación espeja los movimientos VENTA reales de la venta original.
@@ -164,7 +172,7 @@ describe('VentasService.anular', () => {
 
   it('anula un TicketNoFiscal sin pedir CAE ni crear una NC (Fase 10.1)', async () => {
     prisma.venta.findFirst.mockResolvedValue(
-      ventaConItems({ tipoComprobante: 'TicketNoFiscal', cae: null, caeFechaVto: null, numeroComprobante: null }),
+      ventaConItems({ tipoComprobante: 'TicketNoFiscal', cae: null, caeFechaVto: null, numeroComprobante: 3 }),
     );
 
     await service.anular('s1', 'v1');
@@ -173,7 +181,12 @@ describe('VentasService.anular', () => {
     const data = tx.venta.create.mock.calls[0]![0].data;
     expect(data.tipoComprobante).toBe('TicketNoFiscal');
     expect(data.cae).toBeNull();
-    expect(data.numeroComprobante).toBeNull();
+    // Sin CAE igual se numera con el correlativo propio del tipo (Fase 12.J).
+    expect(data.numeroComprobante).toBe(1);
+    expect(tx.venta.aggregate).toHaveBeenCalledWith({
+      where: { sucursalId: 's1', tipoComprobante: 'TicketNoFiscal' },
+      _max: { numeroComprobante: true },
+    });
     // El stock se restaura igual que en una anulación fiscal.
     expect(tx.movimientoStock.create).toHaveBeenCalledOnce();
     expect(tx.venta.update).toHaveBeenCalledWith(

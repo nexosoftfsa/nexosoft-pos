@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Decimal } from '@prisma/client/runtime/library';
+import { Prisma } from '@prisma/client';
 import { VentasService } from './ventas.service';
 import { LibroDeVentasEnMemoria } from './libro/libro-de-ventas-en-memoria';
 
@@ -46,7 +47,7 @@ describe('VentasService', () => {
     $transaction: ReturnType<typeof vi.fn>;
   };
   let tx: {
-    venta: { create: ReturnType<typeof vi.fn> };
+    venta: { create: ReturnType<typeof vi.fn>; aggregate: ReturnType<typeof vi.fn> };
     movimientoStock: { create: ReturnType<typeof vi.fn> };
     movimientoCuentaCorriente: { create: ReturnType<typeof vi.fn> };
   };
@@ -58,7 +59,11 @@ describe('VentasService', () => {
 
   beforeEach(() => {
     tx = {
-      venta: { create: vi.fn().mockResolvedValue(ventaDevuelta()) },
+      venta: {
+        create: vi.fn().mockResolvedValue(ventaDevuelta()),
+        // Sin comprobantes previos del mismo tipo por defecto → arranca en 1.
+        aggregate: vi.fn().mockResolvedValue({ _max: { numeroComprobante: null } }),
+      },
       movimientoStock: { create: vi.fn().mockResolvedValue({}) },
       movimientoCuentaCorriente: { create: vi.fn().mockResolvedValue({}) },
     };
@@ -191,7 +196,7 @@ describe('VentasService', () => {
   });
 
   describe('venta con tipoComprobante=TicketNoFiscal (Fase 10.1 — sin alta en ARCA)', () => {
-    it('NO pide CAE y persiste cae/numeroComprobante en null', async () => {
+    it('NO pide CAE y persiste cae en null, pero SÍ numera el ticket (Fase 12.J)', async () => {
       await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
 
       expect(cae.autorizar).not.toHaveBeenCalled();
@@ -199,7 +204,7 @@ describe('VentasService', () => {
       expect(data.tipoComprobante).toBe('TicketNoFiscal');
       expect(data.cae).toBeNull();
       expect(data.caeFechaVto).toBeNull();
-      expect(data.numeroComprobante).toBeNull();
+      expect(data.numeroComprobante).toBe(1);
     });
 
     it('igual descuenta stock y registra en el libro de ventas', async () => {
@@ -207,6 +212,44 @@ describe('VentasService', () => {
 
       expect(tx.movimientoStock.create).toHaveBeenCalledTimes(2);
       expect(libro.filas).toHaveLength(1);
+    });
+  });
+
+  describe('numeración de comprobantes sin CAE (Fase 12.J)', () => {
+    it('sigue el correlativo por sucursal+tipo a partir del último número existente', async () => {
+      tx.venta.aggregate.mockResolvedValue({ _max: { numeroComprobante: 41 } });
+
+      await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
+
+      expect(tx.venta.aggregate).toHaveBeenCalledWith({
+        where: { sucursalId: 's1', tipoComprobante: 'TicketNoFiscal' },
+        _max: { numeroComprobante: true },
+      });
+      const data = tx.venta.create.mock.calls[0]![0].data;
+      expect(data.numeroComprobante).toBe(42);
+    });
+
+    it('no numera acá un comprobante fiscal: usa el número que devuelve el CAE', async () => {
+      await service.registrar(USUARIO, DTO); // tipo por defecto: FacturaB (fiscal)
+
+      expect(tx.venta.aggregate).not.toHaveBeenCalled();
+      const data = tx.venta.create.mock.calls[0]![0].data;
+      expect(data.numeroComprobante).toBe(1); // viene del mock de cae.autorizar
+    });
+
+    it('reintenta toda la transacción si dos ventas chocan en el mismo número (P2002)', async () => {
+      const colision = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '6.19.3',
+      });
+      prisma.$transaction
+        .mockImplementationOnce(() => Promise.reject(colision))
+        .mockImplementationOnce((cb: (t: typeof tx) => unknown) => cb(tx));
+
+      const result = await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
+
+      expect(result.id).toBe('v1');
+      expect(prisma.$transaction).toHaveBeenCalledTimes(2);
     });
   });
 
