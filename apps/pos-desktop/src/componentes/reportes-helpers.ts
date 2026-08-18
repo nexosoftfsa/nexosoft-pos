@@ -58,3 +58,53 @@ export function porcentaje(parte: string, total: string): number {
   if (!Number.isFinite(t) || t <= 0) return 0;
   return Math.min(100, Math.max(0, (Number(parte) / t) * 100));
 }
+
+export interface SectorTorta {
+  readonly path: string;
+  readonly porcentaje: number;
+}
+
+/**
+ * Convierte una lista de valores en sectores de un gráfico de torta SVG
+ * (ángulo acumulado → coordenadas con seno/coseno, centrado en `cx,cy` con
+ * radio `radio`). Ignora valores en cero o negativos. Un solo valor
+ * positivo se resuelve como círculo completo (un `path` de arco no puede
+ * empezar y terminar en el mismo punto).
+ */
+export function sectoresDeTorta(
+  valores: readonly number[],
+  opciones: { cx?: number; cy?: number; radio?: number } = {},
+): readonly SectorTorta[] {
+  const { cx = 50, cy = 50, radio = 50 } = opciones;
+  const positivos = valores.filter((v) => v > 0);
+  const total = positivos.reduce((a, v) => a + v, 0);
+  if (total <= 0) return [];
+
+  if (positivos.length === 1) {
+    return [
+      {
+        path: `M ${cx - radio},${cy} A ${radio},${radio} 0 1,1 ${cx + radio},${cy} A ${radio},${radio} 0 1,1 ${cx - radio},${cy} Z`,
+        porcentaje: 100,
+      },
+    ];
+  }
+
+  const sectores: SectorTorta[] = [];
+  let acumulado = 0;
+  for (const v of valores) {
+    if (v <= 0) continue;
+    const inicio = (acumulado / total) * 2 * Math.PI;
+    acumulado += v;
+    const fin = (acumulado / total) * 2 * Math.PI;
+    const x1 = cx + radio * Math.sin(inicio);
+    const y1 = cy - radio * Math.cos(inicio);
+    const x2 = cx + radio * Math.sin(fin);
+    const y2 = cy - radio * Math.cos(fin);
+    const largeArc = fin - inicio > Math.PI ? 1 : 0;
+    sectores.push({
+      path: `M ${cx},${cy} L ${x1},${y1} A ${radio},${radio} 0 ${largeArc},1 ${x2},${y2} Z`,
+      porcentaje: (v / total) * 100,
+    });
+  }
+  return sectores;
+}

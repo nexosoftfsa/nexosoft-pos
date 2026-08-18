@@ -648,6 +648,37 @@
   background: var(--grad);
 }
 
+.torta-rubros {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.torta-svg {
+  width: 180px;
+  height: 180px;
+  flex: 0 0 auto;
+}
+.torta-leyenda {
+  flex: 1;
+  min-width: 220px;
+}
+.torta-leyenda .barra-prop__cab {
+  margin-bottom: 10px;
+}
+.torta-leyenda__etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.torta-leyenda__punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+  font-style: normal;
+}
+
 @media (max-width: 900px) {
   .gestion .kpis--4,
   .gestion .kpis--5 {

@@ -12,6 +12,7 @@ import type {
   ResumenVentas,
   TopProducto,
   VentaPorMedio,
+  VentaPorRubro,
 } from "./cliente-reportes";
 
 export class ClienteReportesSimulado implements ClienteReportes {
@@ -56,6 +57,18 @@ export class ClienteReportesSimulado implements ClienteReportes {
       { productoId: "leche", nombre: "Leche entera 1 L", codigo: "7790005", cantidad: "15", monto: "20250.00" },
     ];
     return datos.slice(0, limite);
+  }
+
+  async porRubro(_rango: RangoFechas): Promise<VentaPorRubro[]> {
+    void _rango;
+    return [
+      { rubro: "Almacén", total: "142000.00" },
+      { rubro: "Bebidas", total: "68000.00" },
+      { rubro: "Limpieza", total: "41500.00" },
+      { rubro: "Perfumería", total: "28000.00" },
+      { rubro: "Kiosco", total: "22000.00" },
+      { rubro: "Frutería-Verdulería", total: "17000.00" },
+    ];
   }
 
   async rentabilidad(_rango: RangoFechas): Promise<Rentabilidad> {

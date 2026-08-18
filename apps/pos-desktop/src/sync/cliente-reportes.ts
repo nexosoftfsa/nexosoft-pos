@@ -26,6 +26,11 @@ export interface VentaPorMedio {
   readonly cantidad: number;
 }
 
+export interface VentaPorRubro {
+  readonly rubro: string;
+  readonly total: string;
+}
+
 export interface TopProducto {
   readonly productoId: string;
   readonly nombre: string;
@@ -60,6 +65,7 @@ export interface ClienteReportes {
   resumen(rango: RangoFechas): Promise<ResumenVentas>;
   serie(rango: RangoFechas): Promise<PuntoSerie[]>;
   porMedioPago(rango: RangoFechas): Promise<VentaPorMedio[]>;
+  porRubro(rango: RangoFechas): Promise<VentaPorRubro[]>;
   topProductos(rango: RangoFechas, limite?: number): Promise<TopProducto[]>;
   rentabilidad(rango: RangoFechas): Promise<Rentabilidad>;
   detalleVentas(rango: RangoFechas): Promise<LineaDetalleVenta[]>;
@@ -96,6 +102,10 @@ export class ClienteReportesHttp implements ClienteReportes {
 
   porMedioPago(rango: RangoFechas): Promise<VentaPorMedio[]> {
     return this.get<VentaPorMedio[]>(`/reportes/ventas/por-medio-pago${this.query(rango)}`);
+  }
+
+  porRubro(rango: RangoFechas): Promise<VentaPorRubro[]> {
+    return this.get<VentaPorRubro[]>(`/reportes/ventas/por-rubro${this.query(rango)}`);
   }
 
   topProductos(rango: RangoFechas, limite = 10): Promise<TopProducto[]> {

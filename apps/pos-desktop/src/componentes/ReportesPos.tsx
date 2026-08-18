@@ -17,6 +17,7 @@ import {
   type ResumenVentas,
   type TopProducto,
   type VentaPorMedio,
+  type VentaPorRubro,
 } from "../sync/cliente-reportes";
 import { pesos } from "../formato";
 import { etiquetaMedioPago } from "./comprobantes-helpers";
@@ -25,9 +26,14 @@ import {
   PRESETS,
   porcentaje,
   rangoDe,
+  sectoresDeTorta,
   type PresetRango,
   type RangoFechas,
 } from "./reportes-helpers";
+
+/** Colores fijos para la torta de rubros — no dependen de cuántos rubros haya. */
+const PALETA_TORTA = ["#0f766e", "#2563eb", "#d97706", "#dc2626", "#7c3aed", "#059669", "#db2777", "#64748b"];
+const TOP_RUBROS = 7;
 
 /** Rango personalizado por defecto: desde la medianoche de hoy hasta ahora. */
 function rangoPersonalizadoInicial(): RangoFechas {
@@ -54,6 +60,7 @@ interface Datos {
   resumen: ResumenVentas;
   serie: PuntoSerie[];
   medios: VentaPorMedio[];
+  rubros: VentaPorRubro[];
   top: TopProducto[];
   rentabilidad: Rentabilidad;
 }
@@ -74,14 +81,15 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
     setCargando(true);
     setError(null);
     try {
-      const [resumen, serie, medios, top, rentabilidad] = await Promise.all([
+      const [resumen, serie, medios, rubros, top, rentabilidad] = await Promise.all([
         cliente.resumen(rango),
         cliente.serie(rango),
         cliente.porMedioPago(rango),
+        cliente.porRubro(rango),
         cliente.topProductos(rango, 10),
         cliente.rentabilidad(rango),
       ]);
-      setDatos({ resumen, serie, medios, top, rentabilidad });
+      setDatos({ resumen, serie, medios, rubros, top, rentabilidad });
     } catch (e) {
       setError(mensaje(e));
       setDatos(null);
@@ -101,6 +109,22 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
   const totalMedios = useMemo(
     () => (datos?.medios ?? []).reduce((a, m) => a + Number(m.total), 0).toFixed(2),
     [datos],
+  );
+
+  const rubrosParaTorta = useMemo(() => {
+    const lista = datos?.rubros ?? [];
+    if (lista.length <= TOP_RUBROS) return lista;
+    const principales = lista.slice(0, TOP_RUBROS);
+    const restoTotal = lista.slice(TOP_RUBROS).reduce((a, r) => a + Number(r.total), 0);
+    return [...principales, { rubro: "Otros", total: restoTotal.toFixed(2) }];
+  }, [datos]);
+  const totalRubros = useMemo(
+    () => rubrosParaTorta.reduce((a, r) => a + Number(r.total), 0).toFixed(2),
+    [rubrosParaTorta],
+  );
+  const sectoresRubros = useMemo(
+    () => sectoresDeTorta(rubrosParaTorta.map((r) => Number(r.total))),
+    [rubrosParaTorta],
   );
 
   async function exportarResumen() {
@@ -156,6 +180,11 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
           nombre: "Por medio de pago",
           columnas: [{ titulo: "Medio de pago", ancho: 22 }, { titulo: "Total" }],
           filas: datos.medios.map((m) => [etiquetaMedioPago(m.medioPago), money(m.total)]),
+        },
+        {
+          nombre: "Por rubro",
+          columnas: [{ titulo: "Rubro", ancho: 22 }, { titulo: "Total" }],
+          filas: datos.rubros.map((r) => [r.rubro, money(r.total)]),
         },
         {
           nombre: "Productos más vendidos",
@@ -307,6 +336,41 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
                   ))
                 )}
               </div>
+            </div>
+          </div>
+
+          <div className="card" style={{ marginTop: 18 }}>
+            <div className="card__head">
+              <h3>Rubros más vendidos</h3>
+            </div>
+            <div className="card__pad torta-rubros">
+              {rubrosParaTorta.length === 0 ? (
+                <div className="muted">Sin datos.</div>
+              ) : (
+                <>
+                  <svg viewBox="0 0 100 100" className="torta-svg" aria-hidden>
+                    {sectoresRubros.map((s, i) => (
+                      <path key={i} d={s.path} fill={PALETA_TORTA[i % PALETA_TORTA.length]} />
+                    ))}
+                  </svg>
+                  <div className="torta-leyenda">
+                    {rubrosParaTorta.map((r, i) => (
+                      <div key={r.rubro} className="barra-prop__cab">
+                        <span className="torta-leyenda__etiqueta">
+                          <i
+                            className="torta-leyenda__punto"
+                            style={{ background: PALETA_TORTA[i % PALETA_TORTA.length] }}
+                          />
+                          {r.rubro}
+                        </span>
+                        <b>
+                          {money(r.total)} · {porcentaje(r.total, totalRubros).toFixed(0)}%
+                        </b>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
