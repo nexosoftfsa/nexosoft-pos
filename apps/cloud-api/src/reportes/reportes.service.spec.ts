@@ -225,6 +225,94 @@ describe('ReportesService', () => {
     });
   });
 
+  describe('detalleVentas', () => {
+    it('devuelve una fila por ítem, con ganancia calculada del costoUnitario snapshot', async () => {
+      mockItemVenta.findMany.mockResolvedValue([
+        {
+          cantidad: new Decimal('2'),
+          precioUnitario: new Decimal('100.00'),
+          subtotal: new Decimal('200.00'),
+          costoUnitario: new Decimal('60.00'),
+          venta: {
+            creadaEn: new Date('2026-06-15T12:00:00.000Z'),
+            numeroComprobante: 42,
+            sucursal: { nombre: 'Casa Central' },
+          },
+          producto: { codigo: '7790001', nombre: 'Coca 1.5L', categoria: { nombre: 'Bebidas' } },
+        },
+      ]);
+
+      const [fila] = await service.detalleVentas(SUCURSAL, RANGO);
+
+      expect(fila).toEqual({
+        sucursal: 'Casa Central',
+        fecha: '2026-06-15T12:00:00.000Z',
+        numeroTicket: 42,
+        codigo: '7790001',
+        descripcion: 'Coca 1.5L',
+        rubro: 'Bebidas',
+        cantidad: '2',
+        unitario: '100.00',
+        total: '200.00',
+        // ganancia: 200 - (2*60) = 80
+        ganancia: '80.00',
+      });
+    });
+
+    it('deja ganancia en null si falta el snapshot de costo (no aproxima con el costo actual)', async () => {
+      mockItemVenta.findMany.mockResolvedValue([
+        {
+          cantidad: new Decimal('1'),
+          precioUnitario: new Decimal('50.00'),
+          subtotal: new Decimal('50.00'),
+          costoUnitario: null,
+          venta: {
+            creadaEn: new Date('2026-06-15T12:00:00.000Z'),
+            numeroComprobante: 1,
+            sucursal: { nombre: 'Casa Central' },
+          },
+          producto: { codigo: '00001', nombre: 'Pan', categoria: { nombre: 'Panadería' } },
+        },
+      ]);
+
+      const [fila] = await service.detalleVentas(SUCURSAL, RANGO);
+      expect(fila?.ganancia).toBeNull();
+    });
+
+    it('deja rubro en null si el producto no tiene categoría asignada', async () => {
+      mockItemVenta.findMany.mockResolvedValue([
+        {
+          cantidad: new Decimal('1'),
+          precioUnitario: new Decimal('10.00'),
+          subtotal: new Decimal('10.00'),
+          costoUnitario: new Decimal('5.00'),
+          venta: {
+            creadaEn: new Date('2026-06-15T12:00:00.000Z'),
+            numeroComprobante: 2,
+            sucursal: { nombre: 'Casa Central' },
+          },
+          producto: { codigo: '00002', nombre: 'Sin rubro', categoria: null },
+        },
+      ]);
+
+      const [fila] = await service.detalleVentas(SUCURSAL, RANGO);
+      expect(fila?.rubro).toBeNull();
+    });
+
+    it('sin ventas en el período devuelve un array vacío', async () => {
+      mockItemVenta.findMany.mockResolvedValue([]);
+      const r = await service.detalleVentas(SUCURSAL, RANGO);
+      expect(r).toEqual([]);
+    });
+
+    it('ordena cronológicamente (más antigua primero)', async () => {
+      mockItemVenta.findMany.mockResolvedValue([]);
+      await service.detalleVentas(SUCURSAL, RANGO);
+      const llamada = mockItemVenta.findMany.mock.calls[0][0];
+      expect(llamada.orderBy).toEqual({ venta: { creadaEn: 'asc' } });
+    });
+  });
+
   describe('stockBajo', () => {
     it('devuelve solo productos con saldo <= umbral, ordenados ascendente', async () => {
       mockProducto.findMany.mockResolvedValue([

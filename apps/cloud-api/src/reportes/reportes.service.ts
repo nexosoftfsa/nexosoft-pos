@@ -226,6 +226,57 @@ export class ReportesService {
     };
   }
 
+  /**
+   * Detalle de ventas línea por línea (sin agregar), para exportar a Excel
+   * en el formato que ya usa el cliente en otro sistema: una fila por
+   * producto vendido, con rubro y ganancia por línea. La ganancia usa el
+   * mismo snapshot de costo que `rentabilidad()` (ADR-0048), pero acá NO
+   * se aproxima con el costo actual si falta: al ser un detalle línea por
+   * línea (no un total agregado), mejor dejarla vacía que mostrar un
+   * número que puede no ser exacto.
+   */
+  async detalleVentas(sucursalId: string, rango: RangoFechasDto) {
+    const { gte, lt } = this.calcularRango(rango);
+    const items = await this.prisma.itemVenta.findMany({
+      where: {
+        venta: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
+      },
+      select: {
+        cantidad: true,
+        precioUnitario: true,
+        subtotal: true,
+        costoUnitario: true,
+        venta: {
+          select: {
+            creadaEn: true,
+            numeroComprobante: true,
+            sucursal: { select: { nombre: true } },
+          },
+        },
+        producto: {
+          select: { codigo: true, nombre: true, categoria: { select: { nombre: true } } },
+        },
+      },
+      orderBy: { venta: { creadaEn: 'asc' } },
+    });
+
+    return items.map((it) => ({
+      sucursal: it.venta.sucursal.nombre,
+      fecha: it.venta.creadaEn.toISOString(),
+      numeroTicket: it.venta.numeroComprobante,
+      codigo: it.producto.codigo,
+      descripcion: it.producto.nombre,
+      rubro: it.producto.categoria?.nombre ?? null,
+      cantidad: it.cantidad.toString(),
+      unitario: it.precioUnitario.toFixed(2),
+      total: it.subtotal.toFixed(2),
+      ganancia:
+        it.costoUnitario === null
+          ? null
+          : it.subtotal.sub(it.cantidad.mul(it.costoUnitario)).toFixed(2),
+    }));
+  }
+
   /** Productos activos cuyo saldo de stock está en o por debajo del umbral. */
   async stockBajo(sucursalId: string, umbral = UMBRAL_STOCK_POR_DEFECTO) {
     const productos = await this.prisma.producto.findMany({
