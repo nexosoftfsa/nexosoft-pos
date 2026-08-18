@@ -92,7 +92,7 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
           filas: usuarios.map((u) => [u.nombreDisplay, u.email, etiquetaRol(u.rol), u.activo ? "Activo" : "Inactivo"]),
         },
       ]);
-      descargarBlob("usuarios.xlsx", blob);
+      await descargarBlob("usuarios.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }

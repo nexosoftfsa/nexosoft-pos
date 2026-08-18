@@ -120,7 +120,7 @@ export function CuentasCorrientes({ cliente: api }: { cliente: ClienteCtaCte }) 
           ]),
         },
       ]);
-      descargarBlob("clientes.xlsx", blob);
+      await descargarBlob("clientes.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }

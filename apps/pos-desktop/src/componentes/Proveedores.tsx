@@ -77,7 +77,7 @@ export function Proveedores({ cliente: api }: { cliente: ClienteProveedores }) {
           filas: todos.map((p) => [p.nombre, p.cuit ?? "", p.contacto ?? "", p.telefono ?? "", p.email ?? "", p.activo ? "Activo" : "Inactivo"]),
         },
       ]);
-      descargarBlob("proveedores.xlsx", blob);
+      await descargarBlob("proveedores.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }

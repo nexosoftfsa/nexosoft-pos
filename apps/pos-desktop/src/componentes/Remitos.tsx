@@ -83,7 +83,7 @@ export function Remitos({
           ]),
         },
       ]);
-      descargarBlob("remitos.xlsx", blob);
+      await descargarBlob("remitos.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }

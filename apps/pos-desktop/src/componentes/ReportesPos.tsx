@@ -141,7 +141,7 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
           filas: datos.top.map((p, i) => [i + 1, p.codigo, p.nombre, p.cantidad, money(p.monto)]),
         },
       ]);
-      descargarBlob(`reporte-ventas_${rango.desde.slice(0, 10)}_a_${rango.hasta.slice(0, 10)}.xlsx`, blob);
+      await descargarBlob(`reporte-ventas_${rango.desde.slice(0, 10)}_a_${rango.hasta.slice(0, 10)}.xlsx`, blob);
     } catch (e) {
       setError(mensaje(e));
     }

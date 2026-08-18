@@ -112,7 +112,7 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
           }),
         },
       ]);
-      descargarBlob("stock.xlsx", blob);
+      await descargarBlob("stock.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }

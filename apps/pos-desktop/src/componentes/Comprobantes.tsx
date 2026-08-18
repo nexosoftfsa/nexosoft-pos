@@ -145,7 +145,7 @@ export function Comprobantes({
           ]),
         },
       ]);
-      descargarBlob("comprobantes.xlsx", blob);
+      await descargarBlob("comprobantes.xlsx", blob);
     } catch (e) {
       setError(mensajeError(e));
     }

@@ -148,7 +148,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
           }),
         },
       ]);
-      descargarBlob("articulos.xlsx", blob);
+      await descargarBlob("articulos.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }
@@ -159,7 +159,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
       const blob = await exportarExcel([
         { nombre: "Rubros", columnas: [{ titulo: "Rubro", ancho: 30 }], filas: categorias.map((c) => [c.nombre]) },
       ]);
-      descargarBlob("rubros.xlsx", blob);
+      await descargarBlob("rubros.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }

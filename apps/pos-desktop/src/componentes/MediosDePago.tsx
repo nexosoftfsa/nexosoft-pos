@@ -92,7 +92,7 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
           filas: todas.map((t) => [t.banco, etiquetaTipo(t.tipo), t.marca ?? "", etiquetaTasas(t), t.activo ? "Activa" : "Inactiva"]),
         },
       ]);
-      descargarBlob("medios-de-pago.xlsx", blob);
+      await descargarBlob("medios-de-pago.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }

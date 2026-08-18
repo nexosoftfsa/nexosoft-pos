@@ -116,7 +116,7 @@ export function HistorialCaja({ cliente }: { cliente: ClienteCaja }) {
           ]),
         },
       ]);
-      descargarBlob("historial-caja.xlsx", blob);
+      await descargarBlob("historial-caja.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }

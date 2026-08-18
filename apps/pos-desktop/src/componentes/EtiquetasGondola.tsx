@@ -122,7 +122,7 @@ export function EtiquetasGondola({
     setError(null);
     try {
       const blob = await generarExcelEtiquetas(lista);
-      descargarBlob("etiquetas-gondola.xlsx", blob);
+      await descargarBlob("etiquetas-gondola.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     } finally {

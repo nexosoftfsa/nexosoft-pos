@@ -123,7 +123,7 @@ export function Presupuestos({
           ]),
         },
       ]);
-      descargarBlob("presupuestos.xlsx", blob);
+      await descargarBlob("presupuestos.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }
