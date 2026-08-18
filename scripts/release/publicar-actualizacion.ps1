@@ -51,7 +51,18 @@ Titulo "Compilando y firmando"
 Set-Location apps\pos-desktop
 $env:TAURI_SIGNING_PRIVATE_KEY = [System.IO.File]::ReadAllText($keyPath)
 $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = [System.IO.File]::ReadAllText($keyPasswordPath)
+# corepack/tauri escriben lineas informativas por stderr; con
+# $ErrorActionPreference = "Stop" (global, arriba) eso corta el script
+# aunque el build haya salido bien. Se baja la preferencia solo para este
+# comando nativo y se valida con $LASTEXITCODE, que es lo confiable.
+$ErrorActionPreference = "Continue"
 corepack pnpm tauri:build
+$codigoBuild = $LASTEXITCODE
+$ErrorActionPreference = "Stop"
+if ($codigoBuild -ne 0) {
+    Write-Error "El build de Tauri fallo (exit $codigoBuild)."
+    exit 1
+}
 Set-Location $raiz
 
 $bundleDir = "apps\pos-desktop\src-tauri\target\release\bundle\nsis"
@@ -85,8 +96,15 @@ $manifestPath = "$bundleDir\latest.json"
 [System.IO.File]::WriteAllText($manifestPath, $manifest, (New-Object System.Text.UTF8Encoding $false))
 
 Titulo "Publicando el release v$Version"
+$ErrorActionPreference = "Continue"
 & gh release create "v$Version" $exeSinEspacios $manifestPath `
     --repo $RepoReleases --title "v$Version" --notes "$Notas"
+$codigoRelease = $LASTEXITCODE
+$ErrorActionPreference = "Stop"
+if ($codigoRelease -ne 0) {
+    Write-Error "gh release create fallo (exit $codigoRelease)."
+    exit 1
+}
 
 Titulo "Listo"
 Write-Host "Publicado: https://github.com/$RepoReleases/releases/tag/v$Version"
