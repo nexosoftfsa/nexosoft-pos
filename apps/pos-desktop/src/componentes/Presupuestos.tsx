@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Money } from "@nexosoft/domain";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorPresupuestos,
   type ClientePresupuestos,
@@ -42,6 +44,11 @@ function money(v: string): string {
 function fecha(d: string | Date): string {
   const x = typeof d === "string" ? new Date(d) : d;
   return Number.isNaN(x.getTime()) ? String(d) : x.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
+
+function etiquetaEstadoPresupuesto(p: Presupuesto): string {
+  if (p.estado === "VIGENTE") return estaVencido(p.creadoEn, p.validezDias, p.estado) ? "Vencido" : "Vigente";
+  return ETIQUETA_ESTADO[p.estado];
 }
 
 export function Presupuestos({
@@ -93,10 +100,42 @@ export function Presupuestos({
     }
   }
 
+  async function exportar() {
+    try {
+      const blob = await exportarExcel([
+        {
+          nombre: "Presupuestos",
+          columnas: [
+            { titulo: "N°" },
+            { titulo: "Cliente", ancho: 24 },
+            { titulo: "Fecha" },
+            { titulo: "Vence" },
+            { titulo: "Total" },
+            { titulo: "Estado" },
+          ],
+          filas: items.map((p) => [
+            p.numero,
+            p.clienteNombre ?? "",
+            fecha(p.creadoEn),
+            fecha(fechaVencimiento(p.creadoEn, p.validezDias)),
+            money(p.total),
+            etiquetaEstadoPresupuesto(p),
+          ]),
+        },
+      ]);
+      descargarBlob("presupuestos.xlsx", blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
   return (
     <div className="gestion">
       <div className="toolbar">
         <div className="spacer" />
+        <button type="button" className="pill-btn" onClick={() => void exportar()}>
+          Exportar
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setNuevo(true)}>
           + Nuevo presupuesto
         </button>

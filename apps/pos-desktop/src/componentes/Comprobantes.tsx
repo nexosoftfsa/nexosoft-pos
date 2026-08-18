@@ -8,6 +8,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Money } from "@nexosoft/domain";
 import type { ConfiguracionComercio } from "@nexosoft/app";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import { ErrorVentas, type Comprobante, type ClienteVentas } from "../sync/cliente-ventas";
 import { pesos } from "../formato";
 import { ComprobanteA4 } from "./ComprobanteA4";
@@ -120,6 +122,35 @@ export function Comprobantes({
     }
   }
 
+  async function exportar() {
+    try {
+      const blob = await exportarExcel([
+        {
+          nombre: "Comprobantes",
+          columnas: [
+            { titulo: "Comprobante", ancho: 22 },
+            { titulo: "Número" },
+            { titulo: "Fecha" },
+            { titulo: "Medio de pago", ancho: 20 },
+            { titulo: "Total" },
+            { titulo: "Estado" },
+          ],
+          filas: comprobantes.map((c) => [
+            etiquetaTipoComprobante(c.tipoComprobante),
+            numeroComprobante(c.numeroComprobante),
+            fechaHora(c.creadaEn),
+            etiquetaMedioPago(c.medioPago),
+            money(c.total),
+            c.estado === "ANULADA" ? "Anulada" : "Emitida",
+          ]),
+        },
+      ]);
+      descargarBlob("comprobantes.xlsx", blob);
+    } catch (e) {
+      setError(mensajeError(e));
+    }
+  }
+
   return (
     <div className="gestion">
       <div className="toolbar">
@@ -133,6 +164,9 @@ export function Comprobantes({
         </span>
         <div className="spacer" />
         <span className="muted">«Anular» emite una Nota de Crédito</span>
+        <button type="button" className="pill-btn" onClick={() => void exportar()}>
+          Exportar
+        </button>
       </div>
 
       {error !== null && <div className="error">{error}</div>}

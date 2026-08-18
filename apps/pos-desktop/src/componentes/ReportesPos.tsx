@@ -7,6 +7,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Money } from "@nexosoft/domain";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorReportes,
   type ClienteReportes,
@@ -101,6 +103,50 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
     [datos],
   );
 
+  async function exportarResumen() {
+    if (datos === null) return;
+    try {
+      const blob = await exportarExcel([
+        {
+          nombre: "Resumen",
+          columnas: [{ titulo: "Métrica", ancho: 22 }, { titulo: "Valor", ancho: 20 }],
+          filas: [
+            ["Período", `${rango.desde} — ${rango.hasta}`],
+            ["Total vendido", money(datos.resumen.totalVendido)],
+            ["Cantidad de ventas", datos.resumen.cantidadVentas],
+            ["Ticket promedio", money(datos.resumen.ticketPromedio)],
+            ["Descuentos", money(datos.resumen.totalDescuentos)],
+            ["Ganancia", money(datos.rentabilidad.gananciaBruta)],
+          ],
+        },
+        {
+          nombre: "Evolución diaria",
+          columnas: [{ titulo: "Fecha" }, { titulo: "Total" }],
+          filas: datos.serie.map((p) => [p.fecha, money(p.total)]),
+        },
+        {
+          nombre: "Por medio de pago",
+          columnas: [{ titulo: "Medio de pago", ancho: 22 }, { titulo: "Total" }],
+          filas: datos.medios.map((m) => [etiquetaMedioPago(m.medioPago), money(m.total)]),
+        },
+        {
+          nombre: "Productos más vendidos",
+          columnas: [
+            { titulo: "#" },
+            { titulo: "Código" },
+            { titulo: "Producto", ancho: 30 },
+            { titulo: "Cantidad" },
+            { titulo: "Monto" },
+          ],
+          filas: datos.top.map((p, i) => [i + 1, p.codigo, p.nombre, p.cantidad, money(p.monto)]),
+        },
+      ]);
+      descargarBlob(`reporte-ventas_${rango.desde.slice(0, 10)}_a_${rango.hasta.slice(0, 10)}.xlsx`, blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
   return (
     <div className="gestion">
       <div className="toolbar">
@@ -151,6 +197,9 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
         <span className="muted">
           {rango.desde} — {rango.hasta}
         </span>
+        <button type="button" className="pill-btn" disabled={datos === null} onClick={() => void exportarResumen()}>
+          Exportar resumen
+        </button>
       </div>
 
       {error !== null && <div className="error">{error}</div>}

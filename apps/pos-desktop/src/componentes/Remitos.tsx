@@ -4,6 +4,8 @@
  */
 import { useCallback, useEffect, useState } from "react";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorRemitos,
   type ClienteRemitos,
@@ -66,10 +68,34 @@ export function Remitos({
     }
   }
 
+  async function exportar() {
+    try {
+      const blob = await exportarExcel([
+        {
+          nombre: "Remitos",
+          columnas: [{ titulo: "N°" }, { titulo: "Cliente", ancho: 24 }, { titulo: "Fecha" }, { titulo: "Ítems" }, { titulo: "Estado" }],
+          filas: items.map((r) => [
+            r.numero,
+            r.clienteNombre ?? "",
+            fecha(r.creadoEn),
+            r.items.length,
+            r.estado === "EMITIDO" ? "Emitido" : "Anulado",
+          ]),
+        },
+      ]);
+      descargarBlob("remitos.xlsx", blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
   return (
     <div className="gestion">
       <div className="toolbar">
         <div className="spacer" />
+        <button type="button" className="pill-btn" onClick={() => void exportar()}>
+          Exportar
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setNuevo(true)}>
           + Nuevo remito
         </button>

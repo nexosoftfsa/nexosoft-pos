@@ -8,6 +8,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Money } from "@nexosoft/domain";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorCaja,
   type ClienteCaja,
@@ -42,6 +44,12 @@ function fechaHora(iso: string | null): string {
         hour: "2-digit",
         minute: "2-digit",
       });
+}
+
+function etiquetaDiferencia(diferencia: string | null): string {
+  const dif = leerDiferencia(diferencia);
+  if (dif === null) return "";
+  return diferencia !== null && dif.signo !== "exacto" ? `${dif.etiqueta} · ${money(diferencia)}` : dif.etiqueta;
 }
 
 function BadgeDiferencia({ diferencia }: { diferencia: string | null }) {
@@ -83,10 +91,48 @@ export function HistorialCaja({ cliente }: { cliente: ClienteCaja }) {
     void cargar();
   }, [cargar]);
 
+  async function exportar() {
+    try {
+      const blob = await exportarExcel([
+        {
+          nombre: "Historial de caja",
+          columnas: [
+            { titulo: "Apertura", ancho: 18 },
+            { titulo: "Cierre", ancho: 18 },
+            { titulo: "Terminal" },
+            { titulo: "Cajero", ancho: 24 },
+            { titulo: "Fondo" },
+            { titulo: "Contado" },
+            { titulo: "Diferencia", ancho: 22 },
+          ],
+          filas: turnos.map((t) => [
+            fechaHora(t.abiertoEn),
+            fechaHora(t.cerradoEn),
+            t.terminal.nombre,
+            t.usuario.email,
+            money(t.fondoApertura),
+            t.montoContado !== null ? money(t.montoContado) : "",
+            etiquetaDiferencia(t.diferencia),
+          ]),
+        },
+      ]);
+      descargarBlob("historial-caja.xlsx", blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
   if (cargando) return <div className="muted">Cargando historial…</div>;
 
   return (
     <div>
+      <div className="toolbar">
+        <div className="spacer" />
+        <button type="button" className="pill-btn" onClick={() => void exportar()}>
+          Exportar
+        </button>
+      </div>
+
       {error !== null && <div className="error">{error}</div>}
 
       <div className="card">
