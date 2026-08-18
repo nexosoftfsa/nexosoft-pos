@@ -148,7 +148,14 @@ export class ClienteCajaHttp implements ClienteCaja {
     if (!res.ok) {
       throw new ErrorCaja(await mensajeDeError(res), res.status);
     }
-    return (await res.json()) as T;
+    try {
+      return (await res.json()) as T;
+    } catch {
+      throw new ErrorCaja(
+        "El servidor no respondió correctamente. Verificá la conexión e intentá de nuevo.",
+        res.status,
+      );
+    }
   }
 }
 
