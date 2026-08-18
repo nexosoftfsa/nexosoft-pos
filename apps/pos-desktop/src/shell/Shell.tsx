@@ -8,8 +8,13 @@
  * sincronización, datos del comercio, terminal y cierre de sesión. La cola de
  * sync se orquesta una sola vez (`useSync`) y se baja como prop a Ventas.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
+import {
+  instalarYReiniciar,
+  leerEstadoActualizacion,
+  suscribirseActualizacion,
+} from "../datos/actualizaciones";
 import type { EntornoPos } from "../datos/bootstrap";
 import type { ClienteCatalogoAdmin } from "../sync/cliente-catalogo-admin";
 import type { ClienteStock } from "../sync/cliente-stock";
@@ -126,6 +131,7 @@ export function Shell({
   onAbrirConfig?: () => void;
 }) {
   const sync = useSync(entorno.sync);
+  const estadoActualizacion = useSyncExternalStore(suscribirseActualizacion, leerEstadoActualizacion);
   const visibles = useMemo(() => modulosVisibles(usuario.rol), [usuario.rol]);
   const catalogoPresup = useMemo(
     () =>
@@ -221,6 +227,17 @@ export function Shell({
             );
           })}
         </nav>
+
+        {estadoActualizacion.fase === "lista" && (
+          <button
+            type="button"
+            className="actualizacion-lista"
+            onClick={() => void instalarYReiniciar()}
+            title={`Versión ${estadoActualizacion.info.versionDisponible} lista para instalar`}
+          >
+            Reiniciar para actualizar
+          </button>
+        )}
 
         <div className="sidebar__user">
           <div className="avatar">{iniciales(usuario.email)}</div>

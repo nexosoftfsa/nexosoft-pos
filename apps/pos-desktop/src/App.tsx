@@ -13,6 +13,7 @@ import {
   guardarConfig,
   leerConfig,
 } from "./datos/bootstrap-tauri";
+import { chequearYDescargarEnSilencio } from "./datos/actualizaciones";
 import { leerServidorUrl, guardarServidorUrl } from "./datos/ajustes-sqlite";
 import { EjecutorSqlTauri, estaEnTauri } from "./datos/ejecutor-sql-tauri";
 import { SesionManager } from "./datos/sesion";
@@ -255,6 +256,13 @@ function AppTauri() {
   useEffect(() => {
     void inicializar();
   }, [inicializar]);
+
+  // Chequeo de actualización en silencio al iniciar: si hay una nueva, se
+  // descarga sola; recién se instala cuando el usuario toca "Reiniciar para
+  // actualizar" (banner del costado) o "Instalar y reiniciar" (Configuración).
+  useEffect(() => {
+    void chequearYDescargarEnSilencio();
+  }, []);
 
   // El access token dura minutos (JWT_ACCESS_EXPIRY); sin este chequeo periódico
   // solo se renueva una vez, al loguearse — cualquier acción después de que
