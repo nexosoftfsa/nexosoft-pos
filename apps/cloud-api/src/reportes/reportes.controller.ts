@@ -45,6 +45,11 @@ export class ReportesController {
     return this.reportesService.porMedioPago(req.user.sucursalId, rango);
   }
 
+  @Get('ventas/por-rubro')
+  porRubro(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
+    return this.reportesService.porRubro(req.user.sucursalId, rango);
+  }
+
   @Get('ventas/por-terminal')
   porTerminal(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
     return this.reportesService.porTerminal(req.user.sucursalId, rango);

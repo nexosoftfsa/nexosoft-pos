@@ -143,6 +143,38 @@ describe('ReportesService', () => {
     });
   });
 
+  describe('porRubro', () => {
+    it('agrupa por categoría del producto y ordena por total descendente', async () => {
+      mockItemVenta.findMany.mockResolvedValue([
+        { subtotal: new Decimal('100'), producto: { categoria: { nombre: 'Bebidas' } } },
+        { subtotal: new Decimal('300'), producto: { categoria: { nombre: 'Almacén' } } },
+        { subtotal: new Decimal('50'), producto: { categoria: { nombre: 'Bebidas' } } },
+      ]);
+
+      const r = await service.porRubro(SUCURSAL, RANGO);
+
+      expect(r).toEqual([
+        { rubro: 'Almacén', total: '300.00' },
+        { rubro: 'Bebidas', total: '150.00' },
+      ]);
+    });
+
+    it('agrupa los productos sin categoría bajo "Sin rubro"', async () => {
+      mockItemVenta.findMany.mockResolvedValue([
+        { subtotal: new Decimal('20'), producto: { categoria: null } },
+      ]);
+
+      const r = await service.porRubro(SUCURSAL, RANGO);
+      expect(r).toEqual([{ rubro: 'Sin rubro', total: '20.00' }]);
+    });
+
+    it('sin ventas en el período devuelve un array vacío', async () => {
+      mockItemVenta.findMany.mockResolvedValue([]);
+      const r = await service.porRubro(SUCURSAL, RANGO);
+      expect(r).toEqual([]);
+    });
+  });
+
   describe('porTerminal', () => {
     it('agrupa por terminal y trata las ventas sin terminal aparte', async () => {
       mockVenta.findMany.mockResolvedValue([

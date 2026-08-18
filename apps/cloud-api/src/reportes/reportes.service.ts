@@ -111,6 +111,30 @@ export class ReportesService {
       .sort((a, b) => new Decimal(b.total).cmp(new Decimal(a.total)));
   }
 
+  /** Total vendido agrupado por rubro (categoría), para la torta de Reportes. */
+  async porRubro(sucursalId: string, rango: RangoFechasDto) {
+    const { gte, lt } = this.calcularRango(rango);
+    const items = await this.prisma.itemVenta.findMany({
+      where: {
+        venta: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
+      },
+      select: {
+        subtotal: true,
+        producto: { select: { categoria: { select: { nombre: true } } } },
+      },
+    });
+
+    const porRubro = new Map<string, Decimal>();
+    for (const it of items) {
+      const rubro = it.producto.categoria?.nombre ?? 'Sin rubro';
+      porRubro.set(rubro, (porRubro.get(rubro) ?? new Decimal(0)).add(it.subtotal));
+    }
+
+    return [...porRubro.entries()]
+      .map(([rubro, total]) => ({ rubro, total: total.toFixed(2) }))
+      .sort((a, b) => new Decimal(b.total).cmp(new Decimal(a.total)));
+  }
+
   /** Total y cantidad por terminal (caja). Las ventas sin terminal se agrupan aparte. */
   async porTerminal(sucursalId: string, rango: RangoFechasDto) {
     const { gte, lt } = this.calcularRango(rango);
