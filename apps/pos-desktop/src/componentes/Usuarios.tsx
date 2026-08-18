@@ -6,6 +6,8 @@
  */
 import { useCallback, useEffect, useState } from "react";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorUsuarios,
   type ClienteUsuarios,
@@ -24,6 +26,10 @@ function mensaje(e: unknown): string {
   if (e instanceof ErrorUsuarios) return e.message;
   if (e instanceof Error) return e.message;
   return String(e);
+}
+
+function etiquetaRol(rol: RolUsuario): string {
+  return ROLES.find((r) => r.valor === rol)?.etiqueta ?? rol;
 }
 
 function fecha(iso: string): string {
@@ -77,10 +83,26 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
     }
   }
 
+  async function exportar() {
+    try {
+      const blob = await exportarExcel(
+        "Usuarios",
+        [{ titulo: "Nombre", ancho: 24 }, { titulo: "Email", ancho: 26 }, { titulo: "Rol" }, { titulo: "Estado" }],
+        usuarios.map((u) => [u.nombreDisplay, u.email, etiquetaRol(u.rol), u.activo ? "Activo" : "Inactivo"]),
+      );
+      descargarBlob("usuarios.xlsx", blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
   return (
     <div className="gestion">
       <div className="toolbar">
         <div className="spacer" />
+        <button type="button" className="pill-btn" onClick={() => void exportar()}>
+          Exportar
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setCreando(true)}>
           + Nuevo usuario
         </button>

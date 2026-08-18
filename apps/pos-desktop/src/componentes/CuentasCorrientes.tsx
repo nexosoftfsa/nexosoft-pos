@@ -7,6 +7,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Money } from "@nexosoft/domain";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorCtaCte,
   type Cliente,
@@ -94,6 +96,34 @@ export function CuentasCorrientes({ cliente: api }: { cliente: ClienteCtaCte }) 
     }
   }
 
+  async function exportar() {
+    try {
+      const todos = await api.listar(true);
+      const blob = await exportarExcel(
+        "Clientes",
+        [
+          { titulo: "Cliente", ancho: 28 },
+          { titulo: "CUIT / DNI" },
+          { titulo: "Condición IVA", ancho: 20 },
+          { titulo: "Saldo" },
+          { titulo: "Límite" },
+          { titulo: "Estado" },
+        ],
+        todos.map((c) => [
+          c.nombre,
+          c.documento ?? "",
+          etiquetaCondicion(c.condicionIva),
+          money(c.saldo),
+          c.limiteCredito === "0.00" || c.limiteCredito === "0" ? "" : money(c.limiteCredito),
+          leerSaldo(c.saldo).etiqueta,
+        ]),
+      );
+      descargarBlob("clientes.xlsx", blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
   return (
     <div className="gestion">
       <div className="toolbar">
@@ -113,6 +143,9 @@ export function CuentasCorrientes({ cliente: api }: { cliente: ClienteCtaCte }) 
           Mostrar inactivos
         </label>
         <div className="spacer" />
+        <button type="button" className="pill-btn" onClick={() => void exportar()}>
+          Exportar
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nuevo")}>
           + Nuevo cliente
         </button>

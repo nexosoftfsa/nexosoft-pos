@@ -7,6 +7,8 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorStock,
   type AlertaVencimiento,
@@ -16,6 +18,7 @@ import {
   type ProductoStock,
   type SaldoStock,
 } from "../sync/cliente-stock";
+import { ThOrdenable, useOrdenTabla, type ValorColumna } from "./usar-orden-tabla";
 import {
   aDatosMovimiento,
   calcularKpis,
@@ -83,6 +86,35 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
     () => (soloAlertas ? saldos.filter((s) => estadoStock(s.saldo, umbral) !== "ok") : saldos),
     [saldos, soloAlertas, umbral],
   );
+
+  const RANGO_ESTADO: Record<string, number> = { sin: 0, bajo: 1, ok: 2 };
+  const columnasOrden: Record<string, ValorColumna<SaldoStock>> = {
+    codigo: (s) => s.producto.codigo,
+    producto: (s) => s.producto.nombre,
+    saldo: (s) => s.saldo,
+    estado: (s) => RANGO_ESTADO[estadoStock(s.saldo, umbral)] ?? 0,
+  };
+  const { filasOrdenadas: ordenados, clave: claveOrden, direccion, alternar } = useOrdenTabla(
+    filtrados,
+    columnasOrden,
+  );
+
+  async function exportar() {
+    try {
+      const blob = await exportarExcel(
+        "Stock",
+        [{ titulo: "Código" }, { titulo: "Producto", ancho: 30 }, { titulo: "Saldo" }, { titulo: "Estado" }],
+        saldos.map((s) => {
+          const estado = estadoStock(s.saldo, umbral);
+          const etiqueta = estado === "ok" ? "OK" : estado === "bajo" ? "Bajo mínimo" : "Sin stock";
+          return [s.producto.codigo, s.producto.nombre, s.saldo, etiqueta];
+        }),
+      );
+      descargarBlob("stock.xlsx", blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
 
   return (
     <div className="gestion">
@@ -154,6 +186,9 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
           Ver sólo alertas
         </label>
         <div className="spacer" />
+        <button type="button" className="pill-btn" onClick={() => void exportar()}>
+          Exportar
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setMovProducto("abierto")}>
           + Registrar movimiento
         </button>
@@ -166,10 +201,10 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
           <table>
             <thead>
               <tr>
-                <th>Código</th>
-                <th>Producto</th>
-                <th className="num">Saldo</th>
-                <th>Estado</th>
+                <ThOrdenable titulo="Código" columnaClave="codigo" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
+                <ThOrdenable titulo="Producto" columnaClave="producto" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
+                <ThOrdenable titulo="Saldo" columnaClave="saldo" claveActiva={claveOrden} direccion={direccion} alternar={alternar} className="num" />
+                <ThOrdenable titulo="Estado" columnaClave="estado" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
                 <th />
               </tr>
             </thead>
@@ -181,7 +216,7 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
                   </td>
                 </tr>
               )}
-              {!cargando && filtrados.length === 0 && (
+              {!cargando && ordenados.length === 0 && (
                 <tr>
                   <td colSpan={5} className="td-vacio">
                     No hay artículos para mostrar.
@@ -189,7 +224,7 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
                 </tr>
               )}
               {!cargando &&
-                filtrados.map((s) => {
+                ordenados.map((s) => {
                   const estado = estadoStock(s.saldo, umbral);
                   return (
                     <tr key={s.producto.id}>

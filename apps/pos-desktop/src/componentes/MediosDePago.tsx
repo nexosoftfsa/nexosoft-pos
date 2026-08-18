@@ -6,6 +6,8 @@
  */
 import { useCallback, useEffect, useState } from "react";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorMediosPago,
   type ClienteMediosPago,
@@ -30,6 +32,12 @@ function mensaje(e: unknown): string {
 
 function etiquetaTipo(tipo: Tarjeta["tipo"]): string {
   return TIPOS_TARJETA.find((t) => t.valor === tipo)?.etiqueta ?? tipo;
+}
+
+function etiquetaTasas(t: Tarjeta): string {
+  return t.tasas.length === 0
+    ? ""
+    : t.tasas.map((r) => `${r.cantidadCuotas}c: ${r.recargoPorcentaje}%`).join(" · ");
 }
 
 export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
@@ -68,6 +76,26 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
     }
   }
 
+  async function exportar() {
+    try {
+      const todas = await api.listar(true);
+      const blob = await exportarExcel(
+        "Medios de pago",
+        [
+          { titulo: "Banco", ancho: 22 },
+          { titulo: "Tipo" },
+          { titulo: "Marca" },
+          { titulo: "Tasas por cuotas", ancho: 30 },
+          { titulo: "Estado" },
+        ],
+        todas.map((t) => [t.banco, etiquetaTipo(t.tipo), t.marca ?? "", etiquetaTasas(t), t.activo ? "Activa" : "Inactiva"]),
+      );
+      descargarBlob("medios-de-pago.xlsx", blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
   return (
     <div className="gestion">
       <div className="toolbar">
@@ -87,6 +115,9 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
           Mostrar inactivas
         </label>
         <div className="spacer" />
+        <button type="button" className="pill-btn" onClick={() => void exportar()}>
+          Exportar
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nueva")}>
           + Nueva tarjeta
         </button>
@@ -128,15 +159,7 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
                     <td className="strong">{t.banco}</td>
                     <td>{etiquetaTipo(t.tipo)}</td>
                     <td>{t.marca ?? <span className="muted">—</span>}</td>
-                    <td>
-                      {t.tasas.length === 0 ? (
-                        <span className="muted">—</span>
-                      ) : (
-                        t.tasas
-                          .map((r) => `${r.cantidadCuotas}c: ${r.recargoPorcentaje}%`)
-                          .join(" · ")
-                      )}
-                    </td>
+                    <td>{etiquetaTasas(t) === "" ? <span className="muted">—</span> : etiquetaTasas(t)}</td>
                     <td>
                       {t.activo ? (
                         <span className="badge badge--ok">Activa</span>

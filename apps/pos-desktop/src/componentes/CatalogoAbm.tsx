@@ -7,6 +7,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Money } from "@nexosoft/domain";
 
+import { descargarBlob } from "../descargas";
+import { exportarExcel } from "../exportar-excel";
 import {
   ErrorCatalogoAdmin,
   type CategoriaAdmin,
@@ -24,6 +26,7 @@ import {
   validarProducto,
   type FormProducto,
 } from "./catalogo-form";
+import { ThOrdenable, useOrdenTabla, type ValorColumna } from "./usar-orden-tabla";
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorCatalogoAdmin) return e.message;
@@ -79,6 +82,20 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
     );
   }, [productos, busqueda]);
 
+  const columnasOrden: Record<string, ValorColumna<ProductoAdmin>> = {
+    codigo: (p) => p.codigo,
+    descripcion: (p) => p.nombre,
+    rubro: (p) => p.categoria?.nombre ?? "",
+    costo: (p) => Number(p.precioCosto),
+    precio: (p) => Number(p.precioVenta),
+    utilidad: (p) => margenUtilidad(p.precioVenta, p.precioCosto) ?? -Infinity,
+    estado: (p) => (p.activo ? 1 : 0),
+  };
+  const { filasOrdenadas: ordenados, clave: claveOrden, direccion, alternar } = useOrdenTabla(
+    filtrados,
+    columnasOrden,
+  );
+
   async function desactivar(p: ProductoAdmin) {
     if (!window.confirm(`¿Desactivar "${p.nombre}"? No se borra: deja de venderse y se puede reactivar.`)) {
       return;
@@ -95,6 +112,54 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
     try {
       await cliente.actualizarProducto(p.id, { activo: true });
       await cargar();
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
+  async function exportarArticulos() {
+    try {
+      const todos = await cliente.listarProductos(true);
+      const blob = await exportarExcel(
+        "Artículos",
+        [
+          { titulo: "Código" },
+          { titulo: "Descripción", ancho: 30 },
+          { titulo: "Rubro", ancho: 20 },
+          { titulo: "Costo" },
+          { titulo: "Precio" },
+          { titulo: "IVA" },
+          { titulo: "Utilidad %" },
+          { titulo: "Estado" },
+        ],
+        todos.map((p) => {
+          const margen = margenUtilidad(p.precioVenta, p.precioCosto);
+          return [
+            p.codigo,
+            p.nombre,
+            p.categoria?.nombre ?? "",
+            precio(p.precioCosto),
+            precio(p.precioVenta),
+            etiquetaIva(p.tipoIva),
+            margen === null ? "" : `${margen.toFixed(0)}%`,
+            p.activo ? "Activo" : "Inactivo",
+          ];
+        }),
+      );
+      descargarBlob("articulos.xlsx", blob);
+    } catch (e) {
+      setError(mensaje(e));
+    }
+  }
+
+  async function exportarRubros() {
+    try {
+      const blob = await exportarExcel(
+        "Rubros",
+        [{ titulo: "Rubro", ancho: 30 }],
+        categorias.map((c) => [c.nombre]),
+      );
+      descargarBlob("rubros.xlsx", blob);
     } catch (e) {
       setError(mensaje(e));
     }
@@ -119,6 +184,12 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
           Mostrar inactivos
         </label>
         <div className="spacer" />
+        <button type="button" className="pill-btn" onClick={() => void exportarRubros()}>
+          Exportar rubros
+        </button>
+        <button type="button" className="pill-btn" onClick={() => void exportarArticulos()}>
+          Exportar artículos
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nuevo")}>
           + Nuevo artículo
         </button>
@@ -131,14 +202,14 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
           <table>
             <thead>
               <tr>
-                <th>Código</th>
-                <th>Descripción</th>
-                <th>Rubro</th>
-                <th className="num">Costo</th>
-                <th className="num">Precio</th>
+                <ThOrdenable titulo="Código" columnaClave="codigo" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
+                <ThOrdenable titulo="Descripción" columnaClave="descripcion" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
+                <ThOrdenable titulo="Rubro" columnaClave="rubro" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
+                <ThOrdenable titulo="Costo" columnaClave="costo" claveActiva={claveOrden} direccion={direccion} alternar={alternar} className="num" />
+                <ThOrdenable titulo="Precio" columnaClave="precio" claveActiva={claveOrden} direccion={direccion} alternar={alternar} className="num" />
                 <th>IVA</th>
-                <th className="num">Utilidad</th>
-                <th>Estado</th>
+                <ThOrdenable titulo="Utilidad" columnaClave="utilidad" claveActiva={claveOrden} direccion={direccion} alternar={alternar} className="num" />
+                <ThOrdenable titulo="Estado" columnaClave="estado" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
                 <th />
               </tr>
             </thead>
@@ -150,7 +221,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
                   </td>
                 </tr>
               )}
-              {!cargando && filtrados.length === 0 && (
+              {!cargando && ordenados.length === 0 && (
                 <tr>
                   <td colSpan={9} className="td-vacio">
                     No hay artículos para mostrar.
@@ -158,7 +229,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
                 </tr>
               )}
               {!cargando &&
-                filtrados.map((p) => {
+                ordenados.map((p) => {
                   const margen = margenUtilidad(p.precioVenta, p.precioCosto);
                   return (
                     <tr key={p.id} className={p.activo ? "" : "fila-inactiva"}>
