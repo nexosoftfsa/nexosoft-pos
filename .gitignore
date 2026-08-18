@@ -8,6 +8,10 @@ build/
 out/
 *.tsbuildinfo
 
+# Paquete standalone del servidor (Fase 13) y runtimes portables embebidos
+/dist-servidor/
+/NexoSoftBuild/
+
 # Maqueta: archivo portable generado por prototipo/build-standalone.js
 prototipo/nexosoft-maqueta.html
 

@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "description": "Backend cloud multi-sucursal (NestJS + PostgreSQL). API tipada.",
+  "files": [
+    "dist",
+    "prisma/schema.prisma",
+    "prisma/migrations"
+  ],
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
