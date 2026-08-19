@@ -9,6 +9,9 @@
  */
 import type { TipoIvaRemoto } from "./mapeo-catalogo";
 import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
+import type { FilaImportacion } from "./importacion";
+
+export type { FilaImportacion };
 
 export type { TipoIvaRemoto };
 
@@ -57,14 +60,6 @@ export interface DatosProducto {
   readonly requiereLote?: boolean;
   readonly componentes?: ReadonlyArray<{ readonly componenteId: string; readonly cantidad: string }>;
   readonly categoriaId?: string | null;
-}
-
-/** Resultado de importar una fila de Excel (Fase 14.B): igual forma en los 5 módulos que importan. */
-export interface FilaImportacion {
-  readonly fila: number;
-  readonly resultado: "creada" | "omitida" | "error";
-  readonly mensaje?: string;
-  readonly advertencia?: string;
 }
 
 /** Nombres de columna que espera `POST /productos/importar` (mismos que `scripts/importar-catalogo.mjs`). */

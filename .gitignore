@@ -13,6 +13,9 @@ out/
 /NexoSoftBuild/
 /instalador-servidor/.cache/
 /instalador-servidor/runtime/
+
+# Datos exportados para entregar a otro comercio (Fase 14) -- no es codigo
+/_entregar-a-socio/
 /instalador-servidor/dist/
 /instalador-servidor/Output/
 

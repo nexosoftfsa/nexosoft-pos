@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Re
 import { ProveedoresService } from './proveedores.service';
 import { CrearProveedorDto } from './dto/crear-proveedor.dto';
 import { ActualizarProveedorDto } from './dto/actualizar-proveedor.dto';
+import { ImportarProveedoresDto } from './dto/importar-proveedores.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 interface UsuarioJwt {
@@ -23,6 +24,11 @@ export class ProveedoresController {
   @Post()
   crear(@Request() req: { user: UsuarioJwt }, @Body() dto: CrearProveedorDto) {
     return this.proveedoresService.crearProveedor(req.user.sucursalId, dto);
+  }
+
+  @Post('importar')
+  importar(@Request() req: { user: UsuarioJwt }, @Body() dto: ImportarProveedoresDto) {
+    return this.proveedoresService.importarProveedores(req.user.sucursalId, dto.filas, dto.dryRun);
   }
 
   @Get(':id')

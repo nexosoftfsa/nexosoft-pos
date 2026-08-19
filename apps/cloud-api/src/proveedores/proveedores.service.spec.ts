@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotFoundException } from '@nestjs/common';
 import { ProveedoresService } from './proveedores.service';
+import { COLUMNAS_IMPORTAR_PROVEEDORES as COL } from './importar-proveedores-lote';
 
 const mockProveedor = { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() };
-const mockPrisma = { proveedor: mockProveedor };
+const mockPrisma = {
+  proveedor: mockProveedor,
+  $transaction: vi.fn((cb: (tx: typeof mockPrisma) => unknown) => cb(mockPrisma)),
+};
 
 const SUCURSAL = 's1';
 const ID = 'p1';
@@ -87,6 +91,60 @@ describe('ProveedoresService', () => {
         where: { id: ID },
         data: { activo: false },
       });
+    });
+  });
+
+  describe('importarProveedores (Fase 14.C)', () => {
+    function filaCruda(overrides: Record<string, string> = {}): Record<string, string> {
+      return {
+        [COL.nombre]: 'Distribuidora Sur',
+        [COL.cuit]: '30-1',
+        [COL.contacto]: 'Juan',
+        [COL.telefono]: '123',
+        [COL.email]: 'a@b.com',
+        [COL.activo]: 'S',
+        ...overrides,
+      };
+    }
+
+    beforeEach(() => {
+      mockProveedor.findMany.mockResolvedValue([]);
+      mockProveedor.create.mockResolvedValue(proveedor());
+    });
+
+    it('crea un proveedor nuevo', async () => {
+      const resultados = await service.importarProveedores(SUCURSAL, [filaCruda()], false);
+      expect(resultados).toEqual([{ fila: 2, resultado: 'creada' }]);
+      expect(mockProveedor.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ nombre: 'Distribuidora Sur', cuit: '30-1', sucursalId: SUCURSAL }),
+      });
+    });
+
+    it('omite un proveedor que ya existe (mismo nombre+CUIT)', async () => {
+      mockProveedor.findMany.mockResolvedValue([{ nombre: 'Distribuidora Sur', cuit: '30-1' }]);
+      const resultados = await service.importarProveedores(SUCURSAL, [filaCruda()], false);
+      expect(resultados[0]!.resultado).toBe('omitida');
+      expect(mockProveedor.create).not.toHaveBeenCalled();
+    });
+
+    it('omite duplicados repetidos dentro del propio archivo', async () => {
+      const filas = [filaCruda(), filaCruda()];
+      const resultados = await service.importarProveedores(SUCURSAL, filas, false);
+      expect(resultados[0]).toEqual({ fila: 2, resultado: 'creada' });
+      expect(resultados[1]!.resultado).toBe('omitida');
+      expect(mockProveedor.create).toHaveBeenCalledOnce();
+    });
+
+    it('una fila sin nombre da error y no aborta el resto', async () => {
+      const filas = [filaCruda({ [COL.nombre]: '' }), filaCruda({ [COL.nombre]: 'Otro' })];
+      const resultados = await service.importarProveedores(SUCURSAL, filas, false);
+      expect(resultados[0]).toEqual({ fila: 2, resultado: 'error', mensaje: expect.stringContaining('sin nombre') });
+      expect(resultados[1]).toEqual({ fila: 3, resultado: 'creada' });
+    });
+
+    it('dry-run devuelve el mismo reporte (atrapa el sentinel RevertirDryRun)', async () => {
+      const resultados = await service.importarProveedores(SUCURSAL, [filaCruda()], true);
+      expect(resultados).toEqual([{ fila: 2, resultado: 'creada' }]);
     });
   });
 });

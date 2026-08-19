@@ -9,7 +9,7 @@
  */
 import { useState } from "react";
 import { elegirYLeerExcel } from "../importar-excel";
-import type { FilaImportacion } from "../sync/cliente-catalogo-admin";
+import type { FilaImportacion } from "../sync/importacion";
 
 interface Props {
   readonly titulo: string;

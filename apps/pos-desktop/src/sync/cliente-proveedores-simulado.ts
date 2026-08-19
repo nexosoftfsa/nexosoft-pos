@@ -3,9 +3,11 @@
  * ABM simple, sembrado con algunos proveedores de ejemplo.
  */
 import {
+  COLUMNAS_IMPORTAR_PROVEEDORES as COL,
   ErrorProveedores,
   type ClienteProveedores,
   type DatosProveedor,
+  type FilaImportacion,
   type Proveedor,
 } from "./cliente-proveedores";
 
@@ -81,5 +83,47 @@ export class ClienteProveedoresSimulado implements ClienteProveedores {
   async desactivar(id: string): Promise<void> {
     this.buscar(id);
     this.proveedores = this.proveedores.map((p) => (p.id === id ? { ...p, activo: false } : p));
+  }
+
+  /** Fase 14.C (demo): mismas reglas esenciales que el backend (nombre obligatorio, se omite nombre+CUIT repetido). */
+  async importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+    const proveedores = [...this.proveedores];
+    const resultados: FilaImportacion[] = [];
+    const clave = (nombre: string, cuit: string | null) => `${nombre.trim().toLowerCase()}|${cuit ?? ""}`;
+    const clavesExistentes = new Set(proveedores.map((p) => clave(p.nombre, p.cuit)));
+
+    filas.forEach((cruda, i) => {
+      const fila = i + 2;
+      const nombre = (cruda[COL.nombre] ?? "").trim();
+      if (nombre === "") {
+        resultados.push({ fila, resultado: "error", mensaje: "Fila sin nombre de proveedor." });
+        return;
+      }
+      const limpiar = (v: string | undefined) => {
+        const t = v?.trim();
+        return t && t !== "" ? t : null;
+      };
+      const cuit = limpiar(cruda[COL.cuit]);
+      const k = clave(nombre, cuit);
+      if (clavesExistentes.has(k)) {
+        resultados.push({ fila, resultado: "omitida", mensaje: `Ya existe (o se repite) el proveedor "${nombre}"` });
+        return;
+      }
+      proveedores.push({
+        id: `sim-prov-${proveedores.length + 1}`,
+        nombre,
+        cuit,
+        contacto: limpiar(cruda[COL.contacto]),
+        telefono: limpiar(cruda[COL.telefono]),
+        email: limpiar(cruda[COL.email]),
+        direccion: null,
+        activo: (cruda[COL.activo] ?? "S").trim().toUpperCase() !== "N",
+      });
+      clavesExistentes.add(k);
+      resultados.push({ fila, resultado: "creada" });
+    });
+
+    if (!dryRun) this.proveedores = proveedores;
+    return resultados;
   }
 }

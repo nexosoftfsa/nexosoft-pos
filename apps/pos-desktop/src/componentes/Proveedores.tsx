@@ -8,7 +8,13 @@ import { useCallback, useEffect, useState } from "react";
 
 import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
-import { ErrorProveedores, type ClienteProveedores, type Proveedor } from "../sync/cliente-proveedores";
+import {
+  COLUMNAS_IMPORTAR_PROVEEDORES,
+  ErrorProveedores,
+  type ClienteProveedores,
+  type Proveedor,
+} from "../sync/cliente-proveedores";
+import { ModalImportacion } from "./ModalImportacion";
 import {
   aDatosProveedor,
   filtrarProveedores,
@@ -31,6 +37,7 @@ export function Proveedores({ cliente: api }: { cliente: ClienteProveedores }) {
   const [busqueda, setBusqueda] = useState("");
   const [incluirInactivos, setIncluirInactivos] = useState(false);
   const [editando, setEditando] = useState<Proveedor | "nuevo" | null>(null);
+  const [importando, setImportando] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -104,6 +111,9 @@ export function Proveedores({ cliente: api }: { cliente: ClienteProveedores }) {
         <div className="spacer" />
         <button type="button" className="pill-btn" onClick={() => void exportar()}>
           Exportar
+        </button>
+        <button type="button" className="pill-btn" onClick={() => setImportando(true)}>
+          Importar
         </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nuevo")}>
           + Nuevo proveedor
@@ -186,6 +196,16 @@ export function Proveedores({ cliente: api }: { cliente: ClienteProveedores }) {
             setEditando(null);
             void cargar();
           }}
+        />
+      )}
+
+      {importando && (
+        <ModalImportacion
+          titulo="Importar proveedores desde Excel"
+          columnasAyuda={Object.values(COLUMNAS_IMPORTAR_PROVEEDORES)}
+          onImportar={(filas, dryRun) => api.importar(filas, dryRun)}
+          onCerrar={() => setImportando(false)}
+          onImportado={() => void cargar()}
         />
       )}
     </div>

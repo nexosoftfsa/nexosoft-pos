@@ -11,20 +11,11 @@ import type { CrearProductoDto } from './dto/crear-producto.dto';
 import type { ActualizarProductoDto } from './dto/actualizar-producto.dto';
 import type { ComboComponenteDto } from './dto/combo-componente.dto';
 import { mapearFilaProductoCruda, type FilaProductoCruda } from './importar-productos-lote';
+import { RevertirDryRun, type ResultadoFilaImportacion } from '../common/importacion-lote';
 
 type Tx = Prisma.TransactionClient;
 
-export type ResultadoFilaImportacion =
-  | { fila: number; resultado: 'creada'; advertencia?: string }
-  | { fila: number; resultado: 'omitida'; mensaje: string }
-  | { fila: number; resultado: 'error'; mensaje: string };
-
-/** Sentinel para forzar el rollback de la transacción de dry-run sin perder el reporte ya armado. */
-class RevertirDryRun extends Error {
-  constructor(readonly resultados: ResultadoFilaImportacion[]) {
-    super('dry-run: revertir');
-  }
-}
+export type { ResultadoFilaImportacion };
 
 /** `include` estándar de un producto: categoría + componentes (si es combo). */
 const INCLUDE_PRODUCTO = {

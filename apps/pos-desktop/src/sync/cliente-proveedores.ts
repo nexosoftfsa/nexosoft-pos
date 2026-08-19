@@ -4,6 +4,19 @@
  * y simulado en memoria (navegador de desarrollo).
  */
 import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
+import type { FilaImportacion } from "./importacion";
+
+export type { FilaImportacion };
+
+/** Nombres de columna que espera `POST /proveedores/importar`. */
+export const COLUMNAS_IMPORTAR_PROVEEDORES = {
+  nombre: "Proveedor",
+  cuit: "CUIT",
+  contacto: "Contacto",
+  telefono: "Teléfono",
+  email: "Email",
+  activo: "Activo",
+} as const;
 
 export interface Proveedor {
   readonly id: string;
@@ -31,6 +44,8 @@ export interface ClienteProveedores {
   crear(datos: DatosProveedor): Promise<Proveedor>;
   actualizar(id: string, cambios: Partial<DatosProveedor> & { activo?: boolean }): Promise<Proveedor>;
   desactivar(id: string): Promise<void>;
+  /** Fase 14.C: alta masiva desde Excel. `dryRun: true` no persiste nada, solo valida. */
+  importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]>;
 }
 
 export class ErrorProveedores extends Error {
@@ -66,6 +81,10 @@ export class ClienteProveedoresHttp implements ClienteProveedores {
 
   async desactivar(id: string): Promise<void> {
     await this.pedir<unknown>("DELETE", `/proveedores/${id}`);
+  }
+
+  importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+    return this.pedir<FilaImportacion[]>("POST", "/proveedores/importar", { filas, dryRun });
   }
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
