@@ -4,11 +4,27 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CrearCategoriaDto } from './dto/crear-categoria.dto';
 import type { CrearProductoDto } from './dto/crear-producto.dto';
 import type { ActualizarProductoDto } from './dto/actualizar-producto.dto';
 import type { ComboComponenteDto } from './dto/combo-componente.dto';
+import { mapearFilaProductoCruda, type FilaProductoCruda } from './importar-productos-lote';
+
+type Tx = Prisma.TransactionClient;
+
+export type ResultadoFilaImportacion =
+  | { fila: number; resultado: 'creada'; advertencia?: string }
+  | { fila: number; resultado: 'omitida'; mensaje: string }
+  | { fila: number; resultado: 'error'; mensaje: string };
+
+/** Sentinel para forzar el rollback de la transacción de dry-run sin perder el reporte ya armado. */
+class RevertirDryRun extends Error {
+  constructor(readonly resultados: ResultadoFilaImportacion[]) {
+    super('dry-run: revertir');
+  }
+}
 
 /** `include` estándar de un producto: categoría + componentes (si es combo). */
 const INCLUDE_PRODUCTO = {
@@ -192,5 +208,106 @@ export class CatalogoService {
       where: { id },
       data: { activo: false },
     });
+  }
+
+  // ─── Importación masiva (Fase 14.B) ─────────────────────────────────────
+
+  /**
+   * Importa un lote de filas crudas de Excel (mismo formato de columnas que
+   * `scripts/importar-catalogo.mjs`). Cada fila se procesa de forma
+   * independiente -- una fila con error no aborta el resto, mismo espíritu
+   * que el script CLI. Con `dryRun: true` corre toda la validación y la
+   * lógica de "¿ya existe?" adentro de una transacción que SIEMPRE se
+   * revierte al final (se tira `RevertirDryRun` con el reporte ya armado y
+   * se atrapa afuera), así el dry-run no duplica la lógica de la corrida
+   * real.
+   */
+  async importarProductos(
+    sucursalId: string,
+    filas: FilaProductoCruda[],
+    dryRun: boolean,
+  ): Promise<ResultadoFilaImportacion[]> {
+    const procesarLote = async (tx: Tx): Promise<ResultadoFilaImportacion[]> => {
+      const resultados: ResultadoFilaImportacion[] = [];
+      const categorias = await tx.categoria.findMany({ select: { id: true, nombre: true } });
+      const categoriaIdPorNombre = new Map(categorias.map((c) => [c.nombre, c.id]));
+
+      for (let i = 0; i < filas.length; i++) {
+        const numeroFila = i + 2; // fila 1 = encabezado
+        try {
+          const articulo = mapearFilaProductoCruda(filas[i]!);
+
+          let categoriaId = categoriaIdPorNombre.get(articulo.categoriaNombre);
+          if (!categoriaId) {
+            const nueva = await tx.categoria.create({ data: { nombre: articulo.categoriaNombre } });
+            categoriaId = nueva.id;
+            categoriaIdPorNombre.set(articulo.categoriaNombre, categoriaId);
+          }
+
+          const existe = await tx.producto.findUnique({
+            where: { codigo_sucursalId: { codigo: articulo.codigo, sucursalId } },
+          });
+          if (existe) {
+            resultados.push({
+              fila: numeroFila,
+              resultado: 'omitida',
+              mensaje: `Ya existe un producto con código ${articulo.codigo}`,
+            });
+            continue;
+          }
+
+          const producto = await tx.producto.create({
+            data: {
+              codigo: articulo.codigo,
+              nombre: articulo.nombre,
+              precioVenta: articulo.precioVenta,
+              precioCosto: articulo.precioCosto,
+              tipoIva: articulo.tipoIva,
+              activo: articulo.activo,
+              sucursalId,
+              categoriaId,
+            },
+          });
+          if (articulo.stockInicial !== null) {
+            await tx.movimientoStock.create({
+              data: {
+                tipo: 'ENTRADA',
+                cantidad: articulo.stockInicial,
+                motivo: 'Importación de catálogo',
+                productoId: producto.id,
+                sucursalId,
+              },
+            });
+          }
+
+          resultados.push({
+            fila: numeroFila,
+            resultado: 'creada',
+            ...(articulo.advertencias.length > 0 ? { advertencia: articulo.advertencias.join(' / ') } : {}),
+          });
+        } catch (error) {
+          resultados.push({ fila: numeroFila, resultado: 'error', mensaje: (error as Error).message });
+        }
+      }
+      return resultados;
+    };
+
+    if (!dryRun) {
+      return this.prisma.$transaction((tx) => procesarLote(tx), { timeout: 60_000 });
+    }
+    try {
+      await this.prisma.$transaction(
+        async (tx) => {
+          const resultados = await procesarLote(tx);
+          throw new RevertirDryRun(resultados);
+        },
+        { timeout: 60_000 },
+      );
+      /* istanbul ignore next -- inalcanzable: procesarLote siempre termina en RevertirDryRun arriba */
+      return [];
+    } catch (error) {
+      if (error instanceof RevertirDryRun) return error.resultados;
+      throw error;
+    }
   }
 }

@@ -10,11 +10,13 @@ import { Money } from "@nexosoft/domain";
 import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
 import {
+  COLUMNAS_IMPORTAR_CATALOGO,
   ErrorCatalogoAdmin,
   type CategoriaAdmin,
   type ClienteCatalogoAdmin,
   type ProductoAdmin,
 } from "../sync/cliente-catalogo-admin";
+import { ModalImportacion } from "./ModalImportacion";
 import { pesos } from "../formato";
 import {
   aDatosProducto,
@@ -50,6 +52,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
   const [busqueda, setBusqueda] = useState("");
   const [incluirInactivos, setIncluirInactivos] = useState(false);
   const [editando, setEditando] = useState<ProductoAdmin | "nuevo" | null>(null);
+  const [importando, setImportando] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -190,6 +193,9 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
         <button type="button" className="pill-btn" onClick={() => void exportarArticulos()}>
           Exportar artículos
         </button>
+        <button type="button" className="pill-btn" onClick={() => setImportando(true)}>
+          Importar artículos
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nuevo")}>
           + Nuevo artículo
         </button>
@@ -283,6 +289,16 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
             setEditando(null);
             void cargar();
           }}
+        />
+      )}
+
+      {importando && (
+        <ModalImportacion
+          titulo="Importar artículos desde Excel"
+          columnasAyuda={Object.values(COLUMNAS_IMPORTAR_CATALOGO)}
+          onImportar={(filas, dryRun) => cliente.importarProductos(filas, dryRun)}
+          onCerrar={() => setImportando(false)}
+          onImportado={() => void cargar()}
         />
       )}
     </div>

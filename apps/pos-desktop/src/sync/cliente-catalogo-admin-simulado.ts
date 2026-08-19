@@ -9,11 +9,13 @@ import { ALICUOTAS_IVA, type AlicuotaIva } from "@nexosoft/domain";
 
 import { DEFS, rubroASlug } from "../datos/bootstrap";
 import {
+  COLUMNAS_IMPORTAR_CATALOGO as COL,
   ErrorCatalogoAdmin,
   type CategoriaAdmin,
   type ClienteCatalogoAdmin,
   type ComponenteAdmin,
   type DatosProducto,
+  type FilaImportacion,
   type ProductoAdmin,
   type TipoIvaRemoto,
 } from "./cliente-catalogo-admin";
@@ -22,6 +24,14 @@ function tipoIvaDeAlicuota(a: AlicuotaIva): TipoIvaRemoto {
   if (a === ALICUOTAS_IVA.CERO) return "EXENTO";
   if (a === ALICUOTAS_IVA.DIEZ_CON_CINCO) return "IVA_10_5";
   if (a === ALICUOTAS_IVA.VEINTISIETE) return "IVA_27";
+  return "IVA_21";
+}
+
+/** Fase 14.B (demo): "% IVA" de un Excel importado → alícuota. Desconocido cae en 21% (el cloud-api real es estricto). */
+function tipoIvaDePorcentaje(porcentaje: number): TipoIvaRemoto {
+  if (porcentaje === 0) return "EXENTO";
+  if (porcentaje === 10 || porcentaje === 10.5) return "IVA_10_5";
+  if (porcentaje === 27) return "IVA_27";
   return "IVA_21";
 }
 
@@ -160,6 +170,65 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
 
   async listarCategorias(): Promise<CategoriaAdmin[]> {
     return this.categorias.map((c) => ({ ...c }));
+  }
+
+  /**
+   * Fase 14.B, versión demo: reproduce las reglas esenciales del backend
+   * (código requerido, categoría por nombre creada si falta, duplicado se
+   * omite) sin pasar por `mapearArticulo` (vive en cloud-api, no es parte
+   * del bundle del POS). Suficiente para probar la pantalla en el navegador
+   * sin servidor; la validación real la hace siempre el cloud-api.
+   */
+  async importarProductos(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+    const productos = [...this.productos];
+    const categorias = [...this.categorias];
+    const resultados: FilaImportacion[] = [];
+
+    filas.forEach((cruda, i) => {
+      const fila = i + 2;
+      const codigo = (cruda[COL.codigo] ?? "").trim();
+      const nombre = (cruda[COL.descripcion] ?? "").trim();
+      if (codigo === "") {
+        resultados.push({ fila, resultado: "error", mensaje: "Fila sin código: no se puede importar." });
+        return;
+      }
+      if (nombre === "") {
+        resultados.push({ fila, resultado: "error", mensaje: `Artículo ${codigo} sin descripción.` });
+        return;
+      }
+      if (productos.some((p) => p.codigo === codigo)) {
+        resultados.push({ fila, resultado: "omitida", mensaje: `Ya existe un producto con código ${codigo}` });
+        return;
+      }
+
+      const nombreRubro = cruda[COL.rubro]?.trim() || "Sin Clasificar";
+      let categoria = categorias.find((c) => c.nombre === nombreRubro);
+      if (!categoria) {
+        categoria = { id: `sim-cat-${categorias.length + 1}`, nombre: nombreRubro };
+        categorias.push(categoria);
+      }
+
+      productos.push({
+        id: `sim-${productos.length + 1}`,
+        codigo,
+        nombre,
+        descripcion: null,
+        precioVenta: Number(cruda[COL.precioVenta] ?? 0).toFixed(2),
+        precioCosto: Number(cruda[COL.precioCosto] ?? 0).toFixed(2),
+        tipoIva: tipoIvaDePorcentaje(Number(cruda[COL.porcentajeIva] ?? 0)),
+        tipo: "SIMPLE",
+        requiereLote: false,
+        activo: (cruda[COL.activo] ?? "S").trim().toUpperCase() !== "N",
+        categoria,
+      });
+      resultados.push({ fila, resultado: "creada" });
+    });
+
+    if (!dryRun) {
+      this.productos = productos;
+      this.categorias.splice(0, this.categorias.length, ...categorias);
+    }
+    return resultados;
   }
 
   /** Valida los componentes de un combo igual que el cloud-api (400 si algo falla). */

@@ -14,6 +14,7 @@ import { CatalogoService } from './catalogo.service';
 import { CrearCategoriaDto } from './dto/crear-categoria.dto';
 import { CrearProductoDto } from './dto/crear-producto.dto';
 import { ActualizarProductoDto } from './dto/actualizar-producto.dto';
+import { ImportarProductosDto } from './dto/importar-productos.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 interface UsuarioJwt {
@@ -79,6 +80,14 @@ export class CatalogoController {
     @Body() dto: CrearProductoDto,
   ) {
     return this.catalogoService.crearProducto(req.user.sucursalId, dto);
+  }
+
+  @Post('productos/importar')
+  importarProductos(
+    @Request() req: { user: UsuarioJwt },
+    @Body() dto: ImportarProductosDto,
+  ) {
+    return this.catalogoService.importarProductos(req.user.sucursalId, dto.filas, dto.dryRun);
   }
 
   @Patch('productos/:id')

@@ -59,6 +59,26 @@ export interface DatosProducto {
   readonly categoriaId?: string | null;
 }
 
+/** Resultado de importar una fila de Excel (Fase 14.B): igual forma en los 5 módulos que importan. */
+export interface FilaImportacion {
+  readonly fila: number;
+  readonly resultado: "creada" | "omitida" | "error";
+  readonly mensaje?: string;
+  readonly advertencia?: string;
+}
+
+/** Nombres de columna que espera `POST /productos/importar` (mismos que `scripts/importar-catalogo.mjs`). */
+export const COLUMNAS_IMPORTAR_CATALOGO = {
+  codigo: "Código de barras",
+  descripcion: "Descripción",
+  rubro: "Rubro",
+  precioCosto: "Precio Costo",
+  porcentajeIva: "% IVA",
+  precioVenta: "Precio Venta",
+  stock: "Stock",
+  activo: "Activo",
+} as const;
+
 /** Puerto: lo que la pantalla de ABM necesita del servidor (testeable con un doble). */
 export interface ClienteCatalogoAdmin {
   listarProductos(incluirInactivos: boolean): Promise<ProductoAdmin[]>;
@@ -69,6 +89,8 @@ export interface ClienteCatalogoAdmin {
   ): Promise<ProductoAdmin>;
   desactivarProducto(id: string): Promise<void>;
   listarCategorias(): Promise<CategoriaAdmin[]>;
+  /** Fase 14.B: alta masiva desde Excel. `dryRun: true` no persiste nada, solo valida. */
+  importarProductos(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]>;
 }
 
 /** Error de catálogo con el status HTTP (409 = código duplicado, etc.). */
@@ -114,6 +136,10 @@ export class ClienteCatalogoAdminHttp implements ClienteCatalogoAdmin {
 
   listarCategorias(): Promise<CategoriaAdmin[]> {
     return this.pedir<CategoriaAdmin[]>("GET", "/categorias");
+  }
+
+  importarProductos(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+    return this.pedir<FilaImportacion[]>("POST", "/productos/importar", { filas, dryRun });
   }
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { CatalogoService } from './catalogo.service';
+import { COLUMNAS_IMPORTAR_PRODUCTOS as COL } from './importar-productos-lote';
 
 const mockCategoria = {
   findMany: vi.fn(),
@@ -252,5 +253,105 @@ describe('CatalogoService', () => {
         }),
       ).rejects.toThrow(BadRequestException);
     });
+  });
+});
+
+// ─── Importación masiva (Fase 14.B) ─────────────────────────────────────────
+// Describe aparte: usa un mock de $transaction con forma de `tx` (categoria/
+// producto/movimientoStock) distinta del mockPrisma plano de arriba, porque
+// importarProductos() opera siempre dentro de una transacción.
+
+function filaCruda(overrides: Record<string, string> = {}): Record<string, string> {
+  return {
+    [COL.codigo]: '111',
+    [COL.descripcion]: 'Gaseosa 500ml',
+    [COL.rubro]: 'Kiosco',
+    [COL.precioCosto]: '100',
+    [COL.porcentajeIva]: '21',
+    [COL.precioVenta]: '200',
+    [COL.stock]: '10',
+    [COL.activo]: 'S',
+    ...overrides,
+  };
+}
+
+describe('CatalogoService.importarProductos', () => {
+  let tx: {
+    categoria: { findMany: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn> };
+    producto: { findUnique: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn> };
+    movimientoStock: { create: ReturnType<typeof vi.fn> };
+  };
+  let prisma: { $transaction: ReturnType<typeof vi.fn> };
+  let service: CatalogoService;
+
+  beforeEach(() => {
+    tx = {
+      categoria: {
+        findMany: vi.fn().mockResolvedValue([]),
+        create: vi.fn().mockImplementation(({ data }) => Promise.resolve({ id: `cat-${data.nombre}`, nombre: data.nombre })),
+      },
+      producto: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockImplementation(({ data }) => Promise.resolve({ id: `prod-${data.codigo}`, ...data })),
+      },
+      movimientoStock: { create: vi.fn().mockResolvedValue({}) },
+    };
+    prisma = { $transaction: vi.fn((cb: (t: typeof tx) => unknown) => cb(tx)) };
+    service = new CatalogoService(prisma as never);
+  });
+
+  it('crea un producto nuevo, su categoría, y siembra el stock inicial', async () => {
+    const resultados = await service.importarProductos('s1', [filaCruda()], false);
+
+    expect(resultados).toEqual([{ fila: 2, resultado: 'creada' }]);
+    expect(tx.categoria.create).toHaveBeenCalledWith({ data: { nombre: 'Kiosco' } });
+    expect(tx.producto.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ codigo: '111', categoriaId: 'cat-Kiosco', sucursalId: 's1', activo: true }),
+    });
+    expect(tx.movimientoStock.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ tipo: 'ENTRADA', cantidad: '10', productoId: 'prod-111' }),
+    });
+  });
+
+  it('reusa una categoría que ya existe en vez de duplicarla', async () => {
+    tx.categoria.findMany.mockResolvedValue([{ id: 'cat-existente', nombre: 'Kiosco' }]);
+    await service.importarProductos('s1', [filaCruda()], false);
+    expect(tx.categoria.create).not.toHaveBeenCalled();
+    expect(tx.producto.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ categoriaId: 'cat-existente' }),
+    });
+  });
+
+  it('omite (no pisa) un producto cuyo código ya existe', async () => {
+    tx.producto.findUnique.mockResolvedValue({ id: 'prod-viejo' });
+    const resultados = await service.importarProductos('s1', [filaCruda()], false);
+    expect(resultados).toEqual([{ fila: 2, resultado: 'omitida', mensaje: 'Ya existe un producto con código 111' }]);
+    expect(tx.producto.create).not.toHaveBeenCalled();
+  });
+
+  it('una fila con error no aborta el resto del lote', async () => {
+    const filas = [filaCruda({ [COL.porcentajeIva]: '15' }), filaCruda({ [COL.codigo]: '222' })];
+    const resultados = await service.importarProductos('s1', filas, false);
+    expect(resultados[0]).toEqual({ fila: 2, resultado: 'error', mensaje: '% IVA no reconocido: 15' });
+    expect(resultados[1]).toEqual({ fila: 3, resultado: 'creada' });
+    expect(tx.producto.create).toHaveBeenCalledOnce();
+  });
+
+  it('conserva las advertencias del mapeo (ej. precio en $0) en el resultado de la fila', async () => {
+    const resultados = await service.importarProductos('s1', [filaCruda({ [COL.precioVenta]: '0' })], false);
+    expect(resultados[0]).toEqual({
+      fila: 2,
+      resultado: 'creada',
+      advertencia: 'Precio de venta en $0 — revisar antes de vender.',
+    });
+  });
+
+  it('dry-run devuelve el reporte igual, atrapando el sentinel RevertirDryRun', async () => {
+    // Este mock no simula el rollback real de Postgres (eso solo lo prueba
+    // una transacción real) -- lo que sí valida es que el service atrapa su
+    // propio sentinel y arma el mismo reporte que la corrida real, sin que
+    // el error se escape como una excepción sin manejar.
+    const resultados = await service.importarProductos('s1', [filaCruda()], true);
+    expect(resultados).toEqual([{ fila: 2, resultado: 'creada' }]);
   });
 });
