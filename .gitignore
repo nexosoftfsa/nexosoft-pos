@@ -11,6 +11,10 @@ out/
 # Paquete standalone del servidor (Fase 13) y runtimes portables embebidos
 /dist-servidor/
 /NexoSoftBuild/
+/instalador-servidor/.cache/
+/instalador-servidor/runtime/
+/instalador-servidor/dist/
+/instalador-servidor/Output/
 
 # Maqueta: archivo portable generado por prototipo/build-standalone.js
 prototipo/nexosoft-maqueta.html

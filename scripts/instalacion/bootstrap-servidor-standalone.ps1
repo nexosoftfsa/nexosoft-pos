@@ -76,6 +76,11 @@ New-Item -ItemType Directory -Force -Path $RaizDatos | Out-Null
 $dataDir = Join-Path $RaizDatos "postgres-data"
 $logDir = Join-Path $RaizDatos "logs"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+# Registro permanente de esta corrida (instalacion o reinstalacion), para
+# poder ver que paso si algo falla en la PC del cliente sin tener que
+# reproducirlo. Se pisa en cada corrida (Force): el historico no importa,
+# solo la ultima.
+Start-Transcript -Path (Join-Path $logDir "bootstrap.log") -Force | Out-Null
 
 Titulo "PostgreSQL portable dedicado"
 $primeraVez = -not (Test-Path (Join-Path $dataDir "PG_VERSION"))
@@ -226,3 +231,7 @@ Write-Host "Servidor arriba y anda solo con Windows (PostgreSQL y cloud-api son 
 Write-Host "Panel: http://localhost:$Puerto/  (o http://${ip}:$Puerto/ desde otra PC/celular)"
 Write-Host "Usuario ADMIN: $AdminUsuario"
 Write-Host "IP de esta PC para configurar Deposito/Oficina: $ip"
+# El instalador (Fase 13.C) lee este archivo para mostrar la IP en la
+# pantalla final del wizard.
+[System.IO.File]::WriteAllText((Join-Path $RaizDatos "ip-servidor.txt"), "$ip`n$Puerto")
+Stop-Transcript | Out-Null

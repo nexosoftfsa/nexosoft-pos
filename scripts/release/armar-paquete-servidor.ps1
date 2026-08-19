@@ -9,9 +9,21 @@
 # apps/cloud-api/package.json para que copie solo dist/ + prisma/ y nunca
 # .env, src/, test/ ni logs/.
 #
-# El cliente de Prisma generado (`prisma generate`) no se re-genera en el
-# destino -- se copia el que ya existe en el repo, porque el schema es el
-# mismo y evita depender de tener el CLI de Prisma en el paquete final.
+# --config.node-linker=hoisted: por defecto pnpm arma node_modules con una
+# "virtual store" (node_modules/.pnpm/paquete@version_peer@version.../...)
+# para poder tener varias versiones de un mismo paquete a la vez -- pero
+# genera rutas larguisimas (paquete+peers en un solo nombre de carpeta) que
+# superan el limite de Windows (260 caracteres) apenas se anida un poco, y
+# eso rompe la compilacion del instalador (Fase 13.C, Inno Setup no es
+# "long path aware" aunque LongPathsEnabled este prendido). Con node-linker
+# hoisted, node_modules queda plano (como npm/yarn clasico), muchisimo mas
+# corto.
+#
+# El cliente de Prisma (`prisma generate`) NO se genera aca: el paquete
+# viaja sin generar y `bootstrap-servidor-standalone.ps1` lo genera de
+# verdad en la PC del cliente, ya con el DATABASE_URL real -- el CLI de
+# prisma viaja en node_modules porque es dependency (no devDependency) de
+# cloud-api, ver apps/cloud-api/package.json.
 #
 # Uso: parado en la raiz del repo:
 #   .\scripts\release\armar-paquete-servidor.ps1 [-Destino "C:\ruta\dist-servidor"]
@@ -55,18 +67,8 @@ Ok "panel compilado"
 
 Titulo "Armando $Destino (sin codigo fuente, sin devDependencies)"
 if (Test-Path $Destino) { Remove-Item -Recurse -Force $Destino }
-Correr "pnpm deploy" { corepack pnpm --filter @nexosoft/cloud-api deploy --prod "$Destino" }
+Correr "pnpm deploy" { corepack pnpm --filter @nexosoft/cloud-api deploy --prod --config.node-linker=hoisted "$Destino" }
 Ok "dependencias de produccion instaladas"
-
-Titulo "Copiando cliente Prisma ya generado"
-$origenPrisma = Get-ChildItem "$raiz\node_modules\.pnpm" -Directory -Filter "@prisma+client@*" | Select-Object -First 1
-$destinoPrisma = Get-ChildItem "$Destino\node_modules\.pnpm" -Directory -Filter "@prisma+client@*" | Select-Object -First 1
-if (-not $origenPrisma -or -not $destinoPrisma) {
-    Write-Error "No encontre la carpeta de @prisma/client para copiar el cliente generado. Corre 'pnpm --filter @nexosoft/cloud-api prisma:generate' primero."
-    exit 1
-}
-Copy-Item "$($origenPrisma.FullName)\node_modules\.prisma" "$($destinoPrisma.FullName)\node_modules\.prisma" -Recurse -Force
-Ok "cliente Prisma copiado"
 
 Titulo "Copiando panel compilado"
 New-Item -ItemType Directory -Force "$Destino\panel" | Out-Null
@@ -82,5 +84,5 @@ Titulo "Listo"
 $tamanioMB = [Math]::Round((Get-ChildItem $Destino -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB, 1)
 Write-Host "Paquete armado en: $Destino ($tamanioMB MB)"
 Write-Host "Contiene: dist/, prisma/ (schema+migraciones), node_modules/ (produccion), panel/, scripts/crear-sucursal.mjs"
-Write-Host "NO contiene: codigo fuente (src/, test/), .env, devDependencies."
-Write-Host "`nPara probarlo standalone: copiar un .env a `"$Destino\.env`" y correr 'node dist\main.js' parado ahi."
+Write-Host "NO contiene: codigo fuente (src/, test/), .env, devDependencies, cliente Prisma generado."
+Write-Host "`nPara probarlo standalone: copiar un .env, correr 'node node_modules\prisma\build\index.js generate --schema=prisma\schema.prisma', y recien ahi 'node dist\main.js' parado en $Destino."
