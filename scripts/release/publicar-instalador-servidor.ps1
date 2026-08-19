@@ -90,9 +90,16 @@ Compress-Archive -Path "dist-servidor\*" -DestinationPath $zipActualizacion -Com
 Ok "Paquete de actualizacion: $([Math]::Round((Get-Item $zipActualizacion).Length/1MB,1)) MB"
 
 Titulo "Publicando servidor-v$Version"
+# --latest=false es NO NEGOCIABLE: este release comparte repo con las
+# publicaciones del POS (mismo $RepoReleases), y el updater del POS
+# (@tauri-apps/plugin-updater) apunta a ".../releases/latest/download/latest.json".
+# Sin este flag, "gh release create" marca este release de SERVIDOR como
+# el "Latest" del repo (por fecha), y el POS deja de poder chequear
+# actualizaciones -- paso exactamente esto una vez, rompiendo el update
+# check en la PC de un cliente real.
 Correr "gh release create" {
     & gh release create "servidor-v$Version" $exeInstalador.FullName $zipActualizacion `
-        --repo $RepoReleases --title "Servidor v$Version" --notes "$Notas"
+        --repo $RepoReleases --title "Servidor v$Version" --notes "$Notas" --latest=false
 }
 
 Titulo "Listo"
