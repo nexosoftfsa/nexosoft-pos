@@ -15,7 +15,11 @@
 ;   & "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" instalador-servidor\NexoSoftServidor.iss
 
 #define MyAppName "NexoSoft Servidor"
-#define MyAppVersion "0.1.0"
+; Se puede pisar en build time con /DMyAppVersion=X.Y.Z (ver
+; scripts/release/publicar-instalador-servidor.ps1).
+#ifndef MyAppVersion
+  #define MyAppVersion "0.1.0"
+#endif
 #define MyAppPublisher "NexoSoft"
 
 [Setup]
@@ -33,7 +37,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=Output
-OutputBaseFilename=NexoSoft-Servidor-Setup
+OutputBaseFilename=NexoSoft-Servidor-{#MyAppVersion}-Setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
