@@ -16,6 +16,8 @@ export interface TokensAuth {
 /** Puerto: lo que el `SesionManager` necesita del servidor (testeable con un doble). */
 export interface ClienteAuth {
   login(credenciales: Credenciales): Promise<TokensAuth>;
+  /** Login alternativo por credencial física (escaneo de barcode, Fase 15.A). */
+  loginConCredencial(payload: string): Promise<TokensAuth>;
   refresh(refreshToken: string): Promise<TokensAuth>;
 }
 
@@ -35,6 +37,10 @@ export class ClienteAuthHttp implements ClienteAuth {
 
   async login(credenciales: Credenciales): Promise<TokensAuth> {
     return this.post("/auth/login", credenciales);
+  }
+
+  async loginConCredencial(payload: string): Promise<TokensAuth> {
+    return this.post("/auth/login-credencial", { credencial: payload });
   }
 
   async refresh(refreshToken: string): Promise<TokensAuth> {

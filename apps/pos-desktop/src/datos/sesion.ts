@@ -55,6 +55,12 @@ export function decodificarUsuarioId(token: string): string | undefined {
   return typeof payload?.["sub"] === "string" ? (payload["sub"] as string) : undefined;
 }
 
+/** Devuelve el email del JWT, o `undefined` si no se puede leer. */
+export function decodificarEmail(token: string): string | undefined {
+  const payload = decodificarPayload(token);
+  return typeof payload?.["email"] === "string" ? (payload["email"] as string) : undefined;
+}
+
 export class SesionManager {
   private constructor(
     private readonly ejecutor: EjecutorSql,
@@ -113,6 +119,22 @@ export class SesionManager {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       email: credenciales.email,
+      sucursalId: decodificarSucursal(tokens.accessToken),
+    };
+    await guardarSesion(this.ejecutor, estado);
+    this.estado = estado;
+  }
+
+  /**
+   * Login alternativo por credencial física (escaneo de código de barras,
+   * Fase 15.A). El email no viene del formulario: se decodifica del JWT.
+   */
+  async loginConCredencial(payload: string): Promise<void> {
+    const tokens = await this.auth.loginConCredencial(payload);
+    const estado: SesionGuardada = {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      email: decodificarEmail(tokens.accessToken) ?? "",
       sucursalId: decodificarSucursal(tokens.accessToken),
     };
     await guardarSesion(this.ejecutor, estado);

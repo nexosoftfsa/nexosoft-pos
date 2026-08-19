@@ -4,8 +4,9 @@
  * quitarse el rol de ADMIN a sí mismo (el backend lo bloquea igual; acá se
  * deshabilita para no mostrar un error confuso).
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 
+import { leerComoDataUrl } from "../archivos";
 import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
 import {
@@ -15,12 +16,17 @@ import {
   type RolUsuario,
   type UsuarioRemoto,
 } from "../sync/cliente-usuarios-http";
+import type { ClienteCredenciales } from "../sync/cliente-credenciales-http";
+import { CredencialEmpleado } from "./CredencialEmpleado";
 
 const ROLES: ReadonlyArray<{ valor: RolUsuario; etiqueta: string }> = [
   { valor: "ADMIN", etiqueta: "Administrador" },
   { valor: "SUPERVISOR", etiqueta: "Supervisor" },
   { valor: "CAJERO", etiqueta: "Cajero" },
 ];
+
+/** Tamaño máximo de la foto de perfil (queda embebida en la credencial impresa). */
+const FOTO_MAX_BYTES = 250 * 1024;
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorUsuarios) return e.message;
@@ -39,11 +45,21 @@ function fecha(iso: string): string {
     : d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
-export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios; propioId?: string }) {
+export function Usuarios({
+  cliente: api,
+  clienteCredenciales,
+  propioId,
+}: {
+  cliente: ClienteUsuarios;
+  /** Credencial de acceso por código de barras (Fase 15.A). Sin esto, la acción "Credencial" no se muestra. */
+  clienteCredenciales?: ClienteCredenciales;
+  propioId?: string;
+}) {
   const [usuarios, setUsuarios] = useState<UsuarioRemoto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creando, setCreando] = useState(false);
+  const [credencialUsuario, setCredencialUsuario] = useState<UsuarioRemoto | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -117,6 +133,7 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
           <table>
             <thead>
               <tr>
+                <th>Foto</th>
                 <th>Nombre</th>
                 <th>Usuario</th>
                 <th>Rol</th>
@@ -128,14 +145,14 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
             <tbody>
               {cargando && (
                 <tr>
-                  <td colSpan={6} className="td-vacio">
+                  <td colSpan={7} className="td-vacio">
                     Cargando usuarios…
                   </td>
                 </tr>
               )}
               {!cargando && usuarios.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="td-vacio">
+                  <td colSpan={7} className="td-vacio">
                     No hay usuarios para mostrar.
                   </td>
                 </tr>
@@ -145,6 +162,9 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
                   const esUnoMismo = u.id === propioId;
                   return (
                     <tr key={u.id} className={u.activo ? "" : "fila-inactiva"}>
+                      <td>
+                        <FotoCelda usuarioId={u.id} cliente={api} onError={(m) => setError(m)} />
+                      </td>
                       <td className="strong">
                         {u.nombreDisplay}
                         {esUnoMismo && <span className="muted"> (vos)</span>}
@@ -174,6 +194,11 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
                       </td>
                       <td>{fecha(u.creadoEn)}</td>
                       <td className="acciones">
+                        {clienteCredenciales !== undefined && (
+                          <button type="button" className="linkbtn" onClick={() => setCredencialUsuario(u)}>
+                            Credencial
+                          </button>
+                        )}
                         <button
                           type="button"
                           className={`linkbtn${u.activo ? " linkbtn--danger" : ""}`}
@@ -202,7 +227,87 @@ export function Usuarios({ cliente: api, propioId }: { cliente: ClienteUsuarios;
           }}
         />
       )}
+
+      {credencialUsuario !== null && clienteCredenciales !== undefined && (
+        <CredencialEmpleado
+          usuario={credencialUsuario}
+          clienteUsuarios={api}
+          clienteCredenciales={clienteCredenciales}
+          onCerrar={() => setCredencialUsuario(null)}
+        />
+      )}
     </div>
+  );
+}
+
+/** Miniatura de la foto de perfil; tocarla abre el selector de archivo para cambiarla. */
+function FotoCelda({
+  usuarioId,
+  cliente,
+  onError,
+}: {
+  usuarioId: string;
+  cliente: ClienteUsuarios;
+  onError: (mensaje: string) => void;
+}) {
+  const [fotoDataUrl, setFotoDataUrl] = useState<string | null>(null);
+  const [cargando, setCargando] = useState(true);
+  const [subiendo, setSubiendo] = useState(false);
+
+  useEffect(() => {
+    let vivo = true;
+    setCargando(true);
+    cliente
+      .obtenerFoto(usuarioId)
+      .then((r) => {
+        if (vivo) setFotoDataUrl(r.fotoBase64);
+      })
+      .catch((e: unknown) => {
+        if (vivo) onError(mensaje(e));
+      })
+      .finally(() => {
+        if (vivo) setCargando(false);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [usuarioId, cliente, onError]);
+
+  async function elegirFoto(e: ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    e.target.value = "";
+    if (!archivo) return;
+    if (archivo.size > FOTO_MAX_BYTES) {
+      onError(`La foto no puede pesar más de ${Math.round(FOTO_MAX_BYTES / 1024)} KB.`);
+      return;
+    }
+    setSubiendo(true);
+    try {
+      const dataUrl = await leerComoDataUrl(archivo);
+      const r = await cliente.actualizarFoto(usuarioId, dataUrl);
+      setFotoDataUrl(r.fotoBase64);
+    } catch (err) {
+      onError(mensaje(err));
+    } finally {
+      setSubiendo(false);
+    }
+  }
+
+  return (
+    <label className="foto-celda" title="Cambiar foto">
+      {!cargando && fotoDataUrl !== null ? (
+        <img src={fotoDataUrl} alt="" className="foto-celda__img" />
+      ) : (
+        <div className="foto-celda__placeholder" />
+      )}
+      <input
+        type="file"
+        accept="image/*"
+        className="foto-celda__input"
+        onChange={(e) => void elegirFoto(e)}
+        disabled={subiendo}
+      />
+    </label>
   );
 }
 

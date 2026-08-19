@@ -48,6 +48,7 @@ model Sucursal {
   presupuestos Presupuesto[]
   remitos Remito[]
   lotes Lote[]
+  registrosAuditoria RegistroAuditoria[]
 
   @@map("sucursales")
 }
@@ -85,6 +86,9 @@ model Usuario {
   rol          RolUsuario @default(CAJERO)
   activo       Boolean    @default(true)
   creadoEn     DateTime   @default(now())
+  /// Foto de perfil como data URL (mismo patrón que ConfiguracionSistema.logoBase64).
+  /// Se usa en la credencial física y en el ABM de usuarios; null = sin foto.
+  fotoBase64   String?
 
   sucursalId   String
   sucursal     Sucursal   @relation(fields: [sucursalId], references: [id])
@@ -92,6 +96,8 @@ model Usuario {
   refreshTokens RefreshToken[]
   ventas        Venta[]
   turnosCaja    TurnoCaja[]
+  credencialAcceso  CredencialAcceso?
+  registrosAuditoria RegistroAuditoria[]
 
   @@map("usuarios")
 }
@@ -105,6 +111,53 @@ model RefreshToken {
   creadoEn  DateTime @default(now())
 
   @@map("refresh_tokens")
+}
+
+/// Credencial de acceso por código de barras (Fase 15.A, ver ADR-0051). Codifica
+/// un token dedicado — nunca la contraseña real — revocable/regenerable de forma
+/// independiente. Solo se persiste el hash (mismo criterio que Usuario.passwordHash).
+model CredencialAcceso {
+  id          String    @id @default(cuid())
+  usuarioId   String    @unique
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  /// argon2.hash(tokenPlano). El token en claro nunca se persiste.
+  tokenHash   String
+  /// Se incrementa en cada regeneración; permite invalidar la credencial anterior.
+  version     Int       @default(1)
+  activa      Boolean   @default(true)
+  creadaEn    DateTime  @default(now())
+  revocadaEn  DateTime?
+  ultimoUsoEn DateTime?
+
+  @@map("credenciales_acceso")
+}
+
+/// Auditoría de operaciones sensibles (CLAUDE.md §5). Primera implementación,
+/// acotada a login/credenciales en Fase 15; reusable para caja, precios y
+/// anulaciones en fases futuras.
+model RegistroAuditoria {
+  id         String   @id @default(cuid())
+  /// LOGIN_CREDENCIAL | LOGIN_CREDENCIAL_FALLIDO | CREDENCIAL_REGENERADA |
+  /// CREDENCIAL_REVOCADA | LOGIN_BLOQUEADO (Fase 15.B)
+  accion     String
+  entidad    String
+  entidadId  String?
+  exito      Boolean  @default(true)
+  /// Texto libre; nunca datos sensibles (token, password).
+  detalle    String?
+  ip         String?
+
+  usuarioId  String?
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  sucursalId String
+  sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
+
+  creadoEn   DateTime @default(now())
+
+  @@index([entidad, entidadId])
+  @@index([sucursalId, creadoEn])
+  @@map("registro_auditoria")
 }
 
 // ─── Catálogo ─────────────────────────────────────────────────────────────────

@@ -1,20 +1,38 @@
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useState, type CSSProperties, type FormEvent } from "react";
+
+import type { LectorDeBarras } from "@nexosoft/hardware";
 
 import type { Credenciales } from "../sync/cliente-auth-http";
+import { useLectorTeclado } from "./usar-lector-teclado";
+
+/** Prefijo del payload de una credencial física (ver `credencial-payload.ts` en cloud-api). */
+const PREFIJO_CREDENCIAL = "NXSCRED:";
+
+/** Lector "nulo" para cuando no se pasa uno: `useLectorTeclado` no lo usa mientras `activo` sea false. */
+const LECTOR_NULO: LectorDeBarras = {
+  onEscaneo: () => () => {},
+  desconectar: async () => {},
+};
 
 /** Pantalla de inicio de sesión (solo en la app Tauri). */
 export function PantallaLogin({
   onLogin,
+  onLoginCredencial,
   onConfig,
   onModoDemo,
   logoDataUrl,
+  lector,
 }: {
   onLogin: (c: Credenciales) => Promise<void>;
+  /** Login por escaneo de la credencial física (Fase 15.A). Sin esto, el escaneo se ignora. */
+  onLoginCredencial?: (payload: string) => Promise<void>;
   onConfig?: () => void;
   /** Arranca el POS en modo demo autocontenido (sin backend). */
   onModoDemo?: () => void;
   /** Logo del comercio (ver `ConfiguracionComercio.logoDataUrl`). Sin esto, se ve la marca de NexoSoft. */
   logoDataUrl?: string;
+  /** Lector de código de barras, para loguearse escaneando la credencial física. */
+  lector?: LectorDeBarras;
 }) {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
@@ -34,6 +52,22 @@ export function PantallaLogin({
     }
   }
 
+  const onCodigoEscaneado = useCallback(
+    (codigo: string) => {
+      if (onLoginCredencial === undefined || !codigo.startsWith(PREFIJO_CREDENCIAL)) return;
+      setError(null);
+      setCargando(true);
+      onLoginCredencial(codigo)
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : String(err));
+        })
+        .finally(() => setCargando(false));
+    },
+    [onLoginCredencial],
+  );
+
+  useLectorTeclado(lector ?? LECTOR_NULO, onCodigoEscaneado, lector !== undefined);
+
   const deshabilitado = cargando || usuario.trim() === "" || password === "";
 
   return (
@@ -46,14 +80,17 @@ export function PantallaLogin({
             Nexo<span style={{ color: "#2563eb" }}>Soft</span> POS
           </div>
         )}
-        <p style={subtitulo}>Iniciá sesión para abrir la caja</p>
+        <p style={subtitulo}>
+          {lector !== undefined
+            ? "Escaneá tu credencial o ingresá usuario y contraseña"
+            : "Iniciá sesión para abrir la caja"}
+        </p>
 
         <label style={etiqueta}>
           Usuario
           <input
             style={campo}
             type="text"
-            autoFocus
             autoComplete="username"
             value={usuario}
             onChange={(e) => setUsuario(e.target.value)}

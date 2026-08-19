@@ -7,10 +7,12 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegistroGuard } from './registro.guard';
+import { CredencialesModule } from '../credenciales/credenciales.module';
 
 @Module({
   imports: [
     PassportModule,
+    CredencialesModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({

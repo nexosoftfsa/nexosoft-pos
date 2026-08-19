@@ -47,13 +47,17 @@ describe("decodificarExp", () => {
 
 describe("SesionManager", () => {
   let ejecutor: EjecutorSql;
-  let auth: { login: ReturnType<typeof vi.fn>; refresh: ReturnType<typeof vi.fn> };
+  let auth: {
+    login: ReturnType<typeof vi.fn>;
+    loginConCredencial: ReturnType<typeof vi.fn>;
+    refresh: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     const db = new DatabaseSync(":memory:");
     ejecutor = new EjecutorNodeSqlite(db);
     await crearTablaSesion(ejecutor);
-    auth = { login: vi.fn(), refresh: vi.fn() };
+    auth = { login: vi.fn(), loginConCredencial: vi.fn(), refresh: vi.fn() };
   });
 
   it("login persiste tokens y deriva la sucursal del JWT", async () => {
@@ -66,6 +70,22 @@ describe("SesionManager", () => {
     expect(sesion.obtenerToken()).not.toBeNull();
     const guardada = await leerSesion(ejecutor);
     expect(guardada?.email).toBe("a@b.com");
+    expect(guardada?.sucursalId).toBe("suc-9");
+  });
+
+  it("loginConCredencial persiste tokens y deriva email/sucursal del JWT", async () => {
+    auth.loginConCredencial.mockResolvedValue({
+      accessToken: tokenFalso({ exp: EN_1H(), sucursalId: "suc-9", email: "cajero1@nexo.com" }),
+      refreshToken: "refresh-x",
+    });
+    const sesion = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
+
+    await sesion.loginConCredencial("NXSCRED:u1:token");
+
+    expect(auth.loginConCredencial).toHaveBeenCalledWith("NXSCRED:u1:token");
+    expect(sesion.haySesion()).toBe(true);
+    const guardada = await leerSesion(ejecutor);
+    expect(guardada?.email).toBe("cajero1@nexo.com");
     expect(guardada?.sucursalId).toBe("suc-9");
   });
 

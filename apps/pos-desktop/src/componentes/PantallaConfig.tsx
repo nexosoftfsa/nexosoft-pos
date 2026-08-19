@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 
 import { CondicionIva } from "@nexosoft/domain";
+import { leerComoDataUrl } from "../archivos";
 import { Actualizaciones } from "./Actualizaciones";
 
 export interface ValoresConfig {
@@ -19,15 +20,6 @@ export interface ValoresConfig {
 
 /** Tamaño máximo del archivo de logo (queda embebido en SQLite y viaja en cada impresión). */
 const LOGO_MAX_BYTES = 300 * 1024;
-
-function leerComoDataUrl(archivo: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const lector = new FileReader();
-    lector.onload = () => resolve(String(lector.result));
-    lector.onerror = () => reject(new Error("No se pudo leer el archivo."));
-    lector.readAsDataURL(archivo);
-  });
-}
 
 const EMISORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
   { valor: CondicionIva.ResponsableInscripto, etiqueta: "Responsable Inscripto" },

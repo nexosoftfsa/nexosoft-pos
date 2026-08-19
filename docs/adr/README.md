@@ -67,3 +67,4 @@ Consecuencias y Alternativas consideradas.
 | 0048 | [Snapshot del costo en el ítem de venta, para ganancia real en reportes](0048-snapshot-de-costo-en-item-de-venta.md) | Aceptada |
 | 0049 | [Etiquetas de góndola por escaneo, export a Excel, sin código de barras](0049-etiquetas-por-escaneo-y-export-excel.md) | Aceptada |
 | 0050 | [Medios de pago (tarjetas por banco) y recargo por tarjeta](0050-medios-de-pago-y-recargo-por-tarjeta.md) | Aceptada |
+| 0051 | [Credencial de empleado con código de barras (token dedicado, no la contraseña)](0051-credencial-de-empleado-con-codigo-de-barras.md) | Aceptada |

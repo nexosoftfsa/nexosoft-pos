@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { addDays } from 'date-fns';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
+import { CredencialesService } from '../credenciales/credenciales.service';
 import type { RegistroDto } from './dto/registro.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { JwtPayload } from './jwt.strategy';
@@ -18,6 +19,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly credenciales: CredencialesService,
   ) {}
 
   async registrar(dto: RegistroDto) {
@@ -50,6 +52,15 @@ export class AuthService {
     const passwordOk = await argon2.verify(usuario.passwordHash, dto.password);
     if (!passwordOk) throw new UnauthorizedException('Credenciales inválidas');
 
+    return this.generarTokens(usuario.id, usuario.email, usuario.rol, usuario.sucursalId);
+  }
+
+  /**
+   * Login alternativo por credencial física (escaneo de código de barras,
+   * Fase 15.A / ADR-0051). Devuelve el mismo par de tokens que `login()`.
+   */
+  async loginConCredencial(payloadCrudo: string) {
+    const usuario = await this.credenciales.validar(payloadCrudo);
     return this.generarTokens(usuario.id, usuario.email, usuario.rol, usuario.sucursalId);
   }
 

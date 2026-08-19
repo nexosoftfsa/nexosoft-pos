@@ -179,6 +179,15 @@
   filter: brightness(1.06);
   color: #fff;
 }
+.pill-btn--danger {
+  color: var(--peligro, #e5484d);
+  border-color: var(--peligro, #e5484d);
+}
+.pill-btn--danger:hover {
+  background: #fdecec;
+  border-color: var(--peligro, #e5484d);
+  color: var(--peligro, #e5484d);
+}
 
 /* ---------- Tabla ---------- */
 .gestion .tablewrap {
@@ -310,6 +319,32 @@
   height: 22px;
   line-height: 1;
   padding: 0;
+}
+
+/* ---------- Foto de perfil (Usuarios, Fase 15.A) ---------- */
+.foto-celda {
+  display: block;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+.foto-celda__img,
+.foto-celda__placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+.foto-celda__placeholder {
+  background: var(--surface-2);
+}
+.foto-celda__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
 }
 
 /* ---------- Badges (complementa las de shell.css) ---------- */

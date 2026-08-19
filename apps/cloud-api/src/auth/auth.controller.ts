@@ -2,6 +2,7 @@ import { Body, Controller, Post, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegistroDto } from './dto/registro.dto';
 import { LoginDto } from './dto/login.dto';
+import { LoginCredencialDto } from './dto/login-credencial.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegistroGuard } from './registro.guard';
@@ -19,6 +20,13 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  // Login alternativo por credencial física (escaneo de barcode). Público,
+  // igual que /auth/login — es un mecanismo de login, no un endpoint protegido.
+  @Post('login-credencial')
+  loginConCredencial(@Body() dto: LoginCredencialDto) {
+    return this.authService.loginConCredencial(dto.credencial);
   }
 
   @Post('refresh')

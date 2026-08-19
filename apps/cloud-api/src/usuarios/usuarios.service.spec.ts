@@ -73,4 +73,60 @@ describe('UsuariosService', () => {
       );
     });
   });
+
+  describe('obtenerFoto', () => {
+    it('lanza NotFoundException si el usuario no es de esa sucursal', async () => {
+      mockUsuario.findFirst.mockResolvedValue(null);
+      await expect(service.obtenerFoto('u1', 's1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('devuelve la foto del usuario', async () => {
+      mockUsuario.findFirst.mockResolvedValue({ fotoBase64: 'data:image/png;base64,abc' });
+      const r = await service.obtenerFoto('u1', 's1');
+      expect(r).toEqual({ fotoBase64: 'data:image/png;base64,abc' });
+    });
+
+    it('devuelve null si el usuario no tiene foto', async () => {
+      mockUsuario.findFirst.mockResolvedValue({ fotoBase64: null });
+      const r = await service.obtenerFoto('u1', 's1');
+      expect(r).toEqual({ fotoBase64: null });
+    });
+  });
+
+  describe('actualizarFoto', () => {
+    it('lanza NotFoundException si el usuario no es de esa sucursal', async () => {
+      mockUsuario.findFirst.mockResolvedValue(null);
+      await expect(service.actualizarFoto('u1', 's1', 'data:...')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockUsuario.update).not.toHaveBeenCalled();
+    });
+
+    it('guarda la foto como data URL', async () => {
+      mockUsuario.findFirst.mockResolvedValue({ id: 'u1' });
+      mockUsuario.update.mockResolvedValue({ fotoBase64: 'data:image/png;base64,abc' });
+
+      const r = await service.actualizarFoto('u1', 's1', 'data:image/png;base64,abc');
+
+      expect(r).toEqual({ fotoBase64: 'data:image/png;base64,abc' });
+      expect(mockUsuario.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'u1' },
+          data: { fotoBase64: 'data:image/png;base64,abc' },
+        }),
+      );
+    });
+
+    it('un string vacío borra la foto (null)', async () => {
+      mockUsuario.findFirst.mockResolvedValue({ id: 'u1' });
+      mockUsuario.update.mockResolvedValue({ fotoBase64: null });
+
+      const r = await service.actualizarFoto('u1', 's1', '');
+
+      expect(r).toEqual({ fotoBase64: null });
+      expect(mockUsuario.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { fotoBase64: null } }),
+      );
+    });
+  });
 });

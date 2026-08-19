@@ -51,6 +51,37 @@ describe("ClienteUsuariosHttp", () => {
     vi.unstubAllGlobals();
   });
 
+  it("obtenerFoto() pega GET /usuarios/:id/foto", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ fotoBase64: null }) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
+    const r = await cliente.obtenerFoto("u2");
+
+    expect(r).toEqual({ fotoBase64: null });
+    const [url, opciones] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("http://server/usuarios/u2/foto");
+    expect((opciones as { method: string }).method).toBe("GET");
+    vi.unstubAllGlobals();
+  });
+
+  it("actualizarFoto() pega PUT /usuarios/:id/foto con la data URL", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ fotoBase64: "data:image/png;base64,abc" }) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
+    await cliente.actualizarFoto("u2", "data:image/png;base64,abc");
+
+    const [url, opciones] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("http://server/usuarios/u2/foto");
+    expect((opciones as { method: string }).method).toBe("PUT");
+    const body = JSON.parse((opciones as { body: string }).body);
+    expect(body).toEqual({ fotoBase64: "data:image/png;base64,abc" });
+    vi.unstubAllGlobals();
+  });
+
   it("lanza ErrorUsuarios con el mensaje del servidor si falla", async () => {
     vi.stubGlobal(
       "fetch",

@@ -30,6 +30,10 @@ const mockConfig = {
   getOrThrow: vi.fn().mockReturnValue('secret'),
 };
 
+const mockCredenciales = {
+  validar: vi.fn(),
+};
+
 describe('AuthService', () => {
   let authService: AuthService;
 
@@ -40,6 +44,7 @@ describe('AuthService', () => {
       mockPrisma as never,
       mockJwt as never,
       mockConfig as never,
+      mockCredenciales as never,
     );
   });
 
@@ -121,6 +126,32 @@ describe('AuthService', () => {
       await expect(
         authService.login({ email: 'test@nexo.com', password: 'incorrecta' }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('loginConCredencial', () => {
+    it('devuelve tokens cuando la credencial es válida', async () => {
+      mockCredenciales.validar.mockResolvedValue({
+        id: 'u1',
+        email: 'test@nexo.com',
+        rol: 'CAJERO',
+        sucursalId: 's1',
+      });
+      mockPrismaRefreshToken.create.mockResolvedValue({});
+
+      const result = await authService.loginConCredencial('NXSCRED:u1:token');
+
+      expect(mockCredenciales.validar).toHaveBeenCalledWith('NXSCRED:u1:token');
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+    });
+
+    it('propaga el rechazo de CredencialesService.validar', async () => {
+      mockCredenciales.validar.mockRejectedValue(new UnauthorizedException('Credencial inválida'));
+
+      await expect(authService.loginConCredencial('basura')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 

@@ -29,11 +29,17 @@ export interface CambiosUsuario {
   readonly activo?: boolean;
 }
 
+export interface EstadoFoto {
+  readonly fotoBase64: string | null;
+}
+
 /** Puerto: lo que la pantalla de Usuarios necesita (testeable con un doble). */
 export interface ClienteUsuarios {
   listar(): Promise<UsuarioRemoto[]>;
   crear(datos: NuevoUsuario): Promise<UsuarioRemoto>;
   actualizar(id: string, cambios: CambiosUsuario): Promise<UsuarioRemoto>;
+  obtenerFoto(id: string): Promise<EstadoFoto>;
+  actualizarFoto(id: string, fotoBase64: string): Promise<EstadoFoto>;
 }
 
 export class ErrorUsuarios extends Error {
@@ -64,6 +70,14 @@ export class ClienteUsuariosHttp implements ClienteUsuarios {
 
   actualizar(id: string, cambios: CambiosUsuario): Promise<UsuarioRemoto> {
     return this.pedir("PATCH", `/usuarios/${id}`, cambios);
+  }
+
+  obtenerFoto(id: string): Promise<EstadoFoto> {
+    return this.pedir("GET", `/usuarios/${id}/foto`);
+  }
+
+  actualizarFoto(id: string, fotoBase64: string): Promise<EstadoFoto> {
+    return this.pedir("PUT", `/usuarios/${id}/foto`, { fotoBase64 });
   }
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {

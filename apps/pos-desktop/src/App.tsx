@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
+import { MockLectorDeBarras } from "@nexosoft/hardware";
+
 import { Shell } from "./shell/Shell";
 import { PantallaLogin } from "./componentes/PantallaLogin";
 import { PantallaTerminal } from "./componentes/PantallaTerminal";
@@ -56,6 +58,8 @@ import type { ClienteAsistenteConfig } from "./sync/cliente-asistente-config";
 import { ClienteAsistenteConfigHttp } from "./sync/cliente-asistente-config";
 import type { ClienteUsuarios } from "./sync/cliente-usuarios-http";
 import { ClienteUsuariosHttp } from "./sync/cliente-usuarios-http";
+import type { ClienteCredenciales } from "./sync/cliente-credenciales-http";
+import { ClienteCredencialesHttp } from "./sync/cliente-credenciales-http";
 
 /** Aviso a pantalla completa para estados de carga/error. */
 function Aviso({ children }: { children: ReactNode }) {
@@ -163,6 +167,12 @@ function AppTauri() {
   const clienteIARef = useRef<AsistenteIA | null>(null);
   const clienteAsistenteConfigRef = useRef<ClienteAsistenteConfig | null>(null);
   const clienteUsuariosRef = useRef<ClienteUsuarios | null>(null);
+  const clienteCredencialesRef = useRef<ClienteCredenciales | null>(null);
+  // No hay lector serial real todavía (ver packages/hardware/src/lector.ts): los
+  // lectores HID se capturan como teclado (`useLectorTeclado`), así que esta
+  // instancia solo necesita existir como referencia estable — no depende de la
+  // sesión ni de `entorno`, por eso se crea una sola vez, antes del login.
+  const lectorLoginRef = useRef(new MockLectorDeBarras());
   const [fase, setFase] = useState<Fase>("cargando");
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
@@ -211,6 +221,10 @@ function AppTauri() {
         baseUrlRef.current,
         () => sesion.obtenerToken(),
         sesion.sucursalId ?? "",
+      );
+      clienteCredencialesRef.current = new ClienteCredencialesHttp(
+        baseUrlRef.current,
+        () => sesion.obtenerToken(),
       );
       setEntorno(env);
       setFase("listo");
@@ -289,6 +303,16 @@ function AppTauri() {
       const sesion = sesionRef.current;
       if (sesion === null) return;
       await sesion.login(cred);
+      avanzar(sesion);
+    },
+    [avanzar],
+  );
+
+  const onLoginCredencial = useCallback(
+    async (payload: string) => {
+      const sesion = sesionRef.current;
+      if (sesion === null) return;
+      await sesion.loginConCredencial(payload);
       avanzar(sesion);
     },
     [avanzar],
@@ -411,6 +435,8 @@ function AppTauri() {
     return (
       <PantallaLogin
         onLogin={onLogin}
+        onLoginCredencial={onLoginCredencial}
+        lector={lectorLoginRef.current}
         onConfig={() => void onAbrirConfig()}
         onModoDemo={() => setModoDemo(true)}
         {...(logoDataUrl !== undefined ? { logoDataUrl } : {})}
@@ -451,6 +477,9 @@ function AppTauri() {
           ? { clienteAsistenteConfig: clienteAsistenteConfigRef.current }
           : {})}
         {...(clienteUsuariosRef.current !== null ? { clienteUsuarios: clienteUsuariosRef.current } : {})}
+        {...(clienteCredencialesRef.current !== null
+          ? { clienteCredenciales: clienteCredencialesRef.current }
+          : {})}
         {...(sesionRef.current?.terminalId !== undefined ? { terminalId: sesionRef.current.terminalId } : {})}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }

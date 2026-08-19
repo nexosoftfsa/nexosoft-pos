@@ -46,6 +46,7 @@ import { AsistenteIACompuesto, AsistenteIAMock, type AsistenteIA } from "../sync
 import type { ClienteAsistenteConfig } from "../sync/cliente-asistente-config";
 import { Usuarios as PantallaUsuarios } from "../componentes/Usuarios";
 import type { ClienteUsuarios } from "../sync/cliente-usuarios-http";
+import type { ClienteCredenciales } from "../sync/cliente-credenciales-http";
 import { IconoMenu, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
@@ -88,6 +89,7 @@ export function Shell({
   clienteIA,
   clienteAsistenteConfig,
   clienteUsuarios,
+  clienteCredenciales,
   terminalId,
   terminalNombre,
   onCerrarSesion,
@@ -122,6 +124,8 @@ export function Shell({
   clienteAsistenteConfig?: ClienteAsistenteConfig;
   /** Gestión de usuarios (alta, rol, activo). Solo ADMIN, solo Tauri conectado. */
   clienteUsuarios?: ClienteUsuarios;
+  /** Credencial de acceso por código de barras (Fase 15.A). Solo ADMIN, solo Tauri conectado. */
+  clienteCredenciales?: ClienteCredenciales;
   /** Id de la terminal (para la caja). */
   terminalId?: string;
   terminalNombre?: string;
@@ -330,7 +334,11 @@ export function Shell({
           ) : activo?.id === "remitos" && clienteRemitos ? (
             <Remitos cliente={clienteRemitos} catalogo={catalogoPresup} />
           ) : activo?.id === "usuarios" && clienteUsuarios ? (
-            <PantallaUsuarios cliente={clienteUsuarios} {...(usuario.id ? { propioId: usuario.id } : {})} />
+            <PantallaUsuarios
+              cliente={clienteUsuarios}
+              {...(clienteCredenciales ? { clienteCredenciales } : {})}
+              {...(usuario.id ? { propioId: usuario.id } : {})}
+            />
           ) : activo ? (
             <Placeholder modulo={activo} />
           ) : null}
