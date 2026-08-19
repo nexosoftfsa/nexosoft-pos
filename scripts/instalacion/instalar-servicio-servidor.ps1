@@ -12,10 +12,20 @@
 # prender la PC (antes de que nadie inicie sesion) y se reinicia sola si se
 # cae. Asi el cliente no depende de acordarse de abrir nada.
 
+param(
+    # Permite reusar este mismo script desde el instalador de servidor
+    # standalone (Fase 13.B), que corre contra dist-servidor/ y un Node
+    # portable en vez del monorepo + Node del sistema.
+    [string]$CloudApiDir,
+    [string]$NodeExe
+)
+
 $ErrorActionPreference = "Stop"
 
-$cloudApiDir = Resolve-Path (Join-Path $PSScriptRoot "..\..\apps\cloud-api")
-$nodeExe = (Get-Command node.exe).Source
+if (-not $CloudApiDir) { $CloudApiDir = Resolve-Path (Join-Path $PSScriptRoot "..\..\apps\cloud-api") }
+$cloudApiDir = Resolve-Path $CloudApiDir
+if (-not $NodeExe) { $NodeExe = (Get-Command node.exe).Source }
+$nodeExe = $NodeExe
 
 if (-not (Test-Path (Join-Path $cloudApiDir "dist\main.js"))) {
     Write-Error "No existe dist/main.js. Corre antes: corepack pnpm --filter @nexosoft/cloud-api build"
@@ -37,9 +47,14 @@ $configuracion = New-ScheduledTaskSettingsSet `
 $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 
 Unregister-ScheduledTask -TaskName $nombreTarea -Confirm:$false -ErrorAction SilentlyContinue
+# Los cmdlets *-ScheduledTask son CIM y no siempre respetan
+# $ErrorActionPreference = "Stop": sin -ErrorAction Stop acá, un "Acceso
+# denegado" (por ej. si esto no corrio como Administrador) queda como error
+# no terminante y el script sigue de largo creyendo que la tarea quedo armada.
 Register-ScheduledTask -TaskName $nombreTarea -Action $accion -Trigger $disparador `
     -Settings $configuracion -Principal $principal `
-    -Description "Backend NexoSoft (cloud-api). Arranca solo con Windows, se reinicia si se cae." | Out-Null
+    -Description "Backend NexoSoft (cloud-api). Arranca solo con Windows, se reinicia si se cae." `
+    -ErrorAction Stop | Out-Null
 
 Write-Host "Tarea '$nombreTarea' registrada. Arranca sola en el proximo inicio de Windows."
 Write-Host "Para arrancarla ahora mismo sin reiniciar:"

@@ -1,4 +1,4 @@
-# Arma un paquete standalone del cloud-api, listo para copiar a la PC de un
+﻿# Arma un paquete standalone del cloud-api, listo para copiar a la PC de un
 # comercio SIN el resto del monorepo (Fase 13.A): sin codigo fuente, sin
 # devDependencies, sin .env. Es la base sobre la que se arma despues el
 # instalador de servidor (Fase 13.C) y el paquete liviano de actualizacion
