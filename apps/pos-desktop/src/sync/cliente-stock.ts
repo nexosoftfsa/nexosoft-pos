@@ -7,6 +7,17 @@
  * memoria (desarrollo en el navegador).
  */
 import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
+import type { FilaImportacion } from "./importacion";
+
+export type { FilaImportacion };
+
+/** Nombres de columna que espera `POST /stock/importar`. */
+export const COLUMNAS_IMPORTAR_STOCK = {
+  codigo: "Código",
+  cantidad: "Cantidad a cargar",
+  fechaVencimiento: "Fecha de vencimiento",
+  motivo: "Motivo",
+} as const;
 
 /** Tipos de movimiento del cloud-api. ENTRADA/AJUSTE suman; SALIDA/VENTA restan. */
 export type TipoMovimiento = "ENTRADA" | "SALIDA" | "AJUSTE" | "VENTA";
@@ -74,6 +85,8 @@ export interface ClienteStock {
   lotes(productoId: string): Promise<LoteStock[]>;
   /** Alertas de vencimiento: lotes vencidos o que vencen dentro de `dias`. */
   vencimientos(dias?: number): Promise<AlertaVencimiento[]>;
+  /** Fase 14.D: carga inicial de existencias desde Excel. `dryRun: true` no persiste nada, solo valida. */
+  importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]>;
 }
 
 /** Error de stock con el status HTTP (400 = stock insuficiente / cantidad inválida). */
@@ -112,6 +125,10 @@ export class ClienteStockHttp implements ClienteStock {
   vencimientos(dias?: number): Promise<AlertaVencimiento[]> {
     const query = dias !== undefined ? `?dias=${dias}` : "";
     return this.pedir<AlertaVencimiento[]>("GET", `/stock/vencimientos${query}`);
+  }
+
+  importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+    return this.pedir<FilaImportacion[]>("POST", "/stock/importar", { filas, dryRun });
   }
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {

@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
 import {
+  COLUMNAS_IMPORTAR_STOCK,
   ErrorStock,
   type AlertaVencimiento,
   type ClienteStock,
@@ -18,6 +19,7 @@ import {
   type ProductoStock,
   type SaldoStock,
 } from "../sync/cliente-stock";
+import { ModalImportacion } from "./ModalImportacion";
 import { ThOrdenable, useOrdenTabla, type ValorColumna } from "./usar-orden-tabla";
 import {
   aDatosMovimiento,
@@ -60,6 +62,7 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
   const [movProducto, setMovProducto] = useState<ProductoStock | "abierto" | null>(null);
   const [historialDe, setHistorialDe] = useState<ProductoStock | null>(null);
   const [lotesDe, setLotesDe] = useState<ProductoStock | null>(null);
+  const [importando, setImportando] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -191,6 +194,9 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
         <button type="button" className="pill-btn" onClick={() => void exportar()}>
           Exportar
         </button>
+        <button type="button" className="pill-btn" onClick={() => setImportando(true)}>
+          Importar
+        </button>
         <button type="button" className="pill-btn pill-btn--primary" onClick={() => setMovProducto("abierto")}>
           + Registrar movimiento
         </button>
@@ -281,6 +287,16 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
 
       {historialDe !== null && (
         <ModalHistorial cliente={cliente} producto={historialDe} onCerrar={() => setHistorialDe(null)} />
+      )}
+
+      {importando && (
+        <ModalImportacion
+          titulo="Importar stock (carga inicial) desde Excel"
+          columnasAyuda={Object.values(COLUMNAS_IMPORTAR_STOCK)}
+          onImportar={(filas, dryRun) => cliente.importar(filas, dryRun)}
+          onCerrar={() => setImportando(false)}
+          onImportado={() => void cargar()}
+        />
       )}
     </div>
   );

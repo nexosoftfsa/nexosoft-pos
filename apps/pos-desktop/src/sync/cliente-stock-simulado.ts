@@ -8,10 +8,12 @@
  */
 import { DEFS } from "../datos/bootstrap";
 import {
+  COLUMNAS_IMPORTAR_STOCK as COL,
   ErrorStock,
   type AlertaVencimiento,
   type ClienteStock,
   type DatosMovimiento,
+  type FilaImportacion,
   type LoteStock,
   type MovimientoStock,
   type ProductoStock,
@@ -237,6 +239,59 @@ export class ClienteStockSimulado implements ClienteStock {
       ultimo = this.push(producto, "SALIDA", String(t.cantidad), datos.motivo ?? null, t.loteId);
     }
     return ultimo!;
+  }
+
+  /** Fase 14.D (demo): mismas reglas esenciales que el backend (código debe existir, perecedero necesita fecha). */
+  async importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+    const movimientosOriginales = this.movimientos;
+    const lotesOriginales = this.lotesInternos;
+    const resultados: FilaImportacion[] = [];
+
+    filas.forEach((cruda, i) => {
+      const fila = i + 2;
+      const codigo = (cruda[COL.codigo] ?? "").trim();
+      if (codigo === "") {
+        resultados.push({ fila, resultado: "error", mensaje: "Fila sin código: no se puede importar." });
+        return;
+      }
+      const cantidadTexto = (cruda[COL.cantidad] ?? "").trim();
+      const cantidad = Number(cantidadTexto);
+      if (!Number.isFinite(cantidad) || cantidad <= 0) {
+        resultados.push({ fila, resultado: "error", mensaje: `Cantidad inválida para el código ${codigo}: "${cantidadTexto}"` });
+        return;
+      }
+      const producto = this.productos.find((p) => p.codigo === codigo);
+      if (!producto) {
+        resultados.push({ fila, resultado: "error", mensaje: `No existe ningún producto con código ${codigo}.` });
+        return;
+      }
+      const motivo = cruda[COL.motivo]?.trim() || "Importación de stock";
+      const fechaTexto = cruda[COL.fechaVencimiento]?.trim();
+
+      if (producto.requiereLote) {
+        if (!fechaTexto) {
+          resultados.push({ fila, resultado: "error", mensaje: `El producto ${codigo} es perecedero: necesita "Fecha de vencimiento".` });
+          return;
+        }
+        const lote: LoteInterno = {
+          id: `lote-${++this.loteSeq}`,
+          productoId: producto.id,
+          numero: null,
+          fechaVencimiento: new Date(fechaTexto).toISOString(),
+        };
+        this.lotesInternos = [...this.lotesInternos, lote];
+        this.push(producto, "ENTRADA", cantidadTexto, motivo, lote.id);
+      } else {
+        this.push(producto, "ENTRADA", cantidadTexto, motivo, null);
+      }
+      resultados.push({ fila, resultado: "creada" });
+    });
+
+    if (dryRun) {
+      this.movimientos = movimientosOriginales;
+      this.lotesInternos = lotesOriginales;
+    }
+    return resultados;
   }
 
   private push(

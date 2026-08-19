@@ -2,16 +2,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { StockService } from './stock.service';
+import { COLUMNAS_IMPORTAR_STOCK as COL } from './importar-stock-lote';
 
-const mockProducto = { findFirst: vi.fn(), findMany: vi.fn() };
+const mockProducto = { findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() };
 const mockMovimiento = { findMany: vi.fn(), create: vi.fn() };
 const mockLote = { create: vi.fn(), findMany: vi.fn() };
 const mockPrisma = {
   producto: mockProducto,
   movimientoStock: mockMovimiento,
   lote: mockLote,
-  // El $transaction del servicio recibe un array de promesas (creates).
-  $transaction: vi.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
+  // El $transaction del servicio se usa de dos formas: con un array de
+  // promesas (SALIDA por FEFO) y con una función interactiva (importarStock,
+  // Fase 14.D) -- el mock soporta las dos.
+  $transaction: vi.fn((opsOrCb: unknown) => {
+    if (typeof opsOrCb === 'function') return (opsOrCb as (tx: unknown) => unknown)(mockPrisma);
+    return Promise.all(opsOrCb as Promise<unknown>[]);
+  }),
 };
 
 const SUCURSAL = 's1';
@@ -209,6 +215,75 @@ describe('StockService', () => {
       expect(r[0]!.loteId).toBe('venc');
       expect(r[0]!.vencido).toBe(true);
       expect(r[0]!.saldo).toBe('3');
+    });
+  });
+
+  describe('importarStock (Fase 14.D)', () => {
+    function filaCruda(overrides: Record<string, string> = {}): Record<string, string> {
+      return { [COL.codigo]: 'ABC', [COL.cantidad]: '25', [COL.fechaVencimiento]: '', [COL.motivo]: '', ...overrides };
+    }
+
+    beforeEach(() => {
+      mockProducto.findUnique.mockResolvedValue(PRODUCTO);
+      mockMovimiento.create.mockResolvedValue({ id: 'm1' });
+      mockLote.create.mockResolvedValue({ id: 'L1' });
+    });
+
+    it('carga stock de un producto simple (sin lote)', async () => {
+      const resultados = await service.importarStock(SUCURSAL, [filaCruda()], false);
+      expect(resultados).toEqual([{ fila: 2, resultado: 'creada' }]);
+      expect(mockMovimiento.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          tipo: 'ENTRADA',
+          cantidad: '25',
+          productoId: PRODUCTO_ID,
+          motivo: 'Importación de stock',
+          loteId: null,
+        }),
+      });
+      expect(mockLote.create).not.toHaveBeenCalled();
+    });
+
+    it('un producto perecedero abre un lote si trae fecha de vencimiento', async () => {
+      mockProducto.findUnique.mockResolvedValue(PERECEDERO);
+      const resultados = await service.importarStock(
+        SUCURSAL,
+        [filaCruda({ [COL.codigo]: 'YOG', [COL.fechaVencimiento]: '2027-05-01' })],
+        false,
+      );
+      expect(resultados).toEqual([{ fila: 2, resultado: 'creada' }]);
+      expect(mockLote.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ productoId: PERECEDERO.id, fechaVencimiento: new Date('2027-05-01') }),
+      });
+      expect(mockMovimiento.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ loteId: 'L1' }),
+      });
+    });
+
+    it('un producto perecedero sin fecha de vencimiento da error de fila, no crea nada', async () => {
+      mockProducto.findUnique.mockResolvedValue(PERECEDERO);
+      const resultados = await service.importarStock(SUCURSAL, [filaCruda({ [COL.codigo]: 'YOG' })], false);
+      expect(resultados[0]!.resultado).toBe('error');
+      expect(resultados[0]).toMatchObject({ mensaje: expect.stringContaining('perecedero') });
+      expect(mockMovimiento.create).not.toHaveBeenCalled();
+    });
+
+    it('código que no existe en la sucursal da error de fila', async () => {
+      mockProducto.findUnique.mockResolvedValue(null);
+      const resultados = await service.importarStock(SUCURSAL, [filaCruda({ [COL.codigo]: 'NOEXISTE' })], false);
+      expect(resultados[0]).toMatchObject({ resultado: 'error', mensaje: expect.stringContaining('NOEXISTE') });
+    });
+
+    it('una fila con error no aborta el resto del lote', async () => {
+      const filas = [filaCruda({ [COL.cantidad]: 'no-es-numero' }), filaCruda({ [COL.codigo]: 'DEF' })];
+      const resultados = await service.importarStock(SUCURSAL, filas, false);
+      expect(resultados[0]!.resultado).toBe('error');
+      expect(resultados[1]).toEqual({ fila: 3, resultado: 'creada' });
+    });
+
+    it('dry-run devuelve el mismo reporte (atrapa el sentinel RevertirDryRun)', async () => {
+      const resultados = await service.importarStock(SUCURSAL, [filaCruda()], true);
+      expect(resultados).toEqual([{ fila: 2, resultado: 'creada' }]);
     });
   });
 });

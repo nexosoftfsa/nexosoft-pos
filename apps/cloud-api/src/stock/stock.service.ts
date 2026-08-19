@@ -1,8 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { RegistrarMovimientoDto } from './dto/registrar-movimiento.dto';
 import { asignarFefo } from './fefo';
+import { mapearFilaStockCruda, type FilaStockCruda } from './importar-stock-lote';
+import { RevertirDryRun, type ResultadoFilaImportacion } from '../common/importacion-lote';
+
+type Tx = Prisma.TransactionClient;
 
 const INCLUDE_MOV = {
   producto: { select: { id: true, nombre: true, codigo: true } },
@@ -254,6 +259,103 @@ export class StockService {
       orderBy: { creadoEn: 'desc' },
       include: { producto: { select: { id: true, nombre: true, codigo: true } } },
     });
+  }
+
+  // ─── Importación masiva (Fase 14.D) ─────────────────────────────────────
+
+  /**
+   * Importa una carga inicial de existencias desde Excel: cada fila válida
+   * se registra como un `MovimientoStock` tipo ENTRADA (siempre aditivo --
+   * no hay "ya existía" para un movimiento de stock, es un evento, no una
+   * entidad con identidad propia). Si el producto requiere lote (Fase 8.2),
+   * la fila necesita fecha de vencimiento y se abre un `Lote` nuevo, mismo
+   * criterio que `registrarMovimiento`/`registrarEntradaConLote`.
+   */
+  async importarStock(
+    sucursalId: string,
+    filas: FilaStockCruda[],
+    dryRun: boolean,
+  ): Promise<ResultadoFilaImportacion[]> {
+    const procesarLote = async (tx: Tx): Promise<ResultadoFilaImportacion[]> => {
+      const resultados: ResultadoFilaImportacion[] = [];
+
+      for (let i = 0; i < filas.length; i++) {
+        const numeroFila = i + 2; // fila 1 = encabezado
+        try {
+          const carga = mapearFilaStockCruda(filas[i]!);
+          const producto = await tx.producto.findUnique({
+            where: { codigo_sucursalId: { codigo: carga.codigo, sucursalId } },
+            select: { id: true, requiereLote: true },
+          });
+          if (!producto) {
+            resultados.push({
+              fila: numeroFila,
+              resultado: 'error',
+              mensaje: `No existe ningún producto con código ${carga.codigo} en esta sucursal.`,
+            });
+            continue;
+          }
+
+          let loteId: string | null = null;
+          if (producto.requiereLote) {
+            if (!carga.fechaVencimiento) {
+              resultados.push({
+                fila: numeroFila,
+                resultado: 'error',
+                mensaje: `El producto ${carga.codigo} es perecedero: necesita "Fecha de vencimiento".`,
+              });
+              continue;
+            }
+            const fechaVencimiento = new Date(carga.fechaVencimiento);
+            if (Number.isNaN(fechaVencimiento.getTime())) {
+              resultados.push({
+                fila: numeroFila,
+                resultado: 'error',
+                mensaje: `Fecha de vencimiento inválida para el código ${carga.codigo}: "${carga.fechaVencimiento}"`,
+              });
+              continue;
+            }
+            const lote = await tx.lote.create({
+              data: { productoId: producto.id, sucursalId, fechaVencimiento },
+            });
+            loteId = lote.id;
+          }
+
+          await tx.movimientoStock.create({
+            data: {
+              tipo: 'ENTRADA',
+              cantidad: carga.cantidad,
+              motivo: carga.motivo,
+              productoId: producto.id,
+              sucursalId,
+              loteId,
+            },
+          });
+          resultados.push({ fila: numeroFila, resultado: 'creada' });
+        } catch (error) {
+          resultados.push({ fila: numeroFila, resultado: 'error', mensaje: (error as Error).message });
+        }
+      }
+      return resultados;
+    };
+
+    if (!dryRun) {
+      return this.prisma.$transaction((tx) => procesarLote(tx), { timeout: 60_000 });
+    }
+    try {
+      await this.prisma.$transaction(
+        async (tx) => {
+          const resultados = await procesarLote(tx);
+          throw new RevertirDryRun(resultados);
+        },
+        { timeout: 60_000 },
+      );
+      /* istanbul ignore next -- inalcanzable: procesarLote siempre termina en RevertirDryRun arriba */
+      return [];
+    } catch (error) {
+      if (error instanceof RevertirDryRun) return error.resultados;
+      throw error;
+    }
   }
 
   private async calcularSaldo(productoId: string, sucursalId: string): Promise<Decimal> {

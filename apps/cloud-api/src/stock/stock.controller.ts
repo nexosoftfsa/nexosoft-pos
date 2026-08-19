@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
 import { StockService } from './stock.service';
 import { RegistrarMovimientoDto } from './dto/registrar-movimiento.dto';
+import { ImportarStockDto } from './dto/importar-stock.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 interface UsuarioJwt {
@@ -62,5 +63,10 @@ export class StockController {
     @Body() dto: RegistrarMovimientoDto,
   ) {
     return this.stockService.registrarMovimiento(req.user.sucursalId, dto);
+  }
+
+  @Post('importar')
+  importar(@Request() req: { user: UsuarioJwt }, @Body() dto: ImportarStockDto) {
+    return this.stockService.importarStock(req.user.sucursalId, dto.filas, dto.dryRun);
   }
 }
