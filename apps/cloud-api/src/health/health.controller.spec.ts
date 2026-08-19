@@ -21,4 +21,10 @@ describe('HealthController', () => {
     expect(result.status).toBe('degraded');
     expect(result.db).toBe('error');
   });
+
+  it('incluye la version (dev si no hay archivo VERSION, como en tests)', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
+    const result = await ctrl.check();
+    expect(result.version).toBe('dev');
+  });
 });

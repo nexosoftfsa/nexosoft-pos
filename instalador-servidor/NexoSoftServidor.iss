@@ -57,6 +57,7 @@ Source: "runtime\postgres-portable\*"; DestDir: "{app}\postgres-portable"; Flags
 Source: "..\scripts\instalacion\bootstrap-servidor-standalone.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\instalar-servicio-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\abrir-firewall-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "..\scripts\instalacion\actualizador-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 
 [Run]
 ; No "runhidden": se deja visible la consola de PowerShell durante este

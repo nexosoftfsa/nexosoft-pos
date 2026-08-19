@@ -194,6 +194,29 @@ Titulo "Servicio de Windows del cloud-api"
 & (Join-Path $PSScriptRoot "abrir-firewall-servidor.ps1") -Puerto $Puerto
 Start-ScheduledTask -TaskName "NexoSoft cloud-api" -ErrorAction Stop
 
+Titulo "Actualizador automatico (Fase 13.E)"
+# Tarea aparte de la del cloud-api: revisa a diario (y tambien al prender
+# la PC, por si queda apagada a la hora fija) si hay una version nueva de
+# servidor-vX.Y.Z publicada, y si la hay la aplica sola -- con reversion
+# automatica si algo sale mal. Ver actualizador-servidor.ps1.
+$actualizadorScript = Join-Path $PSScriptRoot "actualizador-servidor.ps1"
+if (Test-Path $actualizadorScript) {
+    $argumentoActualizador = "-NoProfile -ExecutionPolicy Bypass -File ""$actualizadorScript"" -ServidorDir ""$ServidorDir"" -NodeDir ""$NodeDir"" -Puerto $Puerto"
+    $accionAct = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $argumentoActualizador
+    $disparadorInicio = New-ScheduledTaskTrigger -AtStartup
+    $disparadorDiario = New-ScheduledTaskTrigger -Daily -At "04:00"
+    $configAct = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+    $principalAct = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+    Unregister-ScheduledTask -TaskName "NexoSoft Actualizador" -Confirm:$false -ErrorAction SilentlyContinue
+    Register-ScheduledTask -TaskName "NexoSoft Actualizador" -Action $accionAct -Trigger @($disparadorInicio, $disparadorDiario) `
+        -Settings $configAct -Principal $principalAct `
+        -Description "Busca y aplica solo actualizaciones del servidor NexoSoft (a diario y al prender la PC)." `
+        -ErrorAction Stop | Out-Null
+    Ok "Tarea 'NexoSoft Actualizador' registrada (corre a diario a las 04:00 y al prender la PC)"
+} else {
+    Write-Host "No encontre actualizador-servidor.ps1 al lado de este script -- se omite el auto-update." -ForegroundColor Yellow
+}
+
 Titulo "Verificando"
 $salud = $null
 for ($i = 0; $i -lt 15; $i++) {
