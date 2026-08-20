@@ -70,3 +70,4 @@ Consecuencias y Alternativas consideradas.
 | 0051 | [Credencial de empleado con código de barras (token dedicado, no la contraseña)](0051-credencial-de-empleado-con-codigo-de-barras.md) | Aceptada |
 | 0052 | [Acceso remoto a admin-web vía Cloudflare Tunnel](0052-acceso-remoto-admin-web-cloudflare-tunnel.md) | Aceptada |
 | 0053 | [Botón "Actualizar servidor" en el POS, vía script elevado con scope fijo](0053-actualizacion-del-servidor-desde-el-pos.md) | Aceptada |
+| 0054 | [Operación de la pantalla de venta 100% por lector de barras y teclado](0054-operacion-de-venta-por-lector-y-teclado.md) | Aceptada |

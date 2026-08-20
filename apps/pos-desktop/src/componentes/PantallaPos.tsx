@@ -22,7 +22,15 @@ import type { EstadoSync } from "../sync/useSync";
 import type { ClienteMediosPago, Tarjeta } from "../sync/cliente-medios-pago";
 import { ComprobanteA4 } from "./ComprobanteA4";
 import { ComprobanteTicket } from "./ComprobanteTicket";
-import { filtrarCatalogoVenta } from "./pos-helpers";
+import {
+  buscarProductoPorCodigo,
+  cambiarCantidadCarrito,
+  filtrarCatalogoVenta,
+  fijarCantidadCarrito,
+  quitarDelCarrito,
+  ultimoItemCarrito,
+  type ItemCarrito,
+} from "./pos-helpers";
 import {
   descuentoDeLinea,
   descuentoPorcentajeLinea,
@@ -33,10 +41,6 @@ import { useImpresionA4 } from "./usar-impresion-a4";
 import { useImpresionTicket } from "./usar-impresion-ticket";
 import { useLectorTeclado } from "./usar-lector-teclado";
 
-interface ItemCarrito {
-  readonly producto: ProductoCatalogo;
-  readonly cantidad: number;
-}
 interface PagoUi {
   readonly forma: FormaDePago;
   readonly monto: Money;
@@ -148,16 +152,31 @@ export function PantallaPos({
   const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState<string>("");
   const [imprimiendo, setImprimiendo] = useState(false);
   const [pagoElectronico, setPagoElectronico] = useState<IntentoPago | null>(null);
+  const [cobroRapidoPendiente, setCobroRapidoPendiente] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const buscadorRef = useRef<HTMLInputElement>(null);
   const { datosA4, imprimirA4 } = useImpresionA4();
   const { datosTicket, imprimirTicketPreview } = useImpresionTicket();
+
+  // ----- Foco del buscador (Fase 15: operación 100% lector + teclado) -----
+  // El buscador vive con el foco casi todo el tiempo, así el lector de barras
+  // (que tipea como teclado) escribe directo ahí y Enter agrega por código
+  // exacto. Después de cada acción de "volver a escanear" (agregar, cambiar
+  // cantidad, sacar un ítem, cerrar una venta) el foco vuelve solo. NO se
+  // fuerza el foco después de acciones de cobro (agregar pago, etc.): ahí el
+  // cajero está trabajando activamente en otro campo y forzar el foco se lo
+  // pisaría.
+  function refocarBuscador() {
+    buscadorRef.current?.focus();
+  }
+  useEffect(() => {
+    refocarBuscador();
+  }, []);
 
   // ----- Lector de barras -----
   const buscarPorCodigo = useCallback(
     (codigo: string) => {
-      const prod = catalogo.find(
-        (p) => p.articulo.codigoInterno === codigo || p.articulo.codigoBarras === codigo,
-      );
+      const prod = buscarProductoPorCodigo(catalogo, codigo);
       if (prod) agregar(prod);
       else setError(`Código de barras no encontrado: ${codigo}`);
     },
@@ -227,21 +246,78 @@ export function PantallaPos({
       }
       return [...prev, { producto, cantidad: 1 }];
     });
+    refocarBuscador();
   }
 
   function cambiarCantidad(id: string, delta: number) {
-    setCarrito((prev) =>
-      prev.flatMap((c) => {
-        if (c.producto.articulo.id !== id) return [c];
-        const nueva = c.cantidad + delta;
-        return nueva <= 0 ? [] : [{ ...c, cantidad: nueva }];
-      }),
-    );
+    setCarrito((prev) => cambiarCantidadCarrito(prev, id, delta));
+    refocarBuscador();
+  }
+
+  function fijarCantidad(id: string, cantidad: number) {
+    setCarrito((prev) => fijarCantidadCarrito(prev, id, cantidad));
+    refocarBuscador();
   }
 
   function quitar(id: string) {
-    setCarrito((prev) => prev.filter((c) => c.producto.articulo.id !== id));
+    setCarrito((prev) => quitarDelCarrito(prev, id));
+    refocarBuscador();
   }
+
+  /** Atajo F8: cambia la cantidad del último ítem agregado a un valor exacto. */
+  function cambiarCantidadUltimoItem() {
+    const ultimo = ultimoItemCarrito(carrito);
+    if (!ultimo) return;
+    const respuesta = window.prompt(
+      `Nueva cantidad para "${ultimo.producto.articulo.descripcion}":`,
+      String(ultimo.cantidad),
+    );
+    if (respuesta === null) return; // canceló
+    const cantidad = Number(respuesta.trim().replace(",", "."));
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+      setError("Cantidad inválida.");
+      return;
+    }
+    fijarCantidad(ultimo.producto.articulo.id, cantidad);
+  }
+
+  /** Atajo Supr: saca del carrito el último ítem agregado. */
+  function quitarUltimoItem() {
+    const ultimo = ultimoItemCarrito(carrito);
+    if (ultimo) quitar(ultimo.producto.articulo.id);
+  }
+
+  /**
+   * Atajo F12 ("cobro rápido"): cobra el saldo pendiente exacto en efectivo y
+   * confirma la venta en un solo paso — para cuando el cliente da la plata
+   * justa. Si ya está cubierta (saldo cero), confirma directo. No imprime
+   * solo: el ticket queda listo en el overlay de "Imprimir" (hoy la térmica
+   * es un mock, no hay hardware real conectado — ver `packages/hardware`).
+   */
+  function cobroRapido() {
+    if (!preview || carrito.length === 0) return;
+    if (preview.cobro.cancelada) {
+      void confirmar();
+      return;
+    }
+    if (formaPago !== FormaDePago.Efectivo) {
+      setError("El cobro rápido (F12) es para efectivo. Elegí Efectivo o agregá el pago a mano.");
+      return;
+    }
+    pagoExacto();
+    setCobroRapidoPendiente(true);
+  }
+
+  // Completa el cobro rápido apenas el preview confirma que ya está cancelada
+  // (el pago recién agregado por pagoExacto() se refleja async, vía el
+  // useEffect de arriba que recalcula `preview`).
+  useEffect(() => {
+    if (cobroRapidoPendiente && preview?.cobro.cancelada) {
+      setCobroRapidoPendiente(false);
+      void confirmar();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cobroRapidoPendiente, preview]);
 
   function agregarPago() {
     try {
@@ -418,6 +494,7 @@ export function PantallaPos({
       setTarjetaSeleccionada("");
       setCuotasSeleccionadas("");
       setError(null);
+      refocarBuscador();
     } catch (e) {
       setError(mensajeError(e));
     }
@@ -503,12 +580,61 @@ export function PantallaPos({
       <main className="cuerpo">
         <section className="catalogo">
           <input
+            ref={buscadorRef}
             type="text"
             className="catalogo-buscador"
-            placeholder="Buscar producto por nombre o código…"
+            placeholder="Escaneá un código o buscá por nombre…"
             value={busquedaProducto}
             onChange={(e) => setBusquedaProducto(e.target.value)}
+            onBlur={(e) => {
+              // El foco vive acá casi siempre (así el lector de barras, que
+              // tipea como teclado, escribe directo). Si cae al fondo vacío
+              // de la pantalla (relatedTarget null: no fue a otro control
+              // real como un botón o un input), lo recuperamos. Si el
+              // cajero clickeó a propósito otro campo, lo dejamos tranquilo.
+              if (e.relatedTarget === null) {
+                e.currentTarget.focus();
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const codigo = busquedaProducto.trim();
+                if (codigo === "") return;
+                const prod = buscarProductoPorCodigo(catalogo, codigo);
+                if (prod) {
+                  agregar(prod);
+                  setBusquedaProducto("");
+                }
+                // Si no matchea por código exacto, se deja el texto para que
+                // el cajero elija de la grilla filtrada por nombre.
+                return;
+              }
+              // Supr/F8/F12 no interfieren con la edición normal del texto de
+              // búsqueda salvo Supr, que solo actúa con el campo vacío (si no,
+              // "borrar" mientras se escribe un nombre eliminaría el carrito).
+              if (e.key === "Delete" && busquedaProducto.trim() === "") {
+                e.preventDefault();
+                quitarUltimoItem();
+              } else if (e.key === "F8") {
+                e.preventDefault();
+                cambiarCantidadUltimoItem();
+              } else if (e.key === "F12") {
+                e.preventDefault();
+                cobroRapido();
+              }
+            }}
           />
+          <div className="atajos-legend">
+            <span>
+              <kbd>Supr</kbd> saca el último ítem
+            </span>
+            <span>
+              <kbd>F8</kbd> cambia su cantidad
+            </span>
+            <span>
+              <kbd>F12</kbd> cobro exacto y confirma
+            </span>
+          </div>
           <div className="catalogo-grilla">
             {catalogoFiltrado.map((p) => (
               <button key={p.articulo.id} className="producto" onClick={() => agregar(p)}>
