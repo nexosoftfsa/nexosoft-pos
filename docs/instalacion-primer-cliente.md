@@ -110,7 +110,23 @@ Una venta de prueba, imprimir A4 y ticket chico, confirmar que el catálogo
 completo está (711 artículos), y que el panel (`http://localhost:3000/`)
 muestra el logo y los reportes.
 
-## 6. (Opcional) Acceso al panel desde fuera de la LAN
+## 6. Actualizar el servidor más adelante
+
+Cuando salga una versión nueva del POS que dependa de código de servidor
+nuevo (endpoints nuevos, etc.), hace falta actualizar también `cloud-api`.
+Desde la v0.1.13 en adelante esto se puede hacer con un botón: en el POS de
+la PC de Caja, **Configuración → Actualizaciones → "Actualizar servidor"**
+(solo aparece en esa terminal, no en Depósito/Oficina). Pide confirmación,
+Windows va a pedir permiso de administrador (UAC), y hace todo solo: respaldo
+de la base, `git pull`, migración, recompilación y reinicio del servicio —
+ver [ADR-0053](adr/0053-actualizacion-del-servidor-desde-el-pos.md). Hacerlo
+con el negocio cerrado o sin ventas activas.
+
+Si preferís hacerlo a mano (o estás en una versión anterior a la 0.1.13),
+correr `scripts\actualizacion\actualizar-servidor.ps1` como Administrador
+hace lo mismo.
+
+## 7. (Opcional) Acceso al panel desde fuera de la LAN
 
 Si el dueño quiere ver el panel de reportes desde el celular fuera del
 local, ver [despliegue-cloudflare-tunnel.md](despliegue-cloudflare-tunnel.md)

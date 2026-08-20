@@ -182,7 +182,7 @@ export function PantallaConfig({
 
         {error !== null && <div style={aviso}>{error}</div>}
 
-        <Actualizaciones />
+        <Actualizaciones servidorUrl={servidorUrl} />
 
         <div style={{ display: "flex", gap: "0.6rem", marginTop: "0.4rem" }}>
           <button type="button" style={botonSec} onClick={onCancelar} disabled={guardando}>

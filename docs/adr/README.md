@@ -69,3 +69,4 @@ Consecuencias y Alternativas consideradas.
 | 0050 | [Medios de pago (tarjetas por banco) y recargo por tarjeta](0050-medios-de-pago-y-recargo-por-tarjeta.md) | Aceptada |
 | 0051 | [Credencial de empleado con código de barras (token dedicado, no la contraseña)](0051-credencial-de-empleado-con-codigo-de-barras.md) | Aceptada |
 | 0052 | [Acceso remoto a admin-web vía Cloudflare Tunnel](0052-acceso-remoto-admin-web-cloudflare-tunnel.md) | Aceptada |
+| 0053 | [Botón "Actualizar servidor" en el POS, vía script elevado con scope fijo](0053-actualizacion-del-servidor-desde-el-pos.md) | Aceptada |

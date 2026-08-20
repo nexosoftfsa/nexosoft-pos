@@ -14,10 +14,13 @@ import {
   leerEstadoActualizacion,
   suscribirseActualizacion,
 } from "../datos/actualizaciones";
+import { actualizarServidor, esServidorLocal } from "../datos/actualizar-servidor";
 
-export function Actualizaciones() {
+export function Actualizaciones({ servidorUrl }: { servidorUrl?: string }) {
   const estado = useSyncExternalStore(suscribirseActualizacion, leerEstadoActualizacion);
   const [versionActual, setVersionActual] = useState<string | null>(null);
+  const [actualizandoServidor, setActualizandoServidor] = useState(false);
+  const [resultadoServidor, setResultadoServidor] = useState<{ ok: boolean; detalle: string } | null>(null);
 
   useEffect(() => {
     if (!estaEnTauri()) return;
@@ -30,6 +33,24 @@ export function Actualizaciones() {
       vivo = false;
     };
   }, []);
+
+  async function onActualizarServidor() {
+    const { ask } = await import("@tauri-apps/plugin-dialog");
+    const confirma = await ask(
+      "Esto va a traer el código nuevo, migrar la base de datos y reiniciar el servidor. " +
+        "Puede tardar varios minutos y el servidor va a quedar sin responder un momento mientras reinicia. " +
+        "Hacelo en un momento sin ventas activas. Windows va a pedir permiso de administrador.",
+      { title: "¿Actualizar el servidor ahora?", kind: "warning" },
+    );
+    if (!confirma) return;
+    setActualizandoServidor(true);
+    setResultadoServidor(null);
+    try {
+      setResultadoServidor(await actualizarServidor());
+    } finally {
+      setActualizandoServidor(false);
+    }
+  }
 
   if (!estaEnTauri()) return null;
 
@@ -73,6 +94,29 @@ export function Actualizaciones() {
             Reintentar
           </button>
         </>
+      )}
+
+      {servidorUrl !== undefined && esServidorLocal(servidorUrl) && (
+        <div style={{ marginTop: "1rem", paddingTop: "0.8rem", borderTop: "1px solid #e2e8f0" }}>
+          <div className="section-title">Servidor de esta sucursal</div>
+          <p className="muted" style={{ marginTop: 2 }}>
+            Esta terminal aloja el servidor. Actualizarlo trae el código nuevo, migra la
+            base y reinicia el servicio — hacelo con el negocio cerrado o sin ventas activas.
+          </p>
+          <button
+            type="button"
+            className="linkbtn"
+            onClick={() => void onActualizarServidor()}
+            disabled={actualizandoServidor}
+          >
+            {actualizandoServidor ? "Actualizando el servidor… (puede tardar varios minutos)" : "Actualizar servidor"}
+          </button>
+          {resultadoServidor !== null && (
+            <div className={resultadoServidor.ok ? "muted" : "error"} style={{ marginTop: "0.5rem" }}>
+              {resultadoServidor.detalle}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

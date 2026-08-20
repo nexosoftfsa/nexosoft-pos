@@ -15,6 +15,20 @@
     "dialog:default",
     "fs:default",
     "fs:allow-write-file",
-    "fs:allow-read-file"
+    "fs:allow-read-file",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "actualizar-servidor",
+          "cmd": "powershell.exe",
+          "args": [
+            "-NoProfile",
+            "-Command",
+            "$p = Start-Process -FilePath powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File','C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1') -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
+          ]
+        }
+      ]
+    }
   ]
 }
