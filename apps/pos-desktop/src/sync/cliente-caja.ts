@@ -148,8 +148,13 @@ export class ClienteCajaHttp implements ClienteCaja {
     if (!res.ok) {
       throw new ErrorCaja(await mensajeDeError(res), res.status);
     }
+    // Nest responde sin body (no la palabra "null") cuando el controller
+    // devuelve null -- es el caso normal de turnoActual() sin turno abierto.
+    // `res.json()` sobre un body vacío tira, por eso se lee como texto primero.
+    const texto = await res.text();
+    if (texto === "") return null as T;
     try {
-      return (await res.json()) as T;
+      return JSON.parse(texto) as T;
     } catch {
       throw new ErrorCaja(
         "El servidor no respondió correctamente. Verificá la conexión e intentá de nuevo.",
