@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, HttpException, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { AuthService } from './auth.service';
+import { LoginLockoutService } from './login-lockout.service';
 
 // Mocks de dependencias — instanciación directa, sin DI de NestJS
 const mockPrismaUsuario = {
@@ -16,9 +17,14 @@ const mockPrismaRefreshToken = {
   delete: vi.fn(),
 };
 
+const mockPrismaRegistroAuditoria = {
+  create: vi.fn(),
+};
+
 const mockPrisma = {
   usuario: mockPrismaUsuario,
   refreshToken: mockPrismaRefreshToken,
+  registroAuditoria: mockPrismaRegistroAuditoria,
 };
 
 const mockJwt = {
@@ -36,15 +42,18 @@ const mockCredenciales = {
 
 describe('AuthService', () => {
   let authService: AuthService;
+  let lockout: LoginLockoutService;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockJwt.sign.mockReturnValue('mock-token');
+    lockout = new LoginLockoutService();
     authService = new AuthService(
       mockPrisma as never,
       mockJwt as never,
       mockConfig as never,
       mockCredenciales as never,
+      lockout,
     );
   });
 
@@ -126,6 +135,54 @@ describe('AuthService', () => {
       await expect(
         authService.login({ email: 'test@nexo.com', password: 'incorrecta' }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('bloquea el login (429) tras 5 intentos fallidos consecutivos del mismo email', async () => {
+      const hash = await argon2.hash('correcta');
+      mockPrismaUsuario.findUnique.mockResolvedValue({
+        id: 'u1',
+        email: 'test@nexo.com',
+        passwordHash: hash,
+        rol: 'CAJERO',
+        sucursalId: 's1',
+        activo: true,
+      });
+
+      for (let i = 0; i < 5; i++) {
+        await expect(
+          authService.login({ email: 'test@nexo.com', password: 'incorrecta' }),
+        ).rejects.toThrow(UnauthorizedException);
+      }
+
+      // El 6to intento, incluso con la password correcta, queda bloqueado.
+      await expect(
+        authService.login({ email: 'test@nexo.com', password: 'correcta' }),
+      ).rejects.toThrow(HttpException);
+      expect(mockPrismaRegistroAuditoria.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ accion: 'LOGIN_BLOQUEADO', usuarioId: 'u1' }),
+        }),
+      );
+    });
+
+    it('un login exitoso resetea el contador de intentos fallidos', async () => {
+      const hash = await argon2.hash('correcta');
+      mockPrismaUsuario.findUnique.mockResolvedValue({
+        id: 'u1',
+        email: 'test@nexo.com',
+        passwordHash: hash,
+        rol: 'CAJERO',
+        sucursalId: 's1',
+        activo: true,
+      });
+      mockPrismaRefreshToken.create.mockResolvedValue({});
+
+      await expect(
+        authService.login({ email: 'test@nexo.com', password: 'incorrecta' }),
+      ).rejects.toThrow(UnauthorizedException);
+      await authService.login({ email: 'test@nexo.com', password: 'correcta' });
+
+      expect(lockout.estaBloqueado('test@nexo.com')).toBe(false);
     });
   });
 

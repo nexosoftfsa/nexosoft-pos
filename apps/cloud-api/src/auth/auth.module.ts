@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegistroGuard } from './registro.guard';
+import { LoginLockoutService } from './login-lockout.service';
 import { CredencialesModule } from '../credenciales/credenciales.module';
 
 @Module({
@@ -25,7 +26,7 @@ import { CredencialesModule } from '../credenciales/credenciales.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RegistroGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RegistroGuard, LoginLockoutService],
   controllers: [AuthController],
 })
 export class AuthModule {}

@@ -1,4 +1,6 @@
 import {
+  HttpException,
+  HttpStatus,
   Injectable,
   ConflictException,
   UnauthorizedException,
@@ -9,9 +11,13 @@ import { addDays } from 'date-fns';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { CredencialesService } from '../credenciales/credenciales.service';
+import { LoginLockoutService } from './login-lockout.service';
 import type { RegistroDto } from './dto/registro.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { JwtPayload } from './jwt.strategy';
+
+const MENSAJE_BLOQUEADO =
+  'Demasiados intentos fallidos. Probá de nuevo en unos minutos.';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +26,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly credenciales: CredencialesService,
+    private readonly lockout: LoginLockoutService,
   ) {}
 
   async registrar(dto: RegistroDto) {
@@ -43,16 +50,46 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    if (this.lockout.estaBloqueado(dto.email)) {
+      await this.auditarBloqueo(dto.email);
+      throw new HttpException(MENSAJE_BLOQUEADO, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
     const usuario = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
 
     if (!usuario || !usuario.activo) {
+      this.lockout.registrarFallo(dto.email);
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
     const passwordOk = await argon2.verify(usuario.passwordHash, dto.password);
-    if (!passwordOk) throw new UnauthorizedException('Credenciales inválidas');
+    if (!passwordOk) {
+      this.lockout.registrarFallo(dto.email);
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
 
+    this.lockout.registrarExito(dto.email);
     return this.generarTokens(usuario.id, usuario.email, usuario.rol, usuario.sucursalId);
+  }
+
+  /**
+   * Audita el bloqueo por intentos fallidos -- solo si el email corresponde a
+   * un usuario real (si no, no hay sucursalId conocido para el registro, y
+   * nada sensible que dejar asentado: ver LoginLockoutService).
+   */
+  private async auditarBloqueo(email: string): Promise<void> {
+    const usuario = await this.prisma.usuario.findUnique({ where: { email } });
+    if (!usuario) return;
+    await this.prisma.registroAuditoria.create({
+      data: {
+        accion: 'LOGIN_BLOQUEADO',
+        entidad: 'Usuario',
+        entidadId: usuario.id,
+        usuarioId: usuario.id,
+        sucursalId: usuario.sucursalId,
+        exito: false,
+      },
+    });
   }
 
   /**

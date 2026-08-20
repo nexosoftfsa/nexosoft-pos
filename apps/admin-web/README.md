@@ -3,11 +3,15 @@
 **Panel web de reportes** para el dueño/encargado ([ADR-0024](../../docs/adr/0024-panel-web-de-reportes.md)).
 React + Vite + TypeScript. **Solo lectura**: consume los endpoints `/reportes` del
 `cloud-api`. App independiente del POS, pensada para abrirse desde cualquier
-navegador de la LAN del comercio.
+navegador de la LAN del comercio — y, si `cloud-api` se expone vía túnel
+([ADR-0052](../../docs/adr/0052-acceso-remoto-admin-web-cloudflare-tunnel.md)),
+desde cualquier lugar.
 
 > Estado: **Fase 6 COMPLETA** — scaffold + login + shell (6.2), dashboard de
 > ventas (6.3), reportes de productos y stock (6.4) y **export CSV + descarga del
 > libro de ventas Excel + serve estático desde el cloud-api** (6.5).
+> **Fase 15.B**: layout responsive (nav como drawer en mobile, `Layout.tsx`/
+> `estilos.css`) para verlo bien desde el celular.
 
 ## Cómo correrlo
 

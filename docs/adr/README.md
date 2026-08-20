@@ -68,3 +68,4 @@ Consecuencias y Alternativas consideradas.
 | 0049 | [Etiquetas de góndola por escaneo, export a Excel, sin código de barras](0049-etiquetas-por-escaneo-y-export-excel.md) | Aceptada |
 | 0050 | [Medios de pago (tarjetas por banco) y recargo por tarjeta](0050-medios-de-pago-y-recargo-por-tarjeta.md) | Aceptada |
 | 0051 | [Credencial de empleado con código de barras (token dedicado, no la contraseña)](0051-credencial-de-empleado-con-codigo-de-barras.md) | Aceptada |
+| 0052 | [Acceso remoto a admin-web vía Cloudflare Tunnel](0052-acceso-remoto-admin-web-cloudflare-tunnel.md) | Aceptada |

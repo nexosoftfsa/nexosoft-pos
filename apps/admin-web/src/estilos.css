@@ -124,6 +124,20 @@ body {
   border-right: 1px solid var(--color-borde);
   padding: 1.25rem 1rem;
 }
+.layout__burger {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  color: var(--color-texto);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+.layout__overlay {
+  display: none;
+}
 .layout__marca {
   font-size: 1.3rem;
   font-weight: 700;
@@ -261,6 +275,10 @@ body {
   border: 1px solid var(--color-borde);
   border-radius: var(--radio);
   padding: 1.25rem;
+  /* Las tablas (Ventas/Productos/Stock) no se achican más allá de su contenido;
+     que el panel scrollee horizontalmente evita que empujen el layout entero
+     en pantallas angostas (mobile, Fase 15.B). */
+  overflow-x: auto;
 }
 .panel__titulo {
   margin: 0 0 1rem;
@@ -334,4 +352,69 @@ body {
 .placeholder h2 {
   margin-top: 0;
   color: var(--color-acento);
+}
+
+/* ─── Responsive / mobile (Fase 15.B) ─────────────────────────────────
+   El panel se pensó para desktop (ADR-0024); acá se lo hace usable desde el
+   celular del dueño sin tocar el look de escritorio. La nav lateral pasa a
+   ser un drawer off-canvas por debajo de 768px. */
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .layout__burger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .layout__overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    z-index: 20;
+  }
+  .layout__nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(260px, 80vw);
+    z-index: 30;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    overflow-y: auto;
+  }
+  .layout__nav--abierto {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+  }
+  .layout__header {
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+  .layout__titulo {
+    flex: 1;
+  }
+  .layout__usuario {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  .layout__usuario > span {
+    display: none;
+  }
+  .layout__contenido {
+    padding: 1rem;
+  }
+  .kpis {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+  .paneles {
+    grid-template-columns: 1fr;
+  }
+  .panel__cabecera {
+    flex-wrap: wrap;
+  }
 }

@@ -22,7 +22,19 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors();
+  // Fase 15.B: admin-web puede quedar expuesto a internet detrás de un
+  // reverse proxy (Cloudflare Tunnel). `trust proxy` hace que Express lea la
+  // IP real del cliente desde X-Forwarded-For en vez de la IP del túnel/proxy
+  // -- sin esto, el rate-limiting por IP (ver ThrottlerModule en app.module.ts)
+  // no sirve de nada, porque todos los pedidos parecerían venir del mismo lado.
+  app.set('trust proxy', 1);
+
+  // CORS_ORIGINS: lista separada por comas de orígenes permitidos (ej. el
+  // dominio del túnel). Sin la variable, sigue abierto a cualquier origen --
+  // el default de antes de esta fase, correcto mientras todo corre en la LAN
+  // (ADR-0019). Definila en producción antes de exponer el servidor afuera.
+  const origenes = process.env['CORS_ORIGINS'];
+  app.enableCors(origenes ? { origin: origenes.split(',').map((o) => o.trim()) } : undefined);
   app.setGlobalPrefix('api/v1');
 
   const port = process.env['PORT'] ?? 3000;

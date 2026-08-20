@@ -109,3 +109,10 @@ En cada instalación, al loguearse por primera vez:
 Una venta de prueba, imprimir A4 y ticket chico, confirmar que el catálogo
 completo está (711 artículos), y que el panel (`http://localhost:3000/`)
 muestra el logo y los reportes.
+
+## 6. (Opcional) Acceso al panel desde fuera de la LAN
+
+Si el dueño quiere ver el panel de reportes desde el celular fuera del
+local, ver [despliegue-cloudflare-tunnel.md](despliegue-cloudflare-tunnel.md)
+(Fase 15.B / [ADR-0052](adr/0052-acceso-remoto-admin-web-cloudflare-tunnel.md)).
+No es necesario para que el resto del sistema funcione.
