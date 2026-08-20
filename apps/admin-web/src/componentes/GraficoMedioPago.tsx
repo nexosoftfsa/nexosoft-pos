@@ -21,7 +21,6 @@ export function GraficoMedioPago({ datos }: { datos: VentasPorMedioPago[] }) {
           cx="50%"
           cy="50%"
           outerRadius={95}
-          label={({ nombre }) => nombre}
         >
           {porciones.map((_, i) => (
             <Cell key={i} fill={COLORES[i % COLORES.length]} />
