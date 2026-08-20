@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 
-import { leerComoDataUrl } from "../archivos";
+import { redimensionarImagen } from "../archivos";
 import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
 import {
@@ -25,8 +25,13 @@ const ROLES: ReadonlyArray<{ valor: RolUsuario; etiqueta: string }> = [
   { valor: "CAJERO", etiqueta: "Cajero" },
 ];
 
-/** Tamaño máximo de la foto de perfil (queda embebida en la credencial impresa). */
-const FOTO_MAX_BYTES = 250 * 1024;
+/**
+ * Tope solo para descartar un archivo disparatado antes de intentar
+ * procesarlo — el tamaño real que se guarda lo controla `redimensionarImagen`
+ * (reescala y comprime), así que una foto de celular normal (unos pocos MB)
+ * entra sin problema.
+ */
+const ARCHIVO_FOTO_MAX_BYTES = 20 * 1024 * 1024;
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorUsuarios) return e.message;
@@ -277,13 +282,13 @@ function FotoCelda({
     const archivo = e.target.files?.[0];
     e.target.value = "";
     if (!archivo) return;
-    if (archivo.size > FOTO_MAX_BYTES) {
-      onError(`La foto no puede pesar más de ${Math.round(FOTO_MAX_BYTES / 1024)} KB.`);
+    if (archivo.size > ARCHIVO_FOTO_MAX_BYTES) {
+      onError(`El archivo no puede pesar más de ${Math.round(ARCHIVO_FOTO_MAX_BYTES / 1024 / 1024)} MB.`);
       return;
     }
     setSubiendo(true);
     try {
-      const dataUrl = await leerComoDataUrl(archivo);
+      const dataUrl = await redimensionarImagen(archivo);
       const r = await cliente.actualizarFoto(usuarioId, dataUrl);
       setFotoDataUrl(r.fotoBase64);
     } catch (err) {
