@@ -758,6 +758,8 @@ body {
   color: #0f172a;
   align-items: center;
   gap: 4mm;
+  border: 0.6mm solid #2563eb;
+  border-radius: 3mm;
 }
 .credencial-foto {
   width: 20mm;
