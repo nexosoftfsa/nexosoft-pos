@@ -338,6 +338,12 @@ export function Shell({
               cliente={clienteUsuarios}
               {...(clienteCredenciales ? { clienteCredenciales } : {})}
               {...(usuario.id ? { propioId: usuario.id } : {})}
+              comercio={{
+                razonSocial: entorno.config.razonSocial,
+                ...(entorno.config.logoDataUrl !== undefined
+                  ? { logoDataUrl: entorno.config.logoDataUrl }
+                  : {}),
+              }}
             />
           ) : activo ? (
             <Placeholder modulo={activo} />

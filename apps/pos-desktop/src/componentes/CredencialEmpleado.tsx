@@ -32,11 +32,14 @@ export function CredencialEmpleado({
   usuario,
   clienteUsuarios,
   clienteCredenciales,
+  comercio,
   onCerrar,
 }: {
   usuario: UsuarioRemoto;
   clienteUsuarios: ClienteUsuarios;
   clienteCredenciales: ClienteCredenciales;
+  /** Razón social/logo del comercio, para la credencial impresa. Sin esto (o sin cargar), muestra "Nexosoft" y su logo. */
+  comercio?: { razonSocial: string; logoDataUrl?: string };
   onCerrar: () => void;
 }) {
   const [estado, setEstado] = useState<EstadoCredencial | null>(null);
@@ -69,11 +72,14 @@ export function CredencialEmpleado({
     try {
       const { payload } = await clienteCredenciales.regenerar(usuario.id);
       const foto = await clienteUsuarios.obtenerFoto(usuario.id).catch(() => ({ fotoBase64: null }));
+      const razonSocial = comercio?.razonSocial.trim();
       imprimirCredencial({
         nombreDisplay: usuario.nombreDisplay,
         rol: usuario.rol,
         payloadBarcode: payload,
         ...(foto.fotoBase64 !== null ? { fotoDataUrl: foto.fotoBase64 } : {}),
+        ...(razonSocial !== undefined && razonSocial !== "" ? { razonSocial } : {}),
+        ...(comercio?.logoDataUrl !== undefined ? { logoDataUrl: comercio.logoDataUrl } : {}),
       });
       setAvisoNuevaCredencial(true);
       await cargar();

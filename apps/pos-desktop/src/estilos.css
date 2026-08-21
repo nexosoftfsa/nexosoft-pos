@@ -785,11 +785,21 @@ body {
   flex: 1;
 }
 .credencial-marca {
+  display: flex;
+  align-items: center;
+  gap: 1.2mm;
   font-size: 7pt;
   font-weight: 700;
   color: #2563eb;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+.credencial-marca-logo {
+  height: 5mm;
+  width: auto;
+  max-width: 12mm;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 .credencial-nombre {
   font-size: 11pt;

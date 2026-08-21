@@ -53,11 +53,14 @@ function fecha(iso: string): string {
 export function Usuarios({
   cliente: api,
   clienteCredenciales,
+  comercio,
   propioId,
 }: {
   cliente: ClienteUsuarios;
   /** Credencial de acceso por código de barras (Fase 15.A). Sin esto, la acción "Credencial" no se muestra. */
   clienteCredenciales?: ClienteCredenciales;
+  /** Razón social/logo del comercio, para la credencial impresa. */
+  comercio?: { razonSocial: string; logoDataUrl?: string };
   propioId?: string;
 }) {
   const [usuarios, setUsuarios] = useState<UsuarioRemoto[]>([]);
@@ -238,6 +241,7 @@ export function Usuarios({
           usuario={credencialUsuario}
           clienteUsuarios={api}
           clienteCredenciales={clienteCredenciales}
+          {...(comercio !== undefined ? { comercio } : {})}
           onCerrar={() => setCredencialUsuario(null)}
         />
       )}

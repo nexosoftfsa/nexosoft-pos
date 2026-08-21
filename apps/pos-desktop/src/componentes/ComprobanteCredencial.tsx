@@ -8,6 +8,7 @@
 import { useEffect, useRef } from "react";
 import JsBarcode from "jsbarcode";
 
+import { LOGO_NEXOSOFT_DATA_URL } from "./logo-nexosoft";
 import type { DatosCredencial } from "./usar-impresion-credencial";
 
 const ETIQUETA_ROL: Record<string, string> = {
@@ -37,7 +38,14 @@ export function ComprobanteCredencial({ datos }: { datos: DatosCredencial }) {
         <div className="credencial-foto-placeholder" />
       )}
       <div className="credencial-datos">
-        <div className="credencial-marca">NexoSoft POS</div>
+        <div className="credencial-marca">
+          <img
+            src={datos.logoDataUrl ?? LOGO_NEXOSOFT_DATA_URL}
+            alt=""
+            className="credencial-marca-logo"
+          />
+          <span>{datos.razonSocial ?? "Nexosoft"}</span>
+        </div>
         <div className="credencial-nombre">{datos.nombreDisplay}</div>
         <div className="credencial-rol">{ETIQUETA_ROL[datos.rol] ?? datos.rol}</div>
         <svg ref={svgRef} className="credencial-barcode" />

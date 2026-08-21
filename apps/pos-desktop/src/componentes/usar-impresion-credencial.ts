@@ -7,6 +7,10 @@ export interface DatosCredencial {
   readonly fotoDataUrl?: string;
   /** Payload crudo del código de barras, ej. "NXSCRED:{usuarioId}:{token}". */
   readonly payloadBarcode: string;
+  /** Razón social del comercio. Sin esto, la credencial muestra "Nexosoft". */
+  readonly razonSocial?: string;
+  /** Logo del comercio. Sin esto, la credencial muestra el logo de Nexosoft. */
+  readonly logoDataUrl?: string;
 }
 
 export function useImpresionCredencial(): {
