@@ -112,6 +112,13 @@
   .app-shell--sidebar-fijado {
     grid-template-columns: var(--sidebar) 1fr;
   }
+  /* El contenido SIEMPRE en la segunda columna. Cuando el menú se expande en
+     overlay pasa a `position: absolute` y sale del flujo del grid; sin esta
+     línea, `.shell-main` se auto-ubicaba en la primera columna (64px) y el
+     panel central quedaba aplastado — se veía en blanco. */
+  .shell-main {
+    grid-column: 2;
+  }
   .sidebar--expandido:not(.sidebar--fijado) {
     position: absolute;
     top: 0;
