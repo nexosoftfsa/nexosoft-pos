@@ -29,3 +29,9 @@ tauri-plugin-process = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-shell = "2"
+
+# Impresión térmica ESC/POS: se le mandan los bytes crudos al spooler de
+# Windows (datatype "RAW"), salteando el renderizado GDI del navegador — que
+# es lo que obligaba a un tamaño de papel fijo y desperdiciaba rollo.
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winspool", "winbase", "minwindef", "winnt", "handleapi"] }

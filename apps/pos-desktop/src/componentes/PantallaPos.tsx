@@ -16,6 +16,7 @@ import type { DatosTicket } from "@nexosoft/hardware";
 import type { IntentoPago } from "@nexosoft/pagos";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
+import { estaEnTauri } from "../datos/ejecutor-sql-tauri";
 import { etiquetaComprobante, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
@@ -859,11 +860,12 @@ export function PantallaPos({
     setImprimiendo(true);
     try {
       const datos = construirDatosTicket(venta, config, catalogo, pagosDeLaVenta, tarjetas);
-      // La térmica real todavía no existe (mock, ver packages/hardware): igual
-      // se registra el trabajo (para cuando haya driver) y se muestra la vista
-      // previa imprimible en formato rollo, así el "Imprimir" no queda mudo.
       await impresora.imprimirTicket(datos);
-      imprimirTicketPreview(datos);
+      // En la app instalada la impresora es la térmica real (ESC/POS directo
+      // al spooler): el ticket ya salió y abrir además el diálogo del
+      // navegador lo imprimiría dos veces y frenaría la caja. La vista previa
+      // queda solo para el navegador de desarrollo, donde no hay impresora.
+      if (!estaEnTauri()) imprimirTicketPreview(datos);
     } catch (e) {
       setError(`Error al imprimir: ${mensajeError(e)}`);
     } finally {

@@ -37,7 +37,9 @@ import {
   TipoLista,
 } from "@nexosoft/domain";
 import { MockServicioFiscal } from "@nexosoft/fiscal";
-import { MockImpresoraTermica, MockLectorDeBarras } from "@nexosoft/hardware";
+import { MockLectorDeBarras } from "@nexosoft/hardware";
+
+import { ImpresoraEscPos } from "./impresora-escpos";
 import { MockPasarelaDePago } from "@nexosoft/pagos";
 import { AlmacenSqlite, crearTablaSync } from "../sync/almacen-sqlite";
 import { ClienteSyncHttp } from "../sync/cliente-sync-http";
@@ -297,7 +299,8 @@ export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}):
     facturacion: new ServicioDeFacturacion(repos, config, new MockServicioFiscal()),
     config,
     catalogo,
-    impresora: new MockImpresoraTermica(),
+    // Térmica real vía ESC/POS (Windows RAW). 32 columnas = papel de 58mm.
+    impresora: new ImpresoraEscPos(32),
     lector: new MockLectorDeBarras(),
     pasarela: new MockPasarelaDePago(),
     sync,
