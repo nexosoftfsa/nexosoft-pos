@@ -5,6 +5,7 @@ import {
   aAsciiImprimible,
   centrar,
   COLUMNAS_58MM,
+  comandoImagenRaster,
   construirEscPos,
   filaIzquierdaDerecha,
 } from "./escpos.js";
@@ -180,6 +181,61 @@ describe("construirEscPos", () => {
     );
     expect(t).toContain("IVA 21%");
     expect(t).toContain("$ 433,88");
+  });
+});
+
+describe("comandoImagenRaster (logo del comercio)", () => {
+  /** 16x2 puntos = 2 bytes por fila. */
+  const logo = { anchoPuntos: 16, alto: 2, bits: Uint8Array.from([0xff, 0x00, 0x0f, 0xf0]) };
+
+  it("arma la cabecera GS v 0 con ancho en BYTES y alto en puntos", () => {
+    const cmd = comandoImagenRaster(logo);
+    // GS v 0 m=0, xL=2 xH=0 (2 bytes por fila), yL=2 yH=0 (2 filas)
+    expect(cmd.slice(0, 8)).toEqual([0x1d, 0x76, 0x30, 0x00, 2, 0, 2, 0]);
+    expect(cmd.slice(8)).toEqual([0xff, 0x00, 0x0f, 0xf0]);
+  });
+
+  it("parte el alto en dos bytes little-endian cuando pasa de 255", () => {
+    const alto = 300;
+    const cmd = comandoImagenRaster({
+      anchoPuntos: 8,
+      alto,
+      bits: new Uint8Array(alto),
+    });
+    expect(cmd[6]).toBe(300 & 0xff); // 44
+    expect(cmd[7]).toBe(1); // 300 >> 8
+  });
+
+  it("redondea el ancho a bytes completos (17 puntos → 3 bytes por fila)", () => {
+    const cmd = comandoImagenRaster({ anchoPuntos: 17, alto: 1, bits: new Uint8Array(3) });
+    expect(cmd[4]).toBe(3);
+  });
+
+  it("avisa si los bits no cierran con las medidas declaradas", () => {
+    expect(() =>
+      comandoImagenRaster({ anchoPuntos: 16, alto: 2, bits: new Uint8Array(3) }),
+    ).toThrow(/16x2/);
+  });
+
+  it("el ticket incluye la imagen antes de la razón social", () => {
+    const bytes = construirEscPos(ticket(), COLUMNAS_58MM, logo);
+    const marca = [0x1d, 0x76, 0x30];
+    const pos = Array.from(bytes).findIndex(
+      (_, i) => marca.every((m, j) => bytes[i + j] === m),
+    );
+    expect(pos).toBeGreaterThan(-1);
+    const textoDespues = Array.from(bytes.slice(pos))
+      .map((b) => String.fromCharCode(b))
+      .join("");
+    expect(textoDespues).toContain("LAGUS Minimarket");
+  });
+
+  it("sin logo, el ticket no lleva ningún comando de imagen", () => {
+    const bytes = construirEscPos(ticket());
+    const hayImagen = Array.from(bytes).some(
+      (_, i) => bytes[i] === 0x1d && bytes[i + 1] === 0x76 && bytes[i + 2] === 0x30,
+    );
+    expect(hayImagen).toBe(false);
   });
 });
 

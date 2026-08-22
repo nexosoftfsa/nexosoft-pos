@@ -15,6 +15,22 @@ import type { DatosTicket } from "./impresora.js";
 /** Caracteres por línea en fuente A (12x24) sobre papel de 58mm. */
 export const COLUMNAS_58MM = 32;
 
+/** Ancho en puntos de un carácter de fuente A: 32 columnas = 384 puntos. */
+export const PUNTOS_POR_COLUMNA = 12;
+
+/**
+ * Logo ya convertido a mapa de bits monocromo, listo para `GS v 0`.
+ * La conversión desde el PNG/JPG del comercio vive en la app (necesita
+ * `canvas`); acá solo se empaqueta, así el comando queda testeable.
+ */
+export interface LogoRaster {
+  /** Ancho en puntos (píxeles). Máximo 384 en una térmica de 58mm. */
+  readonly anchoPuntos: number;
+  readonly alto: number;
+  /** 1 bit por punto, 8 por byte, MSB primero. Un bit en 1 = punto negro. */
+  readonly bits: Uint8Array;
+}
+
 // --- Comandos ESC/POS ------------------------------------------------------
 const ESC = 0x1b;
 const GS = 0x1d;
@@ -28,6 +44,31 @@ const DOBLE_ALTO = [GS, 0x21, 0x01]; // GS ! — alto doble, ancho normal
 const TAMANO_NORMAL = [GS, 0x21, 0x00];
 /** GS V 66 n: avanza n puntos y corta. Deja pestaña para agarrar el ticket. */
 const CORTAR = [GS, 0x56, 0x42, 0x00];
+
+/**
+ * `GS v 0`: imprime un mapa de bits. El ancho va en BYTES por fila (no en
+ * puntos) y tanto el ancho como el alto viajan en dos bytes little-endian.
+ */
+export function comandoImagenRaster(logo: LogoRaster): number[] {
+  const bytesPorFila = Math.ceil(logo.anchoPuntos / 8);
+  const esperados = bytesPorFila * logo.alto;
+  if (logo.bits.length !== esperados) {
+    throw new Error(
+      `El logo dice ${logo.anchoPuntos}x${logo.alto} (${esperados} bytes) pero trae ${logo.bits.length}.`,
+    );
+  }
+  return [
+    GS,
+    0x76,
+    0x30,
+    0x00, // m = 0 (tamaño normal)
+    bytesPorFila & 0xff,
+    (bytesPorFila >> 8) & 0xff,
+    logo.alto & 0xff,
+    (logo.alto >> 8) & 0xff,
+    ...logo.bits,
+  ];
+}
 
 /**
  * Pasa el texto a ASCII imprimible. Las térmicas usan páginas de código de
@@ -165,8 +206,15 @@ class Buffer {
  * Arma el ticket completo en ESC/POS, listo para mandar a la impresora.
  *
  * @param columnas Ancho del papel en caracteres (32 = 58mm, 48 = 80mm).
+ * @param logo Logo del comercio ya rasterizado. La conversión desde el
+ *   `logoDataUrl` la hace la app (ver `impresora-escpos.ts`), porque necesita
+ *   `canvas` y este paquete tiene que poder correr en Node para los tests.
  */
-export function construirEscPos(datos: DatosTicket, columnas = COLUMNAS_58MM): Uint8Array {
+export function construirEscPos(
+  datos: DatosTicket,
+  columnas = COLUMNAS_58MM,
+  logo?: LogoRaster,
+): Uint8Array {
   const b = new Buffer(columnas);
   const pesos = pesosTicket;
 
@@ -174,6 +222,7 @@ export function construirEscPos(datos: DatosTicket, columnas = COLUMNAS_58MM): U
 
   // --- Cabecera del comercio (centrada) ---
   b.comando(ALINEAR_CENTRO);
+  if (logo) b.comando(comandoImagenRaster(logo)).linea();
   b.comando(NEGRITA_ON).linea(datos.razonSocial).comando(NEGRITA_OFF);
   b.linea(`CUIT ${datos.cuit}`);
   b.linea(datos.condicionIvaEmisor);

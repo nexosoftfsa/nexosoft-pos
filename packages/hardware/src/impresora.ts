@@ -37,7 +37,10 @@ export interface DatosTicket {
   readonly cuit: string;
   readonly condicionIvaEmisor: string;
   readonly puntoDeVenta: number;
-  /** Logo del comercio como data URL. Solo se usa en la impresión A4 (HTML). */
+  /**
+   * Logo del comercio como data URL. Se usa en la impresión A4 (HTML) y en la
+   * térmica (se rasteriza a monocromo y va como imagen ESC/POS).
+   */
   readonly logoDataUrl?: string;
 
   // Comprobante
