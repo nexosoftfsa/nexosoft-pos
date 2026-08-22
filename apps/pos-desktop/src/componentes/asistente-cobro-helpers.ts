@@ -6,7 +6,20 @@
  */
 import { FormaDePago, Money } from "@nexosoft/domain";
 
-export type PasoAsistente = "cerrado" | "medio" | "tarjeta" | "cuotas" | "cliente" | "monto";
+/**
+ * Pasos del asistente. Tras `monto`, si el pago fue parcial se vuelve a
+ * `medio` (pago mixto); si cubrió el total se pasa a `resumen` (muestra el
+ * vuelto y finaliza la venta) y de ahí a `imprimir` (¿ticket sí o no?).
+ */
+export type PasoAsistente =
+  | "cerrado"
+  | "medio"
+  | "tarjeta"
+  | "cuotas"
+  | "cliente"
+  | "monto"
+  | "resumen"
+  | "imprimir";
 
 /** Índice circular: usado por los 4 pasos con lista (medio/tarjeta/cuotas/cliente). */
 export function moverCursor(cursor: number, delta: number, longitud: number): number {
@@ -31,6 +44,21 @@ export function pasoTrasElegirMedio(
 /** Paso siguiente tras elegir la tarjeta/banco: cuotas si tiene tasas cargadas. */
 export function pasoTrasElegirTarjeta(cantidadTasas: number): PasoAsistente {
   return cantidadTasas > 0 ? "cuotas" : "monto";
+}
+
+/**
+ * Esc = volver un paso atrás. Se apoya en el historial de pasos recorridos
+ * (en vez de re-deducir de dónde se vino) para que el camino de vuelta sea
+ * exactamente el de ida: monto → cuotas → tarjeta → medio, o monto →
+ * cliente → medio, según corresponda. Sin historial, el asistente se cierra.
+ */
+export function volverPasoAtras(historial: readonly PasoAsistente[]): {
+  readonly paso: PasoAsistente;
+  readonly historial: PasoAsistente[];
+} {
+  const anterior = historial[historial.length - 1];
+  if (anterior === undefined) return { paso: "cerrado", historial: [] };
+  return { paso: anterior, historial: historial.slice(0, -1) };
 }
 
 /**

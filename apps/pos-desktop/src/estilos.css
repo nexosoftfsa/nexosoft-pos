@@ -169,50 +169,111 @@ body {
   font-size: 14px;
 }
 
-/* Fase 17: carrito en tiles grandes (reemplaza al catálogo en el área central
-   cuando el buscador está vacío) y grilla rápida angosta (curada a mano). */
-.items-grande {
+/* Fase 17: la venta en curso ocupa el área central — lista de renglones
+   (como un ticket real, no tarjetas sueltas) + TOTAL grande abajo, que es
+   donde el cajero ya está mirando. La grilla rápida curada va angosta a la
+   derecha. */
+.venta-actual {
   flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  grid-auto-rows: min-content;
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 10px;
+}
+.items-lista {
+  flex: 1;
   overflow-y: auto;
   list-style: none;
   margin: 0;
   padding: 0;
-}
-.vacio-grande {
-  grid-column: 1 / -1;
-  color: var(--suave);
-  text-align: center;
-  padding: 2rem;
-  font-size: 18px;
-}
-.item-grande {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 18px;
   border: 1px solid var(--borde);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--panel);
 }
-.item-grande .item-desc {
+.vacio-grande {
+  color: var(--suave);
+  text-align: center;
+  padding: 2.5rem 1rem;
+  font-size: 18px;
+}
+.items-lista-encabezado,
+.item-linea {
+  display: grid;
+  grid-template-columns: 1fr 130px 120px 140px 40px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+.items-lista-encabezado {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg);
+  border-bottom: 1px solid var(--borde);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--suave);
+}
+.items-lista-encabezado span:nth-child(2),
+.items-lista-encabezado span:nth-child(3),
+.items-lista-encabezado span:nth-child(4) {
+  text-align: right;
+}
+.item-linea {
+  border-bottom: 1px solid var(--borde);
+}
+.item-linea:last-child {
+  border-bottom: none;
+}
+.item-linea .item-desc {
+  font-size: 16px;
+  font-weight: 600;
+}
+.item-linea .item-cant {
+  justify-content: flex-end;
+}
+.item-linea .item-cant button {
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+}
+.item-unitario {
+  text-align: right;
+  color: var(--suave);
+  font-variant-numeric: tabular-nums;
+}
+.item-linea .item-importe {
   font-size: 18px;
   font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
-.item-grande .item-cant {
-  align-self: flex-start;
+.total-centro {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 22px;
+  border-radius: 12px;
+  background: var(--texto);
+  color: #fff;
 }
-.item-grande .item-cant button {
-  width: 34px;
-  height: 34px;
-  font-size: 20px;
+.total-centro-items {
+  font-size: 13px;
+  color: #94a3b8;
 }
-.item-grande .item-importe {
-  font-size: 20px;
-  text-align: left;
+.total-centro-etiqueta {
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.total-centro-valor {
+  font-size: 40px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 .grilla-rapida-panel {
   border-bottom: 1px solid var(--borde);
@@ -526,6 +587,16 @@ body {
   cursor: pointer;
   font-size: 15px;
 }
+.asistente-resumen-subtotal {
+  border-bottom: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--suave);
+  padding: 2px 0;
+}
+.asistente-resumen-subtotal + .asistente-resumen-total {
+  margin-top: 6px;
+}
 .asistente-resumen-total {
   border-top: 2px solid var(--borde);
   border-bottom: none;
@@ -534,6 +605,60 @@ body {
   font-size: 15px;
   font-weight: 800;
   color: var(--peligro);
+}
+.asistente-resumen-ok {
+  color: var(--ok-fuerte);
+}
+
+/* Pasos de cierre del asistente (Fase 17): resumen con vuelto e impresión. */
+.asistente-cierre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
+.asistente-cierre-icono {
+  font-size: 52px;
+  line-height: 1;
+  color: var(--ok);
+}
+.asistente-cierre-titulo {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--texto);
+}
+.asistente-cierre-detalle {
+  font-size: 14px;
+  color: var(--suave);
+}
+.asistente-vuelto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 28px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 2px solid var(--ok);
+}
+.asistente-vuelto-etiqueta {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--ok-fuerte);
+}
+.asistente-vuelto-valor {
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--ok-fuerte);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.asistente-lista-si-no {
+  width: 100%;
+  max-width: 280px;
 }
 .asistente-footer {
   background: var(--bg);
@@ -1049,10 +1174,21 @@ body {
   .catalogo {
     flex: none;
   }
-  .catalogo-grilla,
-  .items-grande {
+  .catalogo-grilla {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     overflow-y: visible;
+  }
+  /* En pantallas chicas no entran las 4 columnas: se cae a descripción +
+     cantidad + importe, y se ocultan el encabezado y el precio unitario. */
+  .items-lista-encabezado {
+    display: none;
+  }
+  .item-linea {
+    grid-template-columns: 1fr auto auto 32px;
+    gap: 8px;
+  }
+  .item-unitario {
+    display: none;
   }
   .ticket-panel {
     width: 100%;

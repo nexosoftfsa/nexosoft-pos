@@ -36,6 +36,9 @@ export function AsistenteCobro({
   recargoVivo,
   montoBaseVivo,
   saldoPendiente,
+  totalVenta,
+  pagado,
+  vuelto,
   pagos,
   onQuitarPago,
   error,
@@ -54,18 +57,26 @@ export function AsistenteCobro({
   recargoVivo: Money | null;
   montoBaseVivo: Money | null;
   saldoPendiente: Money;
+  totalVenta: Money;
+  pagado: Money;
+  vuelto: Money;
   pagos: readonly PagoUi[];
   onQuitarPago: (indice: number) => void;
   error: string | null;
 }) {
   const etiquetaFormaActual = formas.find((f) => f.valor === formaPago)?.etiqueta ?? formaPago;
+  const cobroCompleto = paso === "resumen" || paso === "imprimir";
 
   return (
     <div className="overlay">
       <div className="asistente-cobro">
         <div className="asistente-header">
           <h2>{tituloDePaso(paso)}</h2>
-          <div className="asistente-balance">{pesos(saldoPendiente)}</div>
+          {/* Mientras se cobra importa lo que falta; una vez cubierto el
+              total, mostrar "$ 0,00" no dice nada — ahí va el total vendido. */}
+          <div className="asistente-balance">
+            {pesos(cobroCompleto ? totalVenta : saldoPendiente)}
+          </div>
         </div>
         <div className="asistente-body">
           <div className="asistente-col-main">
@@ -135,6 +146,39 @@ export function AsistenteCobro({
                 {error && <div className="error">{error}</div>}
               </div>
             )}
+
+            {paso === "resumen" && (
+              <div className="asistente-cierre">
+                <div className="asistente-cierre-icono">✔</div>
+                <div className="asistente-cierre-titulo">Cobro completo</div>
+                {vuelto.esPositivo() ? (
+                  <div className="asistente-vuelto">
+                    <span className="asistente-vuelto-etiqueta">VUELTO</span>
+                    <span className="asistente-vuelto-valor">{pesos(vuelto)}</span>
+                  </div>
+                ) : (
+                  <div className="asistente-cierre-detalle">Pagó justo — sin vuelto.</div>
+                )}
+                {error && <div className="error">{error}</div>}
+              </div>
+            )}
+
+            {paso === "imprimir" && (
+              <div className="asistente-cierre">
+                <div className="asistente-cierre-titulo">¿Imprimir ticket?</div>
+                <ul className="asistente-lista asistente-lista-si-no">
+                  {["Sí, imprimir", "No, gracias"].map((etiqueta, i) => (
+                    <li
+                      key={etiqueta}
+                      className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}
+                    >
+                      {etiqueta}
+                    </li>
+                  ))}
+                </ul>
+                {error && <div className="error">{error}</div>}
+              </div>
+            )}
           </div>
 
           <div className="asistente-col-resumen">
@@ -159,10 +203,25 @@ export function AsistenteCobro({
                 );
               })}
             </div>
-            <div className="asistente-resumen-item asistente-resumen-total">
-              <span>Falta pagar:</span>
-              <span>{pesos(saldoPendiente)}</span>
+            <div className="asistente-resumen-item asistente-resumen-subtotal">
+              <span>Total venta:</span>
+              <span>{pesos(totalVenta)}</span>
             </div>
+            <div className="asistente-resumen-item asistente-resumen-subtotal">
+              <span>Pagado:</span>
+              <span>{pesos(pagado)}</span>
+            </div>
+            {cobroCompleto ? (
+              <div className="asistente-resumen-item asistente-resumen-total asistente-resumen-ok">
+                <span>{vuelto.esPositivo() ? "Vuelto:" : "Saldo:"}</span>
+                <span>{pesos(vuelto)}</span>
+              </div>
+            ) : (
+              <div className="asistente-resumen-item asistente-resumen-total">
+                <span>Falta pagar:</span>
+                <span>{pesos(saldoPendiente)}</span>
+              </div>
+            )}
           </div>
         </div>
         <div className="asistente-footer">{pieDeAyuda(paso)}</div>
@@ -181,12 +240,24 @@ function tituloDePaso(paso: Exclude<PasoAsistente, "cerrado">): string {
       return "Elegir Cuotas";
     case "cliente":
       return "Elegir Cliente";
+    case "resumen":
+      return "Finalizar Venta";
+    case "imprimir":
+      return "Ticket";
     case "monto":
       return "Confirmar Monto";
   }
 }
 
 function pieDeAyuda(paso: Exclude<PasoAsistente, "cerrado">): string {
-  if (paso === "monto") return "Modificá el monto (pago mixto) y presioná Enter. Esc cancela.";
-  return "Usá ↑ ↓ para elegir y Enter para confirmar. Esc cancela.";
+  switch (paso) {
+    case "monto":
+      return "Modificá el monto (pago mixto) y presioná Enter. Esc vuelve atrás.";
+    case "resumen":
+      return "Enter finaliza la venta. Esc vuelve sin confirmar.";
+    case "imprimir":
+      return "Usá ↑ ↓ para elegir y Enter para confirmar.";
+    default:
+      return "Usá ↑ ↓ para elegir y Enter para confirmar. Esc vuelve atrás.";
+  }
 }

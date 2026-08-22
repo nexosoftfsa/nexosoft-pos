@@ -7,6 +7,7 @@ import {
   pasoTrasElegirMedio,
   pasoTrasElegirTarjeta,
   superaSaldoSinVuelto,
+  volverPasoAtras,
 } from "./asistente-cobro-helpers";
 
 describe("moverCursor", () => {
@@ -51,6 +52,33 @@ describe("pasoTrasElegirTarjeta", () => {
   });
   it("sin tasas cargadas va directo al monto", () => {
     expect(pasoTrasElegirTarjeta(0)).toBe("monto");
+  });
+});
+
+describe("volverPasoAtras", () => {
+  it("sin historial, cierra el asistente", () => {
+    expect(volverPasoAtras([])).toEqual({ paso: "cerrado", historial: [] });
+  });
+  it("vuelve al último paso recorrido y lo saca del historial", () => {
+    expect(volverPasoAtras(["medio", "tarjeta", "cuotas"])).toEqual({
+      paso: "cuotas",
+      historial: ["medio", "tarjeta"],
+    });
+  });
+  it("deshace el camino completo de tarjeta a cuotas paso por paso", () => {
+    let estado = volverPasoAtras(["medio", "tarjeta", "cuotas"]);
+    expect(estado.paso).toBe("cuotas");
+    estado = volverPasoAtras(estado.historial);
+    expect(estado.paso).toBe("tarjeta");
+    estado = volverPasoAtras(estado.historial);
+    expect(estado.paso).toBe("medio");
+    estado = volverPasoAtras(estado.historial);
+    expect(estado.paso).toBe("cerrado");
+  });
+  it("no muta el historial recibido", () => {
+    const historial = ["medio", "cliente"] as const;
+    volverPasoAtras(historial);
+    expect(historial).toEqual(["medio", "cliente"]);
   });
 });
 

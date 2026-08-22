@@ -27,6 +27,7 @@ import {
   pasoTrasElegirMedio,
   pasoTrasElegirTarjeta,
   superaSaldoSinVuelto,
+  volverPasoAtras,
   type PasoAsistente,
 } from "./asistente-cobro-helpers";
 import { ComprobanteA4 } from "./ComprobanteA4";
@@ -165,6 +166,17 @@ export function PantallaPos({
   const [pasoAsistente, setPasoAsistente] = useState<PasoAsistente>("cerrado");
   const [cursorAsistente, setCursorAsistente] = useState(0);
   const [avanceAsistentePendiente, setAvanceAsistentePendiente] = useState(false);
+  /** Camino recorrido dentro del asistente, para que Esc vuelva un paso atrás. */
+  const [historialAsistente, setHistorialAsistente] = useState<PasoAsistente[]>([]);
+  /**
+   * Venta ya confirmada desde el asistente, esperando el paso "¿imprimir?".
+   * Se guarda con los pagos de ESA venta porque `pagos` se limpia al
+   * confirmar y el ticket los necesita para el detalle de formas de pago.
+   */
+  const [ventaAsistente, setVentaAsistente] = useState<{
+    venta: VentaConfirmada;
+    pagos: PagoUi[];
+  } | null>(null);
   // Fase 17: `catalogo` es una foto tomada al bootstrapear (no se re-lee
   // sola), así que la estrella de "grilla rápida" se refleja acá al toque
   // (optimista) además de guardarse en el local `entorno.grillaRapida`.
@@ -172,6 +184,26 @@ export function PantallaPos({
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const buscadorRef = useRef<HTMLInputElement>(null);
   const montoAsistenteRef = useRef<HTMLInputElement>(null);
+  /**
+   * Marca temporal del evento que abrió el asistente. React 18 aplica el
+   * `setState` de un evento de teclado en forma SÍNCRONA (los eventos de
+   * teclado son "discretos"), así que el listener global del asistente queda
+   * enganchado mientras ese mismo Enter físico todavía está burbujeando hacia
+   * `window` — y el asistente se comía el primer paso solo, saltando de
+   * "Seleccionar Medio" directo a "Confirmar Monto" con Efectivo elegido.
+   * Comparando contra el `timeStamp` del evento (mismo origen de tiempo que
+   * `performance.now()`) se descarta ese Enter ya consumido.
+   */
+  const aperturaAsistenteRef = useRef(0);
+  /**
+   * Espejo de `pasoAsistente` para leerlo desde handlers cuyo closure quedó
+   * con el valor del render anterior — en particular el `onBlur` del
+   * buscador, que se dispara DURANTE `abrirAsistente()`, cuando el estado
+   * todavía dice "cerrado" y por lo tanto re-enfocaba el buscador anulando
+   * el `blur()`. Con el foco de vuelta ahí, el buscador seguía manejando
+   * cada Enter y el asistente quedaba trabado en el primer paso.
+   */
+  const pasoAsistenteRef = useRef<PasoAsistente>("cerrado");
   const { datosA4, imprimirA4 } = useImpresionA4();
   const { datosTicket, imprimirTicketPreview } = useImpresionTicket();
 
@@ -372,16 +404,36 @@ export function PantallaPos({
    * flechas + Enter) en el primer paso. Le saca el foco al buscador para que
    * el listener global de teclado del wizard no compita con su `onKeyDown`.
    */
-  function abrirAsistente() {
-    setPasoAsistente("medio");
+  function abrirAsistente(marcaDeTiempo = performance.now()) {
+    if (pasoAsistenteRef.current !== "cerrado") return;
+    aperturaAsistenteRef.current = marcaDeTiempo;
+    // Si los pagos ya cubren el total (por ejemplo se cerró el asistente con
+    // Esc y se retoma), no tiene sentido volver a pedir medio de pago.
+    const inicial: PasoAsistente = preview?.cobro.cancelada ? "resumen" : "medio";
+    // El ref se actualiza ANTES del blur: el `onBlur` del buscador lo lee
+    // para no re-enfocarse y devolverle el foco (ver `pasoAsistenteRef`).
+    pasoAsistenteRef.current = inicial;
+    setPasoAsistente(inicial);
     setCursorAsistente(0);
+    setHistorialAsistente([]);
     buscadorRef.current?.blur();
   }
 
   /** Cierra el asistente sin tocar los pagos ya agregados (se sacan con la × de siempre). */
   function cerrarAsistente() {
+    pasoAsistenteRef.current = "cerrado";
     setPasoAsistente("cerrado");
+    setHistorialAsistente([]);
+    setVentaAsistente(null);
     refocarBuscador();
+  }
+
+  /** Avanza a `siguiente` recordando el paso actual, para que Esc pueda volver. */
+  function avanzarPaso(siguiente: PasoAsistente) {
+    setHistorialAsistente((prev) => [...prev, pasoAsistente]);
+    pasoAsistenteRef.current = siguiente;
+    setPasoAsistente(siguiente);
+    setCursorAsistente(0);
   }
 
   function elegirMedioAsistente(indice: number) {
@@ -395,8 +447,7 @@ export function PantallaPos({
     if (siguiente === "monto") {
       setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
     }
-    setPasoAsistente(siguiente);
-    setCursorAsistente(0);
+    avanzarPaso(siguiente);
   }
 
   function elegirTarjetaAsistente(indice: number) {
@@ -408,8 +459,7 @@ export function PantallaPos({
     if (siguiente === "monto") {
       setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
     }
-    setPasoAsistente(siguiente);
-    setCursorAsistente(0);
+    avanzarPaso(siguiente);
   }
 
   function elegirCuotasAsistente(indice: number) {
@@ -419,8 +469,7 @@ export function PantallaPos({
     setMontoPago(
       montoBaseParaSaldoExacto(preview.cobro.saldoPendiente, tasa.recargoPorcentaje).aDecimalString(2),
     );
-    setPasoAsistente("monto");
-    setCursorAsistente(0);
+    avanzarPaso("monto");
   }
 
   function elegirClienteAsistente(indice: number) {
@@ -428,8 +477,7 @@ export function PantallaPos({
     if (!cliente || !preview) return;
     setClienteId(cliente.id);
     setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
-    setPasoAsistente("monto");
-    setCursorAsistente(0);
+    avanzarPaso("monto");
   }
 
   /** Confirma el paso "monto" del asistente: valida contra el saldo y agrega el pago. */
@@ -470,12 +518,16 @@ export function PantallaPos({
     if (!preview.cobro.pagado.igualA(totalPagosActual)) return;
     setAvanceAsistentePendiente(false);
     if (preview.cobro.cancelada) {
-      cerrarAsistente();
+      // Cubierto el total: al resumen (muestra el vuelto y finaliza).
+      setPasoAsistente("resumen");
+      setCursorAsistente(0);
+      setHistorialAsistente([]);
     } else {
+      // Pago parcial (mixto): vuelve a pedir medio por el saldo restante.
       setPasoAsistente("medio");
       setCursorAsistente(0);
+      setHistorialAsistente([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avanceAsistentePendiente, preview, pagos, error]);
 
   // Navegación por teclado del asistente (flechas + Enter + Escape). Se
@@ -485,9 +537,26 @@ export function PantallaPos({
     if (pasoAsistente === "cerrado") return;
 
     function onKeyDown(e: KeyboardEvent) {
+      // Descarta el mismo Enter que abrió el asistente (ver
+      // `aperturaAsistenteRef`): sin esto se comía el paso "Seleccionar
+      // Medio" y saltaba directo a "Confirmar Monto" con Efectivo.
+      if (e.timeStamp <= aperturaAsistenteRef.current) return;
+
       if (e.key === "Escape") {
         e.preventDefault();
-        cerrarAsistente();
+        if (pasoAsistente === "imprimir") {
+          // La venta YA está confirmada: Esc equivale a "no imprimir".
+          cerrarAsistente();
+        } else if (pasoAsistente === "resumen") {
+          // Los pagos quedan cargados; se retoma con Enter desde el buscador.
+          cerrarAsistente();
+        } else {
+          const atras = volverPasoAtras(historialAsistente);
+          setHistorialAsistente(atras.historial);
+          setCursorAsistente(0);
+          if (atras.paso === "cerrado") cerrarAsistente();
+          else setPasoAsistente(atras.paso);
+        }
         return;
       }
       if (pasoAsistente === "medio") {
@@ -540,6 +609,19 @@ export function PantallaPos({
           e.preventDefault();
           confirmarMontoAsistente();
         }
+      } else if (pasoAsistente === "resumen") {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          void confirmar(true);
+        }
+      } else if (pasoAsistente === "imprimir") {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, 1, 2));
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          void resolverImpresionAsistente(cursorAsistente === 0);
+        }
       }
     }
     window.addEventListener("keydown", onKeyDown);
@@ -548,6 +630,7 @@ export function PantallaPos({
   }, [
     pasoAsistente,
     cursorAsistente,
+    historialAsistente,
     tarjetas,
     tarjetaActual,
     clientes,
@@ -555,7 +638,15 @@ export function PantallaPos({
     montoPago,
     preview,
     formaPago,
+    ventaAsistente,
   ]);
+
+  // Red de seguridad del espejo: cubre las transiciones que no pasan por
+  // `abrirAsistente`/`avanzarPaso`/`cerrarAsistente` (el avance tras un pago
+  // y el salto a "imprimir" al confirmar la venta).
+  useEffect(() => {
+    pasoAsistenteRef.current = pasoAsistente;
+  }, [pasoAsistente]);
 
   // Foco + selección automática del monto al entrar al paso "monto" (mismo
   // detalle que el simulador: el monto pre-cargado queda listo para
@@ -613,7 +704,14 @@ export function PantallaPos({
     setPagos((prev) => prev.filter((_, i) => i !== indice));
   }
 
-  async function confirmar() {
+  /**
+   * @param desdeAsistente Fase 17: si viene del asistente, la venta NO abre el
+   *   panel de post-venta (CAE / A4 / anular) — el asistente sigue con su
+   *   propio paso "¿imprimir ticket?" y deja la caja limpia para el próximo
+   *   cliente. Esos comprobantes quedan accesibles desde el módulo
+   *   Comprobantes para reimprimir, sacar A4 o anular.
+   */
+  async function confirmar(desdeAsistente = false) {
     if (carrito.length === 0) return;
 
     // Si hay un pago electrónico pendiente, iniciarlo antes de confirmar la venta
@@ -640,7 +738,7 @@ export function PantallaPos({
               clearInterval(pollingRef.current!);
               pollingRef.current = null;
               setPagoElectronico(null);
-              await _finalizarVenta();
+              await _finalizarVenta(desdeAsistente);
             } else if (estado.estado === "rechazado" || estado.estado === "cancelado") {
               clearInterval(pollingRef.current!);
               pollingRef.current = null;
@@ -658,10 +756,10 @@ export function PantallaPos({
       }
     }
 
-    await _finalizarVenta();
+    await _finalizarVenta(desdeAsistente);
   }
 
-  async function _finalizarVenta() {
+  async function _finalizarVenta(desdeAsistente = false) {
     // Fiado: si se paga con cuenta corriente, hace falta elegir el cliente.
     const hayCuentaCorriente = pagos.some((p) => p.forma === FormaDePago.CuentaCorriente);
     if (hayCuentaCorriente && clienteId === "") {
@@ -673,7 +771,16 @@ export function PantallaPos({
       const venta = await servicio.confirmarVenta(
         armarComando(carrito, condicionReceptor, pagos, recargoPorc, clienteVenta),
       );
-      setUltimaVenta(venta);
+      if (desdeAsistente) {
+        // Los pagos viajan con la venta: más abajo se limpia `pagos`, y el
+        // ticket necesita el detalle de formas de pago de ESTA venta.
+        setVentaAsistente({ venta, pagos: [...pagos] });
+        setPasoAsistente("imprimir");
+        setCursorAsistente(0);
+        setHistorialAsistente([]);
+      } else {
+        setUltimaVenta(venta);
+      }
 
       // Encolar la venta para sincronizar con el servidor de sucursal.
       // No rompe la venta (ya confirmada localmente) si el encolado falla.
@@ -725,7 +832,9 @@ export function PantallaPos({
       setTarjetaSeleccionada("");
       setCuotasSeleccionadas("");
       setError(null);
-      refocarBuscador();
+      // Desde el asistente el foco NO vuelve al buscador todavía: falta el
+      // paso "¿imprimir ticket?", que se maneja con el listener global.
+      if (!desdeAsistente) refocarBuscador();
     } catch (e) {
       setError(mensajeError(e));
     }
@@ -745,11 +854,11 @@ export function PantallaPos({
     setPagoElectronico(null);
   }
 
-  async function imprimirTicket(venta: VentaConfirmada) {
+  async function imprimirTicket(venta: VentaConfirmada, pagosDeLaVenta: readonly PagoUi[] = pagos) {
     if (imprimiendo) return;
     setImprimiendo(true);
     try {
-      const datos = construirDatosTicket(venta, config, catalogo, pagos, tarjetas);
+      const datos = construirDatosTicket(venta, config, catalogo, pagosDeLaVenta, tarjetas);
       // La térmica real todavía no existe (mock, ver packages/hardware): igual
       // se registra el trabajo (para cuando haya driver) y se muestra la vista
       // previa imprimible en formato rollo, así el "Imprimir" no queda mudo.
@@ -759,6 +868,18 @@ export function PantallaPos({
       setError(`Error al imprimir: ${mensajeError(e)}`);
     } finally {
       setImprimiendo(false);
+    }
+  }
+
+  /**
+   * Último paso del asistente: imprime (o no) el ticket de la venta recién
+   * confirmada y deja la pantalla limpia para el próximo cliente.
+   */
+  async function resolverImpresionAsistente(imprimir: boolean) {
+    const pendiente = ventaAsistente;
+    cerrarAsistente();
+    if (imprimir && pendiente) {
+      await imprimirTicket(pendiente.venta, pendiente.pagos);
     }
   }
 
@@ -828,18 +949,21 @@ export function PantallaPos({
               // Mientras el asistente de cobro está abierto tampoco se
               // recupera: `abrirAsistente()` le saca el foco a propósito
               // para que el buscador no compita con la navegación del wizard.
-              if (e.relatedTarget === null && pasoAsistente === "cerrado") {
+              if (e.relatedTarget === null && pasoAsistenteRef.current === "cerrado") {
                 e.currentTarget.focus();
               }
             }}
             onKeyDown={(e) => {
+              // Con el asistente abierto manda su listener global: si el
+              // buscador siguiera actuando, cada Enter reabriría el wizard y
+              // nunca avanzaría de paso.
+              if (pasoAsistenteRef.current !== "cerrado") return;
               if (e.key === "Enter") {
                 const codigo = busquedaProducto.trim();
                 if (codigo === "") {
                   // Buscador vacío + Enter: dispara el cobro (Fase 16).
                   if (carrito.length === 0 || !preview) return;
-                  if (preview.cobro.cancelada) void confirmar();
-                  else abrirAsistente();
+                  abrirAsistente(e.timeStamp);
                   return;
                 }
                 const prod = buscarProductoPorCodigo(catalogo, codigo);
@@ -904,42 +1028,66 @@ export function PantallaPos({
               )}
             </div>
           ) : (
-            <ul className="items-grande">
-              {carrito.length === 0 && <li className="vacio-grande">Agregá productos…</li>}
-              {carrito.map((c) => {
-                const promo = promoDeItem(c);
-                const descPromo = promo
-                  ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
-                  : Money.cero();
-                return (
-                  <li key={c.producto.articulo.id} className="item-grande">
-                    <span className="item-desc">
-                      {c.producto.articulo.descripcion}
-                      {promo && descPromo.esPositivo() && (
-                        <span className="item-promo">
-                          🏷 {promo.nombre} −{pesos(descPromo)}
-                        </span>
-                      )}
-                    </span>
-                    <div className="item-cant">
-                      <button onClick={() => cambiarCantidad(c.producto.articulo.id, -1)}>−</button>
-                      <span>{c.cantidad}</span>
-                      <button onClick={() => cambiarCantidad(c.producto.articulo.id, 1)}>+</button>
-                    </div>
-                    <span className="item-importe">
-                      {pesos(c.producto.precioFinal.multiplicarPor(c.cantidad))}
-                    </span>
-                    <button
-                      className="item-quitar"
-                      onClick={() => quitar(c.producto.articulo.id)}
-                      aria-label="Quitar"
-                    >
-                      ×
-                    </button>
+            <div className="venta-actual">
+              <ul className="items-lista">
+                {carrito.length === 0 && <li className="vacio-grande">Agregá productos…</li>}
+                {carrito.length > 0 && (
+                  <li className="items-lista-encabezado">
+                    <span>Descripción</span>
+                    <span>Cant.</span>
+                    <span>Unitario</span>
+                    <span>Importe</span>
+                    <span />
                   </li>
-                );
-              })}
-            </ul>
+                )}
+                {carrito.map((c) => {
+                  const promo = promoDeItem(c);
+                  const descPromo = promo
+                    ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
+                    : Money.cero();
+                  return (
+                    <li key={c.producto.articulo.id} className="item-linea">
+                      <span className="item-desc">
+                        {c.producto.articulo.descripcion}
+                        {promo && descPromo.esPositivo() && (
+                          <span className="item-promo">
+                            🏷 {promo.nombre} −{pesos(descPromo)}
+                          </span>
+                        )}
+                      </span>
+                      <div className="item-cant">
+                        <button onClick={() => cambiarCantidad(c.producto.articulo.id, -1)}>−</button>
+                        <span>{c.cantidad}</span>
+                        <button onClick={() => cambiarCantidad(c.producto.articulo.id, 1)}>+</button>
+                      </div>
+                      <span className="item-unitario">{pesos(c.producto.precioFinal)}</span>
+                      <span className="item-importe">
+                        {pesos(c.producto.precioFinal.multiplicarPor(c.cantidad))}
+                      </span>
+                      <button
+                        className="item-quitar"
+                        onClick={() => quitar(c.producto.articulo.id)}
+                        aria-label="Quitar"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {preview && (
+                <div className="total-centro">
+                  <span className="total-centro-items">
+                    {carrito.length} {carrito.length === 1 ? "ítem" : "ítems"}
+                  </span>
+                  <span className="total-centro-etiqueta">TOTAL</span>
+                  <span className="total-centro-valor">
+                    {pesos(preview.resultado.total.sumar(recargoTarjetasTotal))}
+                  </span>
+                </div>
+              )}
+            </div>
           )}
         </section>
 
@@ -1041,16 +1189,11 @@ export function PantallaPos({
               {preview.resultado.recargo.esPositivo() && (
                 <Fila etiqueta={`Recargo ${recargoPorc}%`} valor={`+${pesos(preview.resultado.recargo)}`} />
               )}
-              <Fila etiqueta="TOTAL" valor={pesos(preview.resultado.total)} destacado />
+              {/* Fase 17: el TOTAL vive en el panel central (`.total-centro`),
+                  donde el cajero ya está mirando la lista de productos. Acá
+                  solo queda el desglose fiscal y los recargos. */}
               {recargoTarjetasTotal.esPositivo() && (
-                <>
-                  <Fila etiqueta="Recargo tarjeta" valor={`+${pesos(recargoTarjetasTotal)}`} />
-                  <Fila
-                    etiqueta="Total a cobrar"
-                    valor={pesos(preview.resultado.total.sumar(recargoTarjetasTotal))}
-                    destacado
-                  />
-                </>
+                <Fila etiqueta="Recargo tarjeta" valor={`+${pesos(recargoTarjetasTotal)}`} />
               )}
             </div>
           )}
@@ -1076,16 +1219,14 @@ export function PantallaPos({
                 </div>
               ))}
             </div>
-            {!puedeConfirmar && (
-              <button
-                type="button"
-                className="cobrar-boton"
-                onClick={abrirAsistente}
-                disabled={carrito.length === 0 || !preview}
-              >
-                Cobrar (Enter)
-              </button>
-            )}
+            <button
+              type="button"
+              className="cobrar-boton"
+              onClick={() => abrirAsistente()}
+              disabled={carrito.length === 0 || !preview}
+            >
+              Cobrar (Enter)
+            </button>
             {preview && (
               <div className="cobro">
                 <Fila etiqueta="Pagado" valor={pesos(preview.cobro.pagado)} />
@@ -1101,7 +1242,7 @@ export function PantallaPos({
 
           {error && <div className="error">{error}</div>}
 
-          <button className="confirmar" onClick={confirmar} disabled={!puedeConfirmar}>
+          <button className="confirmar" onClick={() => void confirmar()} disabled={!puedeConfirmar}>
             Confirmar venta
           </button>
         </aside>
@@ -1123,7 +1264,14 @@ export function PantallaPos({
           recargoVivo={recargoVivo}
           montoBaseVivo={montoBaseVivo}
           saldoPendiente={preview?.cobro.saldoPendiente ?? Money.cero()}
-          pagos={pagos}
+          totalVenta={
+            preview?.resultado.total.sumar(recargoTarjetasTotal) ??
+            ventaAsistente?.venta.resultado.total ??
+            Money.cero()
+          }
+          pagado={preview?.cobro.pagado ?? ventaAsistente?.venta.resultado.total ?? Money.cero()}
+          vuelto={preview?.cobro.vuelto ?? ventaAsistente?.venta.vuelto ?? Money.cero()}
+          pagos={pasoAsistente === "imprimir" && ventaAsistente ? ventaAsistente.pagos : pagos}
           onQuitarPago={quitarPago}
           error={error}
         />
