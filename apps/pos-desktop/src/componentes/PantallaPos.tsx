@@ -141,7 +141,7 @@ export function PantallaPos({
   /** Tarjetas configuradas (Fase 12.E), para auto-aplicar su recargo al cobrar. */
   clienteMediosPago?: ClienteMediosPago;
 }) {
-  const { servicio, config, catalogo, impresora, lector, pasarela } = entorno;
+  const { servicio, config, catalogo, impresora, lector, pasarela, grillaRapida } = entorno;
 
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [busquedaProducto, setBusquedaProducto] = useState("");
@@ -165,6 +165,10 @@ export function PantallaPos({
   const [pasoAsistente, setPasoAsistente] = useState<PasoAsistente>("cerrado");
   const [cursorAsistente, setCursorAsistente] = useState(0);
   const [avanceAsistentePendiente, setAvanceAsistentePendiente] = useState(false);
+  // Fase 17: `catalogo` es una foto tomada al bootstrapear (no se re-lee
+  // sola), así que la estrella de "grilla rápida" se refleja acá al toque
+  // (optimista) además de guardarse en el local `entorno.grillaRapida`.
+  const [estrellaOverride, setEstrellaOverride] = useState<Record<string, boolean>>({});
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const buscadorRef = useRef<HTMLInputElement>(null);
   const montoAsistenteRef = useRef<HTMLInputElement>(null);
@@ -249,6 +253,20 @@ export function PantallaPos({
   const tipo = emiteFiscal
     ? resolverTipoComprobante(config.condicionIvaEmisor, condicionReceptor)
     : TipoComprobante.TicketNoFiscal;
+
+  /** `true` si el producto está marcado para la grilla rápida (Fase 17). */
+  function esGrillaRapida(producto: ProductoCatalogo): boolean {
+    const id = producto.articulo.id;
+    return estrellaOverride[id] ?? producto.articulo.mostrarEnGrillaRapida ?? false;
+  }
+
+  /** Toggle local (estrella ★/☆): no sincroniza, vive en el SQLite de la terminal. */
+  function alternarGrillaRapida(producto: ProductoCatalogo) {
+    const id = producto.articulo.id;
+    const nuevoValor = !esGrillaRapida(producto);
+    setEstrellaOverride((prev) => ({ ...prev, [id]: nuevoValor }));
+    void grillaRapida.establecer(id, nuevoValor);
+  }
 
   function agregar(producto: ProductoCatalogo) {
     setError(null);
@@ -771,6 +789,8 @@ export function PantallaPos({
 
   const puedeConfirmar = preview !== null && preview.cobro.cancelada;
   const catalogoFiltrado = filtrarCatalogoVenta(catalogo, busquedaProducto);
+  const buscando = busquedaProducto.trim() !== "";
+  const productosGrillaRapida = catalogo.filter((p) => esGrillaRapida(p));
   const recargoTarjetasTotal = pagos.reduce(
     (acc, p) => (p.recargoAplicado !== undefined ? acc.sumar(p.recargoAplicado) : acc),
     Money.cero(),
@@ -860,17 +880,67 @@ export function PantallaPos({
               <kbd>F12</kbd> cobro exacto y confirma
             </span>
           </div>
-          <div className="catalogo-grilla">
-            {catalogoFiltrado.map((p) => (
-              <button key={p.articulo.id} className="producto" onClick={() => agregar(p)}>
-                <span className="producto-desc">{p.articulo.descripcion}</span>
-                <span className="producto-precio">{pesos(p.precioFinal)}</span>
-              </button>
-            ))}
-            {catalogoFiltrado.length === 0 && (
-              <div className="catalogo-vacio">Sin resultados para "{busquedaProducto}".</div>
-            )}
-          </div>
+          {buscando ? (
+            <div className="catalogo-grilla">
+              {catalogoFiltrado.map((p) => (
+                <div key={p.articulo.id} className="producto" onClick={() => agregar(p)}>
+                  <button
+                    type="button"
+                    className="producto-estrella"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alternarGrillaRapida(p);
+                    }}
+                    aria-label={esGrillaRapida(p) ? "Sacar de grilla rápida" : "Agregar a grilla rápida"}
+                  >
+                    {esGrillaRapida(p) ? "★" : "☆"}
+                  </button>
+                  <span className="producto-desc">{p.articulo.descripcion}</span>
+                  <span className="producto-precio">{pesos(p.precioFinal)}</span>
+                </div>
+              ))}
+              {catalogoFiltrado.length === 0 && (
+                <div className="catalogo-vacio">Sin resultados para "{busquedaProducto}".</div>
+              )}
+            </div>
+          ) : (
+            <ul className="items-grande">
+              {carrito.length === 0 && <li className="vacio-grande">Agregá productos…</li>}
+              {carrito.map((c) => {
+                const promo = promoDeItem(c);
+                const descPromo = promo
+                  ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
+                  : Money.cero();
+                return (
+                  <li key={c.producto.articulo.id} className="item-grande">
+                    <span className="item-desc">
+                      {c.producto.articulo.descripcion}
+                      {promo && descPromo.esPositivo() && (
+                        <span className="item-promo">
+                          🏷 {promo.nombre} −{pesos(descPromo)}
+                        </span>
+                      )}
+                    </span>
+                    <div className="item-cant">
+                      <button onClick={() => cambiarCantidad(c.producto.articulo.id, -1)}>−</button>
+                      <span>{c.cantidad}</span>
+                      <button onClick={() => cambiarCantidad(c.producto.articulo.id, 1)}>+</button>
+                    </div>
+                    <span className="item-importe">
+                      {pesos(c.producto.precioFinal.multiplicarPor(c.cantidad))}
+                    </span>
+                    <button
+                      className="item-quitar"
+                      onClick={() => quitar(c.producto.articulo.id)}
+                      aria-label="Quitar"
+                    >
+                      ×
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
 
         <aside className="ticket-panel">
@@ -904,40 +974,37 @@ export function PantallaPos({
             </div>
           )}
 
-          <ul className="items">
-            {carrito.length === 0 && <li className="vacio">Agregá productos…</li>}
-            {carrito.map((c) => {
-              const promo = promoDeItem(c);
-              const descPromo = promo
-                ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
-                : Money.cero();
-              return (
-              <li key={c.producto.articulo.id} className="item">
-                <span className="item-desc">
-                  {c.producto.articulo.descripcion}
-                  {promo && descPromo.esPositivo() && (
-                    <span className="item-promo">🏷 {promo.nombre} −{pesos(descPromo)}</span>
-                  )}
-                </span>
-                <div className="item-cant">
-                  <button onClick={() => cambiarCantidad(c.producto.articulo.id, -1)}>−</button>
-                  <span>{c.cantidad}</span>
-                  <button onClick={() => cambiarCantidad(c.producto.articulo.id, 1)}>+</button>
+          <div className="grilla-rapida-panel">
+            <div className="grilla-rapida-titulo">Grilla rápida</div>
+            <div className="grilla-rapida">
+              {productosGrillaRapida.length === 0 && (
+                <div className="grilla-rapida-vacia">
+                  Marcá productos con ☆ (al buscarlos) para tenerlos acá.
                 </div>
-                <span className="item-importe">
-                  {pesos(c.producto.precioFinal.multiplicarPor(c.cantidad))}
-                </span>
-                <button
-                  className="item-quitar"
-                  onClick={() => quitar(c.producto.articulo.id)}
-                  aria-label="Quitar"
+              )}
+              {productosGrillaRapida.map((p) => (
+                <div
+                  key={p.articulo.id}
+                  className="producto producto-chico"
+                  onClick={() => agregar(p)}
                 >
-                  ×
-                </button>
-              </li>
-              );
-            })}
-          </ul>
+                  <button
+                    type="button"
+                    className="producto-estrella"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alternarGrillaRapida(p);
+                    }}
+                    aria-label="Sacar de grilla rápida"
+                  >
+                    ★
+                  </button>
+                  <span className="producto-desc">{p.articulo.descripcion}</span>
+                  <span className="producto-precio">{pesos(p.precioFinal)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {preview && (
             <div className="totales">

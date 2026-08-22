@@ -301,5 +301,8 @@ export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}):
     lector: new MockLectorDeBarras(),
     pasarela: new MockPasarelaDePago(),
     sync,
+    grillaRapida: {
+      establecer: (articuloId, valor) => repos.articulos.establecerGrillaRapida(articuloId, valor),
+    },
   };
 }

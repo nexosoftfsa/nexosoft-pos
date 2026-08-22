@@ -24,6 +24,13 @@ export interface Articulo {
   readonly costoNeto: Money;
   readonly alicuotaIva: AlicuotaIva;
   readonly activo: boolean;
+  /**
+   * Flag local (Fase 17): el cajero lo marca a mano en la propia pantalla de
+   * venta para artículos sin código de barras (fiambre, pan, sueltos), que
+   * así aparecen en una grilla chica tocable. Vive solo en el SQLite de cada
+   * terminal — nunca viaja por la sincronización con cloud-api.
+   */
+  readonly mostrarEnGrillaRapida?: boolean;
 }
 
 export interface DatosNuevoArticulo {

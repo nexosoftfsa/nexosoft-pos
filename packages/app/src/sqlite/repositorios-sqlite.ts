@@ -65,6 +65,18 @@ export class RepositorioArticulosSqlite implements RepositorioArticulos {
       ],
     );
   }
+
+  /**
+   * Fase 17: toggle local de la estrella "grilla rápida" — a propósito no
+   * pasa por `guardar()` (el upsert de sync), así un catálogo que llega de
+   * nuevo por sync nunca pisa esta marca puramente local.
+   */
+  async establecerGrillaRapida(id: string, valor: boolean): Promise<void> {
+    await this.db.ejecutar(`UPDATE articulo SET mostrar_en_grilla_rapida = ? WHERE id = ?`, [
+      bool01(valor),
+      id,
+    ]);
+  }
 }
 
 export class RepositorioPreciosSqlite implements RepositorioPrecios {

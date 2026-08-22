@@ -32,7 +32,8 @@ export const SENTENCIAS_ESQUEMA: readonly string[] = [
     unidad_de_medida TEXT NOT NULL CHECK (unidad_de_medida IN ('unidad','fraccionado','peso')),
     costo_neto_cent INTEGER NOT NULL CHECK (costo_neto_cent >= 0),
     alicuota_iva TEXT NOT NULL,
-    activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1))
+    activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),
+    mostrar_en_grilla_rapida INTEGER NOT NULL DEFAULT 0 CHECK (mostrar_en_grilla_rapida IN (0,1))
   )`,
   `CREATE TABLE IF NOT EXISTS lista_precios (
     id TEXT PRIMARY KEY,
@@ -149,6 +150,7 @@ async function agregarColumnasNuevas(ejecutor: EjecutorSql): Promise<void> {
     `ALTER TABLE comercio_config ADD COLUMN emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1))`,
     `ALTER TABLE comercio_config ADD COLUMN logo_base64 TEXT`,
     `ALTER TABLE item_venta ADD COLUMN costo_neto_cent INTEGER`,
+    `ALTER TABLE articulo ADD COLUMN mostrar_en_grilla_rapida INTEGER NOT NULL DEFAULT 0 CHECK (mostrar_en_grilla_rapida IN (0,1))`,
   ];
   for (const sentencia of alteraciones) {
     try {

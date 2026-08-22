@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS articulo (
   unidad_de_medida TEXT NOT NULL CHECK (unidad_de_medida IN ('unidad','fraccionado','peso')),
   costo_neto_cent  INTEGER NOT NULL CHECK (costo_neto_cent >= 0),
   alicuota_iva     TEXT NOT NULL,            -- porcentaje como texto ('21','10.5')
-  activo           INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1))
+  activo           INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),
+  -- Fase 17: flag local, nunca viaja por la sincronización con cloud-api.
+  mostrar_en_grilla_rapida INTEGER NOT NULL DEFAULT 0 CHECK (mostrar_en_grilla_rapida IN (0,1))
 );
 CREATE INDEX IF NOT EXISTS idx_articulo_barras ON articulo (codigo_barras);
 

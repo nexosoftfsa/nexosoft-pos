@@ -115,6 +115,36 @@ describe("Adaptador SQLite — round-trip de catálogo", () => {
     expect(a?.alicuotaIva.porcentaje).toBe(21);
     expect(a?.unidadDeMedida).toBe(UnidadDeMedida.Unidad);
   });
+
+  it("nace sin grilla rápida y se puede marcar/desmarcar en forma local (Fase 17)", async () => {
+    const { repos } = await montar();
+    expect((await repos.articulos.obtener("art"))?.mostrarEnGrillaRapida).toBe(false);
+
+    await repos.articulos.establecerGrillaRapida("art", true);
+    expect((await repos.articulos.obtener("art"))?.mostrarEnGrillaRapida).toBe(true);
+
+    await repos.articulos.establecerGrillaRapida("art", false);
+    expect((await repos.articulos.obtener("art"))?.mostrarEnGrillaRapida).toBe(false);
+  });
+
+  it("guardar() (upsert de sync) no pisa la marca local de grilla rápida", async () => {
+    const { repos } = await montar();
+    await repos.articulos.establecerGrillaRapida("art", true);
+
+    const articuloActualizado = crearArticulo({
+      id: "art",
+      codigoInterno: "G1",
+      descripcion: "Gaseosa 1.5L",
+      unidadDeMedida: UnidadDeMedida.Unidad,
+      costoNeto: Money.desde("550"),
+      alicuotaIva: ALICUOTAS_IVA.VEINTIUNO,
+    });
+    await repos.articulos.guardar(articuloActualizado);
+
+    const a = await repos.articulos.obtener("art");
+    expect(a?.descripcion).toBe("Gaseosa 1.5L");
+    expect(a?.mostrarEnGrillaRapida).toBe(true);
+  });
 });
 
 describe("Adaptador SQLite — combos (Fase 8.1.b)", () => {

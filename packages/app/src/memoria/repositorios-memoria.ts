@@ -35,6 +35,12 @@ export class RepositorioArticulosMemoria implements RepositorioArticulos {
   async obtener(id: string): Promise<Articulo | undefined> {
     return this.datos.get(id);
   }
+
+  /** Fase 17: toggle local de la estrella "grilla rápida" (modo demo/navegador). */
+  async establecerGrillaRapida(id: string, valor: boolean): Promise<void> {
+    const articulo = this.datos.get(id);
+    if (articulo) this.datos.set(id, { ...articulo, mostrarEnGrillaRapida: valor });
+  }
 }
 
 export class RepositorioPreciosMemoria implements RepositorioPrecios {

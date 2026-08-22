@@ -171,6 +171,16 @@ export function IconoMenu() {
   );
 }
 
+/** Fase 17: fija el menú lateral expandido (independiente del hover). */
+export function IconoPin() {
+  return (
+    <Svg>
+      <path d="M12 17v5" />
+      <path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z" />
+    </Svg>
+  );
+}
+
 export function IconoSalir() {
   return (
     <Svg>

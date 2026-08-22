@@ -117,6 +117,13 @@ export interface EntornoPos {
   readonly lector: LectorDeBarras;
   readonly pasarela: PasarelaDePago;
   readonly sync: SyncPos;
+  /** Fase 17: toggle local de la estrella "grilla rápida" (nunca sincroniza). */
+  readonly grillaRapida: ServicioGrillaRapida;
+}
+
+/** Puerto local (Fase 17) para marcar/desmarcar un artículo en la grilla rápida. */
+export interface ServicioGrillaRapida {
+  establecer(articuloId: string, valor: boolean): Promise<void>;
 }
 
 /** Configuración del comercio para la demo (igual en navegador y semilla SQLite). */
@@ -244,5 +251,8 @@ export function crearEntornoPos(): EntornoPos {
     lector: new MockLectorDeBarras(),
     pasarela: new MockPasarelaDePago(),
     sync,
+    grillaRapida: {
+      establecer: (articuloId, valor) => repos.articulos.establecerGrillaRapida(articuloId, valor),
+    },
   };
 }

@@ -42,6 +42,7 @@ export function filaAArticulo(fila: Fila): Articulo {
     costoNeto: centavosAMoney(fila.costo_neto_cent),
     alicuotaIva: alicuotaDeTexto(fila.alicuota_iva),
     activo: Number(fila.activo) === 1,
+    mostrarEnGrillaRapida: Number(fila.mostrar_en_grilla_rapida) === 1,
     ...(fila.codigo_barras != null ? { codigoBarras: String(fila.codigo_barras) } : {}),
     ...(fila.rubro_id != null ? { rubroId: String(fila.rubro_id) } : {}),
     ...(fila.proveedor_id != null ? { proveedorId: String(fila.proveedor_id) } : {}),

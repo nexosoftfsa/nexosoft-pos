@@ -47,7 +47,7 @@ import type { ClienteAsistenteConfig } from "../sync/cliente-asistente-config";
 import { Usuarios as PantallaUsuarios } from "../componentes/Usuarios";
 import type { ClienteUsuarios } from "../sync/cliente-usuarios-http";
 import type { ClienteCredenciales } from "../sync/cliente-credenciales-http";
-import { IconoMenu, IconoSalir } from "./iconos";
+import { IconoMenu, IconoPin, IconoSalir } from "./iconos";
 import { Placeholder } from "./Placeholder";
 import {
   buscarModulo,
@@ -64,6 +64,9 @@ export interface UsuarioShell {
   readonly email?: string;
   readonly rol?: string;
 }
+
+/** Fase 17: clave de `localStorage` (por dispositivo) para el pin del menú. */
+const CLAVE_SIDEBAR_FIJADO = "nexosoft.sidebarFijado";
 
 function iniciales(email: string | undefined): string {
   if (!email) return "NS";
@@ -149,6 +152,23 @@ export function Shell({
   const [activoId, setActivoId] = useState<string>(() => moduloInicial(usuario.rol));
   const [navAbierto, setNavAbierto] = useState(false);
 
+  // Fase 17: menú lateral rebatible — colapsado por defecto, se expande al
+  // pasar el mouse (como overlay, sin correr el contenido) o queda fijo si
+  // el cajero lo bloquea con el pin. El fijado se guarda por dispositivo.
+  const [sidebarFijado, setSidebarFijado] = useState<boolean>(
+    () => localStorage.getItem(CLAVE_SIDEBAR_FIJADO) === "1",
+  );
+  const [sidebarHover, setSidebarHover] = useState(false);
+  const sidebarExpandido = sidebarFijado || sidebarHover;
+
+  function alternarSidebarFijado() {
+    setSidebarFijado((prev) => {
+      const nuevo = !prev;
+      localStorage.setItem(CLAVE_SIDEBAR_FIJADO, nuevo ? "1" : "0");
+      return nuevo;
+    });
+  }
+
   // Clientes para vender en cuenta corriente (fiado) desde la pantalla de ventas.
   const [clientesVenta, setClientesVenta] = useState<{ id: string; nombre: string }[]>([]);
   useEffect(() => {
@@ -194,8 +214,14 @@ export function Shell({
   );
 
   return (
-    <div className="app-shell">
-      <aside className={`sidebar${navAbierto ? " sidebar--open" : ""}`}>
+    <div className={`app-shell${sidebarFijado ? " app-shell--sidebar-fijado" : ""}`}>
+      <aside
+        className={`sidebar${navAbierto ? " sidebar--open" : ""}${
+          sidebarExpandido ? " sidebar--expandido" : " sidebar--colapsado"
+        }${sidebarFijado ? " sidebar--fijado" : ""}`}
+        onMouseEnter={() => setSidebarHover(true)}
+        onMouseLeave={() => setSidebarHover(false)}
+      >
         <div className="sidebar__brand">
           {entorno.config.logoDataUrl !== undefined ? (
             <div className="logo">
@@ -215,6 +241,16 @@ export function Shell({
               </div>
             </div>
           )}
+          <button
+            type="button"
+            className={`sidebar__pin${sidebarFijado ? " sidebar__pin--activo" : ""}`}
+            onClick={alternarSidebarFijado}
+            title={sidebarFijado ? "Desbloquear menú" : "Fijar menú abierto"}
+            aria-label={sidebarFijado ? "Desbloquear menú" : "Fijar menú abierto"}
+            aria-pressed={sidebarFijado}
+          >
+            <IconoPin />
+          </button>
         </div>
 
         <nav className="nav">
@@ -366,7 +402,7 @@ function ItemNav({
   return (
     <button type="button" className={`nav-item${activo ? " nav-item--active" : ""}`} onClick={onClick}>
       {modulo.icono()}
-      {modulo.titulo}
+      <span className="nav-item__label">{modulo.titulo}</span>
       {modulo.badge !== undefined && <span className="badge badge--info">{modulo.badge}</span>}
     </button>
   );
