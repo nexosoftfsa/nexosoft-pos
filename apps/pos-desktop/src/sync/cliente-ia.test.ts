@@ -22,6 +22,20 @@ describe("interpretar", () => {
   it("cae en ayuda si no reconoce", () => {
     expect(interpretar("hola qué tal")).toBe("ayuda");
   });
+  it("no confunde palabras comunes que CONTIENEN una clave (van al LLM)", () => {
+    // Bug real: las claves se buscaban como fragmento, así que media
+    // conversación normal caía en una intención de datos y la contestaba el
+    // mock sin llegar nunca a Gemini.
+    expect(interpretar("¿qué debería hacer para mejorar?")).toBe("ayuda"); // deb
+    expect(interpretar("¿cómo organizo mejor mi trabajo?")).toBe("ayuda"); // bajo
+    expect(interpretar("¿hace falta algo para abrir?")).toBe("ayuda"); // falta
+    expect(interpretar("¿cómo hago para convencer a un cliente?")).toBe("ayuda"); // venc
+    expect(interpretar("contame un chiste")).toBe("ayuda");
+  });
+  it("sigue clasificando bien aunque falten las tildes", () => {
+    expect(interpretar("cuanto vendi hoy")).toBe("ventas");
+    expect(interpretar("que lotes vencen")).toBe("vencimientos");
+  });
   it("no confunde preguntas genéricas con 'hoy'/'cuánto' con ventas (deriva a ayuda/LLM)", () => {
     // Bug real: "hoy" y "cuánto" eran claves de "ventas" y matcheaban cualquier
     // pregunta que las contuviera, aunque no tuviera nada que ver (ej. el dólar).

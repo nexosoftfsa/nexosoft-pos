@@ -19,18 +19,45 @@ export interface AsistenteIA {
 /** Intención detectada en la pregunta del usuario (heurística simple). */
 export type Intencion = "ventas" | "stock_bajo" | "vencimientos" | "deudores" | "ayuda";
 
-const REGLAS: ReadonlyArray<{ intencion: Intencion; claves: readonly string[] }> = [
-  { intencion: "vencimientos", claves: ["venc", "lote", "caduc", "por vencer"] },
-  { intencion: "deudores", claves: ["deb", "deud", "cobrar", "fiado", "cuenta corriente", "me debe"] },
-  { intencion: "stock_bajo", claves: ["stock", "repon", "falta", "reponer", "quedan", "bajo"] },
-  { intencion: "ventas", claves: ["vend", "venta", "factur", "recaud"] },
+/** Minúsculas y sin tildes, para no depender de cómo se tipeó la pregunta. */
+function normalizar(texto: string): string {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+/**
+ * Reglas de clasificación. Van por PALABRA COMPLETA (`\b`), no por fragmento:
+ * con `includes` sobre fragmentos cortos, media conversación normal caía en
+ * una intención de datos y la respondía el mock, sin llegar nunca al LLM —
+ * "¿qué **deb**ería hacer?" se leía como deudores, "tra**bajo**" como stock
+ * bajo, "con**venc**er" como vencimientos, "hace **falta**" como reposición.
+ */
+const REGLAS: ReadonlyArray<{ intencion: Intencion; patron: RegExp }> = [
+  {
+    intencion: "vencimientos",
+    patron: /\b(vencimientos?|vencidos?|vence[nr]?|caduca[nr]?|caducidad|lotes?)\b|\bpor vencer\b/,
+  },
+  {
+    intencion: "deudores",
+    patron: /\b(deudor(es)?|deudas?|fiado|fiados)\b|\bme deben?\b|\bcuentas? corrientes?\b|\bpor cobrar\b/,
+  },
+  {
+    intencion: "stock_bajo",
+    patron: /\b(stock|reponer|repongo|reposicion|faltantes?)\b/,
+  },
+  {
+    intencion: "ventas",
+    patron: /\b(vendi|vendio|vendimos|vendiste|ventas?|factur(e|o|amos|ado|acion)?|recaud(e|o|amos|ado|acion)?)\b/,
+  },
 ];
 
 /** Clasifica la pregunta en una intención (pura, testeable sin datos). */
 export function interpretar(texto: string): Intencion {
-  const t = texto.toLowerCase();
+  const t = normalizar(texto);
   for (const r of REGLAS) {
-    if (r.claves.some((c) => t.includes(c))) return r.intencion;
+    if (r.patron.test(t)) return r.intencion;
   }
   return "ayuda";
 }
