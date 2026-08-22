@@ -65,12 +65,33 @@ body {
   display: flex;
   min-height: 0;
 }
-.catalogo {
+/* Fase 17.B: el centro es LA VENTA (fichados + totales + acciones) y la
+   columna derecha es ELEGIR PRODUCTOS (resultados de búsqueda o grilla
+   rápida). Antes los resultados tapaban los fichados en el centro y había
+   que borrar la búsqueda para volver a ver la venta. */
+.venta {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   padding: 16px;
+  gap: 10px;
+}
+.venta-cabecera {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  align-items: center;
+}
+.venta-cabecera .comprobante {
+  gap: 8px;
+}
+.venta-pie {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .catalogo-buscador {
   flex-shrink: 0;
@@ -100,20 +121,6 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--texto);
-}
-.catalogo-grilla {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  grid-auto-rows: min-content;
-  gap: 12px;
-  overflow-y: auto;
-}
-.catalogo-vacio {
-  grid-column: 1 / -1;
-  color: var(--texto-secundario, #64748b);
-  padding: 1rem;
-  text-align: center;
 }
 .producto {
   display: flex;
@@ -275,24 +282,6 @@ body {
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
-.grilla-rapida-panel {
-  border-bottom: 1px solid var(--borde);
-  padding-bottom: 10px;
-}
-.grilla-rapida-titulo {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--suave);
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-.grilla-rapida {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  max-height: 190px;
-  overflow-y: auto;
-}
 .grilla-rapida-vacia {
   grid-column: 1 / -1;
   color: var(--suave);
@@ -301,15 +290,39 @@ body {
   padding: 8px 4px;
 }
 
-/* Panel del ticket */
-.ticket-panel {
-  width: 380px;
+/* Columna derecha: elegir productos (búsqueda o grilla rápida). */
+.panel-productos {
+  width: 320px;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   background: var(--panel);
   border-left: 1px solid var(--borde);
   padding: 16px;
-  gap: 12px;
+  gap: 10px;
+}
+.panel-productos-titulo {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--suave);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.grilla-productos {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: min-content;
+  gap: 8px;
+}
+/* Resultado resaltado con las flechas: Enter agrega este. */
+.producto.resaltado {
+  border-color: var(--acento);
+  background: #ecfeff;
+  box-shadow: 0 0 0 2px var(--acento) inset;
 }
 .comprobante {
   display: flex;
@@ -1254,10 +1267,10 @@ body {
     flex-direction: column;
     overflow-y: auto;
   }
-  .catalogo {
+  .venta {
     flex: none;
   }
-  .catalogo-grilla {
+  .grilla-productos {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     overflow-y: visible;
   }
@@ -1273,8 +1286,9 @@ body {
   .item-unitario {
     display: none;
   }
-  .ticket-panel {
+  .panel-productos {
     width: 100%;
+    min-height: 0;
     border-left: none;
     border-top: 1px solid var(--borde);
   }

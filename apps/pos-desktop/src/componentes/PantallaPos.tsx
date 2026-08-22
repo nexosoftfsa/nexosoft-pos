@@ -182,9 +182,17 @@ export function PantallaPos({
   // sola), así que la estrella de "grilla rápida" se refleja acá al toque
   // (optimista) además de guardarse en el local `entorno.grillaRapida`.
   const [estrellaOverride, setEstrellaOverride] = useState<Record<string, boolean>>({});
+  /**
+   * Producto resaltado dentro de los resultados de búsqueda. El cajero baja
+   * con las flechas y confirma con Enter sin soltar el teclado ni tocar el
+   * mouse, igual que el resto de la pantalla (Fase 15).
+   */
+  const [cursorBusqueda, setCursorBusqueda] = useState(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const buscadorRef = useRef<HTMLInputElement>(null);
   const montoAsistenteRef = useRef<HTMLInputElement>(null);
+  /** Resultado resaltado, para mantenerlo visible al bajar con las flechas. */
+  const itemBusquedaRef = useRef<HTMLDivElement>(null);
   /**
    * Marca temporal del evento que abrió el asistente. React 18 aplica el
    * `setState` de un evento de teclado en forma SÍNCRONA (los eventos de
@@ -642,6 +650,11 @@ export function PantallaPos({
     ventaAsistente,
   ]);
 
+  // Mantiene visible el resultado resaltado al moverse con las flechas.
+  useEffect(() => {
+    itemBusquedaRef.current?.scrollIntoView({ block: "nearest" });
+  }, [cursorBusqueda, busquedaProducto]);
+
   // Red de seguridad del espejo: cubre las transiciones que no pasan por
   // `abrirAsistente`/`avanzarPaso`/`cerrarAsistente` (el avance tras un pago
   // y el salto a "imprimir" al confirmar la venta).
@@ -934,14 +947,17 @@ export function PantallaPos({
   return (
     <div className="pos">
       <main className="cuerpo">
-        <section className="catalogo">
+        <section className="venta">
           <input
             ref={buscadorRef}
             type="text"
             className="catalogo-buscador"
             placeholder="Escaneá un código o buscá por nombre…"
             value={busquedaProducto}
-            onChange={(e) => setBusquedaProducto(e.target.value)}
+            onChange={(e) => {
+              setBusquedaProducto(e.target.value);
+              setCursorBusqueda(0); // resultados nuevos: arrancar desde arriba
+            }}
             onBlur={(e) => {
               // El foco vive acá casi siempre (así el lector de barras, que
               // tipea como teclado, escribe directo). Si cae al fondo vacío
@@ -968,13 +984,24 @@ export function PantallaPos({
                   abrirAsistente(e.timeStamp);
                   return;
                 }
-                const prod = buscarProductoPorCodigo(catalogo, codigo);
+                // Código exacto (lector de barras) o, si no, el producto
+                // resaltado en los resultados. En los dos casos se limpia la
+                // búsqueda para quedar listo para el próximo ítem.
+                const prod =
+                  buscarProductoPorCodigo(catalogo, codigo) ?? catalogoFiltrado[cursorBusqueda];
                 if (prod) {
                   agregar(prod);
                   setBusquedaProducto("");
+                  setCursorBusqueda(0);
                 }
-                // Si no matchea por código exacto, se deja el texto para que
-                // el cajero elija de la grilla filtrada por nombre.
+                return;
+              }
+              // Flechas: mover el resaltado dentro de los resultados.
+              if (buscando && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+                e.preventDefault();
+                setCursorBusqueda((c) =>
+                  moverCursor(c, e.key === "ArrowDown" ? 1 : -1, catalogoFiltrado.length),
+                );
                 return;
               }
               // Supr/F8/F12 no interfieren con la edición normal del texto de
@@ -1006,31 +1033,40 @@ export function PantallaPos({
               <kbd>F12</kbd> cobro exacto y confirma
             </span>
           </div>
-          {buscando ? (
-            <div className="catalogo-grilla">
-              {catalogoFiltrado.map((p) => (
-                <div key={p.articulo.id} className="producto" onClick={() => agregar(p)}>
-                  <button
-                    type="button"
-                    className="producto-estrella"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alternarGrillaRapida(p);
-                    }}
-                    aria-label={esGrillaRapida(p) ? "Sacar de grilla rápida" : "Agregar a grilla rápida"}
-                  >
-                    {esGrillaRapida(p) ? "★" : "☆"}
-                  </button>
-                  <span className="producto-desc">{p.articulo.descripcion}</span>
-                  <span className="producto-precio">{pesos(p.precioFinal)}</span>
-                </div>
-              ))}
-              {catalogoFiltrado.length === 0 && (
-                <div className="catalogo-vacio">Sin resultados para "{busquedaProducto}".</div>
+          <div className="venta-cabecera">
+            <div className="comprobante">
+              <span className="tipo">{etiquetaComprobante(tipo)}</span>
+              {emiteFiscal && (
+                <select
+                  value={condicionReceptor}
+                  onChange={(e) => setCondicionReceptor(e.target.value as CondicionIva)}
+                >
+                  {RECEPTORES.map((r) => (
+                    <option key={r.valor} value={r.valor}>
+                      {r.etiqueta}
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
-          ) : (
-            <div className="venta-actual">
+            {clientes.length > 0 && (
+              <div className="comprobante cliente-venta">
+                <span className="tipo">Cliente</span>
+                <select value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+                  <option value="">— Consumidor final —</option>
+                  {clientes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Los fichados ya NO se ocultan al buscar: los resultados van al
+              panel derecho, así el cajero nunca pierde de vista la venta. */}
+          <div className="venta-actual">
               <ul className="items-lista">
                 {carrito.length === 0 && <li className="vacio-grande">Agregá productos…</li>}
                 {carrito.length > 0 && (
@@ -1089,73 +1125,9 @@ export function PantallaPos({
                   </span>
                 </div>
               )}
-            </div>
-          )}
-        </section>
-
-        <aside className="ticket-panel">
-          <div className="comprobante">
-            <span className="tipo">{etiquetaComprobante(tipo)}</span>
-            {emiteFiscal && (
-              <select
-                value={condicionReceptor}
-                onChange={(e) => setCondicionReceptor(e.target.value as CondicionIva)}
-              >
-                {RECEPTORES.map((r) => (
-                  <option key={r.valor} value={r.valor}>
-                    {r.etiqueta}
-                  </option>
-                ))}
-              </select>
-            )}
           </div>
 
-          {clientes.length > 0 && (
-            <div className="comprobante cliente-venta">
-              <span className="tipo">Cliente</span>
-              <select value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
-                <option value="">— Consumidor final —</option>
-                {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div className="grilla-rapida-panel">
-            <div className="grilla-rapida-titulo">Grilla rápida</div>
-            <div className="grilla-rapida">
-              {productosGrillaRapida.length === 0 && (
-                <div className="grilla-rapida-vacia">
-                  Marcá productos con ☆ (al buscarlos) para tenerlos acá.
-                </div>
-              )}
-              {productosGrillaRapida.map((p) => (
-                <div
-                  key={p.articulo.id}
-                  className="producto producto-chico"
-                  onClick={() => agregar(p)}
-                >
-                  <button
-                    type="button"
-                    className="producto-estrella"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alternarGrillaRapida(p);
-                    }}
-                    aria-label="Sacar de grilla rápida"
-                  >
-                    ★
-                  </button>
-                  <span className="producto-desc">{p.articulo.descripcion}</span>
-                  <span className="producto-precio">{pesos(p.precioFinal)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          <div className="venta-pie">
           {preview && (
             <div className="totales">
               {preview.resultado.discriminaIva && (
@@ -1247,6 +1219,58 @@ export function PantallaPos({
           <button className="confirmar" onClick={() => void confirmar()} disabled={!puedeConfirmar}>
             Confirmar venta
           </button>
+          </div>
+        </section>
+
+        {/* Columna de elegir productos: los resultados de la búsqueda salen
+            acá (no en el centro), así los fichados quedan siempre a la vista.
+            Sin búsqueda, muestra la grilla rápida curada. */}
+        <aside className="panel-productos">
+          <div className="panel-productos-titulo">
+            {buscando ? `Resultados (${catalogoFiltrado.length})` : "Grilla rápida"}
+          </div>
+          <div className="grilla-productos">
+            {buscando && catalogoFiltrado.length === 0 && (
+              <div className="grilla-rapida-vacia">Sin resultados para "{busquedaProducto}".</div>
+            )}
+            {!buscando && productosGrillaRapida.length === 0 && (
+              <div className="grilla-rapida-vacia">
+                Marcá productos con ☆ (al buscarlos) para tenerlos acá.
+              </div>
+            )}
+            {(buscando ? catalogoFiltrado : productosGrillaRapida).map((p, i) => (
+              <div
+                key={p.articulo.id}
+                ref={buscando && i === cursorBusqueda ? itemBusquedaRef : null}
+                className={
+                  buscando && i === cursorBusqueda
+                    ? "producto producto-chico resaltado"
+                    : "producto producto-chico"
+                }
+                onClick={() => {
+                  agregar(p);
+                  if (buscando) {
+                    setBusquedaProducto("");
+                    setCursorBusqueda(0);
+                  }
+                }}
+              >
+                <button
+                  type="button"
+                  className="producto-estrella"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    alternarGrillaRapida(p);
+                  }}
+                  aria-label={esGrillaRapida(p) ? "Sacar de grilla rápida" : "Agregar a grilla rápida"}
+                >
+                  {esGrillaRapida(p) ? "★" : "☆"}
+                </button>
+                <span className="producto-desc">{p.articulo.descripcion}</span>
+                <span className="producto-precio">{pesos(p.precioFinal)}</span>
+              </div>
+            ))}
+          </div>
         </aside>
       </main>
 
