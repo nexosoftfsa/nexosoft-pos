@@ -58,6 +58,42 @@ describe("filtrarCatalogoVenta", () => {
     expect(filtrarCatalogoVenta(catalogo, "7790003")).toHaveLength(1);
   });
 
+  it("pone primero el producto que se llama exactamente asi", () => {
+    // El caso real: tipear "PAN" y apretar Enter fichaba "Pan rallado"
+    // (primero alfabético) en vez del pan.
+    const conPan = [
+      producto("4", "COD4", "Pan Rallado 450g"),
+      producto("5", "COD5", "Pan"),
+      producto("6", "COD6", "Pancho x6"),
+    ];
+    const r = filtrarCatalogoVenta(conPan, "pan");
+    expect(r).toHaveLength(3);
+    expect(r[0]?.articulo.descripcion).toBe("Pan");
+  });
+
+  it("después del exacto, prioriza los que empiezan con lo tipeado", () => {
+    const conPan = [
+      producto("1", "C1", "Harina para Pan"),
+      producto("2", "C2", "Pan Lactal"),
+      producto("3", "C3", "Pan"),
+    ];
+    const r = filtrarCatalogoVenta(conPan, "pan").map((p) => p.articulo.descripcion);
+    expect(r).toEqual(["Pan", "Pan Lactal", "Harina para Pan"]);
+  });
+
+  it("un código interno exacto también gana", () => {
+    const cat = [producto("1", "C1", "Algo con 55 adentro"), producto("2", "55", "Otro")];
+    expect(filtrarCatalogoVenta(cat, "55")[0]?.articulo.codigoInterno).toBe("55");
+  });
+
+  it("mantiene el orden original entre productos de la misma relevancia", () => {
+    // Los tres matchean "o" (por descripción o por código) y ninguno empieza
+    // con "o": quedan todos en el mismo nivel y conservan el orden con el que
+    // venían del catálogo.
+    const r = filtrarCatalogoVenta(catalogo, "o").map((p) => p.articulo.descripcion);
+    expect(r).toEqual(["Gaseosa Cola 1.5L", "Yerba Mate 1kg", "Alfajor Triple"]);
+  });
+
   it("filtra por codigo interno", () => {
     expect(filtrarCatalogoVenta(catalogo, "COD2")).toHaveLength(1);
   });

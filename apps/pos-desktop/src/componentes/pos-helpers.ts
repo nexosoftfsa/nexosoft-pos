@@ -5,18 +5,40 @@
  */
 import type { ProductoCatalogo } from "../datos/bootstrap";
 
-/** Filtra el catálogo de venta por texto (código interno, código de barras o descripción). */
+/**
+ * Relevancia de un producto para lo que se tipeó: 0 = se llama (o se codifica)
+ * exactamente así, 1 = empieza con eso, 2 = lo contiene en algún lado.
+ */
+function relevancia(p: ProductoCatalogo, q: string): number {
+  const descripcion = p.articulo.descripcion.toLowerCase();
+  const codigo = p.articulo.codigoInterno.toLowerCase();
+  if (descripcion === q || codigo === q) return 0;
+  if (descripcion.startsWith(q)) return 1;
+  return 2;
+}
+
+/**
+ * Filtra el catálogo de venta por texto (código interno, código de barras o
+ * descripción), ordenado por relevancia.
+ *
+ * El orden importa porque el primer resultado viene resaltado y Enter lo
+ * ficha: sin esto, tipear "PAN" y apretar Enter agregaba "FAVORITA PAN
+ * RALLADO 450GR" (el primero alfabético) en vez del producto que se llama
+ * justamente "PAN". `sort` es estable, así que dentro de cada nivel se
+ * respeta el orden alfabético que ya traía el catálogo.
+ */
 export function filtrarCatalogoVenta(
   catalogo: readonly ProductoCatalogo[],
   busqueda: string,
 ): ProductoCatalogo[] {
   const q = busqueda.trim().toLowerCase();
   if (q === "") return [...catalogo];
-  return catalogo.filter((p) =>
+  const coincidencias = catalogo.filter((p) =>
     [p.articulo.codigoInterno, p.articulo.codigoBarras ?? "", p.articulo.descripcion].some(
       (campo) => campo.toLowerCase().includes(q),
     ),
   );
+  return coincidencias.sort((a, b) => relevancia(a, q) - relevancia(b, q));
 }
 
 /** Busca un producto por código exacto (interno o de barras) — lo que dispara un escaneo. */
