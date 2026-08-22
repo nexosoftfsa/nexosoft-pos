@@ -21,7 +21,59 @@
 import { useCallback, useState } from "react";
 import { flushSync } from "react-dom";
 
-export function useImpresion<T>(claseBody: string): {
+/**
+ * Fija el alto de una `@page` con nombre midiendo lo que se va a imprimir.
+ * Hace falta para el rollo térmico: `size` no admite `<medida> auto`, así que
+ * sin un alto explícito el navegador usa el papel del driver — en una térmica
+ * eso es un rollo de metros y sale un ticket sin fin.
+ */
+export interface PaginaAMedida {
+  /** Nombre de la `@page` (la propiedad `page:` del nodo, en `estilos.css`). */
+  readonly nombrePagina: string;
+  /** Ancho imprimible del papel, en mm. */
+  readonly anchoMm: number;
+  /** Nodo a medir. */
+  readonly selector: string;
+  /** Papel extra al final para que el corte no coma la última línea. */
+  readonly colaMm?: number;
+}
+
+const ID_ESTILO_PAGINA = "nexosoft-pagina-a-medida";
+const PX_POR_MM = 96 / 25.4;
+
+function ajustarAltoDePagina(o: PaginaAMedida): void {
+  const nodo = document.querySelector<HTMLElement>(o.selector);
+  if (!nodo) return;
+
+  // En pantalla el nodo está `display:none` (solo aparece en @media print),
+  // así que no tiene alto medible: se lo muestra fuera de la vista, al ancho
+  // real del papel, se mide, y se restauran los estilos inline previos.
+  const estiloPrevio = nodo.getAttribute("style");
+  nodo.style.display = "block";
+  nodo.style.position = "absolute";
+  nodo.style.left = "-10000px";
+  nodo.style.top = "0";
+  nodo.style.width = `${o.anchoMm}mm`;
+  const altoPx = nodo.getBoundingClientRect().height;
+  if (estiloPrevio === null) nodo.removeAttribute("style");
+  else nodo.setAttribute("style", estiloPrevio);
+
+  if (altoPx <= 0) return; // no se pudo medir: queda el fallback del CSS
+  const altoMm = Math.ceil(altoPx / PX_POR_MM) + (o.colaMm ?? 4);
+
+  let estilo = document.getElementById(ID_ESTILO_PAGINA) as HTMLStyleElement | null;
+  if (!estilo) {
+    estilo = document.createElement("style");
+    estilo.id = ID_ESTILO_PAGINA;
+    document.head.appendChild(estilo);
+  }
+  estilo.textContent = `@page ${o.nombrePagina} { size: ${o.anchoMm}mm ${altoMm}mm; margin: 0; }`;
+}
+
+export function useImpresion<T>(
+  claseBody: string,
+  pagina?: PaginaAMedida,
+): {
   readonly datos: T | null;
   readonly imprimir: (datos: T) => void;
 } {
@@ -31,6 +83,9 @@ export function useImpresion<T>(claseBody: string): {
     (d: T) => {
       flushSync(() => setDatos(d));
       document.body.classList.add(claseBody);
+      // Después del flushSync el nodo ya está en el DOM con los datos reales,
+      // así que recién acá se puede medir su alto.
+      if (pagina) ajustarAltoDePagina(pagina);
 
       function limpiar() {
         document.body.classList.remove(claseBody);
@@ -41,7 +96,7 @@ export function useImpresion<T>(claseBody: string): {
 
       window.print();
     },
-    [claseBody],
+    [claseBody, pagina],
   );
 
   return { datos, imprimir };

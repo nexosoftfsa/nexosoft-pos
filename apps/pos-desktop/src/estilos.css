@@ -926,7 +926,9 @@ body {
     position: absolute;
     left: 0;
     top: 0;
-    width: 80mm;
+    /* Sin `width` a propósito: manda el de `.hoja-ticket` (48mm), que es el
+       mismo ancho al que se mide el alto de la página. Si se pisa acá, lo
+       impreso y lo medido dejan de coincidir. */
   }
 
   /* Credencial física de empleado (8x5cm, Fase 15.A) — mismo patrón que .hoja-a4/.hoja-ticket. */
@@ -951,12 +953,17 @@ body {
   size: A4;
   margin: 15mm;
 }
-/* Página angosta para el ticket chico (soportado en navegadores Chromium,
-   como el WebView2 de la app instalada). Si el navegador no soporta páginas
-   con nombre, imprime igual, solo que en A4 con margen blanco alrededor. */
+/* Página angosta para el ticket chico. OJO: `size` NO admite mezclar una
+   medida con `auto` (`80mm auto` es inválido y el navegador descarta la
+   regla entera, cayendo al papel del driver — en una térmica eso es un rollo
+   de 3276mm, o sea un ticket sin fin). Por eso el alto real lo inyecta
+   `usar-impresion-ticket.ts` midiendo el ticket antes de imprimir; esto es
+   solo el fallback si esa medición no llegara a correr.
+   `margin: 0` además saca el encabezado/pie que Chromium agrega (fecha,
+   título) cuando la página tiene margen. */
 @page ticket-chico {
-  size: 80mm auto;
-  margin: 3mm;
+  size: 48mm 200mm;
+  margin: 0;
 }
 /* Credencial física de empleado: tamaño estándar de credencial (8x5cm). */
 @page credencial {
@@ -1051,14 +1058,19 @@ body {
   text-align: center;
 }
 
-/* Ticket chico (oculto en pantalla; ver regla @media print de arriba) */
+/* Ticket chico (oculto en pantalla; ver regla @media print de arriba).
+   El ancho tiene que coincidir con ANCHO_TICKET_MM en
+   `componentes/usar-impresion-ticket.ts`, que mide este nodo a ese ancho
+   para fijar el alto exacto de la página. 48mm = area imprimible de una
+   térmica de 58mm ("58(48)" en el driver). A 7pt en Courier entran ~32
+   caracteres por línea, que es lo que espera este layout. */
 .hoja-ticket {
   display: none;
   page: ticket-chico;
-  width: 80mm;
+  width: 48mm;
   font-family: "Courier New", monospace;
-  font-size: 9pt;
-  line-height: 1.35;
+  font-size: 7pt;
+  line-height: 1.3;
   color: #000;
 }
 .ticket-print-logo {

@@ -65,7 +65,7 @@ Source: "..\scripts\instalacion\actualizador-servidor.ps1"; DestDir: "{app}\scri
 ; minutos: initdb, migraciones, compilacion del cliente Prisma). Ademas
 ; queda un log permanente en <RaizDatos>\logs\bootstrap.log.
 Filename: "powershell.exe"; \
-    Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\bootstrap-servidor-standalone.ps1"" -NombreComercio ""{code:GetNombreComercio}"" -AdminUsuario ""{code:GetAdminUsuario}"" -AdminPassword ""{code:GetAdminPassword}"" -NodeDir ""{app}\node-portable"" -PostgresDir ""{app}\postgres-portable"" -ServidorDir ""{app}\dist-servidor"""; \
+    Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\bootstrap-servidor-standalone.ps1"" -NombreComercio ""{code:GetNombreComercio}"" -AdminUsuario ""{code:GetAdminUsuario}"" -AdminPassword ""{code:GetAdminPassword}"" -NodeDir ""{app}\node-portable"" -PostgresDir ""{app}\postgres-portable"" -ServidorDir ""{app}\dist-servidor"" -PuertoPostgres {code:GetPuertoPostgres}"; \
     StatusMsg: "Configurando el servidor (puede tardar varios minutos)..."; \
     Flags: waituntilterminated
 
@@ -73,6 +73,7 @@ Filename: "powershell.exe"; \
 var
   PaginaComercio: TInputQueryWizardPage;
   PaginaAdmin: TInputQueryWizardPage;
+  PaginaBase: TInputQueryWizardPage;
 
 procedure InitializeWizard;
 begin
@@ -87,9 +88,18 @@ begin
   PaginaAdmin.Add('Usuario (por ejemplo: admin):', False);
   PaginaAdmin.Add('Contraseña (minimo 8 caracteres):', True);
   PaginaAdmin.Add('Confirmar contraseña:', True);
+
+  PaginaBase := CreateInputQueryPage(PaginaAdmin.ID,
+    'Base de datos', 'Puerto de PostgreSQL',
+    'NexoSoft instala su PROPIO PostgreSQL, aparte de cualquier otro que ya haya en esta PC.' + #13#10 +
+    'Dejalo en 5432 salvo que esta PC YA tenga un PostgreSQL instalado (por ejemplo del sistema anterior del comercio): en ese caso pone otro puerto libre, como 5433, para no interferir con el existente.');
+  PaginaBase.Add('Puerto:', False);
+  PaginaBase.Values[0] := '5432';
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  Puerto: Integer;
 begin
   Result := True;
   if CurPageID = PaginaComercio.ID then begin
@@ -110,6 +120,13 @@ begin
       Result := False;
     end;
   end;
+  if CurPageID = PaginaBase.ID then begin
+    Puerto := StrToIntDef(Trim(PaginaBase.Values[0]), -1);
+    if (Puerto < 1) or (Puerto > 65535) then begin
+      MsgBox('Ingresa un puerto valido (entre 1 y 65535). Si no sabes, dejalo en 5432.', mbError, MB_OK);
+      Result := False;
+    end;
+  end;
 end;
 
 function GetNombreComercio(Param: String): String;
@@ -125,6 +142,11 @@ end;
 function GetAdminPassword(Param: String): String;
 begin
   Result := PaginaAdmin.Values[1];
+end;
+
+function GetPuertoPostgres(Param: String): String;
+begin
+  Result := Trim(PaginaBase.Values[0]);
 end;
 
 procedure CurPageChanged(CurPageID: Integer);
