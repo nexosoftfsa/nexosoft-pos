@@ -20,6 +20,15 @@ import { etiquetaComprobante, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
 import type { ClienteMediosPago, Tarjeta } from "../sync/cliente-medios-pago";
+import { AsistenteCobro } from "./AsistenteCobro";
+import {
+  moverCursor,
+  montoBaseParaSaldoExacto,
+  pasoTrasElegirMedio,
+  pasoTrasElegirTarjeta,
+  superaSaldoSinVuelto,
+  type PasoAsistente,
+} from "./asistente-cobro-helpers";
 import { ComprobanteA4 } from "./ComprobanteA4";
 import { ComprobanteTicket } from "./ComprobanteTicket";
 import {
@@ -41,7 +50,7 @@ import { useImpresionA4 } from "./usar-impresion-a4";
 import { useImpresionTicket } from "./usar-impresion-ticket";
 import { useLectorTeclado } from "./usar-lector-teclado";
 
-interface PagoUi {
+export interface PagoUi {
   readonly forma: FormaDePago;
   readonly monto: Money;
   /** Trazabilidad de tarjeta configurada (Fase 12.E). */
@@ -153,8 +162,12 @@ export function PantallaPos({
   const [imprimiendo, setImprimiendo] = useState(false);
   const [pagoElectronico, setPagoElectronico] = useState<IntentoPago | null>(null);
   const [cobroRapidoPendiente, setCobroRapidoPendiente] = useState(false);
+  const [pasoAsistente, setPasoAsistente] = useState<PasoAsistente>("cerrado");
+  const [cursorAsistente, setCursorAsistente] = useState(0);
+  const [avanceAsistentePendiente, setAvanceAsistentePendiente] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const buscadorRef = useRef<HTMLInputElement>(null);
+  const montoAsistenteRef = useRef<HTMLInputElement>(null);
   const { datosA4, imprimirA4 } = useImpresionA4();
   const { datosTicket, imprimirTicketPreview } = useImpresionTicket();
 
@@ -183,7 +196,7 @@ export function PantallaPos({
     // agregar se define más abajo, pero es estable porque usa setCarrito funcional
     [catalogo],
   );
-  useLectorTeclado(lector, buscarPorCodigo);
+  useLectorTeclado(lector, buscarPorCodigo, pasoAsistente === "cerrado");
 
   // ----- Tarjetas configuradas (Fase 12.E) -----
   useEffect(() => {
@@ -335,6 +348,206 @@ export function PantallaPos({
       setError("Monto de pago inválido.");
     }
   }
+
+  /**
+   * Abre el asistente de cobro (Fase 16: wizard "Seleccionar Medio" con
+   * flechas + Enter) en el primer paso. Le saca el foco al buscador para que
+   * el listener global de teclado del wizard no compita con su `onKeyDown`.
+   */
+  function abrirAsistente() {
+    setPasoAsistente("medio");
+    setCursorAsistente(0);
+    buscadorRef.current?.blur();
+  }
+
+  /** Cierra el asistente sin tocar los pagos ya agregados (se sacan con la × de siempre). */
+  function cerrarAsistente() {
+    setPasoAsistente("cerrado");
+    refocarBuscador();
+  }
+
+  function elegirMedioAsistente(indice: number) {
+    const forma = FORMAS[indice]?.valor;
+    if (!forma || !preview) return;
+    setFormaPago(forma);
+    setTarjetaSeleccionada("");
+    setCuotasSeleccionadas("");
+    setError(null);
+    const siguiente = pasoTrasElegirMedio(forma, tarjetas.length, clientes.length, clienteId !== "");
+    if (siguiente === "monto") {
+      setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
+    }
+    setPasoAsistente(siguiente);
+    setCursorAsistente(0);
+  }
+
+  function elegirTarjetaAsistente(indice: number) {
+    const tarjeta = tarjetas[indice];
+    if (!tarjeta || !preview) return;
+    setTarjetaSeleccionada(tarjeta.id);
+    setCuotasSeleccionadas("");
+    const siguiente = pasoTrasElegirTarjeta(tarjeta.tasas.length);
+    if (siguiente === "monto") {
+      setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
+    }
+    setPasoAsistente(siguiente);
+    setCursorAsistente(0);
+  }
+
+  function elegirCuotasAsistente(indice: number) {
+    const tasa = tarjetaActual?.tasas[indice];
+    if (!tasa || !preview) return;
+    setCuotasSeleccionadas(String(tasa.cantidadCuotas));
+    setMontoPago(
+      montoBaseParaSaldoExacto(preview.cobro.saldoPendiente, tasa.recargoPorcentaje).aDecimalString(2),
+    );
+    setPasoAsistente("monto");
+    setCursorAsistente(0);
+  }
+
+  function elegirClienteAsistente(indice: number) {
+    const cliente = clientes[indice];
+    if (!cliente || !preview) return;
+    setClienteId(cliente.id);
+    setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
+    setPasoAsistente("monto");
+    setCursorAsistente(0);
+  }
+
+  /** Confirma el paso "monto" del asistente: valida contra el saldo y agrega el pago. */
+  function confirmarMontoAsistente() {
+    if (!preview) return;
+    try {
+      const montoBase = Money.desde(montoPago.replace(",", "."));
+      if (!montoBase.esPositivo()) {
+        setError("El monto del pago debe ser mayor a cero.");
+        return;
+      }
+      const pagoUi = armarPagoUi(montoBase);
+      if (superaSaldoSinVuelto(formaPago, pagoUi.monto, preview.cobro.saldoPendiente)) {
+        const etiquetaForma = FORMAS.find((f) => f.valor === formaPago)?.etiqueta ?? formaPago;
+        setError(`No se puede dar vuelto con ${etiquetaForma}: el monto no puede superar el saldo pendiente.`);
+        return;
+      }
+      agregarPago();
+      setAvanceAsistentePendiente(true);
+    } catch {
+      setError("Monto de pago inválido.");
+    }
+  }
+
+  // Avanza el asistente tras agregar un pago (paso "monto" → Enter). La
+  // validación del cobro es async (recalcula `preview` vía el useEffect de
+  // arriba), así que este effect espera a que `preview.cobro.pagado`
+  // refleje el pago recién agregado antes de decidir el próximo paso —
+  // mismo patrón que `cobroRapidoPendiente` más arriba.
+  useEffect(() => {
+    if (!avanceAsistentePendiente) return;
+    if (error) {
+      setAvanceAsistentePendiente(false);
+      return;
+    }
+    if (!preview) return;
+    const totalPagosActual = pagos.reduce((acc, p) => acc.sumar(p.monto), Money.cero());
+    if (!preview.cobro.pagado.igualA(totalPagosActual)) return;
+    setAvanceAsistentePendiente(false);
+    if (preview.cobro.cancelada) {
+      cerrarAsistente();
+    } else {
+      setPasoAsistente("medio");
+      setCursorAsistente(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [avanceAsistentePendiente, preview, pagos, error]);
+
+  // Navegación por teclado del asistente (flechas + Enter + Escape). Se
+  // engancha solo mientras el wizard está abierto; el buscador pierde el
+  // foco en `abrirAsistente()` para que su propio `onKeyDown` no compita.
+  useEffect(() => {
+    if (pasoAsistente === "cerrado") return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        cerrarAsistente();
+        return;
+      }
+      if (pasoAsistente === "medio") {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, 1, FORMAS.length));
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, -1, FORMAS.length));
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          elegirMedioAsistente(cursorAsistente);
+        }
+      } else if (pasoAsistente === "tarjeta") {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, 1, tarjetas.length));
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, -1, tarjetas.length));
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          elegirTarjetaAsistente(cursorAsistente);
+        }
+      } else if (pasoAsistente === "cuotas") {
+        const longitud = tarjetaActual?.tasas.length ?? 0;
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, 1, longitud));
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, -1, longitud));
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          elegirCuotasAsistente(cursorAsistente);
+        }
+      } else if (pasoAsistente === "cliente") {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, 1, clientes.length));
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setCursorAsistente((c) => moverCursor(c, -1, clientes.length));
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          elegirClienteAsistente(cursorAsistente);
+        }
+      } else if (pasoAsistente === "monto") {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          confirmarMontoAsistente();
+        }
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    pasoAsistente,
+    cursorAsistente,
+    tarjetas,
+    tarjetaActual,
+    clientes,
+    clienteId,
+    montoPago,
+    preview,
+    formaPago,
+  ]);
+
+  // Foco + selección automática del monto al entrar al paso "monto" (mismo
+  // detalle que el simulador: el monto pre-cargado queda listo para
+  // sobreescribir en un pago mixto).
+  useEffect(() => {
+    if (pasoAsistente === "monto") {
+      montoAsistenteRef.current?.focus();
+      montoAsistenteRef.current?.select();
+    }
+  }, [pasoAsistente]);
 
   /** Arma el `PagoUi`: si hay tarjeta+cuotas elegida, calcula y suma su recargo. */
   function armarPagoUi(montoBase: Money): PagoUi {
@@ -592,14 +805,23 @@ export function PantallaPos({
               // de la pantalla (relatedTarget null: no fue a otro control
               // real como un botón o un input), lo recuperamos. Si el
               // cajero clickeó a propósito otro campo, lo dejamos tranquilo.
-              if (e.relatedTarget === null) {
+              // Mientras el asistente de cobro está abierto tampoco se
+              // recupera: `abrirAsistente()` le saca el foco a propósito
+              // para que el buscador no compita con la navegación del wizard.
+              if (e.relatedTarget === null && pasoAsistente === "cerrado") {
                 e.currentTarget.focus();
               }
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 const codigo = busquedaProducto.trim();
-                if (codigo === "") return;
+                if (codigo === "") {
+                  // Buscador vacío + Enter: dispara el cobro (Fase 16).
+                  if (carrito.length === 0 || !preview) return;
+                  if (preview.cobro.cancelada) void confirmar();
+                  else abrirAsistente();
+                  return;
+                }
                 const prod = buscarProductoPorCodigo(catalogo, codigo);
                 if (prod) {
                   agregar(prod);
@@ -625,6 +847,9 @@ export function PantallaPos({
             }}
           />
           <div className="atajos-legend">
+            <span>
+              <kbd>Enter</kbd> (buscador vacío) cobra
+            </span>
             <span>
               <kbd>Supr</kbd> saca el último ítem
             </span>
@@ -784,73 +1009,16 @@ export function PantallaPos({
                 </div>
               ))}
             </div>
-            <div className="pago-nuevo">
-              <select
-                value={formaPago}
-                onChange={(e) => {
-                  setFormaPago(e.target.value as FormaDePago);
-                  setTarjetaSeleccionada("");
-                  setCuotasSeleccionadas("");
-                }}
+            {!puedeConfirmar && (
+              <button
+                type="button"
+                className="cobrar-boton"
+                onClick={abrirAsistente}
+                disabled={carrito.length === 0 || !preview}
               >
-                {FORMAS.map((f) => (
-                  <option key={f.valor} value={f.valor}>
-                    {f.etiqueta}
-                  </option>
-                ))}
-              </select>
-              {formaPago === FormaDePago.Tarjeta && tarjetas.length > 0 && (
-                <>
-                  <select
-                    value={tarjetaSeleccionada}
-                    onChange={(e) => {
-                      setTarjetaSeleccionada(e.target.value);
-                      setCuotasSeleccionadas("");
-                    }}
-                  >
-                    <option value="">Tarjeta / banco…</option>
-                    {tarjetas.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.banco}
-                        {t.marca ? ` — ${t.marca}` : ""} ({t.tipo === "CREDITO" ? "Crédito" : "Débito"})
-                      </option>
-                    ))}
-                  </select>
-                  {tarjetaActual && (
-                    <select
-                      value={cuotasSeleccionadas}
-                      onChange={(e) => setCuotasSeleccionadas(e.target.value)}
-                    >
-                      <option value="">Cuotas…</option>
-                      {tarjetaActual.tasas.map((t) => (
-                        <option key={t.cantidadCuotas} value={t.cantidadCuotas}>
-                          {t.cantidadCuotas} — {t.recargoPorcentaje}%
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </>
-              )}
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="Monto"
-                value={montoPago}
-                onChange={(e) => setMontoPago(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") agregarPago();
-                }}
-              />
-              {recargoVivo && (
-                <span className="muted">
-                  + {pesos(recargoVivo)} recargo = {pesos(montoBaseVivo!.sumar(recargoVivo))}
-                </span>
-              )}
-              <button onClick={agregarPago}>Agregar</button>
-              <button className="exacto" onClick={pagoExacto} disabled={!preview}>
-                Exacto
+                Cobrar (Enter)
               </button>
-            </div>
+            )}
             {preview && (
               <div className="cobro">
                 <Fila etiqueta="Pagado" valor={pesos(preview.cobro.pagado)} />
@@ -871,6 +1039,28 @@ export function PantallaPos({
           </button>
         </aside>
       </main>
+
+      {pasoAsistente !== "cerrado" && (
+        <AsistenteCobro
+          paso={pasoAsistente}
+          cursor={cursorAsistente}
+          formas={FORMAS}
+          formaPago={formaPago}
+          tarjetas={tarjetas}
+          tarjetaActual={tarjetaActual}
+          tasaActual={tasaActual}
+          clientes={clientes}
+          montoPago={montoPago}
+          onCambiarMonto={setMontoPago}
+          montoInputRef={montoAsistenteRef}
+          recargoVivo={recargoVivo}
+          montoBaseVivo={montoBaseVivo}
+          saldoPendiente={preview?.cobro.saldoPendiente ?? Money.cero()}
+          pagos={pagos}
+          onQuitarPago={quitarPago}
+          error={error}
+        />
+      )}
 
       {ultimaVenta && (
         <div className="overlay" onClick={() => setUltimaVenta(null)}>

@@ -296,35 +296,182 @@ body {
   cursor: pointer;
   font-size: 16px;
 }
-.pago-nuevo {
-  display: grid;
-  /* 2 columnas × 2 filas: forma + monto arriba, Agregar + Exacto abajo.
-     Entra en el panel de 380px sin desbordar (antes era 1fr 1fr auto auto). */
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-.pago-nuevo select,
-.pago-nuevo input {
-  min-width: 0;
-}
-.pago-nuevo button {
-  padding: 8px 10px;
+.cobrar-boton {
+  padding: 12px;
   border: 1px solid var(--acento);
   background: var(--acento);
   color: #fff;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
-  /* En un grid, los botones no encogen por debajo de su contenido por defecto
-     (min-width:auto) y a anchos chicos quedaban cortados contra el borde. */
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 700;
+  font-size: 15px;
 }
-.pago-nuevo button.exacto {
-  background: #fff;
+.cobrar-boton:hover:not(:disabled) {
+  background: var(--acento-fuerte);
+}
+.cobrar-boton:disabled {
+  background: #cbd5e1;
+  border-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* Asistente de cobro (Fase 16): wizard "Seleccionar Medio" por teclado. */
+.asistente-cobro {
+  background: var(--panel);
+  width: 700px;
+  max-width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.asistente-header {
+  background: var(--texto);
+  color: #fff;
+  padding: 20px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.asistente-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--acento);
+}
+.asistente-balance {
+  font-size: 28px;
+  font-weight: 900;
+}
+.asistente-body {
+  display: flex;
+  padding: 26px 28px;
+  gap: 26px;
+  min-height: 240px;
+}
+.asistente-col-main {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.asistente-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.asistente-item {
+  padding: 12px 16px;
+  border: 2px solid var(--borde);
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+}
+.asistente-item.seleccionado {
+  border-color: var(--acento);
+  background: #ecfeff;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.15);
+}
+.asistente-monto-contenedor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+.asistente-monto-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--suave);
+}
+.asistente-monto-label strong {
   color: var(--acento-fuerte);
+}
+.asistente-monto {
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--texto);
+  border: none;
+  border-bottom: 4px solid var(--acento);
+  width: 100%;
+  text-align: center;
+  outline: none;
+  background: transparent;
+  padding-bottom: 8px;
+}
+.asistente-col-resumen {
+  flex: 0.8;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid var(--borde);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.asistente-resumen-titulo {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--suave);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--borde);
+  padding-bottom: 8px;
+}
+.asistente-resumen-lista {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.asistente-resumen-vacio {
+  font-size: 13px;
+  color: var(--suave);
+}
+.asistente-resumen-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--texto);
+  border-bottom: 1px dashed var(--borde);
+  padding: 6px 0;
+}
+.asistente-resumen-item button {
+  border: none;
+  background: none;
+  color: var(--peligro);
+  cursor: pointer;
+  font-size: 15px;
+}
+.asistente-resumen-total {
+  border-top: 2px solid var(--borde);
+  border-bottom: none;
+  margin-top: auto;
+  padding-top: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--peligro);
+}
+.asistente-footer {
+  background: var(--bg);
+  padding: 12px 28px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--suave);
+  font-weight: 600;
+  border-top: 1px solid var(--borde);
 }
 
 .error {
