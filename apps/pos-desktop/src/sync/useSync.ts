@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 
-import type { AlmacenDeOperaciones, MotorDeSincronizacion, OperacionSync } from "@nexosoft/sync";
+import type {
+  AlmacenDeOperaciones,
+  MotorDeSincronizacion,
+  OperacionEnCola,
+  OperacionSync,
+} from "@nexosoft/sync";
 
 /** Lo que el POS inyecta para la sincronización. */
 export interface SyncPos {
@@ -12,6 +17,13 @@ export interface SyncPos {
 export interface EstadoSync {
   readonly pendientes: number;
   readonly fallidas: number;
+  /**
+   * Las operaciones rechazadas, con el motivo que devolvió el servidor. El
+   * contador solo no alcanza: una venta que no sincroniza necesita decir POR
+   * QUÉ, si no queda enterrada en la cola y el comercio se entera cuando le
+   * faltan ventas en los reportes.
+   */
+  readonly detalleFallidas: readonly OperacionEnCola[];
   readonly sincronizando: boolean;
   readonly online: boolean;
   readonly error: string | null;
@@ -32,6 +44,7 @@ export function useSync(sync: SyncPos): EstadoSync {
   const { motor, almacen } = sync;
   const [pendientes, setPendientes] = useState(0);
   const [fallidas, setFallidas] = useState(0);
+  const [detalleFallidas, setDetalleFallidas] = useState<readonly OperacionEnCola[]>([]);
   const [sincronizando, setSincronizando] = useState(false);
   const [online, setOnline] = useState(() => navigator.onLine);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +52,9 @@ export function useSync(sync: SyncPos): EstadoSync {
   const refrescar = useCallback(async () => {
     const todas = await almacen.todas();
     setPendientes(todas.filter((o) => o.estado === "pendiente" || o.estado === "enviando").length);
-    setFallidas(todas.filter((o) => o.estado === "fallida").length);
+    const rechazadas = todas.filter((o) => o.estado === "fallida");
+    setFallidas(rechazadas.length);
+    setDetalleFallidas(rechazadas);
   }, [almacen]);
 
   const sincronizarAhora = useCallback(async () => {
@@ -93,6 +108,7 @@ export function useSync(sync: SyncPos): EstadoSync {
   return {
     pendientes,
     fallidas,
+    detalleFallidas,
     sincronizando,
     online,
     error,

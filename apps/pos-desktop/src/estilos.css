@@ -670,6 +670,81 @@ body {
   border-top: 1px solid var(--borde);
 }
 
+/* Detalle de ventas rechazadas por el servidor (se abre desde el indicador). */
+.sync-texto--boton {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.sync-detalle {
+  background: var(--panel);
+  width: 560px;
+  max-width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+.sync-detalle h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+.sync-detalle-ayuda {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--suave);
+  line-height: 1.45;
+}
+.sync-detalle-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sync-detalle-lista li {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.sync-detalle-op {
+  font-size: 12px;
+  color: var(--suave);
+  font-variant-numeric: tabular-nums;
+}
+.sync-detalle-error {
+  margin-top: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--peligro);
+  word-break: break-word;
+}
+.sync-detalle-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.sync-detalle-acciones button {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+.sync-detalle-acciones button.primario {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
+
 .error {
   background: #fef2f2;
   color: var(--peligro);
