@@ -953,18 +953,15 @@ body {
   size: A4;
   margin: 15mm;
 }
-/* Página angosta para el ticket chico. OJO: `size` NO admite mezclar una
-   medida con `auto` (`80mm auto` es inválido y el navegador descarta la
-   regla entera, cayendo al papel del driver — en una térmica eso es un rollo
-   de 3276mm, o sea un ticket sin fin). Por eso el alto real lo inyecta
-   `usar-impresion-ticket.ts` midiendo el ticket antes de imprimir; esto es
-   solo el fallback si esa medición no llegara a correr.
-   `margin: 0` además saca el encabezado/pie que Chromium agrega (fecha,
-   título) cuando la página tiene margen. */
-@page ticket-chico {
-  size: 48mm 200mm;
-  margin: 0;
-}
+/* El ticket chico NO define su página acá: `usar-impresion.ts` inyecta una
+   `@page` sin nombre (con el alto medido del ticket) justo antes de imprimir
+   y la saca en `afterprint`. Se hace así porque:
+     - `size` no admite mezclar una medida con `auto` (`80mm auto` es
+       inválido: el navegador descarta la regla y cae al papel del driver,
+       que en una térmica es un rollo de 3276mm → ticket sin fin);
+     - las páginas CON NOMBRE (`@page ticket-chico` + `page: ticket-chico`)
+       dependen del soporte del motor, y si no está la regla se ignora en
+       silencio — que fue exactamente lo que pasó en la PC del cliente. */
 /* Credencial física de empleado: tamaño estándar de credencial (8x5cm). */
 @page credencial {
   size: 80mm 50mm;
@@ -1066,7 +1063,6 @@ body {
    caracteres por línea, que es lo que espera este layout. */
 .hoja-ticket {
   display: none;
-  page: ticket-chico;
   width: 48mm;
   font-family: "Courier New", monospace;
   font-size: 7pt;

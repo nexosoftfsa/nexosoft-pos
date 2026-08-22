@@ -22,14 +22,20 @@ import { useCallback, useState } from "react";
 import { flushSync } from "react-dom";
 
 /**
- * Fija el alto de una `@page` con nombre midiendo lo que se va a imprimir.
- * Hace falta para el rollo térmico: `size` no admite `<medida> auto`, así que
- * sin un alto explícito el navegador usa el papel del driver — en una térmica
- * eso es un rollo de metros y sale un ticket sin fin.
+ * Fija el tamaño de página midiendo lo que se va a imprimir. Hace falta para
+ * el rollo térmico: `size` no admite `<medida> auto`, así que sin un alto
+ * explícito el navegador usa el papel del driver — en una térmica eso es un
+ * rollo de metros y sale un ticket sin fin.
+ *
+ * La regla se inyecta como `@page` SIN NOMBRE, a propósito: las páginas con
+ * nombre (`@page ticket-chico` + `page: ticket-chico`) dependen de soporte
+ * del motor, y si no está, la regla entera se ignora en silencio y vuelve el
+ * problema original. Como mientras se imprime solo hay un documento visible
+ * (el resto queda en `visibility:hidden`), pisar la `@page` global es seguro;
+ * el estilo se saca en `afterprint` para no afectar impresiones posteriores
+ * (A4, etiquetas, credencial).
  */
 export interface PaginaAMedida {
-  /** Nombre de la `@page` (la propiedad `page:` del nodo, en `estilos.css`). */
-  readonly nombrePagina: string;
   /** Ancho imprimible del papel, en mm. */
   readonly anchoMm: number;
   /** Nodo a medir. */
@@ -67,7 +73,11 @@ function ajustarAltoDePagina(o: PaginaAMedida): void {
     estilo.id = ID_ESTILO_PAGINA;
     document.head.appendChild(estilo);
   }
-  estilo.textContent = `@page ${o.nombrePagina} { size: ${o.anchoMm}mm ${altoMm}mm; margin: 0; }`;
+  estilo.textContent = `@page { size: ${o.anchoMm}mm ${altoMm}mm; margin: 0; }`;
+}
+
+function quitarPaginaAMedida(): void {
+  document.getElementById(ID_ESTILO_PAGINA)?.remove();
 }
 
 export function useImpresion<T>(
@@ -89,6 +99,7 @@ export function useImpresion<T>(
 
       function limpiar() {
         document.body.classList.remove(claseBody);
+        quitarPaginaAMedida();
         setDatos(null);
         window.removeEventListener("afterprint", limpiar);
       }

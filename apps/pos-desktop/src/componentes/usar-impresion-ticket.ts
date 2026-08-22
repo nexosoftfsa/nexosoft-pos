@@ -18,7 +18,6 @@ export function useImpresionTicket(): {
 } {
   const pagina = useMemo<PaginaAMedida>(
     () => ({
-      nombrePagina: "ticket-chico",
       anchoMm: ANCHO_TICKET_MM,
       selector: ".hoja-ticket",
       // Unos mm de cola para que el corte no se coma la última línea.
