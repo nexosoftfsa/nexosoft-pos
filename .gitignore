@@ -8,6 +8,11 @@ build/
 out/
 *.tsbuildinfo
 
+# Panel web compilado que el cloud-api sirve estatico. Lo genera el build de
+# admin-web (ver instalacion-primer-cliente.md y armar-paquete-servidor.ps1):
+# es un artefacto local, no codigo fuente.
+/apps/cloud-api/panel/
+
 # Paquete standalone del servidor (Fase 13) y runtimes portables embebidos
 /dist-servidor/
 /NexoSoftBuild/
