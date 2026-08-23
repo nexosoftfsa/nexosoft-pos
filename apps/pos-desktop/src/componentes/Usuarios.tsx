@@ -4,7 +4,7 @@
  * quitarse el rol de ADMIN a sí mismo (el backend lo bloquea igual; acá se
  * deshabilita para no mostrar un error confuso).
  */
-import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 
 import { redimensionarImagen } from "../archivos";
 import { descargarBlob } from "../descargas";
@@ -112,8 +112,18 @@ export function Usuarios({
       const blob = await exportarExcel([
         {
           nombre: "Usuarios",
-          columnas: [{ titulo: "Nombre", ancho: 24 }, { titulo: "Email", ancho: 26 }, { titulo: "Rol" }, { titulo: "Estado" }],
-          filas: usuarios.map((u) => [u.nombreDisplay, u.email, etiquetaRol(u.rol), u.activo ? "Activo" : "Inactivo"]),
+          columnas: [
+            { titulo: "Nombre", ancho: 24 },
+            { titulo: "Email", ancho: 26 },
+            { titulo: "Rol" },
+            { titulo: "Estado" },
+          ],
+          filas: usuarios.map((u) => [
+            u.nombreDisplay,
+            u.email,
+            etiquetaRol(u.rol),
+            u.activo ? "Activo" : "Inactivo",
+          ]),
         },
       ]);
       await descargarBlob("usuarios.xlsx", blob);
@@ -129,7 +139,11 @@ export function Usuarios({
         <button type="button" className="pill-btn" onClick={() => void exportar()}>
           Exportar
         </button>
-        <button type="button" className="pill-btn pill-btn--primary" onClick={() => setCreando(true)}>
+        <button
+          type="button"
+          className="pill-btn pill-btn--primary"
+          onClick={() => setCreando(true)}
+        >
           + Nuevo usuario
         </button>
       </div>
@@ -183,7 +197,11 @@ export function Usuarios({
                           className="input"
                           value={u.rol}
                           disabled={esUnoMismo}
-                          title={esUnoMismo ? "No podés quitarte el rol de administrador a vos mismo" : undefined}
+                          title={
+                            esUnoMismo
+                              ? "No podés quitarte el rol de administrador a vos mismo"
+                              : undefined
+                          }
                           onChange={(e) => void cambiarRol(u, e.target.value as RolUsuario)}
                         >
                           {ROLES.map((r) => (
@@ -203,7 +221,11 @@ export function Usuarios({
                       <td>{fecha(u.creadoEn)}</td>
                       <td className="acciones">
                         {clienteCredenciales !== undefined && (
-                          <button type="button" className="linkbtn" onClick={() => setCredencialUsuario(u)}>
+                          <button
+                            type="button"
+                            className="linkbtn"
+                            onClick={() => setCredencialUsuario(u)}
+                          >
                             Credencial
                           </button>
                         )}
@@ -211,7 +233,11 @@ export function Usuarios({
                           type="button"
                           className={`linkbtn${u.activo ? " linkbtn--danger" : ""}`}
                           disabled={esUnoMismo && u.activo}
-                          title={esUnoMismo && u.activo ? "No podés desactivar tu propio usuario" : undefined}
+                          title={
+                            esUnoMismo && u.activo
+                              ? "No podés desactivar tu propio usuario"
+                              : undefined
+                          }
                           onClick={() => void alternarActivo(u)}
                         >
                           {u.activo ? "Desactivar" : "Reactivar"}
@@ -263,6 +289,18 @@ function FotoCelda({
   const [cargando, setCargando] = useState(true);
   const [subiendo, setSubiendo] = useState(false);
 
+  // `onError` llega del padre como arrow nueva en cada render, así que NO
+  // puede estar en las dependencias del efecto: cambiaría de identidad en
+  // cada render y volvería a pedir la foto de todos los usuarios.
+  //
+  // Peor todavía, se realimentaba solo: un pedido que fallaba llamaba a
+  // `onError` → el padre hacía `setError` → re-render → dependencia nueva →
+  // pedir de nuevo → fallar → ... hasta que el servidor cortaba con
+  // "ThrottlerException: Too Many Requests". Pasó al cambiar una foto de
+  // perfil. Mismo patrón (y misma solución) que en `AccesoRemoto.tsx`.
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+
   useEffect(() => {
     let vivo = true;
     setCargando(true);
@@ -272,7 +310,7 @@ function FotoCelda({
         if (vivo) setFotoDataUrl(r.fotoBase64);
       })
       .catch((e: unknown) => {
-        if (vivo) onError(mensaje(e));
+        if (vivo) onErrorRef.current(mensaje(e));
       })
       .finally(() => {
         if (vivo) setCargando(false);
@@ -280,14 +318,16 @@ function FotoCelda({
     return () => {
       vivo = false;
     };
-  }, [usuarioId, cliente, onError]);
+  }, [usuarioId, cliente]);
 
   async function elegirFoto(e: ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0];
     e.target.value = "";
     if (!archivo) return;
     if (archivo.size > ARCHIVO_FOTO_MAX_BYTES) {
-      onError(`El archivo no puede pesar más de ${Math.round(ARCHIVO_FOTO_MAX_BYTES / 1024 / 1024)} MB.`);
+      onError(
+        `El archivo no puede pesar más de ${Math.round(ARCHIVO_FOTO_MAX_BYTES / 1024 / 1024)} MB.`,
+      );
       return;
     }
     setSubiendo(true);
@@ -345,7 +385,12 @@ function ModalNuevoUsuario({
       setErrores(e);
       return;
     }
-    const datos: NuevoUsuario = { email: usuario.trim(), nombreDisplay: nombreDisplay.trim(), password, rol };
+    const datos: NuevoUsuario = {
+      email: usuario.trim(),
+      nombreDisplay: nombreDisplay.trim(),
+      password,
+      rol,
+    };
     setGuardando(true);
     setErrores([]);
     try {
@@ -370,7 +415,11 @@ function ModalNuevoUsuario({
         <div className="modal__body">
           <div className="field">
             <label>Nombre</label>
-            <input className="input" value={nombreDisplay} onChange={(e) => setNombreDisplay(e.target.value)} />
+            <input
+              className="input"
+              value={nombreDisplay}
+              onChange={(e) => setNombreDisplay(e.target.value)}
+            />
           </div>
           <div className="field">
             <label>Nombre de usuario</label>
@@ -394,7 +443,11 @@ function ModalNuevoUsuario({
             </div>
             <div className="field">
               <label>Rol</label>
-              <select className="input" value={rol} onChange={(e) => setRol(e.target.value as RolUsuario)}>
+              <select
+                className="input"
+                value={rol}
+                onChange={(e) => setRol(e.target.value as RolUsuario)}
+              >
                 {ROLES.map((r) => (
                   <option key={r.valor} value={r.valor}>
                     {r.etiqueta}
@@ -415,7 +468,12 @@ function ModalNuevoUsuario({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar"}
           </button>
         </div>

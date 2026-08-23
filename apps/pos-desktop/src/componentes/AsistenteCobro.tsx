@@ -8,7 +8,7 @@
  * existentes. Acá solo se resalta el `cursor`-ésimo ítem de la lista activa
  * y se pinta el resumen de pagos + "Falta pagar".
  */
-import type { RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 import type { FormaDePago, Money } from "@nexosoft/domain";
 
@@ -67,6 +67,16 @@ export function AsistenteCobro({
   const etiquetaFormaActual = formas.find((f) => f.valor === formaPago)?.etiqueta ?? formaPago;
   const cobroCompleto = paso === "resumen" || paso === "imprimir";
 
+  // Las listas tienen alto fijo y scroll: sin esto, bajar con las flechas
+  // selecciona un ítem que queda FUERA de la vista y el cajero cree que no
+  // pasó nada. Pasaba con "Cuenta corriente", que es el último medio de pago
+  // y nunca entraba en pantalla. `block: "nearest"` desplaza lo mínimo
+  // necesario, sin sacudir la lista cuando el ítem ya se ve.
+  const seleccionadoRef = useRef<HTMLLIElement | null>(null);
+  useEffect(() => {
+    seleccionadoRef.current?.scrollIntoView({ block: "nearest" });
+  }, [cursor, paso]);
+
   return (
     <div className="overlay">
       <div className="asistente-cobro">
@@ -83,7 +93,11 @@ export function AsistenteCobro({
             {paso === "medio" && (
               <ul className="asistente-lista">
                 {formas.map((f, i) => (
-                  <li key={f.valor} className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}>
+                  <li
+                    key={f.valor}
+                    ref={i === cursor ? seleccionadoRef : null}
+                    className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}
+                  >
                     {f.etiqueta}
                   </li>
                 ))}
@@ -93,7 +107,11 @@ export function AsistenteCobro({
             {paso === "tarjeta" && (
               <ul className="asistente-lista">
                 {tarjetas.map((t, i) => (
-                  <li key={t.id} className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}>
+                  <li
+                    key={t.id}
+                    ref={i === cursor ? seleccionadoRef : null}
+                    className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}
+                  >
                     {etiquetaTarjeta(t)}
                   </li>
                 ))}
@@ -105,9 +123,11 @@ export function AsistenteCobro({
                 {tarjetaActual.tasas.map((t, i) => (
                   <li
                     key={t.cantidadCuotas}
+                    ref={i === cursor ? seleccionadoRef : null}
                     className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}
                   >
-                    {t.cantidadCuotas} cuota{t.cantidadCuotas === 1 ? "" : "s"} — {t.recargoPorcentaje}%
+                    {t.cantidadCuotas} cuota{t.cantidadCuotas === 1 ? "" : "s"} —{" "}
+                    {t.recargoPorcentaje}%
                   </li>
                 ))}
               </ul>
@@ -116,7 +136,11 @@ export function AsistenteCobro({
             {paso === "cliente" && (
               <ul className="asistente-lista">
                 {clientes.map((c, i) => (
-                  <li key={c.id} className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}>
+                  <li
+                    key={c.id}
+                    ref={i === cursor ? seleccionadoRef : null}
+                    className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}
+                  >
                     {c.nombre}
                   </li>
                 ))}
@@ -128,7 +152,8 @@ export function AsistenteCobro({
                 <div className="asistente-monto-label">
                   Monto a abonar con <strong>{etiquetaFormaActual}</strong>
                   {tarjetaActual && ` — ${tarjetaActual.banco}`}
-                  {tasaActual && ` (${tasaActual.cantidadCuotas} cuota${tasaActual.cantidadCuotas === 1 ? "" : "s"})`}
+                  {tasaActual &&
+                    ` (${tasaActual.cantidadCuotas} cuota${tasaActual.cantidadCuotas === 1 ? "" : "s"})`}
                 </div>
                 <input
                   ref={montoInputRef}
@@ -170,6 +195,7 @@ export function AsistenteCobro({
                   {["Sí, imprimir", "No, gracias"].map((etiqueta, i) => (
                     <li
                       key={etiqueta}
+                      ref={i === cursor ? seleccionadoRef : null}
                       className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}
                     >
                       {etiqueta}
@@ -184,7 +210,9 @@ export function AsistenteCobro({
           <div className="asistente-col-resumen">
             <div className="asistente-resumen-titulo">Resumen de pagos</div>
             <div className="asistente-resumen-lista">
-              {pagos.length === 0 && <div className="asistente-resumen-vacio">Sin pagos todavía…</div>}
+              {pagos.length === 0 && (
+                <div className="asistente-resumen-vacio">Sin pagos todavía…</div>
+              )}
               {pagos.map((p, i) => {
                 const tarjeta = tarjetas.find((t) => t.id === p.tarjetaConfigId);
                 const base = formas.find((f) => f.valor === p.forma)?.etiqueta ?? p.forma;

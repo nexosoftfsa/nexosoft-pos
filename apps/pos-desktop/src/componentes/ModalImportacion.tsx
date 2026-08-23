@@ -10,11 +10,18 @@
 import { useState } from "react";
 import { elegirYLeerExcel } from "../importar-excel";
 import type { FilaImportacion } from "../sync/importacion";
+import { mensajeColumnasFaltantes, normalizarFilas, revisarColumnas } from "./columnas-importacion";
 
 interface Props {
   readonly titulo: string;
   /** Nombres de columna esperados (mostrados como ayuda, ej. "Código de barras, Descripción, …"). */
   readonly columnasAyuda: readonly string[];
+  /**
+   * Las que SÍ o SÍ tienen que estar. Si falta alguna, se corta antes de
+   * mandar nada al servidor. Por defecto, la primera de `columnasAyuda`: en
+   * los cinco importadores esa es la clave (código, id, etc.).
+   */
+  readonly columnasRequeridas?: readonly string[];
   readonly onImportar: (
     filas: readonly Record<string, string>[],
     dryRun: boolean,
@@ -41,7 +48,14 @@ function mensajeDeError(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-export function ModalImportacion({ titulo, columnasAyuda, onImportar, onCerrar, onImportado }: Props) {
+export function ModalImportacion({
+  titulo,
+  columnasAyuda,
+  columnasRequeridas = columnasAyuda.slice(0, 1),
+  onImportar,
+  onCerrar,
+  onImportado,
+}: Props) {
   const [estado, setEstado] = useState<Estado>({ paso: "elegir" });
 
   async function elegirArchivo() {
@@ -56,8 +70,29 @@ export function ModalImportacion({ titulo, columnasAyuda, onImportar, onCerrar, 
         setEstado({ paso: "error", mensaje: `"${leido.nombreArchivo}" no tiene filas de datos.` });
         return;
       }
-      const resultados = await onImportar(leido.filas, true);
-      setEstado({ paso: "preview", archivo: leido.nombreArchivo, filas: leido.filas, resultados });
+
+      // Revisar las columnas ANTES de mandar nada. Si falta la columna clave,
+      // el servidor devolvería el mismo error repetido una vez por fila, sin
+      // decir nunca cuál es el problema real (pasó con un archivo que no era
+      // el export de artículos: 25 veces "Fila sin código").
+      const { faltantes, equivalencias } = revisarColumnas(
+        leido.encabezados,
+        columnasAyuda,
+        columnasRequeridas,
+      );
+      if (faltantes.length > 0) {
+        setEstado({
+          paso: "error",
+          mensaje: mensajeColumnasFaltantes(leido.nombreArchivo, faltantes, leido.encabezados),
+        });
+        return;
+      }
+      // Deja los encabezados con el nombre exacto que espera el importador,
+      // para que un archivo con otra capitalización o sin acentos funcione.
+      const filas = normalizarFilas(leido.filas, equivalencias);
+
+      const resultados = await onImportar(filas, true);
+      setEstado({ paso: "preview", archivo: leido.nombreArchivo, filas, resultados });
     } catch (e) {
       setEstado({ paso: "error", mensaje: mensajeDeError(e) });
     }
@@ -91,7 +126,11 @@ export function ModalImportacion({ titulo, columnasAyuda, onImportar, onCerrar, 
                 Elegí un archivo Excel (.xlsx) con estas columnas en la primera fila:{" "}
                 {columnasAyuda.join(", ")}.
               </p>
-              <button type="button" className="pill-btn pill-btn--primary" onClick={() => void elegirArchivo()}>
+              <button
+                type="button"
+                className="pill-btn pill-btn--primary"
+                onClick={() => void elegirArchivo()}
+              >
                 Elegir archivo…
               </button>
             </>
@@ -101,16 +140,26 @@ export function ModalImportacion({ titulo, columnasAyuda, onImportar, onCerrar, 
             <ResumenFilas resultados={estado.resultados} dryRun archivo={estado.archivo} />
           )}
           {estado.paso === "confirmando" && <p className="muted">Importando…</p>}
-          {estado.paso === "hecho" && <ResumenFilas resultados={estado.resultados} dryRun={false} />}
+          {estado.paso === "hecho" && (
+            <ResumenFilas resultados={estado.resultados} dryRun={false} />
+          )}
           {estado.paso === "error" && <div className="error">{estado.mensaje}</div>}
         </div>
         <div className="modal__foot">
           {estado.paso === "preview" && (
             <>
-              <button type="button" className="pill-btn" onClick={() => setEstado({ paso: "elegir" })}>
+              <button
+                type="button"
+                className="pill-btn"
+                onClick={() => setEstado({ paso: "elegir" })}
+              >
                 Elegir otro archivo
               </button>
-              <button type="button" className="pill-btn pill-btn--primary" onClick={() => void confirmar()}>
+              <button
+                type="button"
+                className="pill-btn pill-btn--primary"
+                onClick={() => void confirmar()}
+              >
                 Confirmar importación
               </button>
             </>
