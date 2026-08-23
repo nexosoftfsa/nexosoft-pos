@@ -54,7 +54,9 @@ export function IndicadorSync({ estado }: { estado: EstadoSync }) {
         {mostrarBoton && (
           <button
             className="sync-boton"
-            onClick={() => void (fallidas > 0 ? reintentarFallidasYSincronizar() : sincronizarAhora())}
+            onClick={() =>
+              void (fallidas > 0 ? reintentarFallidasYSincronizar() : sincronizarAhora())
+            }
           >
             {fallidas > 0 ? "Reintentar" : "Sincronizar"}
           </button>
@@ -65,9 +67,16 @@ export function IndicadorSync({ estado }: { estado: EstadoSync }) {
         <div className="overlay" onClick={() => setVerDetalle(false)}>
           <div className="sync-detalle" onClick={(e) => e.stopPropagation()}>
             <h3>Ventas que no llegaron al servidor</h3>
+            {/*
+              Decía "el servidor las rechazó", pero la causa más común es
+              justamente la contraria: el pedido nunca llegó (servidor apagado,
+              sin red). Culpar al servidor mandaba a buscar el problema en el
+              lugar equivocado. El motivo puntual de cada una va abajo.
+            */}
             <p className="sync-detalle-ayuda">
-              Estas ventas están guardadas en esta terminal y el ticket salió, pero el servidor
-              las rechazó, así que <strong>no figuran en el panel de reportes</strong>.
+              Estas ventas están guardadas en esta terminal y el ticket salió, pero{" "}
+              <strong>no se pudieron registrar en el servidor</strong>, así que no figuran en el
+              panel de reportes. Abajo está el motivo de cada una.
             </p>
             <ul className="sync-detalle-lista">
               {detalleFallidas.map((op) => (
@@ -83,7 +92,9 @@ export function IndicadorSync({ estado }: { estado: EstadoSync }) {
             <div className="sync-detalle-acciones">
               <button
                 className="primario"
-                onClick={() => void reintentarFallidasYSincronizar().then(() => setVerDetalle(false))}
+                onClick={() =>
+                  void reintentarFallidasYSincronizar().then(() => setVerDetalle(false))
+                }
               >
                 Reintentar todas
               </button>

@@ -10,6 +10,27 @@ export interface OpcionesSync {
 }
 
 /**
+ * Traduce una falla de transporte al idioma del comercio.
+ *
+ * `fetch` rechaza con un `TypeError` cuyo mensaje es "Failed to fetch" cuando
+ * la conexión ni siquiera se pudo establecer: servidor apagado, sin red, o URL
+ * mal configurada. Ese texto crudo terminaba tal cual en la pantalla "Ventas
+ * que no llegaron al servidor", donde no le dice nada a quien tiene que
+ * resolverlo — que además suele ser el dueño del comercio, no un técnico.
+ *
+ * Cualquier otro error sí se muestra: puede tener información útil.
+ */
+export function mensajeDeTransporte(error: unknown): string {
+  if (error instanceof TypeError) {
+    return "No se pudo conectar con el servidor. Revisá que la PC del servidor esté encendida y que esta terminal tenga red.";
+  }
+  if (error instanceof Error && error.message.trim() !== "") {
+    return `No se pudo enviar al servidor: ${error.message}`;
+  }
+  return "No se pudo enviar al servidor (error de transporte).";
+}
+
+/**
  * Motor de la cola outbox (ADR-0005). Encola operaciones locales y las sube al
  * servidor de sucursal cuando hay red, con reintentos e idempotencia.
  *
@@ -50,12 +71,14 @@ export class MotorDeSincronizacion {
     }
 
     let resultados: Record<string, ResultadoEnvio>;
+    // Ver `mensajeDeTransporte` al final del archivo: este texto termina en la
+    // pantalla "Ventas que no llegaron al servidor" que mira el comercio.
     try {
       resultados = await this.cliente.enviar(pendientes);
     } catch (error) {
       // Falla de transporte (sin red): todas vuelven a pendiente para reintentar.
       resultados = {};
-      const msg = error instanceof Error ? error.message : "error de transporte";
+      const msg = mensajeDeTransporte(error);
       for (const op of pendientes) {
         resultados[op.operacionId] = { ok: false, error: msg, reintentable: true };
       }

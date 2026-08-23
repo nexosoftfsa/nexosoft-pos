@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AlmacenEnMemoria } from "./almacen-en-memoria";
-import { MotorDeSincronizacion } from "./motor-de-sincronizacion";
+import { MotorDeSincronizacion, mensajeDeTransporte } from "./motor-de-sincronizacion";
 import type { ClienteDeSync } from "./cliente-de-sync";
 import type { OperacionSync, ResultadoEnvio } from "./tipos";
 
@@ -83,7 +83,7 @@ describe("MotorDeSincronizacion", () => {
 
     expect(resumen).toEqual({ enviadas: 2, completadas: 2, fallidas: 0, pendientes: 0 });
     expect((await almacen.obtener("op-1"))?.estado).toBe("completada");
-    expect((await almacen.pendientes())).toHaveLength(0);
+    expect(await almacen.pendientes()).toHaveLength(0);
   });
 
   it("deja en pendiente (con intento++) un error reintentable", async () => {
@@ -159,5 +159,31 @@ describe("MotorDeSincronizacion", () => {
     const fallidas = await motor.fallidas();
     expect(fallidas).toHaveLength(1);
     expect(fallidas[0]?.operacionId).toBe("op-1");
+  });
+});
+
+/**
+ * El texto que se guarda acá termina en la pantalla "Ventas que no llegaron al
+ * servidor", que mira el dueño del comercio. Antes le llegaba "Failed to
+ * fetch" tal cual, que no le dice nada a nadie.
+ */
+describe("mensajeDeTransporte", () => {
+  it("traduce el fallo de conexión de fetch a algo accionable", () => {
+    const r = mensajeDeTransporte(new TypeError("Failed to fetch"));
+
+    expect(r).not.toContain("Failed to fetch");
+    expect(r).toContain("encendida");
+    expect(r).toContain("red");
+  });
+
+  it("conserva el mensaje de un error que sí dice algo útil", () => {
+    expect(mensajeDeTransporte(new Error("HTTP 401 no autorizado"))).toContain(
+      "HTTP 401 no autorizado",
+    );
+  });
+
+  it("no deja el detalle vacío cuando no hay mensaje", () => {
+    expect(mensajeDeTransporte(new Error(""))).toContain("transporte");
+    expect(mensajeDeTransporte("algo raro")).toContain("transporte");
   });
 });
