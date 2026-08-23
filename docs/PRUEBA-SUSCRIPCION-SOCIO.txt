@@ -1,0 +1,290 @@
+﻿===============================================================================
+NEXOSOFT - PRUEBA DEL SISTEMA DE AVISOS Y BLOQUEO POR FALTA DE PAGO
+Instrucciones para hacer en TU PC
+===============================================================================
+
+Hola. Esta prueba es para verificar el mecanismo nuevo de suscripcion mensual
+ANTES de usarlo con un cliente real.
+
+Vas a necesitar estar en contacto con Rodrigo mientras la haces (telefono o
+WhatsApp): el maneja el panel desde su compu y vos mirás que pasa en la tuya.
+
+Tiempo: unos 30 minutos.
+
+
+-------------------------------------------------------------------------------
+QUE VAMOS A PROBAR (para que sepas que estas haciendo)
+-------------------------------------------------------------------------------
+
+NexoSoft se vende como suscripcion mensual. El sistema nuevo tiene tres
+escalones, que Rodrigo maneja desde un panel:
+
+  1. RECORDATORIO  - avisa que se acerca la fecha de pago
+  2. ADVERTENCIA   - vencio el plazo, avisa que se va a bloquear
+  3. BLOQUEO       - no se puede vender hasta que pague
+
+Tu PC va a hacer de "comercio de prueba" un rato. Al final lo sacamos y tu PC
+queda como estaba: sin ningun control de suscripcion.
+
+Nada de esto toca tus datos, tus ventas ni tu configuracion.
+
+
+-------------------------------------------------------------------------------
+LO QUE NECESITAS
+-------------------------------------------------------------------------------
+
+  [ ] Tu PC con NexoSoft instalado y funcionando
+  [ ] Poder abrir PowerShell COMO ADMINISTRADOR
+      (boton de Windows -> escribir "powershell" -> clic derecho ->
+       "Ejecutar como administrador")
+  [ ] Internet
+  [ ] Rodrigo del otro lado del telefono
+
+
+===============================================================================
+PARTE 1 - PREPARAR (una sola vez)
+===============================================================================
+
+PASO 1.1 - Actualizar el POS
+----------------------------
+Abri NexoSoft y anda a:
+
+    Configuracion  ->  Actualizaciones  ->  "Buscar actualizaciones"
+
+Si ofrece una version nueva, instalala. El POS se va a reiniciar solo.
+
+Cuando termine, volve a Configuracion y fijate que diga:
+
+    POS: 0.1.27      (o un numero mas alto)
+
+
+PASO 1.2 - Actualizar el servidor
+---------------------------------
+En la MISMA pantalla de Configuracion, mas abajo, boton:
+
+    "Actualizar servidor"
+
+Windows te va a pedir permiso de administrador: dale que si.
+TARDA VARIOS MINUTOS y se ve una ventana negra con texto. Es normal.
+No cierres nada hasta que termine.
+
+Cuando termine, cerra y volve a abrir la Configuracion. Tiene que decir:
+
+    Servidor: 0.9.0     (o un numero mas alto)
+
+    [ ] Anotá lo que dice: POS ________   Servidor ________
+
+Si dice "no responde", espera un minuto y volve a abrir Configuracion.
+
+
+PASO 1.3 - Conectar tu PC al comercio de prueba
+-----------------------------------------------
+Abri PowerShell COMO ADMINISTRADOR y pega esta linea tal cual:
+
+    C:\NexoSoft-Servidor\scripts\configurar-suscripcion.ps1 -ComercioId socio
+
+Tiene que terminar diciendo:
+
+    Servidor arriba.
+
+    [ ] Salio "Servidor arriba"
+
+Si dice otra cosa, PARA ACA y avisale a Rodrigo.
+
+
+===============================================================================
+PARTE 2 - LA PRUEBA
+===============================================================================
+
+IMPORTANTE - EL TRUCO QUE VAS A USAR EN CADA PASO
+-------------------------------------------------
+El sistema consulta el estado una vez por hora. Para no esperar, despues de
+CADA cambio que haga Rodrigo tenes que hacer estas dos cosas:
+
+  a) En PowerShell COMO ADMINISTRADOR, pega estas dos lineas:
+
+        Stop-ScheduledTask -TaskName "NexoSoft cloud-api"
+        Start-ScheduledTask -TaskName "NexoSoft cloud-api"
+
+  b) Espera 20 segundos, CERRA el POS y volve a abrirlo.
+
+Esto lo vas a repetir 5 veces. Dejá el PowerShell abierto todo el tiempo.
+
+
+PASO 2.1 - Todo normal
+----------------------
+Deci: "Rodrigo, poneme en ACTIVA"
+Hace el truco (reiniciar + reabrir el POS).
+
+    QUE TENES QUE VER: nada raro. El POS normal, sin avisos.
+    Proba hacer una venta de prueba: tiene que dejarte.
+
+    [ ] Sin avisos, se puede vender
+
+
+PASO 2.2 - Recordatorio
+-----------------------
+Deci: "poneme en RECORDATORIO"
+Hace el truco.
+
+    QUE TENES QUE VER: una FRANJA AZUL arriba de todo, con la fecha de pago.
+    Se sigue vendiendo normal.
+
+    [ ] Aparece la franja azul
+    [ ] Se puede vender igual
+    Que decia la franja: _________________________________________
+
+
+PASO 2.3 - Advertencia
+----------------------
+Deci: "poneme en ADVERTENCIA"
+Hace el truco.
+
+    QUE TENES QUE VER: una FRANJA NARANJA arriba, avisando que se va a
+    bloquear en los proximos dias.
+    TODAVIA se puede vender. Este es el ultimo aviso antes del corte.
+
+    [ ] Aparece la franja naranja
+    [ ] Se puede vender igual
+
+
+PASO 2.4 - Bloqueo   <<< EL PASO MAS IMPORTANTE
+-----------------------------------------------
+Deci: "bloqueame"
+Hace el truco.
+
+    QUE TENES QUE VER: al entrar a Punto de Venta, una pantalla con un
+    candado que dice "El sistema esta bloqueado".
+
+    AHORA LO IMPORTANTE. No alcanza con que se bloquee la venta: el resto
+    del sistema TIENE que seguir andando. Comproba una por una:
+
+    [ ] El menu de la izquierda sigue completo (no desaparecio nada)
+    [ ] El boton "Ir a Caja para cerrar el turno" te lleva a Caja
+    [ ] Caja y Tesoreria abre bien
+    [ ] Si tenes un turno de caja abierto, PODES CERRARLO
+    [ ] Reportes abre y podes ver las ventas viejas
+    [ ] Podes exportar a Excel desde Reportes
+    [ ] Comprobantes abre y podes ver comprobantes viejos
+    [ ] Punto de Venta NO te deja vender
+
+    Si alguna de esas cosas NO anda, anotalo:
+    _____________________________________________________________
+    _____________________________________________________________
+
+
+PASO 2.5 - Desbloqueo (simula que el cliente pago)
+--------------------------------------------------
+Deci: "desbloqueame"
+Hace el truco.
+
+    QUE TENES QUE VER: todo vuelve a la normalidad. Sin franjas, sin
+    candado, se vende normal.
+
+    [ ] Volvio todo a la normalidad
+
+
+===============================================================================
+PARTE 3 - LA PRUEBA MAS IMPORTANTE DE TODAS
+===============================================================================
+
+Esta es la que de verdad hay que verificar. Todo lo anterior ya lo probamos
+nosotros. Esto no.
+
+QUE ESTAMOS VERIFICANDO: que quedarse sin internet NO bloquee al comercio.
+Si esto falla, un problema de red podria dejar sin vender a TODOS los
+clientes al mismo tiempo. Por eso importa tanto.
+
+  3.1  Pedile a Rodrigo que te deje en ACTIVA.
+       Hace el truco (reiniciar + reabrir el POS).
+       Confirma que se puede vender.
+
+       [ ] Se vende normal
+
+  3.2  DESCONECTA INTERNET en tu PC.
+       Desenchufa el cable de red, o apaga el WiFi.
+       Asegurate de que no haya internet de verdad (proba abrir una pagina).
+
+       [ ] Internet desconectado, confirmado
+
+  3.3  Con internet desconectado, hace el truco otra vez
+       (reiniciar el servidor + reabrir el POS).
+
+  3.4  PROBA VENDER.
+
+       LO QUE TIENE QUE PASAR: se vende con total normalidad.
+       Puede aparecer un aviso de que no se pudo validar la suscripcion.
+       Eso esta bien. Lo que NO puede pasar es que te bloquee.
+
+       [ ] SE PUEDE VENDER SIN INTERNET          <-- tiene que estar tildado
+       [ ] Aparecio algun aviso? Cual: ______________________________
+
+       SI NO TE DEJA VENDER: para todo y avisale a Rodrigo YA.
+       Eso seria un problema grave y no se puede usar con clientes asi.
+
+  3.5  Volve a conectar internet.
+
+       [ ] Internet de vuelta
+
+
+===============================================================================
+PARTE 4 - DEJAR TU PC COMO ESTABA
+===============================================================================
+
+No te saltees esto, o tu PC queda atada a un comercio de prueba.
+
+PowerShell COMO ADMINISTRADOR:
+
+    C:\NexoSoft-Servidor\scripts\configurar-suscripcion.ps1 -Quitar
+
+Tiene que decir:
+
+    Suscripcion desvinculada de esta PC. El sistema opera sin control.
+    Servidor arriba.
+
+    [ ] Listo, PC desvinculada
+
+Despues cerra y volve a abrir el POS: no tiene que quedar ningun aviso.
+
+    [ ] El POS quedo limpio, sin franjas ni bloqueos
+
+
+===============================================================================
+SI ALGO NO FUNCIONA
+===============================================================================
+
+* "El POS no muestra ningun aviso, en ningun paso"
+  -> Fijate en Configuracion que el servidor sea 0.9.0 o mas nuevo.
+  -> Fijate que el paso 1.3 haya terminado con "Servidor arriba".
+  -> Acordate de REABRIR el POS despues de reiniciar el servidor.
+
+* "El servidor no responde"
+  -> En PowerShell como administrador:
+        Start-ScheduledTask -TaskName "NexoSoft cloud-api"
+     Espera 30 segundos y reabri el POS.
+
+* "Dice que no se pudo validar la suscripcion"
+  -> Es un aviso, no un error, salvo que estes con internet.
+     Proba abrir en el navegador de esa PC:
+        https://licencias.nexosoft.com.ar
+     Tiene que contestar algo (aunque sea un texto de error). Si no carga,
+     esa PC no esta llegando a internet.
+
+* Si algo se rompe feo, los registros del sistema estan en:
+        C:\ProgramData\NexoSoft\logs\
+  Mandale esa carpeta a Rodrigo.
+
+
+===============================================================================
+PARA CONTARLE A RODRIGO CUANDO TERMINES
+===============================================================================
+
+  1. Los numeros de version que anotaste en el paso 1.2
+  2. Si aparecieron las franjas azul y naranja
+  3. Sobre todo: si en el bloqueo pudiste cerrar la caja y ver los reportes
+  4. Y lo mas importante: SI PUDISTE VENDER SIN INTERNET
+  5. Cualquier cosa que te haya resultado confusa o mal explicada en el POS
+     (los textos que ve el comercio los podemos cambiar)
+
+Gracias!
+===============================================================================
