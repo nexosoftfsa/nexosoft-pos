@@ -42,10 +42,21 @@ fueras un empleado que conoce el sistema y algo de contabilidad/impuestos.
   siempre el lote que vence antes (FEFO).
 - **Cuentas Corrientes**: clientes con su cuenta (ledger de cargos y pagos);
   el saldo es lo que el cliente debe. Se puede definir un límite de crédito.
+- **Etiquetas de góndola**: se buscan o escanean los productos a etiquetar y
+  se exportan a Excel para imprimir las etiquetas de precio.
+- **Proveedores**: alta y datos de contacto de los proveedores, para
+  asociarlos a los artículos del catálogo.
+- **Medios de pago**: tarjetas por banco, con su tasa de recargo según la
+  cantidad de cuotas. Al cobrar con tarjeta, el Punto de Venta aplica ese
+  recargo solo y lo deja anotado en la venta.
 - **Reportes y Estadísticas**: ventas por día, por medio de pago, top de
   productos vendidos, ticket promedio.
+- **Asistente IA**: este mismo asistente.
+- **Usuarios**: altas, roles (Administrador / Supervisor / Cajero) y permisos.
+  Se puede imprimir una credencial con código de barras para que el empleado
+  fiche sin tipear la clave.
 - **Configuración**: datos del comercio (razón social, CUIT, condición de IVA
-  del emisor, punto de venta) y el servidor al que se conecta el POS.
+  del emisor, punto de venta, logo) y el servidor al que se conecta el POS.
 
 ## Sobre la facturación y lo fiscal (Argentina)
 

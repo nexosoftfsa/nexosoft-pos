@@ -1,3 +1,7 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -7,6 +11,26 @@ import {
   modulosVisibles,
   normalizarRol,
 } from "./modulos";
+
+/**
+ * El prompt del Asistente IA (cloud-api) enumera los módulos del POS a mano —
+ * es lo único que el LLM "sabe" del sistema. Se había desactualizado y el
+ * asistente le contestó al cliente que NexoSoft no tiene módulo de
+ * Proveedores, que sí existe desde la Fase 12. Este test lee el prompt real y
+ * falla si se agrega un módulo sin contárselo al asistente.
+ */
+describe("el prompt del Asistente IA conoce todos los módulos", () => {
+  const rutaPrompt = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../cloud-api/src/asistente/prompt-sistema.ts",
+  );
+
+  it("menciona cada módulo por su título", () => {
+    const prompt = readFileSync(rutaPrompt, "utf8");
+    const faltantes = MODULOS.filter((m) => !prompt.includes(m.titulo)).map((m) => m.titulo);
+    expect(faltantes, "módulos que el asistente no conoce (agregalos al prompt)").toEqual([]);
+  });
+});
 
 describe("normalizarRol", () => {
   it("acepta los roles conocidos", () => {
