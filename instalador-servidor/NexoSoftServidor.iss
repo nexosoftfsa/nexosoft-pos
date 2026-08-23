@@ -62,6 +62,7 @@ Source: "..\scripts\instalacion\instalar-servicio-servidor.ps1"; DestDir: "{app}
 Source: "..\scripts\instalacion\abrir-firewall-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\actualizador-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\instalar-acceso-remoto.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "..\scripts\instalacion\configurar-suscripcion.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 
 [Run]
 ; No "runhidden": se deja visible la consola de PowerShell durante este

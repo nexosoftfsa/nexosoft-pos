@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { evaluarLicencia, type EstadoLicencia, type Licencia } from '@nexosoft/licencias';
 import { PrismaService } from '../prisma/prisma.service';
+import { CLAVE_PUBLICA_LICENCIAS } from './clave-publica';
 import { LicenciasHttp, URL_LICENCIAS_DEFECTO } from './licencias-http';
 import { verificarToken } from './verificar-firma';
 
@@ -43,10 +44,22 @@ export class LicenciaService implements OnModuleInit {
   }
 
   /**
-   * Renovación diaria. La hora es de madrugada a propósito: si el Worker
-   * cambiara el estado a bloqueado, el corte no cae en medio de la jornada.
+   * Renovación **cada hora**, más el arranque del servidor.
+   *
+   * Se evaluó hacerla diaria de madrugada, para que un bloqueo nunca cayera
+   * en medio de la jornada. Se descartó por la asimetría que importa: cuando
+   * un comercio **paga**, quiere volver a vender ya — no al otro día. Que el
+   * desbloqueo tarde 24 horas es un problema real y frecuente; que el bloqueo
+   * tarde una hora no le hace mal a nadie, y de todos modos lo apretamos
+   * nosotros cuando queremos.
+   *
+   * Contrapartida asumida: un bloqueo puede caer con el local abierto. Por eso
+   * conviene apretar el botón de noche, y por eso el POS deja igual cerrar la
+   * caja y ver lo histórico (ADR-0056 §4).
+   *
+   * Una consulta por hora por comercio es nada para el plan gratuito de KV.
    */
-  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  @Cron(CronExpression.EVERY_HOUR)
   async renovar(): Promise<void> {
     const comercioId = this.comercioId ?? this.config.get<string>('LICENCIAS_COMERCIO_ID') ?? null;
     if (comercioId === null || comercioId === '') {
@@ -55,7 +68,7 @@ export class LicenciaService implements OnModuleInit {
     }
     const proveedor = new LicenciasHttp(
       this.config.get<string>('LICENCIAS_URL') ?? URL_LICENCIAS_DEFECTO,
-      this.config.get<string>('LICENCIAS_CLAVE_PUBLICA') ?? '',
+      this.clavePublica(),
       this.config.get<string>('VERSION') ?? 'desconocida',
     );
 
@@ -70,6 +83,15 @@ export class LicenciaService implements OnModuleInit {
     this.log.log(`Licencia renovada: ${obtenida.licencia.estado}`);
   }
 
+  /**
+   * La clave pública viene embebida (la misma para todos los comercios) y se
+   * puede pisar por entorno para pruebas o para una rotación de emergencia.
+   */
+  private clavePublica(): string {
+    const delEntorno = (this.config.get<string>('LICENCIAS_CLAVE_PUBLICA') ?? '').trim();
+    return delEntorno !== '' ? delEntorno : CLAVE_PUBLICA_LICENCIAS;
+  }
+
   /** Lee de la base la última licencia recibida y la deja lista para usar. */
   private async cargarGuardada(): Promise<void> {
     let fila;
@@ -82,12 +104,10 @@ export class LicenciaService implements OnModuleInit {
     this.comercioId = fila?.licenciaComercioId ?? null;
     const token = fila?.licenciaToken ?? null;
     if (token === null) return;
-    const clave = this.config.get<string>('LICENCIAS_CLAVE_PUBLICA') ?? '';
-    if (clave === '') return;
     // Se vuelve a verificar la firma al leerla: que esté en nuestra base no
     // la vuelve confiable — alguien con acceso al Postgres podría haberla
     // editado para desbloquearse.
-    this.licencia = verificarToken(token, clave);
+    this.licencia = verificarToken(token, this.clavePublica());
     if (this.licencia === null) {
       this.log.warn('La licencia guardada no pasa la verificación; se ignora.');
     }
