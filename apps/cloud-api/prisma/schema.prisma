@@ -20,6 +20,12 @@ model ConfiguracionSistema {
   /// Logo del comercio como data URL (ver ADR del panel/branding). Lo sirve
   /// admin-web; el POS tiene su propia copia local (SQLite, independiente).
   logoBase64    String?
+  /// Fase 17.B (ADR-0056). Ultima licencia de suscripcion recibida, tal como
+  /// vino firmada del Worker. Se guarda para que un reinicio del servidor no
+  /// la pierda: si no, un comercio bloqueado se desbloquearia reiniciando.
+  /// No es un secreto -- solo se puede leer, no falsificar.
+  licenciaToken String?
+  licenciaComercioId String?
   actualizadoEn DateTime @updatedAt
 
   @@map("configuracion_sistema")
