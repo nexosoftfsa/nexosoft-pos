@@ -25,7 +25,7 @@
           "args": [
             "-NoProfile",
             "-Command",
-            "$p = Start-Process -FilePath powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File','C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1') -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
+            "$standalone='C:\\NexoSoft-Servidor\\scripts\\actualizador-servidor.ps1'; $legacy='C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1'; if (Test-Path $standalone) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$standalone,'-ServidorDir','C:\\NexoSoft-Servidor\\dist-servidor','-NodeDir','C:\\NexoSoft-Servidor\\node-portable') } elseif (Test-Path $legacy) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$legacy) } else { exit 3 }; $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
           ]
         }
       ]

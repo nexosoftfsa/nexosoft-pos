@@ -15,11 +15,30 @@
  */
 import { estaEnTauri } from "./ejecutor-sql-tauri";
 
-const ARGS_ACTUALIZAR_SERVIDOR = [
+/**
+ * Hay DOS formas de instalar el servidor y cada una se actualiza distinto:
+ *
+ *  - **Standalone** (`C:\NexoSoft-Servidor`, el instalador con Node y
+ *    PostgreSQL embebidos): trae su propio `actualizador-servidor.ps1`, que
+ *    baja el release nuevo, migra y revierte solo si algo falla.
+ *  - **Legacy** (`C:\NexoSoft`, repo clonado): usa el script de siempre, con
+ *    `git pull` + `pnpm install` + build.
+ *
+ * El comando de acá elige según lo que exista en la PC. Antes apuntaba fijo
+ * al legacy, así que en una instalación standalone el botón fallaba con un
+ * código sin sentido y mandaba a mirar un log que nunca se había escrito.
+ *
+ * Los argumentos están fijados en `src-tauri/capabilities/default.json` y
+ * tienen que matchear EXACTO con este string (Tauri lo rechaza si no).
+ */
+export const ARGS_ACTUALIZAR_SERVIDOR = [
   "-NoProfile",
   "-Command",
-  "$p = Start-Process -FilePath powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File','C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1') -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
+  "$standalone='C:\\NexoSoft-Servidor\\scripts\\actualizador-servidor.ps1'; $legacy='C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1'; if (Test-Path $standalone) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$standalone,'-ServidorDir','C:\\NexoSoft-Servidor\\dist-servidor','-NodeDir','C:\\NexoSoft-Servidor\\node-portable') } elseif (Test-Path $legacy) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$legacy) } else { exit 3 }; $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
 ];
+
+/** El comando sale con este código cuando no encuentra servidor instalado. */
+const SIN_INSTALACION = 3;
 
 export interface ResultadoActualizarServidor {
   readonly ok: boolean;
@@ -57,9 +76,16 @@ export async function actualizarServidor(): Promise<ResultadoActualizarServidor>
     if (resultado.code === 0) {
       return { ok: true, detalle: "Servidor actualizado y respondiendo OK." };
     }
+    if (resultado.code === SIN_INSTALACION) {
+      return {
+        ok: false,
+        detalle:
+          "No encontré el servidor instalado en esta PC (ni en C:\\NexoSoft-Servidor ni en C:\\NexoSoft). Si el servidor corre en otra máquina, actualizalo desde ahí.",
+      };
+    }
     return {
       ok: false,
-      detalle: `El script terminó con error (código ${resultado.code ?? "desconocido"}). Revisá el log en la carpeta "logs" del servidor.`,
+      detalle: `El script terminó con error (código ${resultado.code ?? "desconocido"}). El detalle está en el log: C:\\NexoSoft-Servidor\\logs\\actualizador.log (o la carpeta "logs" del repo si el servidor se instaló con git).`,
     };
   } catch (e) {
     return { ok: false, detalle: e instanceof Error ? e.message : String(e) };
