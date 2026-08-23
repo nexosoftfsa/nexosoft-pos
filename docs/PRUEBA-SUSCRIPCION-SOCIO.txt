@@ -55,7 +55,7 @@ Si ofrece una version nueva, instalala. El POS se va a reiniciar solo.
 
 Cuando termine, volve a Configuracion y fijate que diga:
 
-    POS: 0.1.28      (o un numero mas alto)
+    POS: 0.1.29      (o un numero mas alto)
 
 
 PASO 1.2 - Actualizar el servidor
@@ -190,6 +190,46 @@ Espera unos minutos.
 
 
 ===============================================================================
+PARTE 2 BIS - QUE LAS VENTAS LLEGUEN A REPORTES (aprovechando que estas ahi)
+===============================================================================
+
+Esto no tiene nada que ver con la suscripcion. Es otra cosa que quedo
+pendiente de verificar: en un cliente pasaba que faltaban ventas en el panel
+de Reportes, porque quedaban trabadas en la cola de sincronizacion y nadie se
+enteraba. Ahora el POS lo muestra, pero hay que confirmarlo en una PC de
+verdad.
+
+Con el comercio en ACTIVA (o sea, sin bloqueo):
+
+  a) Hace UNA VENTA de prueba, con cualquier producto.
+
+  b) Mira el INDICADOR DE SINCRONIZACION, arriba a la derecha.
+     Tiene que decir "Sincronizado".
+
+     [ ] Dice "Sincronizado"
+
+  c) Si en vez de eso dice algo como "2 con error", TOCALO: se abre un
+     detalle con el motivo exacto que devolvio el servidor.
+
+     [ ] Habia errores?   [ ] No    [ ] Si
+     Si habia, copia el mensaje TAL CUAL y mandaselo a Rodrigo:
+     _____________________________________________________________
+     _____________________________________________________________
+     _____________________________________________________________
+
+  d) Anda a Reportes y fijate que la venta que acabas de hacer APAREZCA.
+
+     [ ] La venta aparece en Reportes
+
+  e) Repeti con una segunda venta, para estar seguros.
+
+     [ ] La segunda venta tambien aparece
+
+Si las ventas aparecen y no hay errores, esto quedo resuelto.
+Si falta alguna, el mensaje del punto (c) es exactamente lo que necesitamos.
+
+
+===============================================================================
 PARTE 3 - LA PRUEBA MAS IMPORTANTE DE TODAS
 ===============================================================================
 
@@ -285,9 +325,11 @@ PARA CONTARLE A RODRIGO CUANDO TERMINES
 
   1. Los numeros de version que anotaste en el paso 1.2
   2. Si aparecieron las franjas azul y naranja
-  3. Sobre todo: si en el bloqueo pudiste cerrar la caja y ver los reportes
-  4. Y lo mas importante: SI PUDISTE VENDER SIN INTERNET
-  5. Cualquier cosa que te haya resultado confusa o mal explicada en el POS
+  3. Si las ventas de la Parte 2 BIS aparecieron en Reportes (y el mensaje
+     de error, si hubo)
+  4. Sobre todo: si en el bloqueo pudiste cerrar la caja y ver los reportes
+  5. Y lo mas importante: SI PUDISTE VENDER SIN INTERNET
+  6. Cualquier cosa que te haya resultado confusa o mal explicada en el POS
      (los textos que ve el comercio los podemos cambiar)
 
 Gracias!
