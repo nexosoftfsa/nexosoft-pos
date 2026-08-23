@@ -80,6 +80,45 @@ var
   PaginaBase: TInputQueryWizardPage;
   PaginaAccesoRemoto: TInputQueryWizardPage;
 
+{ Version del servidor NexoSoft ya instalada en esta PC, leida de la clave de
+  desinstalacion que escribe el propio Inno. Vacio si no hay ninguna. }
+function VersionYaInstalada(): String;
+var
+  Valor: String;
+begin
+  Result := '';
+  if RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{7C6E2C6A-6C8B-4B7B-9C5E-2B7C9E9B5C1A}_is1', 'DisplayVersion', Valor) then
+    Result := Valor;
+end;
+
+{ Frena la instalacion si en la PC ya hay una version MAS NUEVA.
+
+  Instalar un servidor viejo sobre uno nuevo deja codigo viejo contra una
+  base de datos que ya fue migrada por el nuevo: las migraciones de Prisma
+  van para adelante, no para atras. Ya paso una vez en la PC de un cliente
+  (se llevo un instalador compilado con el numero de version del POS, 0.1.17,
+  cuando ahi ya corria el servidor 0.4.0). }
+function InitializeSetup(): Boolean;
+var
+  Instalada: String;
+  VerInstalada, VerNueva: Int64;
+begin
+  Result := True;
+  Instalada := VersionYaInstalada();
+  if Instalada = '' then exit;
+  if not StrToVersion(Instalada, VerInstalada) then exit;
+  if not StrToVersion('{#MyAppVersion}', VerNueva) then exit;
+  if ComparePackedVersion(VerInstalada, VerNueva) > 0 then begin
+    MsgBox('En esta PC ya esta instalado el servidor NexoSoft ' + Instalada + ', que es MAS NUEVO que el ' +
+           '{#MyAppVersion}' + ' que estas por instalar.' + #13#10 + #13#10 +
+           'Poner una version mas vieja sobre una mas nueva puede romper la base de datos del comercio, ' +
+           'porque las migraciones ya aplicadas no se pueden deshacer.' + #13#10 + #13#10 +
+           'Conseguí el instalador de la ultima version del SERVIDOR (ojo: el servidor y el POS tienen ' +
+           'numeraciones distintas) y volve a intentar.', mbError, MB_OK);
+    Result := False;
+  end;
+end;
+
 procedure InitializeWizard;
 begin
   PaginaComercio := CreateInputQueryPage(wpSelectDir,

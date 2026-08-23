@@ -20,7 +20,9 @@
 param(
     [Parameter(Mandatory = $true)][string]$Version,
     [Parameter(Mandatory = $true)][string]$Notas,
-    [string]$RepoReleases = "nexosoftfsa/nexosoft-pos-releases"
+    [string]$RepoReleases = "nexosoftfsa/nexosoft-pos-releases",
+    # Escape hatch del control de version de abajo. Solo con una razon real.
+    [switch]$Forzar
 )
 
 $ErrorActionPreference = "Stop"
@@ -57,6 +59,43 @@ if (-not $iscc) {
     Write-Error "No encontre ISCC.exe (Inno Setup 6). Instalalo con: winget install --id JRSoftware.InnoSetup"
     exit 1
 }
+
+# El SERVIDOR y el POS llevan numeraciones SEPARADAS (servidor-vX.Y.Z vs
+# vX.Y.Z). Ya paso una vez: se compilo un instalador de servidor con el
+# numero de version del POS (0.1.17) cuando la linea del servidor iba por
+# 0.4.0, y en la PC del cliente eso quedo como una "instalacion mas vieja"
+# sobre una mas nueva. De ahi este control: la version tiene que ser MAYOR
+# que la ultima de servidor publicada, o no se publica.
+Titulo "Control de version"
+try {
+    $versionNueva = [version]$Version
+} catch {
+    Write-Error "'$Version' no es una version valida (tiene que ser X.Y.Z)."
+    exit 1
+}
+$publicados = & gh api "repos/$RepoReleases/releases?per_page=100" 2>$null | ConvertFrom-Json
+$ultimaServidor = $publicados |
+    Where-Object { $_.tag_name -like "servidor-v*" } |
+    ForEach-Object { try { [version]$_.tag_name.Substring("servidor-v".Length) } catch { $null } } |
+    Where-Object { $_ } | Sort-Object -Descending | Select-Object -First 1
+if ($ultimaServidor) {
+    Write-Host "Ultima version de SERVIDOR publicada: $ultimaServidor"
+    if ($versionNueva -le $ultimaServidor -and -not $Forzar) {
+        Write-Error @"
+La version que pediste ($Version) NO es mayor que la ultima publicada ($ultimaServidor).
+
+Ojo: el POS y el servidor tienen numeraciones distintas. Si copiaste el
+numero de la ultima version del POS, ese no es el que va aca. La proxima
+version de servidor seria $($ultimaServidor.Major).$($ultimaServidor.Minor + 1).0.
+
+Si aun asi sabes lo que estas haciendo, repeti con -Forzar.
+"@
+        exit 1
+    }
+} else {
+    Write-Host "No hay versiones de servidor publicadas todavia."
+}
+Ok "Version $Version aceptada"
 
 Titulo "Armando el paquete del servidor (dist-servidor)"
 Correr "armar-paquete-servidor" { & "$raiz\scripts\release\armar-paquete-servidor.ps1" }
