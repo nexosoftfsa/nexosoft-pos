@@ -17,8 +17,7 @@ import type { RegistroDto } from './dto/registro.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { JwtPayload } from './jwt.strategy';
 
-const MENSAJE_BLOQUEADO =
-  'Demasiados intentos fallidos. Probá de nuevo en unos minutos.';
+const MENSAJE_BLOQUEADO = 'Demasiados intentos fallidos. Probá de nuevo en unos minutos.';
 
 @Injectable()
 export class AuthService {
@@ -51,7 +50,12 @@ export class AuthService {
     return usuario;
   }
 
-  async login(dto: LoginDto) {
+  /**
+   * @param origen Si el login entró por el túnel (ADR-0057), queda asentado
+   *   en auditoría: un acceso desde afuera del local es información que el
+   *   dueño quiere poder mirar.
+   */
+  async login(dto: LoginDto, origen: { remota?: boolean; ip?: string | undefined } = {}) {
     if (this.lockout.estaBloqueado(dto.email)) {
       await this.auditarBloqueo(dto.email);
       throw new HttpException(MENSAJE_BLOQUEADO, HttpStatus.TOO_MANY_REQUESTS);
@@ -84,7 +88,35 @@ export class AuthService {
       email: usuario.email,
       nombreComercio: usuario.sucursal?.nombre,
     });
+    if (origen.remota === true) await this.auditarLoginRemoto(usuario, origen.ip);
     return this.generarTokens(usuario.id, usuario.email, usuario.rol, usuario.sucursalId);
+  }
+
+  /**
+   * Deja asentado un ingreso desde fuera del local (Fase 17.C, ADR-0057).
+   * Best-effort: si la auditoría falla, el usuario entra igual — no vale
+   * dejar a alguien afuera del panel porque no se pudo escribir un registro.
+   */
+  private async auditarLoginRemoto(
+    usuario: { id: string; sucursalId: string },
+    ip: string | undefined,
+  ): Promise<void> {
+    try {
+      await this.prisma.registroAuditoria.create({
+        data: {
+          accion: 'LOGIN_REMOTO',
+          entidad: 'Usuario',
+          entidadId: usuario.id,
+          usuarioId: usuario.id,
+          sucursalId: usuario.sucursalId,
+          exito: true,
+          detalle: 'Ingreso al panel desde fuera del local',
+          ...(ip !== undefined ? { ip } : {}),
+        },
+      });
+    } catch {
+      // Ver arriba: no romper el login por esto.
+    }
   }
 
   /**
@@ -138,19 +170,16 @@ export class AuthService {
     return this.generarTokens(usuario.id, usuario.email, usuario.rol, usuario.sucursalId);
   }
 
-  private async generarTokens(
-    usuarioId: string,
-    email: string,
-    rol: string,
-    sucursalId: string,
-  ) {
+  private async generarTokens(usuarioId: string, email: string, rol: string, sucursalId: string) {
     const payload: JwtPayload = { sub: usuarioId, email, rol, sucursalId };
 
     // El valor viene de config (string en runtime); la librería lo parsea con `ms`.
-    const accessExpiry = (this.config.get<string>('JWT_ACCESS_EXPIRY') ??
-      '15m') as NonNullable<JwtSignOptions['expiresIn']>;
-    const refreshExpiry = (this.config.get<string>('JWT_REFRESH_EXPIRY') ??
-      '30d') as NonNullable<JwtSignOptions['expiresIn']>;
+    const accessExpiry = (this.config.get<string>('JWT_ACCESS_EXPIRY') ?? '15m') as NonNullable<
+      JwtSignOptions['expiresIn']
+    >;
+    const refreshExpiry = (this.config.get<string>('JWT_REFRESH_EXPIRY') ?? '30d') as NonNullable<
+      JwtSignOptions['expiresIn']
+    >;
 
     const accessToken = this.jwt.sign(payload, { expiresIn: accessExpiry });
 
@@ -162,10 +191,7 @@ export class AuthService {
       },
     );
 
-    const diasRefresh = parseInt(
-      this.config.get<string>('JWT_REFRESH_DAYS') ?? '30',
-      10,
-    );
+    const diasRefresh = parseInt(this.config.get<string>('JWT_REFRESH_DAYS') ?? '30', 10);
 
     await this.prisma.refreshToken.create({
       data: {

@@ -210,6 +210,19 @@ con tu cuenta normal de Cloudflare.
    panel publicado en internet, esa contraseña es la unica puerta.
    Regla: 12 caracteres o mas, sin el nombre del comercio, no todo numeros.
 
+QUE SE PUEDE HACER DESDE AFUERA (para explicarselo al cliente)
+--------------------------------------------------------------
+
+Desde afuera del local el sistema es de SOLO LECTURA: se entra al panel y se
+miran los reportes. NO se puede vender, ni cambiar precios, ni tocar usuarios.
+Eso es a proposito:
+
+  - Si le roban la contraseña, el que entre solo ve reportes. No puede
+    hacer daño.
+  - El dueño tampoco puede administrar desde el celular: para cambiar algo
+    hay que estar en el local. Decíselo de entrada asi no se sorprende.
+  - Cada ingreso desde afuera queda registrado (usuario, fecha e IP).
+
 Para apagarlo: POS -> Configuracion -> Acceso remoto -> Desactivar.
 
 Desde tu PC podes ver los tuneles de todos los comercios:

@@ -111,11 +111,34 @@ Archivos que quedan en la PC del comercio, en `C:\ProgramData\NexoSoft\`:
 - `acceso-remoto.json` — estado que muestra el POS (dirección y si responde).
   Sin secretos: esto sí lo lee `cloud-api`.
 
+## Qué se puede hacer desde afuera (y qué no)
+
+Por el túnel el sistema es de **solo lectura** ([ADR-0057](adr/0057-acceso-remoto-solo-lectura-y-auditado.md)):
+entra el login y los reportes del panel, y nada más. Cualquier intento de
+modificar algo —o de leer cosas que no salen del local, como la credencial de
+un empleado o un respaldo— se rechaza con 403 **antes** de mirar el token.
+
+Consecuencias prácticas:
+
+- Si a alguien le roban la contraseña de un ADMIN, desde afuera sólo puede
+  mirar reportes. No puede tocar precios, usuarios ni ventas.
+- Un ADMIN legítimo **tampoco** puede administrar desde afuera: para cambiar
+  un precio o dar de alta un usuario hay que estar en el local. Es a propósito.
+- Cada ingreso desde afuera queda registrado en la auditoría (`LOGIN_REMOTO`),
+  con usuario, fecha e IP.
+
+Si en el futuro `admin-web` necesita un endpoint nuevo, hay que agregarlo a la
+lista de `apps/cloud-api/src/acceso-remoto/rutas-remotas.ts`: si no, funciona
+en el local y falla sólo desde afuera.
+
 ## Notas
 
 - El túnel **no abre ningún puerto** del router del comercio: la conexión
   sale desde la PC hacia Cloudflare, nunca al revés. No hay que tocar el
   router ni el firewall del ISP.
+- El túnel apunta al **puerto 3001**, que el `cloud-api` escucha sólo en
+  loopback (`PORT_REMOTO`). El 3000 sigue siendo el de la LAN. Que un pedido
+  llegue por el 3001 es lo que lo marca como "vino de internet".
 - `cloudflared` corre como **tarea programada de Windows** (`NexoSoft Acceso
   Remoto`): arranca sola al prender la PC y se reinicia sola si se cae, igual
   que las tareas del `cloud-api` y de PostgreSQL. Se usa tarea en vez de

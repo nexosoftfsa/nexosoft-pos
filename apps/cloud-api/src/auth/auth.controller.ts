@@ -27,8 +27,13 @@ export class AuthController {
 
   @Throttle(LIMITE_LOGIN)
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  login(
+    @Body() dto: LoginDto,
+    // `esRemota` la marca RestriccionRemotaGuard cuando el pedido entró por el
+    // túnel (ADR-0057); `ip` ya viene resuelta por `trust proxy` (ADR-0052).
+    @Request() req: { esRemota?: boolean; ip?: string },
+  ) {
+    return this.authService.login(dto, { remota: req.esRemota === true, ip: req.ip });
   }
 
   // Login alternativo por credencial física (escaneo de barcode). Público,

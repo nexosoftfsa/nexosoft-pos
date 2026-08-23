@@ -331,6 +331,7 @@ plantilla en `.env.example` (raíz del repo) con todos los nombres.
 | `LIBRO_VENTAS_ARCHIVO` | Ruta del Excel de ventas (default `RESPALDO_RUTA/ventas.xlsx`). |
 | `CORS_ORIGINS` | Fase 15.B: lista de orígenes permitidos por CORS, separados por coma. Vacía/sin definir = CORS abierto a cualquier origen (correcto en LAN, ADR-0019). Con el acceso remoto de ADR-0055 **no hace falta tocarla**: el panel lo sirve el mismo `cloud-api`, así que las llamadas van al mismo origen. Sigue estando para quien sirva `admin-web` desde otro origen. |
 | `ACCESO_REMOTO_ARCHIVO` | Fase 17.A: ruta del archivo de estado del acceso remoto que escribe `instalar-acceso-remoto.ps1`. Por defecto `%ProgramData%\NexoSoft\acceso-remoto.json` — solo se define en instalaciones fuera de esa convención. Ver ADR-0055. |
+| `PORT_REMOTO` | Fase 17.C: puerto dedicado al túnel de acceso remoto (default `3001`). `cloud-api` lo escucha **solo en loopback** y no se abre en el firewall; lo que entra por ahí queda en **solo lectura**. Tiene que coincidir con el `service:` del `config.yml` del túnel. Ver ADR-0057. |
 
 **`apps/pos-desktop` (el POS instalado) no usa variables de entorno de
 build.** Su configuración (URL del servidor, datos fiscales del comercio) se

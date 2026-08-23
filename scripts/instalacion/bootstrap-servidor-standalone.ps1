@@ -30,6 +30,10 @@ param(
     [string]$RaizDatos = "C:\ProgramData\NexoSoft",
 
     [int]$Puerto = 3000,
+    # Puerto dedicado al tunel de acceso remoto (ADR-0057): el cloud-api lo
+    # escucha solo en loopback y NO se abre en el firewall. Es lo que permite
+    # que lo que entra de internet quede en solo lectura.
+    [int]$PuertoRemoto = 3001,
     [int]$PuertoPostgres = 5432,
 
     # Opcional (Fase 17.A, ADR-0055): codigo de activacion del acceso remoto
@@ -170,6 +174,7 @@ if (-not (Test-Path $envPath)) {
     @"
 NODE_ENV=production
 PORT=$Puerto
+PORT_REMOTO=$PuertoRemoto
 DATABASE_URL=postgresql://nexosoft:$nexosoftPassword@localhost:$PuertoPostgres/nexosoft
 JWT_SECRET=$jwtSecret
 JWT_ACCESS_EXPIRY=15m
@@ -263,7 +268,7 @@ if ($CodigoAccesoRemoto) {
         # igual sin acceso remoto, y se puede reintentar despues desde el POS
         # (Configuracion > Acceso remoto).
         try {
-            & $scriptAcceso -Accion activar -Codigo $CodigoAccesoRemoto -Puerto $Puerto -RaizDatos $RaizDatos
+            & $scriptAcceso -Accion activar -Codigo $CodigoAccesoRemoto -Puerto $Puerto -PuertoRemoto $PuertoRemoto -RaizDatos $RaizDatos
             Ok "Acceso remoto configurado"
         } catch {
             Write-Host "No se pudo configurar el acceso remoto: $($_.Exception.Message)" -ForegroundColor Yellow

@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { createServer } from 'node:http';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -40,6 +41,19 @@ async function bootstrap() {
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);
   console.log(`NexoSoft cloud-api corriendo en http://localhost:${port}/api/v1`);
+
+  // Fase 17.C (ADR-0057): un segundo listener SÓLO para el túnel de acceso
+  // remoto, atado a loopback (nunca se abre en el firewall, así que desde la
+  // LAN no se llega). Que una petición entre por este puerto es la señal
+  // imposible de falsificar de que viene de internet, y es lo que usa
+  // RestriccionRemotaGuard para dejar el acceso remoto en solo lectura.
+  //
+  // Es la MISMA app de Nest: no se duplica nada, sólo se la escucha en dos
+  // sockets distintos.
+  const portRemoto = Number(process.env['PORT_REMOTO'] ?? 3001);
+  createServer(app.getHttpAdapter().getInstance()).listen(portRemoto, '127.0.0.1', () => {
+    console.log(`Acceso remoto (solo lectura) escuchando en 127.0.0.1:${portRemoto}`);
+  });
 }
 
 bootstrap();

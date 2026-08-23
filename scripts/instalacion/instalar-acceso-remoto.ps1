@@ -35,7 +35,14 @@ param(
     # tunel en base64). Lo genera scripts/release/generar-codigo-acceso-remoto.ps1.
     # Solo hace falta la primera vez: queda guardado.
     [string]$Codigo,
+    # Puerto del cloud-api en la LAN. Solo se usa para el mensaje de ayuda:
+    # el tunel NO apunta aca (ver -PuertoRemoto).
     [int]$Puerto = 3000,
+    # Puerto dedicado al tunel (ADR-0057). El cloud-api lo escucha SOLO en
+    # loopback y no se abre en el firewall: que un pedido entre por ahi es la
+    # senal de que viene de internet, y es lo que deja el acceso remoto en
+    # solo lectura. Tiene que coincidir con PORT_REMOTO del .env del servidor.
+    [int]$PuertoRemoto = 3001,
     [string]$RaizDatos = "C:\ProgramData\NexoSoft",
     [string]$CloudflaredExe
 )
@@ -155,15 +162,16 @@ function Aplicar-Codigo([string]$CodigoBase64) {
     # nombre, porque en Windows en espanol el grupo es "Administradores".
     & icacls $archivoCredenciales /inheritance:r /grant "*S-1-5-18:(F)" "*S-1-5-32-544:(F)" *> $null
 
-    # Ingress minimo: el hostname del comercio al cloud-api local, y 404 para
-    # cualquier otra cosa que llegue por el tunel.
+    # Ingress minimo: el hostname del comercio al PUERTO REMOTO del cloud-api
+    # (no al de la LAN), y 404 para cualquier otra cosa que llegue por el
+    # tunel. Ese puerto es el que deja el acceso en solo lectura (ADR-0057).
     $config = @"
 tunnel: $($datos.tunnelId)
 credentials-file: $archivoCredenciales
 no-autoupdate: true
 ingress:
   - hostname: $($datos.hostname)
-    service: http://localhost:$Puerto
+    service: http://localhost:$PuertoRemoto
   - service: http_status:404
 "@
     [System.IO.File]::WriteAllText($archivoConfig, $config, (New-Object System.Text.UTF8Encoding($false)))

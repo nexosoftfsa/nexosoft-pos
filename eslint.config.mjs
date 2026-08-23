@@ -13,6 +13,11 @@ export default tseslint.config(
       "**/target/**",
       "**/node_modules/**",
       "**/src-tauri/**",
+      // El panel web compilado que el cloud-api sirve estático: es el build
+      // de admin-web copiado ahí (ver instalacion-primer-cliente.md), no
+      // código de este paquete. Sin esto, lintear un bundle minificado tira
+      // más de mil errores.
+      "apps/cloud-api/panel/**",
     ],
   },
   js.configs.recommended,

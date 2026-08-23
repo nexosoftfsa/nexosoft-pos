@@ -31,6 +31,14 @@ const CACHE_MS = 30_000;
 const TIMEOUT_MS = 6_000;
 
 /**
+ * El hostname público se consulta en cada request (ver `hostnamePublico`), así
+ * que se cachea corto: suficiente para no leer el archivo mil veces por
+ * segundo, y lo bastante breve como para que activar o desactivar el acceso
+ * remoto tenga efecto enseguida.
+ */
+const CACHE_HOSTNAME_MS = 10_000;
+
+/**
  * Estado del acceso remoto del comercio (Fase 17.A, ADR-0055): la dirección
  * pública fija que atiende el túnel de Cloudflare, y si responde ahora.
  *
@@ -41,11 +49,37 @@ const TIMEOUT_MS = 6_000;
 @Injectable()
 export class AccesoRemotoService {
   private cache: { url: string; alcanzable: boolean; cuando: number } | null = null;
+  private cacheHostname: { hostname: string | null; cuando: number } | null = null;
 
   constructor(private readonly revisionClaves: RevisionClavesService) {}
 
   private get ruta(): string {
     return process.env['ACCESO_REMOTO_ARCHIVO'] ?? RUTA_DEFECTO;
+  }
+
+  /**
+   * Hostname público del comercio (`lagus.nexosoft.com.ar`), o `null` si esta
+   * PC no tiene acceso remoto. Lo usa `RestriccionRemotaGuard` para reconocer
+   * una petición que entró por el túnel, así que se consulta en **cada
+   * request**: de ahí la caché en memoria y que sólo lea el archivo, sin
+   * tocar la red.
+   */
+  async hostnamePublico(): Promise<string | null> {
+    const ahora = Date.now();
+    if (this.cacheHostname !== null && ahora - this.cacheHostname.cuando < CACHE_HOSTNAME_MS) {
+      return this.cacheHostname.hostname;
+    }
+    let hostname: string | null = null;
+    try {
+      const estado = parsearEstadoAccesoRemoto(await readFile(this.ruta, 'utf8'));
+      if (estado?.estado === 'activo' && estado.url !== null) {
+        hostname = new URL(estado.url).hostname;
+      }
+    } catch {
+      hostname = null;
+    }
+    this.cacheHostname = { hostname, cuando: ahora };
+    return hostname;
   }
 
   /**
