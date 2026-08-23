@@ -109,9 +109,9 @@ LA PRUEBA QUE MAS IMPORTA - que un corte de internet NO bloquee
 
 Esto es lo que hay que verificar si o si antes de usarlo con un cliente real.
 
-  a) Dejar el comercio en ACTIVA y reiniciar el servidor (que tome la licencia)
+  a) Dejar el comercio en ACTIVA y esperar a que el POS lo tome (unos minutos)
   b) DESCONECTAR INTERNET en esa PC (desenchufar el cable / apagar el wifi)
-  c) Reiniciar el servidor y reabrir el POS
+  c) Esperar unos minutos mas, con internet cortado
 
   RESULTADO ESPERADO: se sigue vendiendo con total normalidad.
 
@@ -142,7 +142,7 @@ SI ALGO NO PASA LO QUE TIENE QUE PASAR
 * "El POS no muestra ningun aviso"
   -> Confirma que el servidor sea 0.9.1+ (Configuracion lo muestra).
   -> Confirma que corriste configurar-suscripcion.ps1 con el id correcto.
-  -> Reinicia el servidor y REABRI el POS (el POS consulta al abrir).
+  -> Espera al menos 6 minutos: el sistema se actualiza solo.
 
 * "Dice que no se pudo validar la suscripcion"
   -> Esa PC no llega a internet, o no resuelve licencias.nexosoft.com.ar.
