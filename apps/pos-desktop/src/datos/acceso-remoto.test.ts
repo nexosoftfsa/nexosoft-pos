@@ -135,6 +135,44 @@ describe("validarCodigoActivacion", () => {
     expect(validarCodigoActivacion(sinId)).toContain("incompleto");
   });
 
+  /**
+   * Fase 17.B (ADR-0056 §6): un solo código por comercio, que puede traer la
+   * suscripción, el acceso remoto, o las dos cosas.
+   */
+  describe("código unificado", () => {
+    it("acepta un código que trae suscripción y acceso remoto", () => {
+      const completo = codigoDe({
+        comercioId: "lagus",
+        hostname: "lagus.nexosoft.com.ar",
+        tunnelId: "6ff42ae2-765d-4adf-8112-31c55c1551ef",
+        credenciales: { TunnelSecret: "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=" },
+      });
+      expect(validarCodigoActivacion(completo)).toBeNull();
+    });
+
+    it("acepta un código de SOLO suscripción, sin túnel", () => {
+      // El comercio que no contrató acceso remoto igual tiene suscripción.
+      expect(validarCodigoActivacion(codigoDe({ comercioId: "kiosco" }))).toBeNull();
+    });
+
+    it("en un código sin túnel no hay dirección que mostrar", () => {
+      expect(hostnameDelCodigo(codigoDe({ comercioId: "kiosco" }))).toBeNull();
+    });
+
+    it("sigue aceptando los códigos viejos, que sólo traían el túnel", () => {
+      expect(validarCodigoActivacion(CODIGO_VALIDO)).toBeNull();
+    });
+
+    it("rechaza un código que no trae ni comercio ni túnel", () => {
+      expect(validarCodigoActivacion(codigoDe({ otraCosa: 1 }))).toContain("incompleto");
+    });
+
+    it("si trae túnel a medias, lo rechaza aunque tenga comercio", () => {
+      const aMedias = codigoDe({ comercioId: "lagus", hostname: "lagus.nexosoft.com.ar" });
+      expect(validarCodigoActivacion(aMedias)).toContain("incompleto");
+    });
+  });
+
   it("rechaza base64 que no contiene JSON", () => {
     expect(validarCodigoActivacion(btoa("no soy json, soy un texto cualquiera"))).toContain(
       "no se pudo leer",

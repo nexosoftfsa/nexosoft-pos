@@ -1,6 +1,6 @@
 ﻿===============================================================================
 NEXOSOFT - INSTRUCTIVO DE INSTALACION EN UN CLIENTE
-Ultima actualizacion: 22/08/2026
+Ultima actualizacion: 23/08/2026
 ===============================================================================
 
 Este archivo se abre con el Bloc de notas. Imprimilo o llevalo en el pendrive.
@@ -13,8 +13,8 @@ REGLAS DE ORO  (leer SIEMPRE antes de salir)
 
 1) EL POS Y EL SERVIDOR TIENEN NUMERACIONES DISTINTAS.
 
-      POS       ->  v0.1.24        (tags: v0.1.24)
-      SERVIDOR  ->  servidor-v0.6.0 (tags: servidor-v0.6.0)
+      POS       ->  v0.1.29         (tags: v0.1.29)
+      SERVIDOR  ->  servidor-v0.9.1 (tags: servidor-v0.9.1)
 
    NUNCA uses el numero del POS para el servidor. Ya paso: se compilo un
    instalador de servidor con el numero del POS (0.1.17) cuando el servidor
@@ -161,11 +161,14 @@ PASO 4 - PRUEBA FINAL (no te vayas sin esto)
 
 
 ===============================================================================
-ACCESO REMOTO  (ver el panel desde afuera del local) - OPCIONAL
+ALTA DEL COMERCIO: SUSCRIPCION Y ACCESO REMOTO
 ===============================================================================
 
-Cada comercio queda en https://<comercio>.nexosoft.com.ar
-Los pasos 0 y 1 son EN TU PC, antes de salir. El 2 es en la PC del cliente.
+Aca se da de alta el comercio en el panel de clientes (la suscripcion) y, si
+lo contrato, su acceso remoto: https://<comercio>.nexosoft.com.ar
+
+Es UN SOLO CODIGO para las dos cosas. Los pasos 0 y 1 son EN TU PC, antes de
+salir. El 2 es en la PC del cliente.
 
 NO entres a Cloudflare Zero Trust: te va a pedir una tarjeta de credito aunque
 el plan sea gratis, y no hace falta. Todo esto se hace por linea de comandos
@@ -184,10 +187,14 @@ con tu cuenta normal de Cloudflare.
 
 1) POR CADA COMERCIO, un solo comando en tu PC:
 
-      .\scripts\release\generar-codigo-acceso-remoto.ps1 -Subdominio lagus
+      .\scripts\release\generar-codigo-cliente.ps1 -ComercioId lagus -Nombre "Lagus Minimarket" -ConAccesoRemoto
 
-   Crea el tunel, apunta lagus.nexosoft.com.ar al tunel, y te devuelve UN
-   SOLO texto largo: ese es el codigo de activacion.
+   Da de alta el comercio en el panel de clientes, crea el tunel, apunta
+   lagus.nexosoft.com.ar, y te devuelve UN SOLO texto largo: ese es el
+   codigo de activacion. Ata la suscripcion Y el acceso remoto.
+
+   Si el comercio NO contrato acceso remoto, el mismo comando sin
+   -ConAccesoRemoto: el codigo ata solo la suscripcion.
 
    OJO: un solo nivel de subdominio. lagus.nexosoft.com.ar SI.
         panel.lagus.nexosoft.com.ar NO (falla el certificado).

@@ -42,12 +42,22 @@ Si no tenés `cloudflared` a mano, sale de
 ## 1. Dar de alta el comercio (un comando)
 
 ```powershell
-.\scripts\release\generar-codigo-acceso-remoto.ps1 -Subdominio lagus
+.\scripts\release\generar-codigo-cliente.ps1 -ComercioId lagus -Nombre "Lagus Minimarket" -ConAccesoRemoto
 ```
 
-Eso, en una sola corrida: crea el túnel `nexosoft-lagus` en nuestra cuenta,
-apunta el CNAME de `lagus.nexosoft.com.ar` al túnel, y arma el **código de
-activación**. Si el túnel ya existía, lo reusa.
+Eso, en una sola corrida: da de alta el comercio en el **panel de clientes**,
+crea el túnel `nexosoft-lagus`, apunta el CNAME de `lagus.nexosoft.com.ar`, y
+arma **un solo código** que ata la suscripción *y* levanta el acceso remoto.
+Si el túnel ya existía, lo reusa.
+
+Para un comercio **sin** acceso remoto, el mismo comando sin
+`-ConAccesoRemoto`: sale un código que sólo ata la suscripción.
+
+> **Por qué un solo código** (ADR-0056): antes eran dos pasos separados —
+> pegar el código del túnel y correr aparte el de la suscripción— y olvidarse
+> del segundo era una falla **silenciosa**. El comercio quedaba sin control de
+> suscripción, todo andaba perfecto, y se descubría recién el día que se lo
+> quería bloquear y no pasaba nada.
 
 > **Un solo nivel de subdominio.** `lagus.nexosoft.com.ar` sí;
 > `panel.lagus.nexosoft.com.ar` no — el certificado universal gratuito de

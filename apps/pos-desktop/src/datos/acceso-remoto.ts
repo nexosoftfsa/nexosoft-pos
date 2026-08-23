@@ -100,31 +100,48 @@ export function validarCodigoActivacion(codigo: string): string | null {
   } catch {
     return "Ese código no se pudo leer. Copialo de nuevo, completo.";
   }
-  const { hostname, tunnelId, credenciales } = datos as {
+  const { comercioId, hostname, tunnelId, credenciales } = datos as {
+    comercioId?: unknown;
     hostname?: unknown;
     tunnelId?: unknown;
     credenciales?: { TunnelSecret?: unknown };
   };
-  if (typeof hostname !== "string" || !/^[a-z0-9-]+\.nexosoft\.com\.ar$/.test(hostname)) {
-    return "Ese código no corresponde a una dirección de NexoSoft.";
-  }
-  // Las credenciales del túnel son lo que hace falta para levantarlo: sin
-  // ellas el código no sirve para nada.
-  if (
-    typeof tunnelId !== "string" ||
-    tunnelId.trim() === "" ||
-    typeof credenciales?.TunnelSecret !== "string" ||
-    credenciales.TunnelSecret.trim() === ""
-  ) {
+
+  // Fase 17.B (ADR-0056 §6): un solo código por comercio. Puede traer la
+  // suscripción, el acceso remoto, o las dos cosas. El acceso remoto es
+  // opcional; lo que no puede faltar es que traiga ALGO.
+  const traeSuscripcion = typeof comercioId === "string" && comercioId.trim() !== "";
+  const traeTunel = hostname !== undefined || tunnelId !== undefined || credenciales !== undefined;
+
+  if (!traeSuscripcion && !traeTunel) {
     return "Ese código está incompleto. Pedilo de nuevo.";
+  }
+
+  if (traeTunel) {
+    if (typeof hostname !== "string" || !/^[a-z0-9-]+\.nexosoft\.com\.ar$/.test(hostname)) {
+      return "Ese código no corresponde a una dirección de NexoSoft.";
+    }
+    // Las credenciales del túnel son lo que hace falta para levantarlo: sin
+    // ellas el código no sirve para nada.
+    if (
+      typeof tunnelId !== "string" ||
+      tunnelId.trim() === "" ||
+      typeof credenciales?.TunnelSecret !== "string" ||
+      credenciales.TunnelSecret.trim() === ""
+    ) {
+      return "Ese código está incompleto. Pedilo de nuevo.";
+    }
   }
   return null;
 }
 
-/** La dirección pública que trae un código válido, para mostrarla antes de activar. */
+/**
+ * La dirección pública que trae el código, para mostrarla antes de activar.
+ * `null` si el código es inválido o si es de sólo suscripción (sin túnel).
+ */
 export function hostnameDelCodigo(codigo: string): string | null {
   if (validarCodigoActivacion(codigo) !== null) return null;
-  return (JSON.parse(atob(codigo.trim())) as { hostname: string }).hostname;
+  return (JSON.parse(atob(codigo.trim())) as { hostname?: string }).hostname ?? null;
 }
 
 function explicar(codigo: number | null): string {

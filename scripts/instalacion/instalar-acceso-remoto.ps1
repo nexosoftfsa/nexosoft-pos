@@ -148,6 +148,28 @@ function Aplicar-Codigo([string]$CodigoBase64) {
         Write-Error "El codigo de activacion no es valido. Pedilo de nuevo a NexoSoft."
         exit $SALIDA_CODIGO_INVALIDO
     }
+
+    # Fase 17.B (ADR-0056 §6): el codigo pasa a ser UNO SOLO por comercio y
+    # trae tambien la suscripcion. Antes eran dos pasos separados y olvidarse
+    # del segundo dejaba al comercio sin control de suscripcion en silencio.
+    #
+    # El acceso remoto es opcional: un codigo puede traer solo el comercioId.
+    if ($datos.comercioId) {
+        Atar-Suscripcion $datos.comercioId
+    }
+
+    $tieneTunel = $datos.hostname -or $datos.tunnelId -or $datos.credenciales
+    if (-not $tieneTunel) {
+        if (-not $datos.comercioId) {
+            Registrar "El codigo no trae ni comercio ni tunel."
+            Write-Error "El codigo de activacion no es valido. Pedilo de nuevo a NexoSoft."
+            exit $SALIDA_CODIGO_INVALIDO
+        }
+        # Codigo de solo suscripcion: no hay tunel que levantar.
+        Registrar "Codigo sin acceso remoto: solo se ato la suscripcion."
+        return $null
+    }
+
     if (-not $datos.hostname -or $datos.hostname -notmatch $PATRON_HOSTNAME -or
         -not $datos.tunnelId -or -not $datos.credenciales -or -not $datos.credenciales.TunnelSecret) {
         Registrar "Codigo de activacion mal formado (hostname '$($datos.hostname)')."
@@ -178,6 +200,32 @@ ingress:
     [System.IO.File]::WriteAllText($archivoHostname, $datos.hostname, (New-Object System.Text.UTF8Encoding($false)))
     Registrar "Configuracion del tunel escrita para $($datos.hostname) (tunel $($datos.tunnelId))"
     return $datos.hostname
+}
+
+<#
+Ata esta PC a la suscripcion del comercio, delegando en el script que ya lo
+hace (configurar-suscripcion.ps1). No se duplica la logica del .env ni el
+reinicio del servicio: si eso cambia, cambia en un solo lugar.
+
+Best-effort: si falla, se avisa pero NO se corta el alta del tunel. Dejar al
+comercio sin acceso remoto porque no se pudo escribir una variable seria peor
+que dejarlo sin control de suscripcion, que se puede arreglar despues.
+#>
+function Atar-Suscripcion([string]$ComercioId) {
+    $script = Join-Path $PSScriptRoot "configurar-suscripcion.ps1"
+    if (-not (Test-Path $script)) {
+        Registrar "No encontre configurar-suscripcion.ps1; la suscripcion queda sin atar."
+        Write-Warning "No se pudo atar la suscripcion (falta configurar-suscripcion.ps1). Avisar a NexoSoft."
+        return
+    }
+    Registrar "Atando la suscripcion al comercio '$ComercioId'"
+    try {
+        & $script -ComercioId $ComercioId -Puerto $Puerto
+        Registrar "Suscripcion atada a '$ComercioId'"
+    } catch {
+        Registrar "No se pudo atar la suscripcion: $($_.Exception.Message)"
+        Write-Warning "El acceso remoto se configuro, pero la suscripcion no. Avisar a NexoSoft."
+    }
 }
 
 function Hostname-Guardado {
@@ -213,6 +261,11 @@ switch ($Accion) {
     "activar" {
         if ($Codigo) {
             $hostnamePublico = Aplicar-Codigo $Codigo
+            # Codigo de solo suscripcion: ya quedo todo hecho, no hay tunel.
+            if (-not $hostnamePublico) {
+                Write-Host "Suscripcion configurada. Este comercio no tiene acceso remoto."
+                exit 0
+            }
         } else {
             $hostnamePublico = Hostname-Guardado
             if (-not $hostnamePublico -or -not (Test-Path $archivoConfig)) {
