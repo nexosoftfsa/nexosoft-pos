@@ -83,12 +83,19 @@ corepack pnpm --filter @nexosoft/cloud-api crear:sucursal -- --nombre "..."
 
 ## 3. Catálogo real
 
+**Desde el POS**: Catálogo → **"Importar artículos"** → elegir el Excel, con
+la opción de prueba (dry-run) tildada primero; revisar el resumen y recién
+ahí confirmar. Es el único camino que funciona en las dos formas de
+instalación (ADR-0042).
+
+El comando de abajo **solo existe si el servidor se instaló clonando el
+repo**: el paquete standalone (`C:\NexoSoft-Servidor`) no incluye
+`importar-catalogo.mjs`.
+
 ```powershell
 cd C:\NexoSoft\apps\cloud-api
 corepack pnpm importar:catalogo -- --archivo "RUTA\AL\Migrar Articulos.xlsx" --email admin --password "la-de-arriba" --dry-run
 ```
-
-Revisar que no haya sorpresas y correr de nuevo **sin** `--dry-run`.
 
 ## 4. Instalar el POS
 

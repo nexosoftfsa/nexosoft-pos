@@ -1,0 +1,295 @@
+﻿===============================================================================
+NEXOSOFT - INSTRUCTIVO DE INSTALACION EN UN CLIENTE
+Ultima actualizacion: 22/08/2026
+===============================================================================
+
+Este archivo se abre con el Bloc de notas. Imprimilo o llevalo en el pendrive.
+La version larga de cada tema esta en docs/ del repositorio.
+
+
+===============================================================================
+REGLAS DE ORO  (leer SIEMPRE antes de salir)
+===============================================================================
+
+1) EL POS Y EL SERVIDOR TIENEN NUMERACIONES DISTINTAS.
+
+      POS       ->  v0.1.24        (tags: v0.1.24)
+      SERVIDOR  ->  servidor-v0.6.0 (tags: servidor-v0.6.0)
+
+   NUNCA uses el numero del POS para el servidor. Ya paso: se compilo un
+   instalador de servidor con el numero del POS (0.1.17) cuando el servidor
+   iba por 0.4.0, se llevo a un cliente que tenia el 0.4.0, y fallo.
+
+2) NUNCA compiles el instalador a mano con ISCC.
+   Se publica siempre con el script, que ademas verifica el numero de version:
+
+      .\scripts\release\publicar-instalador-servidor.ps1 -Version "0.7.0" -Notas "que cambio"
+
+3) NUNCA instales una version mas vieja sobre una mas nueva.
+   El codigo viejo queda contra una base de datos ya migrada por el nuevo, y
+   las migraciones no se deshacen. Desde ahora el instalador lo frena solo y
+   te avisa, pero fijate igual.
+
+4) NUNCA copies la carpeta del proyecto por USB (node_modules son decenas de
+   miles de archivos y falla a mitad). El pendrive es para los .exe.
+
+
+===============================================================================
+PASO 0 - ANTES DE SALIR (en tu PC, con internet)
+===============================================================================
+
+a) Fijate cual es la ULTIMA version publicada de cada cosa:
+
+      gh release list --repo nexosoftfsa/nexosoft-pos-releases --limit 10
+
+   Anotalas aca antes de salir:
+
+      Servidor que llevo: servidor-v ______      POS que llevo: v ______
+
+b) Bajate los dos instaladores de esas versiones y ponelos en el pendrive:
+
+      NexoSoft-Servidor-<VERSION>-Setup.exe
+      NexoSoft POS_<VERSION>_x64-setup.exe
+
+   Estan en:
+      https://github.com/nexosoftfsa/nexosoft-pos-releases/releases
+
+c) Si el cliente contrato ACCESO REMOTO, hace los pasos 1, 2 y 3 de la
+   seccion "ACCESO REMOTO" de mas abajo y anotate el codigo de activacion.
+
+d) Llevate tambien en el pendrive, por las dudas:
+      - WebView2 Runtime (si la PC es vieja o sin internet)
+      - Este instructivo
+
+
+===============================================================================
+PASO 1 - INSTALAR EL SERVIDOR (solo en la PC de CAJA)
+===============================================================================
+
+El servidor va UNA SOLA VEZ, en la PC de Caja. Deposito y Oficina NO llevan
+servidor, solo el POS.
+
+1) Ejecutar NexoSoft-Servidor-<VERSION>-Setup.exe  (pide permiso de admin)
+
+2) El asistente pide, en este orden:
+
+      - Nombre del comercio        (aparece en el panel y en los tickets)
+      - Usuario ADMIN + contraseña (minimo 8 caracteres) -> ANOTALA
+      - Puerto de PostgreSQL       (dejar 5432; si la PC YA tiene otro
+                                    PostgreSQL instalado, poner 5433)
+      - Codigo de acceso remoto    (opcional; dejar vacio si no lo contrato)
+
+3) Tarda VARIOS MINUTOS y muestra una consola negra. Es normal. No la cierres.
+
+4) Al terminar, la ultima pantalla muestra la IP de esa PC. ANOTALA:
+
+      IP de la Caja: ____________________
+
+5) VERIFICAR antes de seguir. En el navegador de esa PC:
+
+      http://localhost:3000/api/v1/health
+
+   Tiene que decir:  {"status":"ok"}
+
+   Si no dice eso, NO SIGAS. Ver la seccion SI ALGO FALLA.
+
+
+===============================================================================
+PASO 2 - INSTALAR EL POS (en cada PC: Caja, Deposito, Oficina)
+===============================================================================
+
+1) Ejecutar "NexoSoft POS_<VERSION>_x64-setup.exe"  (no pide admin)
+
+2) La primera vez que abre, en Configuracion cargar:
+
+      Servidor de sucursal:
+         En la CAJA               ->  http://localhost:3000/api/v1
+         En DEPOSITO u OFICINA    ->  http://<IP-de-la-caja>:3000/api/v1
+
+      Razon social, CUIT, condicion IVA, punto de venta, LOGO.
+
+      "Ya esta de alta en ARCA"  ->  DEJAR DESTILDADO salvo que el comercio
+                                     ya facture con CAE.
+
+3) Elegir o crear la terminal ("Caja 1", "Deposito", "Oficina") con el boton
+   "+ Agregar" de esa misma pantalla.
+
+4) Entrar con el usuario ADMIN que creaste en el Paso 1.
+
+
+===============================================================================
+PASO 3 - CATALOGO REAL
+===============================================================================
+
+Se hace DESDE EL POS, no por linea de comandos:
+
+   POS -> Catalogo -> boton "Importar articulos"  ->  elegir el Excel
+
+   1) Primero con la opcion de PRUEBA (dry-run) tildada: muestra que va a
+      pasar sin tocar nada. Revisar que no haya sorpresas.
+   2) Despues destildarla y confirmar.
+
+Al terminar, contar los articulos y comparar con el Excel.
+
+OJO: el comando "pnpm importar:catalogo" que figura en la guia vieja
+(docs/instalacion-primer-cliente.md) SOLO funciona si el servidor se instalo
+clonando el repositorio. Con el instalador (C:\NexoSoft-Servidor) ese script
+no existe: usar el POS.
+
+
+===============================================================================
+PASO 4 - PRUEBA FINAL (no te vayas sin esto)
+===============================================================================
+
+   [ ] Una venta de prueba completa
+   [ ] Imprimir el ticket chico
+   [ ] Imprimir el A4
+   [ ] El panel http://localhost:3000/ muestra el logo y los reportes
+   [ ] Desde otra PC de la red: http://<IP-de-la-caja>:3000/
+   [ ] El catalogo esta completo (contar los articulos)
+   [ ] Reiniciar la PC de Caja y confirmar que el servidor levanta SOLO
+       (volver a abrir el health del Paso 1.5)
+
+
+===============================================================================
+ACCESO REMOTO  (ver el panel desde afuera del local) - OPCIONAL
+===============================================================================
+
+Cada comercio queda en https://<comercio>.nexosoft.com.ar
+Los pasos 1 a 3 son EN TU PC, antes de salir. El 4 es en la PC del cliente.
+
+1) Cloudflare -> Zero Trust -> Networks -> Tunnels -> Create a tunnel
+   Tipo: Cloudflared.  Nombre: nexosoft-<comercio>
+   COPIAR EL TOKEN que muestra (arranca con eyJ...)
+
+2) En ese mismo tunel -> pestaña "Public Hostname" -> Add a public hostname:
+
+      Subdomain: <comercio>          (ej: lagus)
+      Domain:    nexosoft.com.ar
+      Type:      HTTP
+      URL:       localhost:3000
+
+   OJO: un solo nivel. lagus.nexosoft.com.ar SI.
+        panel.lagus.nexosoft.com.ar NO (falla el certificado).
+
+3) En tu PC, generar el codigo de activacion:
+
+      .\scripts\release\generar-codigo-acceso-remoto.ps1 -Subdominio lagus -Token "eyJ..."
+
+   Te devuelve UN SOLO texto largo. Ese es el codigo.
+
+4) En la PC del cliente, cualquiera de las dos:
+
+      - Durante la instalacion: pegarlo en la pantalla "Acceso remoto".
+      - Despues: en el POS -> Configuracion -> Acceso remoto -> pegar y
+        "Activar". Windows pide permiso de administrador una vez.
+
+5) VERIFICAR: en el POS, la tarjeta de Acceso remoto tiene que decir
+   "Se esta viendo bien desde afuera", y ahi mismo aparece el QR.
+   Probar la direccion desde un celular CON DATOS MOVILES (no el wifi
+   del local).
+
+Para apagarlo: POS -> Configuracion -> Acceso remoto -> Desactivar.
+
+
+===============================================================================
+ACTUALIZAR UN CLIENTE QUE YA TIENE NEXOSOFT
+===============================================================================
+
+EL POS se actualiza solo (avisa y pide reiniciar).
+
+EL SERVIDOR: desde el POS de la PC de Caja ->
+   Configuracion -> Actualizaciones -> "Actualizar servidor"
+
+   - Solo aparece en la PC de Caja (la que aloja el servidor).
+   - Pide confirmacion y despues Windows pide permiso de administrador.
+   - HACERLO CON EL NEGOCIO CERRADO O SIN VENTAS ACTIVAS.
+   - Tarda varios minutos y el servidor queda sin responder un rato.
+
+El servidor tambien se actualiza SOLO todas las noches a las 04:00 y cada vez
+que se prende la PC. Si algo sale mal, vuelve solo a la version anterior.
+
+NO hace falta correr el instalador de nuevo para actualizar. El instalador es
+para la PRIMERA instalacion.
+
+
+===============================================================================
+SI ALGO FALLA - DONDE MIRAR
+===============================================================================
+
+TODOS los logs estan en:   C:\ProgramData\NexoSoft\logs\
+
+   bootstrap.log        -> la instalacion del servidor (Paso 1)
+   actualizador.log     -> la actualizacion automatica del servidor
+   acceso-remoto.log    -> el tunel / acceso remoto
+   postgres.log         -> la base de datos
+
+Abrilos con el Bloc de notas. El error real esta ahi, casi siempre en las
+ultimas lineas.
+
+Comandos utiles (PowerShell como Administrador, en la PC de Caja):
+
+   # ¿Estan corriendo las tareas del servidor?
+   Get-ScheduledTask -TaskName "NexoSoft*" | Get-ScheduledTaskInfo
+
+   # Arrancar el servidor a mano
+   Start-ScheduledTask -TaskName "NexoSoft cloud-api"
+
+   # ¿Esta el tunel corriendo?
+   Get-Service Cloudflared
+
+   # Estado del acceso remoto
+   C:\NexoSoft-Servidor\scripts\instalar-acceso-remoto.ps1 -Accion estado
+
+   # Que version de servidor hay instalada
+   Get-Content C:\NexoSoft-Servidor\dist-servidor\VERSION
+
+
+PROBLEMAS CONOCIDOS
+-------------------
+
+* "El health no responde / no abre el panel"
+  -> Mirar bootstrap.log. Casi siempre es el puerto 5432 ocupado por otro
+     PostgreSQL que ya estaba en la PC: reinstalar eligiendo 5433.
+
+* "El instalador dice que ya hay una version mas nueva instalada"
+  -> Estas por instalar un servidor MAS VIEJO. Conseguí el instalador de la
+     ultima version del SERVIDOR (ojo: no es el numero del POS).
+
+* "Deposito u Oficina no ven el servidor"
+  -> Revisar que pusiste http://<IP-de-la-caja>:3000/api/v1 (no localhost),
+     que las dos PC estan en la misma red, y que el firewall de la Caja tiene
+     la regla (la crea el instalador; se rehace con
+     C:\NexoSoft-Servidor\scripts\abrir-firewall-servidor.ps1).
+
+* "La direccion de afuera no responde"
+  -> Que la PC tenga internet, que el servicio Cloudflared este corriendo, y
+     en Cloudflare que el Public Hostname apunte a localhost:3000.
+
+
+===============================================================================
+DATOS DEL CLIENTE  (completar en cada instalacion)
+===============================================================================
+
+   Comercio:            ______________________________________
+
+   Fecha instalacion:   ____ / ____ / ________
+
+   Version servidor:    servidor-v ____________
+   Version POS:         v ____________
+
+   IP de la Caja:       ______________________________________
+   Puerto PostgreSQL:   ______________
+
+   Usuario ADMIN:       ______________________________________
+   Contraseña:          ______________________________________
+
+   Acceso remoto:       [ ] no   [ ] si ->  https://__________.nexosoft.com.ar
+
+   PCs con POS:         [ ] Caja   [ ] Deposito   [ ] Oficina
+
+   Notas:
+   ___________________________________________________________
+   ___________________________________________________________
+
+===============================================================================
