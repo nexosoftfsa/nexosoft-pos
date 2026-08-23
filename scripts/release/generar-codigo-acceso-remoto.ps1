@@ -71,19 +71,20 @@ Corre una sola vez (abre el navegador, elegi $Dominio y autoriza):
     exit 1
 }
 
-# cloudflared escribe sus logs por stderr; se valida con $LASTEXITCODE en vez
-# de confiar en $ErrorActionPreference, igual que el resto de scripts/release.
+# cloudflared escribe TODOS sus logs por stderr, incluso los informativos.
+# Nada de "2>&1": en PowerShell 5.1 eso envuelve cada linea de stderr de un
+# ejecutable nativo en un ErrorRecord, y la corrida se llena de rojo aunque
+# haya salido todo bien. Se deja que escriba directo a la consola y se valida
+# con $LASTEXITCODE, que es lo unico confiable acá.
 function CorrerCloudflared([string]$Descripcion, [string[]]$Argumentos) {
     $ErrorActionPreference = "Continue"
-    $salida = & $CloudflaredExe @Argumentos 2>&1 | Out-String
+    & $CloudflaredExe @Argumentos
     $codigo = $LASTEXITCODE
     $ErrorActionPreference = "Stop"
     if ($codigo -ne 0) {
-        Write-Host $salida
         Write-Error "$Descripcion fallo (exit $codigo)."
         exit 1
     }
-    return $salida
 }
 
 <# Devuelve el id del tunel con ese nombre, o $null si no existe. #>
@@ -105,7 +106,7 @@ $idTunel = IdDelTunel $nombreTunel
 if ($idTunel) {
     Write-Host "El tunel '$nombreTunel' ya existia (id $idTunel) -- lo reuso." -ForegroundColor Yellow
 } else {
-    CorrerCloudflared "tunnel create" @("tunnel", "create", $nombreTunel) | Out-Null
+    CorrerCloudflared "tunnel create" @("tunnel", "create", $nombreTunel)
     $idTunel = IdDelTunel $nombreTunel
     if (-not $idTunel) {
         Write-Error "Cree el tunel pero no lo encuentro despues en 'tunnel list'. Revisar a mano."
@@ -133,8 +134,7 @@ Titulo "DNS"
 $argsDns = @("tunnel", "route", "dns")
 if ($PisarDns) { $argsDns += "--overwrite-dns" }
 $argsDns += @($nombreTunel, $hostnamePublico)
-$salidaDns = CorrerCloudflared "tunnel route dns" $argsDns
-Write-Host $salidaDns.Trim()
+CorrerCloudflared "tunnel route dns" $argsDns
 Ok "$hostnamePublico apunta al tunel"
 
 Titulo "Codigo de activacion"
