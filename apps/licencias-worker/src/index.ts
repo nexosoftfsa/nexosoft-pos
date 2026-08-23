@@ -51,8 +51,12 @@ function igualSeguro(a: string, b: string): boolean {
 
 function autorizado(pedido: Request, env: Env): boolean {
   const cabecera = pedido.headers.get("Authorization") ?? "";
-  const token = cabecera.startsWith("Bearer ") ? cabecera.slice(7) : "";
-  return env.ADMIN_TOKEN !== "" && igualSeguro(token, env.ADMIN_TOKEN);
+  const token = (cabecera.startsWith("Bearer ") ? cabecera.slice(7) : "").trim();
+  // El secreto se carga por stdin y ahí es fácil que se cuele un salto de
+  // línea; un carácter invisible no puede dejarnos afuera de nuestro propio
+  // panel. Se compara sin espacios de los dos lados.
+  const esperado = (env.ADMIN_TOKEN ?? "").trim();
+  return esperado !== "" && igualSeguro(token, esperado);
 }
 
 // ─── Cara pública: la licencia de cada comercio ──────────────────────────────
