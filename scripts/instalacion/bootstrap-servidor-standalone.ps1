@@ -30,7 +30,14 @@ param(
     [string]$RaizDatos = "C:\ProgramData\NexoSoft",
 
     [int]$Puerto = 3000,
-    [int]$PuertoPostgres = 5432
+    [int]$PuertoPostgres = 5432,
+
+    # Opcional (Fase 17.A, ADR-0055): codigo de activacion del acceso remoto
+    # de ESTE comercio. Si viene, se deja el tunel de Cloudflare andando y el
+    # panel queda accesible en https://<comercio>.nexosoft.com.ar. Si no
+    # viene, todo funciona igual, solo que el panel se ve nada mas que desde
+    # la red del local.
+    [string]$CodigoAccesoRemoto
 )
 
 $ErrorActionPreference = "Stop"
@@ -245,6 +252,25 @@ if ($sucursalId) {
         Ok "ADMIN '$AdminUsuario' creado"
     } catch {
         Write-Host "No se pudo crear el ADMIN automaticamente (¿ya existia?). Revisar a mano si hace falta." -ForegroundColor Yellow
+    }
+}
+
+if ($CodigoAccesoRemoto) {
+    Titulo "Acceso remoto (Fase 17.A)"
+    $scriptAcceso = Join-Path $PSScriptRoot "instalar-acceso-remoto.ps1"
+    if (Test-Path $scriptAcceso) {
+        # No corta la instalacion si falla: el POS y el panel en la LAN andan
+        # igual sin acceso remoto, y se puede reintentar despues desde el POS
+        # (Configuracion > Acceso remoto).
+        try {
+            & $scriptAcceso -Accion activar -Codigo $CodigoAccesoRemoto -Puerto $Puerto -RaizDatos $RaizDatos
+            Ok "Acceso remoto configurado"
+        } catch {
+            Write-Host "No se pudo configurar el acceso remoto: $($_.Exception.Message)" -ForegroundColor Yellow
+            Write-Host "Se puede reintentar desde el POS: Configuracion > Acceso remoto." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "No encontre instalar-acceso-remoto.ps1 -- se omite el acceso remoto." -ForegroundColor Yellow
     }
 }
 

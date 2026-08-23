@@ -24,6 +24,7 @@ import { AsistenteModule } from './asistente/asistente.module';
 import { ComercioModule } from './comercio/comercio.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { CredencialesModule } from './credenciales/credenciales.module';
+import { AccesoRemotoModule } from './acceso-remoto/acceso-remoto.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { CredencialesModule } from './credenciales/credenciales.module';
     ComercioModule,
     UsuariosModule,
     CredencialesModule,
+    AccesoRemotoModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

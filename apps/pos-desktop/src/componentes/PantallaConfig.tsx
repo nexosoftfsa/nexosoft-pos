@@ -2,6 +2,7 @@ import { useState, type ChangeEvent, type CSSProperties, type FormEvent } from "
 
 import { CondicionIva } from "@nexosoft/domain";
 import { leerComoDataUrl } from "../archivos";
+import { AccesoRemoto } from "./AccesoRemoto";
 import { Actualizaciones } from "./Actualizaciones";
 
 export interface ValoresConfig {
@@ -31,10 +32,13 @@ export function PantallaConfig({
   valores,
   onGuardar,
   onCancelar,
+  obtenerToken,
 }: {
   valores: ValoresConfig;
   onGuardar: (v: ValoresConfig) => Promise<void>;
   onCancelar: () => void;
+  /** Token de la sesión actual, para consultar el acceso remoto (ADR-0055). */
+  obtenerToken: () => string | null;
 }) {
   const [servidorUrl, setServidorUrl] = useState(valores.servidorUrl);
   const [razonSocial, setRazonSocial] = useState(valores.razonSocial);
@@ -100,11 +104,19 @@ export function PantallaConfig({
 
         <label style={etiqueta}>
           Servidor de sucursal
-          <input style={campo} value={servidorUrl} onChange={(e) => setServidorUrl(e.target.value)} />
+          <input
+            style={campo}
+            value={servidorUrl}
+            onChange={(e) => setServidorUrl(e.target.value)}
+          />
         </label>
         <label style={etiqueta}>
           Razón social
-          <input style={campo} value={razonSocial} onChange={(e) => setRazonSocial(e.target.value)} />
+          <input
+            style={campo}
+            value={razonSocial}
+            onChange={(e) => setRazonSocial(e.target.value)}
+          />
         </label>
         <label style={etiqueta}>
           CUIT
@@ -128,9 +140,18 @@ export function PantallaConfig({
           Logo del comercio
           <div style={{ display: "flex", alignItems: "center", gap: "0.7rem" }}>
             {logoDataUrl !== undefined && (
-              <img src={logoDataUrl} alt="Logo" style={{ height: 40, maxWidth: 120, objectFit: "contain" }} />
+              <img
+                src={logoDataUrl}
+                alt="Logo"
+                style={{ height: 40, maxWidth: 120, objectFit: "contain" }}
+              />
             )}
-            <input style={{ ...campo, padding: "0.4rem" }} type="file" accept="image/*" onChange={(e) => void elegirLogo(e)} />
+            <input
+              style={{ ...campo, padding: "0.4rem" }}
+              type="file"
+              accept="image/*"
+              onChange={(e) => void elegirLogo(e)}
+            />
             {logoDataUrl !== undefined && (
               <button type="button" style={enlace} onClick={() => setLogoDataUrl(undefined)}>
                 Quitar
@@ -158,9 +179,8 @@ export function PantallaConfig({
         </label>
         {!emiteFiscal && (
           <div style={ayuda}>
-            Mientras esté desmarcado, el sistema vende con un ticket interno sin
-            CAE ni numeración fiscal. Activalo cuando el comercio complete el
-            alta en ARCA.
+            Mientras esté desmarcado, el sistema vende con un ticket interno sin CAE ni numeración
+            fiscal. Activalo cuando el comercio complete el alta en ARCA.
           </div>
         )}
 
@@ -174,13 +194,15 @@ export function PantallaConfig({
         </label>
         {stockNegativo && (
           <div style={ayuda}>
-            Útil si el stock de productos de mucha rotación no se actualiza a
-            tiempo: la venta no se bloquea aunque figure stock cero o
-            insuficiente, y el saldo queda en negativo hasta el próximo ajuste.
+            Útil si el stock de productos de mucha rotación no se actualiza a tiempo: la venta no se
+            bloquea aunque figure stock cero o insuficiente, y el saldo queda en negativo hasta el
+            próximo ajuste.
           </div>
         )}
 
         {error !== null && <div style={aviso}>{error}</div>}
+
+        <AccesoRemoto servidorUrl={servidorUrl} obtenerToken={obtenerToken} />
 
         <Actualizaciones servidorUrl={servidorUrl} />
 
@@ -188,7 +210,11 @@ export function PantallaConfig({
           <button type="button" style={botonSec} onClick={onCancelar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="submit" style={{ ...boton, opacity: guardando ? 0.6 : 1 }} disabled={guardando}>
+          <button
+            type="submit"
+            style={{ ...boton, opacity: guardando ? 0.6 : 1 }}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar"}
           </button>
         </div>

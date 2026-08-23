@@ -53,11 +53,15 @@ Source: "..\dist-servidor\*"; DestDir: "{app}\dist-servidor"; Flags: recursesubd
 ; Runtimes portables (Fase 13.C, ver preparar-runtimes-instalador.ps1).
 Source: "runtime\node-portable\*"; DestDir: "{app}\node-portable"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "runtime\postgres-portable\*"; DestDir: "{app}\postgres-portable"; Flags: recursesubdirs createallsubdirs ignoreversion
+; Conector del tunel de acceso remoto (Fase 17.A, ADR-0055). Va embebido
+; para no depender de bajarlo en la PC del cliente.
+Source: "runtime\cloudflared\cloudflared.exe"; DestDir: "{app}\cloudflared"; Flags: ignoreversion
 ; Scripts de bootstrap (Fase 13.B).
 Source: "..\scripts\instalacion\bootstrap-servidor-standalone.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\instalar-servicio-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\abrir-firewall-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\actualizador-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "..\scripts\instalacion\instalar-acceso-remoto.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 
 [Run]
 ; No "runhidden": se deja visible la consola de PowerShell durante este
@@ -65,7 +69,7 @@ Source: "..\scripts\instalacion\actualizador-servidor.ps1"; DestDir: "{app}\scri
 ; minutos: initdb, migraciones, compilacion del cliente Prisma). Ademas
 ; queda un log permanente en <RaizDatos>\logs\bootstrap.log.
 Filename: "powershell.exe"; \
-    Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\bootstrap-servidor-standalone.ps1"" -NombreComercio ""{code:GetNombreComercio}"" -AdminUsuario ""{code:GetAdminUsuario}"" -AdminPassword ""{code:GetAdminPassword}"" -NodeDir ""{app}\node-portable"" -PostgresDir ""{app}\postgres-portable"" -ServidorDir ""{app}\dist-servidor"" -PuertoPostgres {code:GetPuertoPostgres}"; \
+    Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\bootstrap-servidor-standalone.ps1"" -NombreComercio ""{code:GetNombreComercio}"" -AdminUsuario ""{code:GetAdminUsuario}"" -AdminPassword ""{code:GetAdminPassword}"" -NodeDir ""{app}\node-portable"" -PostgresDir ""{app}\postgres-portable"" -ServidorDir ""{app}\dist-servidor"" -PuertoPostgres {code:GetPuertoPostgres} -CodigoAccesoRemoto ""{code:GetCodigoAccesoRemoto}"""; \
     StatusMsg: "Configurando el servidor (puede tardar varios minutos)..."; \
     Flags: waituntilterminated
 
@@ -74,6 +78,7 @@ var
   PaginaComercio: TInputQueryWizardPage;
   PaginaAdmin: TInputQueryWizardPage;
   PaginaBase: TInputQueryWizardPage;
+  PaginaAccesoRemoto: TInputQueryWizardPage;
 
 procedure InitializeWizard;
 begin
@@ -95,6 +100,30 @@ begin
     'Dejalo en 5432 salvo que esta PC YA tenga un PostgreSQL instalado (por ejemplo del sistema anterior del comercio): en ese caso pone otro puerto libre, como 5433, para no interferir con el existente.');
   PaginaBase.Add('Puerto:', False);
   PaginaBase.Values[0] := '5432';
+
+  PaginaAccesoRemoto := CreateInputQueryPage(PaginaBase.ID,
+    'Acceso remoto (opcional)', 'Ver el panel desde afuera del local',
+    'Si contrataste el acceso remoto, pega aca el codigo de activacion que te dimos: el panel de reportes va a quedar disponible desde cualquier lugar, con su propia direccion.' + #13#10 +
+    'Si no lo tenes, dejalo vacio: todo el sistema funciona igual y el panel se ve desde la red del local. Se puede activar despues desde el POS (Configuracion > Acceso remoto).');
+  PaginaAccesoRemoto.Add('Codigo de activacion:', False);
+end;
+
+{ El codigo de activacion es base64 (ver generar-codigo-acceso-remoto.ps1).
+  Se valida el juego de caracteres para cazar en el acto un copiado a medias
+  o un texto pegado por error, en vez de fallar recien al final. }
+function CodigoAccesoRemotoValido(Codigo: String): Boolean;
+var
+  i: Integer;
+  c: Char;
+begin
+  Result := False;
+  if Length(Codigo) < 20 then exit;
+  for i := 1 to Length(Codigo) do begin
+    c := Codigo[i];
+    if not (((c >= 'A') and (c <= 'Z')) or ((c >= 'a') and (c <= 'z')) or
+            ((c >= '0') and (c <= '9')) or (c = '+') or (c = '/') or (c = '=')) then exit;
+  end;
+  Result := True;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -127,6 +156,13 @@ begin
       Result := False;
     end;
   end;
+  if CurPageID = PaginaAccesoRemoto.ID then begin
+    if (Trim(PaginaAccesoRemoto.Values[0]) <> '') and
+       (not CodigoAccesoRemotoValido(Trim(PaginaAccesoRemoto.Values[0]))) then begin
+      MsgBox('Ese codigo de activacion no parece completo. Copialo de nuevo entero, o dejalo vacio para instalar sin acceso remoto.', mbError, MB_OK);
+      Result := False;
+    end;
+  end;
 end;
 
 function GetNombreComercio(Param: String): String;
@@ -147,6 +183,11 @@ end;
 function GetPuertoPostgres(Param: String): String;
 begin
   Result := Trim(PaginaBase.Values[0]);
+end;
+
+function GetCodigoAccesoRemoto(Param: String): String;
+begin
+  Result := Trim(PaginaAccesoRemoto.Values[0]);
 end;
 
 procedure CurPageChanged(CurPageID: Integer);

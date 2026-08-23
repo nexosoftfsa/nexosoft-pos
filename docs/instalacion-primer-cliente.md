@@ -129,6 +129,11 @@ hace lo mismo.
 ## 7. (Opcional) Acceso al panel desde fuera de la LAN
 
 Si el dueño quiere ver el panel de reportes desde el celular fuera del
-local, ver [despliegue-cloudflare-tunnel.md](despliegue-cloudflare-tunnel.md)
-(Fase 15.B / [ADR-0052](adr/0052-acceso-remoto-admin-web-cloudflare-tunnel.md)).
+local, cada comercio tiene su propia dirección fija
+(`https://<comercio>.nexosoft.com.ar`) atendida por un túnel de Cloudflare.
+El alta se hace con un **código de activación** que generamos nosotros: se
+pega en la pantalla "Acceso remoto (opcional)" del instalador, o después
+desde el POS (Configuración → Acceso remoto). Ver
+[acceso-remoto-cloudflare.md](acceso-remoto-cloudflare.md) (Fase 17.A /
+[ADR-0055](adr/0055-acceso-remoto-tunel-con-nombre-por-comercio.md)).
 No es necesario para que el resto del sistema funcione.

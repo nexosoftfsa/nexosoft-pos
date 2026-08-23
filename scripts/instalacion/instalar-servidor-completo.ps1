@@ -15,7 +15,10 @@ param(
     [Parameter(Mandatory = $true)][string]$NombreComercio,
     [Parameter(Mandatory = $true)][string]$AdminUsuario,
     [Parameter(Mandatory = $true)][string]$AdminPassword,
-    [string]$PostgresBin = "C:\Program Files\PostgreSQL\16\bin"
+    [string]$PostgresBin = "C:\Program Files\PostgreSQL\16\bin",
+    # Opcional (Fase 17.A, ADR-0055): codigo de activacion del acceso remoto
+    # de este comercio. Sin esto el panel se ve solo desde la red del local.
+    [string]$CodigoAccesoRemoto
 )
 
 $ErrorActionPreference = "Stop"
@@ -150,6 +153,19 @@ if ($sucursalId) {
         Ok "ADMIN '$AdminUsuario' creado"
     } catch {
         Write-Host "No se pudo crear el ADMIN automáticamente (¿ya existía?). Revisá a mano si hace falta." -ForegroundColor Yellow
+    }
+}
+
+if ($CodigoAccesoRemoto) {
+    Titulo "Acceso remoto (Fase 17.A)"
+    # No corta la instalación si falla: el sistema anda igual sin acceso
+    # remoto y se puede reintentar desde el POS (Configuración > Acceso remoto).
+    try {
+        & (Join-Path $PSScriptRoot "instalar-acceso-remoto.ps1") -Accion activar -Codigo $CodigoAccesoRemoto
+        Ok "Acceso remoto configurado"
+    } catch {
+        Write-Host "No se pudo configurar el acceso remoto: $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "Se puede reintentar desde el POS: Configuración > Acceso remoto." -ForegroundColor Yellow
     }
 }
 

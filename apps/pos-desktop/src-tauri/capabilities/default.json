@@ -27,6 +27,37 @@
             "-Command",
             "$standalone='C:\\NexoSoft-Servidor\\scripts\\actualizador-servidor.ps1'; $legacy='C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1'; if (Test-Path $standalone) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$standalone,'-ServidorDir','C:\\NexoSoft-Servidor\\dist-servidor','-NodeDir','C:\\NexoSoft-Servidor\\node-portable') } elseif (Test-Path $legacy) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$legacy) } else { exit 3 }; $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
           ]
+        },
+        {
+          "name": "acceso-remoto-activar",
+          "cmd": "powershell.exe",
+          "args": [
+            "-NoProfile",
+            "-Command",
+            "$codigo='",
+            {
+              "validator": "^[A-Za-z0-9+/=]{20,4096}$"
+            },
+            "'.Trim(); $standalone='C:\\NexoSoft-Servidor\\scripts\\instalar-acceso-remoto.ps1'; $legacy='C:\\NexoSoft\\scripts\\instalacion\\instalar-acceso-remoto.ps1'; if (Test-Path $standalone) { $s=$standalone } elseif (Test-Path $legacy) { $s=$legacy } else { exit 2 }; $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$s,'-Accion','activar','-Codigo',$codigo); $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
+          ]
+        },
+        {
+          "name": "acceso-remoto-reactivar",
+          "cmd": "powershell.exe",
+          "args": [
+            "-NoProfile",
+            "-Command",
+            "$standalone='C:\\NexoSoft-Servidor\\scripts\\instalar-acceso-remoto.ps1'; $legacy='C:\\NexoSoft\\scripts\\instalacion\\instalar-acceso-remoto.ps1'; if (Test-Path $standalone) { $s=$standalone } elseif (Test-Path $legacy) { $s=$legacy } else { exit 2 }; $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$s,'-Accion','activar'); $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
+          ]
+        },
+        {
+          "name": "acceso-remoto-desactivar",
+          "cmd": "powershell.exe",
+          "args": [
+            "-NoProfile",
+            "-Command",
+            "$standalone='C:\\NexoSoft-Servidor\\scripts\\instalar-acceso-remoto.ps1'; $legacy='C:\\NexoSoft\\scripts\\instalacion\\instalar-acceso-remoto.ps1'; if (Test-Path $standalone) { $s=$standalone } elseif (Test-Path $legacy) { $s=$legacy } else { exit 2 }; $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$s,'-Accion','desactivar'); $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
+          ]
         }
       ]
     }

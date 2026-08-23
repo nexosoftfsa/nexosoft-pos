@@ -1,9 +1,19 @@
 # ADR-0052: Acceso remoto a `admin-web` vía Cloudflare Tunnel
 
-- **Estado:** Aceptada
+- **Estado:** Aceptada — el procedimiento operativo lo reemplaza [ADR-0055](0055-acceso-remoto-tunel-con-nombre-por-comercio.md)
 - **Fecha:** 2026-08-19
 - **Decisores:** Equipo NexoSoft
-- **Relacionada:** ADR-0019 (servidor de sucursal en LAN), ADR-0024 (panel web de reportes), ADR-0047 (registro cerrado, ya mencionaba este plan de pasada)
+- **Relacionada:** ADR-0019 (servidor de sucursal en LAN), ADR-0024 (panel web de reportes), ADR-0047 (registro cerrado, ya mencionaba este plan de pasada), ADR-0055 (túnel con nombre y subdominio fijo por comercio)
+
+> **Qué sigue vigente de esta ADR:** todo lo que decidió sobre **seguridad**
+> — rate-limiting global, lockout por cuenta, `trust proxy`, `CORS_ORIGINS`,
+> el responsive de `admin-web` y la decisión sobre el JWT en `localStorage`.
+> Son los prerrequisitos para exponer el servidor a internet y valen igual.
+> **Qué quedó reemplazado:** el procedimiento por comercio (cuenta y dominio
+> propios del comercio, `cloudflared tunnel login`, `config.yml`, ruta DNS a
+> mano). Desde ADR-0055 el túnel vive en la cuenta de NexoSoft, cada comercio
+> tiene un subdominio fijo de `nexosoft.com.ar` y el alta en la PC del cliente
+> es pegar un código.
 
 ## Contexto
 
@@ -78,8 +88,9 @@ no confiable al panel.
   servidor de sucursal (ADR-0019), no horizontalmente escalado; si eso
   cambia, el lockout necesita moverse a una tabla o storage compartido.
 - Configurar el túnel (dominio, DNS, `cloudflared`, credenciales) es un paso
-  operativo manual por comercio, fuera del repo (ver `docs/despliegue-
-  cloudflare-tunnel.md`) — no es un "activalo con un flag".
+  operativo manual por comercio, fuera del repo — no es un "activalo con un
+  flag". *(Este costo es justamente el que resolvió después ADR-0055; el
+  procedimiento vigente está en `docs/acceso-remoto-cloudflare.md`.)*
 - El JWT en `localStorage` sigue siendo vulnerable a XSS si en el futuro se
   agrega contenido no confiable al panel (ver decisión arriba).
 

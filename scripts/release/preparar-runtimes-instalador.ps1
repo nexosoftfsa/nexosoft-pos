@@ -82,8 +82,28 @@ if (-not (Test-Path (Join-Path $pgDestino "bin\initdb.exe"))) {
 }
 Ok "PostgreSQL portable (recortado) listo en $pgDestino"
 
+Titulo "cloudflared (acceso remoto, Fase 17.A)"
+# Binario unico, sin instalador: es el conector del tunel de Cloudflare que
+# le da al comercio su direccion fija (ver ADR-0055). Va embebido para que
+# el alta del acceso remoto no dependa de bajar nada en la PC del cliente,
+# que muchas veces se instala con internet malo o sin internet.
+$cloudflaredDestino = Join-Path $runtimeDir "cloudflared"
+$cloudflaredExe = Join-Path $cloudflaredDestino "cloudflared.exe"
+New-Item -ItemType Directory -Force -Path $cloudflaredDestino | Out-Null
+if (-not (Test-Path $cloudflaredExe)) {
+    Write-Host "Descargando..."
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest -Uri "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe" `
+        -OutFile $cloudflaredExe -TimeoutSec 300 -UseBasicParsing
+} else {
+    Write-Host "Ya estaba: $cloudflaredExe"
+}
+Ok "cloudflared listo en $cloudflaredDestino"
+
 Titulo "Listo"
 $tamanioNode = [Math]::Round((Get-ChildItem $nodeDestino -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB, 1)
 $tamanioPg = [Math]::Round((Get-ChildItem $pgDestino -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB, 1)
+$tamanioCf = [Math]::Round((Get-Item $cloudflaredExe).Length / 1MB, 1)
 Write-Host "node-portable: $tamanioNode MB"
 Write-Host "postgres-portable: $tamanioPg MB"
+Write-Host "cloudflared: $tamanioCf MB"

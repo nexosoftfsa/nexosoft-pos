@@ -428,6 +428,7 @@ function AppTauri() {
         valores={valoresConfig}
         onGuardar={onGuardarConfig}
         onCancelar={() => void inicializar()}
+        obtenerToken={() => sesionRef.current?.obtenerToken() ?? null}
       />
     );
   }
