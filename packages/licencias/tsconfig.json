@@ -1,8 +1,24 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // A diferencia del resto de los paquetes del monorepo, este se compila a
+    // JavaScript de verdad (CommonJS) en vez de consumirse como fuente.
+    //
+    // El motivo: `cloud-api` lo necesita en TIEMPO DE EJECUCIÓN
+    // (`evaluarLicencia`, `EstadoSuscripcion`), no sólo para tipos. Los demás
+    // paquetes del workspace se importan sólo como tipos desde `cloud-api`,
+    // que se borran al compilar — por eso nunca hizo falta esto antes. Sin
+    // compilar, Node intenta cargar el `.ts` y falla con ERR_MODULE_NOT_FOUND.
+    //
+    // `verbatimModuleSyntax` se apaga porque es incompatible con emitir
+    // CommonJS desde sintaxis ESM.
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "verbatimModuleSyntax": false,
+    "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.spec.ts"]
 }

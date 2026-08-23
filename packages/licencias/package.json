@@ -2,14 +2,20 @@
   "name": "@nexosoft/licencias",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "description": "Suscripción mensual: contrato de la licencia, estados y ventana de gracia. Puro, sin criptografía ni red (ADR-0056).",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "tsc",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
