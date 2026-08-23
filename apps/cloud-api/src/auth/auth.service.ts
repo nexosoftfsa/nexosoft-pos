@@ -12,6 +12,7 @@ import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { CredencialesService } from '../credenciales/credenciales.service';
 import { LoginLockoutService } from './login-lockout.service';
+import { RevisionClavesService } from './revision-claves.service';
 import type { RegistroDto } from './dto/registro.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { JwtPayload } from './jwt.strategy';
@@ -27,6 +28,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly credenciales: CredencialesService,
     private readonly lockout: LoginLockoutService,
+    private readonly revisionClaves: RevisionClavesService,
   ) {}
 
   async registrar(dto: RegistroDto) {
@@ -55,7 +57,13 @@ export class AuthService {
       throw new HttpException(MENSAJE_BLOQUEADO, HttpStatus.TOO_MANY_REQUESTS);
     }
 
-    const usuario = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
+    // Se trae el nombre del comercio junto con el usuario: es la pista más
+    // útil para detectar la contraseña típica ("lagus2026") unas líneas más
+    // abajo, y sale en la misma consulta.
+    const usuario = await this.prisma.usuario.findUnique({
+      where: { email: dto.email },
+      include: { sucursal: { select: { nombre: true } } },
+    });
 
     if (!usuario || !usuario.activo) {
       this.lockout.registrarFallo(dto.email);
@@ -69,6 +77,13 @@ export class AuthService {
     }
 
     this.lockout.registrarExito(dto.email);
+    // Único momento en que el servidor ve la contraseña en claro: se aprovecha
+    // para evaluar si aguanta estar publicada en internet (Fase 17.C). No se
+    // guarda la contraseña, sólo el veredicto. No bloquea el login.
+    this.revisionClaves.revisar(usuario, dto.password, {
+      email: usuario.email,
+      nombreComercio: usuario.sucursal?.nombre,
+    });
     return this.generarTokens(usuario.id, usuario.email, usuario.rol, usuario.sucursalId);
   }
 

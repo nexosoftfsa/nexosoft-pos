@@ -3,17 +3,22 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AccesoRemotoService } from './acceso-remoto.service';
+import { RevisionClavesService } from '../auth/revision-claves.service';
+
+const ADMIN = { id: 'u1', rol: 'ADMIN' };
 
 describe('AccesoRemotoService', () => {
   let carpeta: string;
   let archivo: string;
   let service: AccesoRemotoService;
+  let revisionClaves: RevisionClavesService;
 
   beforeEach(async () => {
     carpeta = await mkdtemp(join(tmpdir(), 'nexosoft-acceso-'));
     archivo = join(carpeta, 'acceso-remoto.json');
     process.env['ACCESO_REMOTO_ARCHIVO'] = archivo;
-    service = new AccesoRemotoService();
+    revisionClaves = new RevisionClavesService();
+    service = new AccesoRemotoService(revisionClaves);
     vi.restoreAllMocks();
   });
 
@@ -93,6 +98,51 @@ describe('AccesoRemotoService', () => {
     expect(r.estado).toBe('apagado');
     expect(r.mensaje).toBe('Desactivado.');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  describe('aviso de contraseñas débiles (Fase 17.C)', () => {
+    it('un ADMIN ve todas las contraseñas débiles conocidas', async () => {
+      revisionClaves.revisar({ id: 'u1', email: 'admin@lagus.com', rol: 'ADMIN' }, 'Abcd1234');
+      revisionClaves.revisar({ id: 'u2', email: 'marta@lagus.com', rol: 'CAJERO' }, 'marta123');
+
+      const r = await service.obtenerPara(ADMIN);
+
+      expect(r.clavesDebiles.map((c) => c.email).sort()).toEqual([
+        'admin@lagus.com',
+        'marta@lagus.com',
+      ]);
+    });
+
+    it('quien no es ADMIN sólo ve la suya, no la de sus compañeros', async () => {
+      revisionClaves.revisar({ id: 'u1', email: 'admin@lagus.com', rol: 'ADMIN' }, 'Abcd1234');
+      revisionClaves.revisar({ id: 'u2', email: 'marta@lagus.com', rol: 'SUPERVISOR' }, 'marta123');
+
+      const r = await service.obtenerPara({ id: 'u2', rol: 'SUPERVISOR' });
+
+      expect(r.clavesDebiles).toHaveLength(1);
+      expect(r.clavesDebiles[0]?.email).toBe('marta@lagus.com');
+    });
+
+    it('sin contraseñas débiles, la lista viene vacía', async () => {
+      revisionClaves.revisar(
+        { id: 'u1', email: 'admin@lagus.com', rol: 'ADMIN' },
+        'Melon-Tractor-92',
+      );
+
+      const r = await service.obtenerPara(ADMIN);
+
+      expect(r.clavesDebiles).toEqual([]);
+    });
+
+    it('avisa aunque el acceso remoto todavía no esté activado', async () => {
+      revisionClaves.revisar({ id: 'u1', email: 'admin@lagus.com', rol: 'ADMIN' }, 'Abcd1234');
+
+      const r = await service.obtenerPara(ADMIN);
+
+      // Es justo el momento en que sirve el aviso: antes de publicar nada.
+      expect(r.estado).toBe('no-configurado');
+      expect(r.clavesDebiles).toHaveLength(1);
+    });
   });
 
   it('un archivo corrupto no rompe la pantalla: se reporta como no-configurado', async () => {

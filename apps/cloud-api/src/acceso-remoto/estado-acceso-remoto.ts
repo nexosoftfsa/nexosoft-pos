@@ -20,6 +20,16 @@ export const ARCHIVO_ESTADO_SCHEMA = z.object({
 /** Estados que ve el POS. `no-configurado` = nunca se dio de alta en esta PC. */
 export type EstadoAccesoRemoto = 'activo' | 'apagado' | 'no-configurado';
 
+/**
+ * Usuario cuya contraseña no aguanta estar publicada en internet (Fase 17.C).
+ * Ver `RevisionClavesService`.
+ */
+export interface ClaveDebilExpuesta {
+  readonly email: string;
+  readonly rol: string;
+  readonly motivo: string;
+}
+
 export interface AccesoRemoto {
   readonly estado: EstadoAccesoRemoto;
   /** Dirección pública fija del comercio, p. ej. `https://lagus.nexosoft.com.ar`. */
@@ -31,6 +41,17 @@ export interface AccesoRemoto {
   readonly alcanzable: boolean | null;
   readonly mensaje: string | null;
   readonly actualizadoEn: string | null;
+}
+
+/** Lo que devuelve `GET /acceso-remoto`: el estado del túnel más el aviso de seguridad. */
+export interface RespuestaAccesoRemoto extends AccesoRemoto {
+  /**
+   * Usuarios cuya contraseña no aguanta estar publicada. Un ADMIN ve la lista
+   * completa (es quien puede resetear contraseñas); cualquier otro rol ve
+   * sólo la suya — saber qué compañero tiene una contraseña floja es
+   * justamente lo que le serviría a alguien de adentro para entrar como él.
+   */
+  readonly clavesDebiles: readonly ClaveDebilExpuesta[];
 }
 
 /** Lo que se responde cuando el acceso remoto nunca se configuró en esta PC. */

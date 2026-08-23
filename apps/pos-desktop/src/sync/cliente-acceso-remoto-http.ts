@@ -8,6 +8,13 @@
  */
 import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
+/** Usuario cuya contraseña no aguanta estar publicada en internet (Fase 17.C). */
+export interface ClaveDebil {
+  readonly email: string;
+  readonly rol: string;
+  readonly motivo: string;
+}
+
 export interface EstadoAccesoRemoto {
   readonly estado: "activo" | "apagado" | "no-configurado";
   /** Dirección pública, p. ej. `https://lagus.nexosoft.com.ar`. */
@@ -15,6 +22,11 @@ export interface EstadoAccesoRemoto {
   readonly alcanzable: boolean | null;
   readonly mensaje: string | null;
   readonly actualizadoEn: string | null;
+  /**
+   * Un ADMIN recibe todas las conocidas; los demás roles, sólo la propia.
+   * Vacío en servidores anteriores a la Fase 17.C.
+   */
+  readonly clavesDebiles?: readonly ClaveDebil[];
 }
 
 export class ClienteAccesoRemotoHttp {
@@ -46,6 +58,7 @@ export class ClienteAccesoRemotoHttp {
           alcanzable: null,
           mensaje: null,
           actualizadoEn: null,
+          clavesDebiles: [],
         };
       }
       throw new Error(`Acceso remoto HTTP ${res.status}`);

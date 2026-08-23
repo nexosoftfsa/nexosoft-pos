@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegistroGuard } from './registro.guard';
 import { LoginLockoutService } from './login-lockout.service';
+import { RevisionClavesService } from './revision-claves.service';
 import { CredencialesModule } from '../credenciales/credenciales.module';
 
 @Module({
@@ -26,7 +27,16 @@ import { CredencialesModule } from '../credenciales/credenciales.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RegistroGuard, LoginLockoutService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RegistroGuard,
+    LoginLockoutService,
+    RevisionClavesService,
+  ],
   controllers: [AuthController],
+  // Lo usa el módulo de acceso remoto para avisar antes de publicar el panel.
+  exports: [RevisionClavesService],
 })
 export class AuthModule {}

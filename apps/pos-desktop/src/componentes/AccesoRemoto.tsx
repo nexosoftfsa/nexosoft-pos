@@ -103,12 +103,51 @@ export function AccesoRemoto({
   const direccion = estado?.url ?? null;
   /** Dirección que trae el código tipeado, para mostrarla antes de activar. */
   const destinoDelCodigo = hostnameDelCodigo(codigo);
+  const clavesDebiles = estado?.clavesDebiles ?? [];
+  const yaExpuesto = estado?.estado === "activo";
 
   return (
     <div className="card card__pad" style={{ marginTop: "1rem" }}>
       <div className="section-title">Acceso remoto al panel</div>
 
       {error !== null && <div className="error">{error}</div>}
+
+      {/*
+        Fase 17.C: con el panel en internet, la contraseña es lo único que
+        separa a un desconocido de los datos del comercio. El aviso aparece
+        ANTES de activar (que es cuando todavía se puede arreglar sin apuro) y
+        también mientras está activo.
+      */}
+      {clavesDebiles.length > 0 && (
+        <div
+          style={{
+            background: yaExpuesto ? "#fef2f2" : "#fffbeb",
+            color: yaExpuesto ? "#b91c1c" : "#92400e",
+            border: `1px solid ${yaExpuesto ? "#fecaca" : "#fde68a"}`,
+            borderRadius: 8,
+            padding: "0.6rem 0.7rem",
+            fontSize: "0.85rem",
+            marginBottom: "0.7rem",
+          }}
+        >
+          <strong>
+            {yaExpuesto
+              ? "El panel está publicado en internet y hay contraseñas flojas."
+              : "Antes de publicar el panel, conviene reforzar estas contraseñas."}
+          </strong>
+          <ul style={{ margin: "0.4rem 0 0", paddingLeft: "1.1rem" }}>
+            {clavesDebiles.map((c) => (
+              <li key={c.email}>
+                <b>{c.email}</b> ({c.rol.toLowerCase()}): {c.motivo}
+              </li>
+            ))}
+          </ul>
+          <div style={{ marginTop: "0.4rem" }}>
+            Se cambian en Usuarios. Una contraseña de 12 caracteres o más, que no tenga el nombre
+            del comercio, alcanza.
+          </div>
+        </div>
+      )}
 
       {estado?.estado === "activo" && direccion !== null && (
         <>

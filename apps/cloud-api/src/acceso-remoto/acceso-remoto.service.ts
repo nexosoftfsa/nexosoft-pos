@@ -3,9 +3,12 @@ import { join } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import {
   type AccesoRemoto,
+  type ClaveDebilExpuesta,
   NO_CONFIGURADO,
+  type RespuestaAccesoRemoto,
   parsearEstadoAccesoRemoto,
 } from './estado-acceso-remoto';
+import { RevisionClavesService } from '../auth/revision-claves.service';
 
 /**
  * Misma convención de carpeta de datos que
@@ -39,8 +42,30 @@ const TIMEOUT_MS = 6_000;
 export class AccesoRemotoService {
   private cache: { url: string; alcanzable: boolean; cuando: number } | null = null;
 
+  constructor(private readonly revisionClaves: RevisionClavesService) {}
+
   private get ruta(): string {
     return process.env['ACCESO_REMOTO_ARCHIVO'] ?? RUTA_DEFECTO;
+  }
+
+  /**
+   * Estado del túnel + los avisos de seguridad que correspondan a quien
+   * pregunta (Fase 17.C).
+   */
+  async obtenerPara(solicitante: { id: string; rol: string }): Promise<RespuestaAccesoRemoto> {
+    const estado = await this.obtener();
+    return { ...estado, clavesDebiles: this.clavesDebilesPara(solicitante) };
+  }
+
+  private clavesDebilesPara(solicitante: { id: string; rol: string }): ClaveDebilExpuesta[] {
+    const aExpuesta = (c: { email: string; rol: string; motivo: string }): ClaveDebilExpuesta => ({
+      email: c.email,
+      rol: c.rol,
+      motivo: c.motivo,
+    });
+    if (solicitante.rol === 'ADMIN') return this.revisionClaves.listar().map(aExpuesta);
+    const propia = this.revisionClaves.deUsuario(solicitante.id);
+    return propia === null ? [] : [aExpuesta(propia)];
   }
 
   async obtener(): Promise<AccesoRemoto> {

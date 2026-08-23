@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Request, UseGuards } from '@nestjs/common';
 import { RolUsuario } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -19,7 +19,7 @@ export class AccesoRemotoController {
   constructor(private readonly accesoRemoto: AccesoRemotoService) {}
 
   @Get()
-  obtener() {
-    return this.accesoRemoto.obtener();
+  obtener(@Request() req: { user: { id: string; rol: string } }) {
+    return this.accesoRemoto.obtenerPara(req.user);
   }
 }

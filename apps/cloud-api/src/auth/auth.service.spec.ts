@@ -3,6 +3,7 @@ import { ConflictException, HttpException, UnauthorizedException } from '@nestjs
 import * as argon2 from 'argon2';
 import { AuthService } from './auth.service';
 import { LoginLockoutService } from './login-lockout.service';
+import { RevisionClavesService } from './revision-claves.service';
 
 // Mocks de dependencias — instanciación directa, sin DI de NestJS
 const mockPrismaUsuario = {
@@ -43,17 +44,20 @@ const mockCredenciales = {
 describe('AuthService', () => {
   let authService: AuthService;
   let lockout: LoginLockoutService;
+  let revisionClaves: RevisionClavesService;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockJwt.sign.mockReturnValue('mock-token');
     lockout = new LoginLockoutService();
+    revisionClaves = new RevisionClavesService();
     authService = new AuthService(
       mockPrisma as never,
       mockJwt as never,
       mockConfig as never,
       mockCredenciales as never,
       lockout,
+      revisionClaves,
     );
   });
 
@@ -111,6 +115,47 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
+    });
+
+    it('anota la contraseña débil al entrar, usando el nombre del comercio (Fase 17.C)', async () => {
+      // Larga como para pasar la regla de largo: lo que la delata es que
+      // contiene el nombre del comercio.
+      const hash = await argon2.hash('LagusMinimarket2026');
+      mockPrismaUsuario.findUnique.mockResolvedValue({
+        id: 'u1',
+        email: 'admin@nexo.com',
+        passwordHash: hash,
+        rol: 'ADMIN',
+        sucursalId: 's1',
+        activo: true,
+        sucursal: { nombre: 'Lagus' },
+      });
+      mockPrismaRefreshToken.create.mockResolvedValue({});
+
+      await authService.login({ email: 'admin@nexo.com', password: 'LagusMinimarket2026' });
+
+      const debil = revisionClaves.deUsuario('u1');
+      expect(debil?.motivo).toContain('nombre del comercio');
+      // Lo que se guarda es el veredicto, nunca la contraseña.
+      expect(JSON.stringify(debil)).not.toContain('LagusMinimarket2026');
+    });
+
+    it('no anota nada si la contraseña aguanta estar publicada', async () => {
+      const hash = await argon2.hash('Melon-Tractor-92');
+      mockPrismaUsuario.findUnique.mockResolvedValue({
+        id: 'u2',
+        email: 'admin@nexo.com',
+        passwordHash: hash,
+        rol: 'ADMIN',
+        sucursalId: 's1',
+        activo: true,
+        sucursal: { nombre: 'Lagus' },
+      });
+      mockPrismaRefreshToken.create.mockResolvedValue({});
+
+      await authService.login({ email: 'admin@nexo.com', password: 'Melon-Tractor-92' });
+
+      expect(revisionClaves.listar()).toEqual([]);
     });
 
     it('lanza UnauthorizedException si el usuario no existe', async () => {

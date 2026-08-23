@@ -74,7 +74,16 @@ servidor, solo el POS.
 2) El asistente pide, en este orden:
 
       - Nombre del comercio        (aparece en el panel y en los tickets)
-      - Usuario ADMIN + contraseña (minimo 8 caracteres) -> ANOTALA
+      - Usuario ADMIN + contraseña -> ANOTALA
+
+        OJO CON ESTA CONTRASEÑA. El instalador acepta 8 caracteres, pero si
+        el comercio va a tener ACCESO REMOTO esa clave queda siendo lo unico
+        que separa a un desconocido de sus datos. Elegila VOS, no la dejes a
+        criterio del dueño:
+           - 12 caracteres o mas
+           - que NO tenga el nombre del comercio (es lo primero que prueban)
+           - que no sean todos numeros
+        El POS avisa solo si detecta una contraseña floja.
       - Puerto de PostgreSQL       (dejar 5432; si la PC YA tiene otro
                                     PostgreSQL instalado, poner 5433)
       - Codigo de acceso remoto    (opcional; dejar vacio si no lo contrato)
@@ -196,12 +205,37 @@ con tu cuenta normal de Cloudflare.
    Probar la direccion desde un celular CON DATOS MOVILES (no el wifi
    del local).
 
+   Si la tarjeta muestra un aviso NARANJA o ROJO de contraseñas flojas,
+   arreglalo ANTES de irte: entra a Usuarios y cambiales la clave. Con el
+   panel publicado en internet, esa contraseña es la unica puerta.
+   Regla: 12 caracteres o mas, sin el nombre del comercio, no todo numeros.
+
 Para apagarlo: POS -> Configuracion -> Acceso remoto -> Desactivar.
 
 Desde tu PC podes ver los tuneles de todos los comercios:
 
       cloudflared tunnel list
       cloudflared tunnel info nexosoft-lagus
+
+DAR DE BAJA EL ACCESO REMOTO DE UN COMERCIO (son 3 pasos, no 1)
+---------------------------------------------------------------
+
+1) En la PC del comercio: POS -> Configuracion -> Acceso remoto -> Desactivar
+   (o el script con -Accion desactivar)
+
+2) Borrar el tunel, desde tu PC:
+
+      cloudflared tunnel delete nexosoft-lagus
+
+   Si dice "This tunnel has active connections", esperá un minuto o corré
+   antes:  cloudflared tunnel cleanup nexosoft-lagus
+
+3) Borrar el registro DNS A MANO. Borrar el tunel NO borra el subdominio:
+   queda apuntando a la nada.
+
+      Cloudflare -> menu izquierdo DNS -> "Archivos" (es "Records", la
+      traduccion es mala) -> buscar la fila del subdominio del comercio
+      (tipo CNAME, apunta a algo.cfargotunnel.com) -> Editar -> Eliminar
 
 
 ===============================================================================
