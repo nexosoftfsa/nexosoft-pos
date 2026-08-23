@@ -17,6 +17,12 @@ import {
 } from "./datos/bootstrap-tauri";
 import { chequearYDescargarEnSilencio } from "./datos/actualizaciones";
 import { leerServidorUrl, guardarServidorUrl } from "./datos/ajustes-sqlite";
+import {
+  guardarSuscripcion,
+  leerSuscripcionGuardada,
+  SUSCRIPCION_ACTIVA,
+} from "./datos/suscripcion";
+import { ClienteLicenciaHttp } from "./sync/cliente-licencia-http";
 import { EjecutorSqlTauri, estaEnTauri } from "./datos/ejecutor-sql-tauri";
 import { SesionManager } from "./datos/sesion";
 import { ClienteAuthHttp, ErrorAuth, type Credenciales } from "./sync/cliente-auth-http";
@@ -132,16 +138,26 @@ function AppDemo({ onSalir }: { onSalir?: () => void } = {}) {
       entorno={entorno}
       usuario={{ rol: "ADMIN", email: "demo@nexosoft.local" }}
       terminalId="caja-demo"
-      {...(clienteCatalogoRef.current !== null ? { clienteCatalogo: clienteCatalogoRef.current } : {})}
+      {...(clienteCatalogoRef.current !== null
+        ? { clienteCatalogo: clienteCatalogoRef.current }
+        : {})}
       {...(clienteStockRef.current !== null ? { clienteStock: clienteStockRef.current } : {})}
       {...(clienteCajaRef.current !== null ? { clienteCaja: clienteCajaRef.current } : {})}
       {...(clienteCtaCteRef.current !== null ? { clienteCtaCte: clienteCtaCteRef.current } : {})}
       {...(clienteVentasRef.current !== null ? { clienteVentas: clienteVentasRef.current } : {})}
-      {...(clienteReportesRef.current !== null ? { clienteReportes: clienteReportesRef.current } : {})}
-      {...(clientePresupuestosRef.current !== null ? { clientePresupuestos: clientePresupuestosRef.current } : {})}
+      {...(clienteReportesRef.current !== null
+        ? { clienteReportes: clienteReportesRef.current }
+        : {})}
+      {...(clientePresupuestosRef.current !== null
+        ? { clientePresupuestos: clientePresupuestosRef.current }
+        : {})}
       {...(clienteRemitosRef.current !== null ? { clienteRemitos: clienteRemitosRef.current } : {})}
-      {...(clienteProveedoresRef.current !== null ? { clienteProveedores: clienteProveedoresRef.current } : {})}
-      {...(clienteMediosPagoRef.current !== null ? { clienteMediosPago: clienteMediosPagoRef.current } : {})}
+      {...(clienteProveedoresRef.current !== null
+        ? { clienteProveedores: clienteProveedoresRef.current }
+        : {})}
+      {...(clienteMediosPagoRef.current !== null
+        ? { clienteMediosPago: clienteMediosPagoRef.current }
+        : {})}
       {...(onSalir ? { onCerrarSesion: onSalir, tituloCerrarSesion: "Salir del modo demo" } : {})}
     />
   );
@@ -174,6 +190,7 @@ function AppTauri() {
   // sesión ni de `entorno`, por eso se crea una sola vez, antes del login.
   const lectorLoginRef = useRef(new MockLectorDeBarras());
   const [fase, setFase] = useState<Fase>("cargando");
+  const [suscripcion, setSuscripcion] = useState(SUSCRIPCION_ACTIVA);
   const [error, setError] = useState<string>("");
   const [entorno, setEntorno] = useState<EntornoPos | null>(null);
   const [valoresConfig, setValoresConfig] = useState<ValoresConfig | null>(null);
@@ -199,32 +216,45 @@ function AppTauri() {
         ...(sesion.terminalId !== undefined ? { terminalId: sesion.terminalId } : {}),
       });
       // ABM de catálogo y stock online contra el servidor de sucursal (mismo token).
-      clienteCatalogoRef.current = new ClienteCatalogoAdminHttp(
-        baseUrlRef.current,
-        () => sesion.obtenerToken(),
+      clienteCatalogoRef.current = new ClienteCatalogoAdminHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
       );
-      clienteStockRef.current = new ClienteStockHttp(baseUrlRef.current, () => sesion.obtenerToken());
+      clienteStockRef.current = new ClienteStockHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
+      );
       clienteCajaRef.current = new ClienteCajaHttp(baseUrlRef.current, () => sesion.obtenerToken());
-      clienteCtaCteRef.current = new ClienteCtaCteHttp(baseUrlRef.current, () => sesion.obtenerToken());
-      clienteVentasRef.current = new ClienteVentasHttp(baseUrlRef.current, () => sesion.obtenerToken());
-      clienteReportesRef.current = new ClienteReportesHttp(baseUrlRef.current, () => sesion.obtenerToken());
-      clientePresupuestosRef.current = new ClientePresupuestosHttp(baseUrlRef.current, () => sesion.obtenerToken());
-      clienteRemitosRef.current = new ClienteRemitosHttp(baseUrlRef.current, () => sesion.obtenerToken());
-      clienteProveedoresRef.current = new ClienteProveedoresHttp(baseUrlRef.current, () => sesion.obtenerToken());
-      clienteMediosPagoRef.current = new ClienteMediosPagoHttp(baseUrlRef.current, () => sesion.obtenerToken());
+      clienteCtaCteRef.current = new ClienteCtaCteHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
+      );
+      clienteVentasRef.current = new ClienteVentasHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
+      );
+      clienteReportesRef.current = new ClienteReportesHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
+      );
+      clientePresupuestosRef.current = new ClientePresupuestosHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
+      );
+      clienteRemitosRef.current = new ClienteRemitosHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
+      );
+      clienteProveedoresRef.current = new ClienteProveedoresHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
+      );
+      clienteMediosPagoRef.current = new ClienteMediosPagoHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
+      );
       clienteIARef.current = new AsistenteIAHttp(baseUrlRef.current, () => sesion.obtenerToken());
-      clienteAsistenteConfigRef.current = new ClienteAsistenteConfigHttp(
-        baseUrlRef.current,
-        () => sesion.obtenerToken(),
+      clienteAsistenteConfigRef.current = new ClienteAsistenteConfigHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
       );
       clienteUsuariosRef.current = new ClienteUsuariosHttp(
         baseUrlRef.current,
         () => sesion.obtenerToken(),
         sesion.sucursalId ?? "",
       );
-      clienteCredencialesRef.current = new ClienteCredencialesHttp(
-        baseUrlRef.current,
-        () => sesion.obtenerToken(),
+      clienteCredencialesRef.current = new ClienteCredencialesHttp(baseUrlRef.current, () =>
+        sesion.obtenerToken(),
       );
       setEntorno(env);
       setFase("listo");
@@ -297,6 +327,35 @@ function AppTauri() {
     }, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  // Estado de la suscripción (Fase 17.B, ADR-0056). Se le pregunta al servidor
+  // —que es quien verifica la firma— y se guarda en SQLite: el POS puede
+  // vender sin el servidor (ADR-0004), así que si el bloqueo viviera sólo del
+  // lado del servidor, alcanzaría con desenchufar la red para seguir vendiendo.
+  const refrescarSuscripcion = useCallback(async () => {
+    const ejecutor = ejecutorRef.current;
+    if (ejecutor === null) return;
+    const delServidor = await new ClienteLicenciaHttp(
+      baseUrlRef.current,
+      () => sesionRef.current?.obtenerToken() ?? null,
+    ).obtener();
+    if (delServidor === null) {
+      // Sin respuesta: se sigue con lo último que se sepa.
+      setSuscripcion(await leerSuscripcionGuardada(ejecutor));
+      return;
+    }
+    await guardarSuscripcion(ejecutor, delServidor);
+    setSuscripcion(delServidor);
+  }, []);
+
+  useEffect(() => {
+    if (fase !== "listo") return;
+    void refrescarSuscripcion();
+    // Una vez por hora alcanza: el estado lo cambia una persona en el panel,
+    // no cambia solo minuto a minuto.
+    const id = setInterval(() => void refrescarSuscripcion(), 3_600_000);
+    return () => clearInterval(id);
+  }, [fase, refrescarSuscripcion]);
 
   const onLogin = useCallback(
     async (cred: Credenciales) => {
@@ -376,16 +435,21 @@ function AppTauri() {
         ...(v.logoDataUrl !== undefined ? { logoDataUrl: v.logoDataUrl } : {}),
       });
       await guardarServidorUrl(ejecutor, v.servidorUrl);
-      void new ClienteComercioHttp(v.servidorUrl, () => sesionRef.current?.obtenerToken() ?? null).actualizarLogo(
-        v.logoDataUrl ?? "",
-      );
+      void new ClienteComercioHttp(
+        v.servidorUrl,
+        () => sesionRef.current?.obtenerToken() ?? null,
+      ).actualizarLogo(v.logoDataUrl ?? "");
       await inicializar(); // re-lee la URL, reconstruye el cliente y reevalúa la fase
     },
     [inicializar],
   );
 
   const clienteTerminales = useCallback(
-    () => new ClienteTerminalesHttp(baseUrlRef.current, () => sesionRef.current?.obtenerToken() ?? null),
+    () =>
+      new ClienteTerminalesHttp(
+        baseUrlRef.current,
+        () => sesionRef.current?.obtenerToken() ?? null,
+      ),
     [],
   );
   const listarTerminales = useCallback(() => clienteTerminales().listar(), [clienteTerminales]);
@@ -395,14 +459,24 @@ function AppTauri() {
   );
 
   // Modo demo autocontenido (sin backend), disparado desde el login.
-  if (modoDemo) return <AppDemo onSalir={() => { setModoDemo(false); void inicializar(); }} />;
+  if (modoDemo)
+    return (
+      <AppDemo
+        onSalir={() => {
+          setModoDemo(false);
+          void inicializar();
+        }}
+      />
+    );
 
   if (fase === "error") {
     return (
       <Aviso>
         <div>
           <p>No se pudo conectar con el servidor de sucursal.</p>
-          <p style={{ color: "#64748b", fontSize: "0.9rem", margin: "0.5rem 0 1.25rem" }}>{error}</p>
+          <p style={{ color: "#64748b", fontSize: "0.9rem", margin: "0.5rem 0 1.25rem" }}>
+            {error}
+          </p>
           <button
             type="button"
             onClick={() => setModoDemo(true)}
@@ -458,30 +532,53 @@ function AppTauri() {
     return (
       <Shell
         entorno={entorno}
+        // Fase 17.B (ADR-0056): el Shell decide qué hacer con cada módulo.
+        // No se tapa todo el sistema: bloqueada la suscripción, la venta
+        // muestra la pantalla de bloqueo pero Caja y los reportes siguen
+        // andando, para poder cerrar el turno y consultar lo histórico.
+        suscripcion={suscripcion}
         usuario={{
-          ...(sesionRef.current?.usuarioId !== undefined ? { id: sesionRef.current.usuarioId } : {}),
+          ...(sesionRef.current?.usuarioId !== undefined
+            ? { id: sesionRef.current.usuarioId }
+            : {}),
           ...(sesionRef.current?.email !== undefined ? { email: sesionRef.current.email } : {}),
           ...(sesionRef.current?.rol !== undefined ? { rol: sesionRef.current.rol } : {}),
         }}
-        {...(clienteCatalogoRef.current !== null ? { clienteCatalogo: clienteCatalogoRef.current } : {})}
+        {...(clienteCatalogoRef.current !== null
+          ? { clienteCatalogo: clienteCatalogoRef.current }
+          : {})}
         {...(clienteStockRef.current !== null ? { clienteStock: clienteStockRef.current } : {})}
         {...(clienteCajaRef.current !== null ? { clienteCaja: clienteCajaRef.current } : {})}
         {...(clienteCtaCteRef.current !== null ? { clienteCtaCte: clienteCtaCteRef.current } : {})}
         {...(clienteVentasRef.current !== null ? { clienteVentas: clienteVentasRef.current } : {})}
-        {...(clienteReportesRef.current !== null ? { clienteReportes: clienteReportesRef.current } : {})}
-        {...(clientePresupuestosRef.current !== null ? { clientePresupuestos: clientePresupuestosRef.current } : {})}
-        {...(clienteRemitosRef.current !== null ? { clienteRemitos: clienteRemitosRef.current } : {})}
-        {...(clienteProveedoresRef.current !== null ? { clienteProveedores: clienteProveedoresRef.current } : {})}
-        {...(clienteMediosPagoRef.current !== null ? { clienteMediosPago: clienteMediosPagoRef.current } : {})}
+        {...(clienteReportesRef.current !== null
+          ? { clienteReportes: clienteReportesRef.current }
+          : {})}
+        {...(clientePresupuestosRef.current !== null
+          ? { clientePresupuestos: clientePresupuestosRef.current }
+          : {})}
+        {...(clienteRemitosRef.current !== null
+          ? { clienteRemitos: clienteRemitosRef.current }
+          : {})}
+        {...(clienteProveedoresRef.current !== null
+          ? { clienteProveedores: clienteProveedoresRef.current }
+          : {})}
+        {...(clienteMediosPagoRef.current !== null
+          ? { clienteMediosPago: clienteMediosPagoRef.current }
+          : {})}
         {...(clienteIARef.current !== null ? { clienteIA: clienteIARef.current } : {})}
         {...(clienteAsistenteConfigRef.current !== null
           ? { clienteAsistenteConfig: clienteAsistenteConfigRef.current }
           : {})}
-        {...(clienteUsuariosRef.current !== null ? { clienteUsuarios: clienteUsuariosRef.current } : {})}
+        {...(clienteUsuariosRef.current !== null
+          ? { clienteUsuarios: clienteUsuariosRef.current }
+          : {})}
         {...(clienteCredencialesRef.current !== null
           ? { clienteCredenciales: clienteCredencialesRef.current }
           : {})}
-        {...(sesionRef.current?.terminalId !== undefined ? { terminalId: sesionRef.current.terminalId } : {})}
+        {...(sesionRef.current?.terminalId !== undefined
+          ? { terminalId: sesionRef.current.terminalId }
+          : {})}
         {...(sesionRef.current?.terminalNombre !== undefined
           ? { terminalNombre: sesionRef.current.terminalNombre }
           : {})}

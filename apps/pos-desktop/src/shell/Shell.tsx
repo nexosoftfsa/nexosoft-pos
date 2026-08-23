@@ -15,6 +15,7 @@ import {
   leerEstadoActualizacion,
   suscribirseActualizacion,
 } from "../datos/actualizaciones";
+import type { EstadoLicencia } from "@nexosoft/licencias";
 import type { EntornoPos } from "../datos/bootstrap";
 import type { ClienteCatalogoAdmin } from "../sync/cliente-catalogo-admin";
 import type { ClienteStock } from "../sync/cliente-stock";
@@ -29,6 +30,7 @@ import type { ClienteMediosPago } from "../sync/cliente-medios-pago";
 import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
+import { BannerSuscripcion, PantallaSuscripcionBloqueada } from "../componentes/AvisoSuscripcion";
 import { CatalogoAbm } from "../componentes/CatalogoAbm";
 import { StockAbm } from "../componentes/StockAbm";
 import { CajaPanel } from "../componentes/CajaPanel";
@@ -72,7 +74,7 @@ function iniciales(email: string | undefined): string {
   if (!email) return "NS";
   const local = email.split("@")[0] ?? email;
   const partes = local.split(/[.\-_]/).filter(Boolean);
-  const dos = (partes.length >= 2 ? partes[0]![0]! + partes[1]![0]! : local.slice(0, 2));
+  const dos = partes.length >= 2 ? partes[0]![0]! + partes[1]![0]! : local.slice(0, 2);
   return dos.toUpperCase();
 }
 
@@ -98,9 +100,15 @@ export function Shell({
   onCerrarSesion,
   tituloCerrarSesion = "Cerrar sesión",
   onAbrirConfig,
+  suscripcion,
 }: {
   entorno: EntornoPos;
   usuario: UsuarioShell;
+  /**
+   * Estado de la suscripción (ADR-0056). Si no se pasa, el sistema opera
+   * normal — una instalación sin suscripción configurada no se controla.
+   */
+  suscripcion?: EstadoLicencia;
   /** Cliente del ABM de catálogo (HTTP en Tauri, simulado en el navegador). */
   clienteCatalogo?: ClienteCatalogoAdmin;
   /** Cliente de stock (HTTP en Tauri, simulado en el navegador). */
@@ -138,7 +146,10 @@ export function Shell({
   onAbrirConfig?: () => void;
 }) {
   const sync = useSync(entorno.sync);
-  const estadoActualizacion = useSyncExternalStore(suscribirseActualizacion, leerEstadoActualizacion);
+  const estadoActualizacion = useSyncExternalStore(
+    suscribirseActualizacion,
+    leerEstadoActualizacion,
+  );
   const visibles = useMemo(() => modulosVisibles(usuario.rol), [usuario.rol]);
   const catalogoPresup = useMemo(
     () =>
@@ -205,7 +216,12 @@ export function Shell({
   // fiscales, charla libre) se deriva al LLM real (Gemini vía el servidor) si
   // está disponible.
   const asistenteMock = useMemo(
-    () => new AsistenteIAMock({ reportes: clienteReportes, stock: clienteStock, ctacte: clienteCtaCte }),
+    () =>
+      new AsistenteIAMock({
+        reportes: clienteReportes,
+        stock: clienteStock,
+        ctacte: clienteCtaCte,
+      }),
     [clienteReportes, clienteStock, clienteCtaCte],
   );
   const asistente = useMemo(
@@ -261,7 +277,12 @@ export function Shell({
               <div key={seccion}>
                 <div className="nav__sec">{seccion}</div>
                 {items.map((m) => (
-                  <ItemNav key={m.id} modulo={m} activo={m.id === activo?.id} onClick={() => navegar(m.id)} />
+                  <ItemNav
+                    key={m.id}
+                    modulo={m}
+                    activo={m.id === activo?.id}
+                    onClick={() => navegar(m.id)}
+                  />
                 ))}
               </div>
             );
@@ -299,11 +320,20 @@ export function Shell({
         </div>
       </aside>
 
-      {navAbierto && <div className="nav-backdrop nav-backdrop--show" onClick={() => setNavAbierto(false)} />}
+      {navAbierto && (
+        <div className="nav-backdrop nav-backdrop--show" onClick={() => setNavAbierto(false)} />
+      )}
 
       <div className="shell-main">
+        {/* Recordatorio y advertencia: franja arriba de todo, en cualquier módulo. */}
+        {suscripcion !== undefined && <BannerSuscripcion estado={suscripcion} />}
         <header className="topbar">
-          <button type="button" className="hamburger" onClick={() => setNavAbierto(true)} aria-label="Menú">
+          <button
+            type="button"
+            className="hamburger"
+            onClick={() => setNavAbierto(true)}
+            aria-label="Menú"
+          >
             <IconoMenu />
           </button>
           <div>
@@ -341,12 +371,22 @@ export function Shell({
               {...(clienteAsistenteConfig ? { clienteConfig: clienteAsistenteConfig } : {})}
             />
           ) : activo?.id === "pos" ? (
-            <PantallaPos
-              entorno={entorno}
-              sync={sync}
-              clientes={clientesVenta}
-              {...(clienteMediosPago ? { clienteMediosPago } : {})}
-            />
+            // Fase 17.B (ADR-0056): con la suscripción cortada se bloquea
+            // VENDER, no el sistema entero. Caja y los reportes siguen acá al
+            // lado, para cerrar el turno abierto y consultar lo histórico.
+            suscripcion !== undefined && !suscripcion.puedeVender ? (
+              <PantallaSuscripcionBloqueada
+                estado={suscripcion}
+                onCerrarCaja={() => navegar("caja")}
+              />
+            ) : (
+              <PantallaPos
+                entorno={entorno}
+                sync={sync}
+                clientes={clientesVenta}
+                {...(clienteMediosPago ? { clienteMediosPago } : {})}
+              />
+            )
           ) : activo?.id === "catalogo" && clienteCatalogo ? (
             <CatalogoAbm cliente={clienteCatalogo} />
           ) : activo?.id === "etiquetas" && clienteCatalogo ? (
@@ -400,7 +440,11 @@ function ItemNav({
   onClick: () => void;
 }) {
   return (
-    <button type="button" className={`nav-item${activo ? " nav-item--active" : ""}`} onClick={onClick}>
+    <button
+      type="button"
+      className={`nav-item${activo ? " nav-item--active" : ""}`}
+      onClick={onClick}
+    >
       {modulo.icono()}
       <span className="nav-item__label">{modulo.titulo}</span>
       {modulo.badge !== undefined && <span className="badge badge--info">{modulo.badge}</span>}

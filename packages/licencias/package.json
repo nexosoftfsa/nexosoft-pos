@@ -4,11 +4,12 @@
   "private": true,
   "description": "Suscripción mensual: contrato de la licencia, estados y ventana de gracia. Puro, sin criptografía ni red (ADR-0056).",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "require": "./dist/index.js"
     }
   },
   "files": [

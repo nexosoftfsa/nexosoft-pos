@@ -19,6 +19,7 @@
     "@nexosoft/app": "workspace:*",
     "@nexosoft/domain": "workspace:*",
     "@nexosoft/fiscal": "workspace:*",
+    "@nexosoft/licencias": "workspace:*",
     "@nexosoft/hardware": "workspace:*",
     "@nexosoft/pagos": "workspace:*",
     "@nexosoft/sync": "workspace:*",

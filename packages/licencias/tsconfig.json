@@ -10,6 +10,11 @@
     // que se borran al compilar — por eso nunca hizo falta esto antes. Sin
     // compilar, Node intenta cargar el `.ts` y falla con ERR_MODULE_NOT_FOUND.
     //
+    // El POS, en cambio, lo consume como FUENTE (condición `import` en
+    // `exports`): Vite compila TypeScript sin problema, y así no hay que
+    // reconstruir el paquete para ver un cambio en la app. Un build CommonJS
+    // importado desde Vite falla al resolver los named exports.
+    //
     // `verbatimModuleSyntax` se apaga porque es incompatible con emitir
     // CommonJS desde sintaxis ESM.
     "module": "CommonJS",
