@@ -1,11 +1,12 @@
 # ADR-0056: Suscripción mensual — licencia firmada, tres avisos y panel de clientes
 
-- **Estado:** Propuesta — diseño de la Fase 17.B, pendiente de OK antes de implementar
-- **Fecha:** 2026-08-22
+- **Estado:** Aceptada
+- **Fecha:** 2026-08-22 (aceptada y corregida el 2026-08-23)
 - **Decisores:** Equipo NexoSoft
-- **Relacionada:** ADR-0055 (dominio y cuenta de Cloudflare de NexoSoft), ADR-0019
-  (servidor de sucursal en LAN), ADR-0004 (SQLite como fuente de verdad offline),
-  ADR-0016 (puertos de repositorio), ADR-0040 (configuración desde la UI)
+- **Relacionada:** ADR-0055 (dominio y cuenta de Cloudflare de NexoSoft), ADR-0057
+  (acceso remoto de solo lectura), ADR-0019 (servidor de sucursal en LAN),
+  ADR-0004 (SQLite como fuente de verdad offline), ADR-0016 (puertos de
+  repositorio), ADR-0040 (configuración desde la UI)
 
 ## Contexto
 
@@ -40,14 +41,40 @@ Sobre `nexosoft.com.ar` (ADR-0055), en la misma cuenta:
 
 - `licencias.nexosoft.com.ar` — Worker que emite y firma las licencias. Lo
   consume el `cloud-api` de cada comercio.
-- `admin.nexosoft.com.ar` — nuestro panel de clientes, protegido con
-  **Cloudflare Access** (allowlist de mails): no escribimos login propio ni
-  guardamos contraseñas nuestras.
+- `admin.nexosoft.com.ar` — nuestro panel de clientes, **web y accesible
+  desde cualquier lado**, servido por el mismo Worker.
 - **KV** como base: un registro por comercio. Son decenas de comercios y
   lecturas de una vez por día — el plan gratuito sobra.
 
 Sin servidor que mantener, sin costo mensual, y reusa el dominio y la cuenta
 que ya existen.
+
+**Por qué web y no una app de escritorio.** El servicio de licencias tiene
+que ser remoto igual —el servidor de cada comercio necesita consultarlo—, así
+que lo único que se elige es dónde vive la pantalla. Web gana porque: no hay
+instalador ni pipeline de publicación ni **una segunda clave de firma que
+cuidar** (ver ADR-0053 y lo que ya pesa la del POS); se abre desde el celular,
+que es donde uno está cuando un cliente avisa un sábado a la noche que ya
+pagó; y si se rompe nuestra PC, la lista de clientes sigue viva en KV.
+
+**Cómo se protege el panel — no con Cloudflare Access.** La versión anterior
+de esta ADR proponía Access, y quedó descartado por lo mismo que en ADR-0055:
+es parte de Zero Trust, cuyo panel exige cargar una tarjeta de crédito aunque
+el plan sea gratuito. En su lugar:
+
+- **Token largo y aleatorio** en vez de usuario y contraseña: no hay nombre de
+  usuario que adivinar ni contraseña que filtrar.
+- **Segundo factor (TOTP) para las acciones peligrosas** — bloquear sí, mirar
+  no.
+- **Tope de seguridad**: el Worker se niega a bloquear más de un puñado de
+  comercios por día sin una confirmación extra. Protege de un intruso y
+  también de nuestro propio error.
+- **Desbloquear es siempre inmediato y bloquear siempre reversible**: ante la
+  duda, el sistema se equivoca para el lado de dejar trabajar al comercio.
+- Toda acción del panel queda registrada.
+
+Este panel puede dejar sin vender a todos los clientes a la vez: es el sistema
+más sensible que vamos a tener, y se trata como tal.
 
 ### 2. Licencia firmada con ventana de gracia
 
@@ -93,9 +120,9 @@ hacerlo es bajo.
 | `ADVERTENCIA` | banner naranja fijo: "pago vencido, se bloquea el 20/09" | expone el estado |
 | `BLOQUEADA` | pantalla de bloqueo con el contacto de NexoSoft | rechaza operaciones de escritura (HTTP 402) |
 
-**Recomendación sobre qué dejar disponible en `BLOQUEADA`** (a confirmar; el
-pedido original fue "todas las funciones bloqueadas"): bloquear **vender**,
-que es lo que hace efectivo el corte, pero dejar habilitados
+**Qué queda disponible en `BLOQUEADA`** (decidido el 2026-08-23; el pedido
+original era "todas las funciones bloqueadas", y se optó por esto): se bloquea
+**vender**, que es lo que hace efectivo el corte, y quedan habilitados
 
 - **cerrar el turno de caja** que haya quedado abierto — si no, el bloqueo
   deja una caja abierta e inconsistente que después hay que arreglar a mano;
@@ -110,6 +137,12 @@ que es lo que hace efectivo el corte, pero dejar habilitados
 `LicenciasHttp` (el Worker) y `MockLicencias` (desarrollo y tests). Todo el
 lado del cliente —estados, avisos, bloqueo, ventana de gracia— se puede
 implementar y testear **antes** de que exista el Worker.
+
+El paquete `@nexosoft/licencias` queda **puro y sin criptografía**: tipos,
+reglas de estado y la ventana de gracia, nada más. La verificación de la firma
+Ed25519 vive en `cloud-api` (`node:crypto`), porque el paquete también lo
+consume el POS, que corre en un navegador donde `node:crypto` no existe. El
+POS nunca verifica firmas: le pregunta a su servidor.
 
 ### 6. Identidad del comercio y alta
 
