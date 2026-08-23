@@ -1,0 +1,159 @@
+﻿===============================================================================
+PROBAR EL MECANISMO DE AVISOS Y BLOQUEO EN LA PC DEL SOCIO
+===============================================================================
+
+Objetivo: ver los tres escalones (recordatorio, advertencia, bloqueo) andando
+de verdad en una PC con el POS instalado.
+
+Tiempo estimado: 30 minutos.
+
+
+-------------------------------------------------------------------------------
+ANTES DE EMPEZAR - en TU PC
+-------------------------------------------------------------------------------
+
+1) Entra al panel:            https://admin.nexosoft.com.ar
+
+   La primera vez te pide el token. Esta en:
+       C:\Users\rodri\.nexosoft\panel-admin-token.txt
+
+   Copialo y pegalo. Queda guardado en ese navegador.
+
+2) Da de alta el comercio de prueba, con el formulario de arriba:
+
+       Id del comercio:  socio
+       Nombre:           PC del socio
+       Proximo pago:     una fecha cualquiera
+
+   OJO: el id "socio" ya existe de mis pruebas y quedo BLOQUEADO.
+   Ponelo en ACTIVA antes de empezar (desplegable de la derecha).
+
+
+-------------------------------------------------------------------------------
+EN LA PC DEL SOCIO - preparar (una sola vez)
+-------------------------------------------------------------------------------
+
+3) Actualizar el servidor a la 0.9.0 o mas nueva.
+
+   En el POS de esa PC:  Configuracion -> Actualizaciones -> "Actualizar servidor"
+   Windows va a pedir permiso de administrador. Tarda unos minutos.
+
+   VERIFICAR: cuando termine, Configuracion tiene que mostrar
+       Servidor: 0.9.0   (o mas nuevo)
+
+   Si el POS todavia no muestra la linea "Servidor:", actualiza primero el POS
+   (el mismo boton de arriba, "Buscar actualizaciones").
+
+4) Atar esa PC al comercio "socio".
+
+   PowerShell COMO ADMINISTRADOR en esa PC:
+
+       C:\NexoSoft-Servidor\scripts\configurar-suscripcion.ps1 -ComercioId socio
+
+   Escribe el id, reinicia el servidor y verifica que volvio a responder.
+   Tiene que terminar diciendo "Servidor arriba."
+
+
+-------------------------------------------------------------------------------
+LA PRUEBA
+-------------------------------------------------------------------------------
+
+IMPORTANTE: el servidor consulta el estado UNA VEZ POR HORA. Para no esperar,
+despues de cada cambio en el panel forza la consulta reiniciando el servidor
+en la PC del socio (PowerShell como Administrador):
+
+    Stop-ScheduledTask -TaskName "NexoSoft cloud-api"
+    Start-ScheduledTask -TaskName "NexoSoft cloud-api"
+
+Espera unos 20 segundos y despues cerra y volve a abrir el POS.
+
+
+PASO 1 - Todo normal
+  Panel: estado ACTIVA
+  POS:   no aparece ningun aviso. Se vende normal.
+
+PASO 2 - Recordatorio (se acerca el pago)
+  Panel: cambiar "socio" a RECORDATORIO
+  Reiniciar el servidor + reabrir el POS
+  POS:   FRANJA AZUL arriba de todo, con la fecha de pago.
+         La venta sigue funcionando normal.
+
+PASO 3 - Advertencia (vencio el plazo)
+  Panel: cambiar a ADVERTENCIA
+  Reiniciar el servidor + reabrir el POS
+  POS:   FRANJA NARANJA arriba, avisando que se va a bloquear.
+         La venta TODAVIA funciona. Este es el ultimo aviso.
+
+PASO 4 - Bloqueo
+  Panel: cambiar a BLOQUEADA
+  Reiniciar el servidor + reabrir el POS
+  POS:   En Punto de Venta, PANTALLA DE BLOQUEO con el candado.
+
+  Comprobar que el resto SIGUE ANDANDO (es lo importante):
+     [ ] El menu de la izquierda esta completo
+     [ ] El boton "Ir a Caja para cerrar el turno" lleva a Caja
+     [ ] Caja y Tesoreria abre y deja cerrar el turno
+     [ ] Reportes abre y deja ver/exportar
+     [ ] Comprobantes abre
+     [ ] Intentar vender NO deja
+
+PASO 5 - Desbloqueo (el cliente pago)
+  Panel: cambiar a ACTIVA
+  Reiniciar el servidor + reabrir el POS
+  POS:   vuelve a la normalidad, sin rastros.
+
+
+-------------------------------------------------------------------------------
+LA PRUEBA QUE MAS IMPORTA - que un corte de internet NO bloquee
+-------------------------------------------------------------------------------
+
+Esto es lo que hay que verificar si o si antes de usarlo con un cliente real.
+
+  a) Dejar el comercio en ACTIVA y reiniciar el servidor (que tome la licencia)
+  b) DESCONECTAR INTERNET en esa PC (desenchufar el cable / apagar el wifi)
+  c) Reiniciar el servidor y reabrir el POS
+
+  RESULTADO ESPERADO: se sigue vendiendo con total normalidad.
+
+  El sistema NUNCA bloquea por falta de internet. Solo bloquea si recibe una
+  licencia firmada que diga BLOQUEADA. Si esto no se cumple, PARAR y avisarme:
+  significa que un problema de red nuestro podria dejar sin vender a todos los
+  comercios a la vez.
+
+  d) Volver a conectar internet.
+
+
+-------------------------------------------------------------------------------
+AL TERMINAR - dejar la PC del socio limpia
+-------------------------------------------------------------------------------
+
+PowerShell COMO ADMINISTRADOR:
+
+    C:\NexoSoft-Servidor\scripts\configurar-suscripcion.ps1 -Quitar
+
+Eso desvincula la suscripcion: esa PC vuelve a operar sin ningun control.
+Y en el panel, borra o dejá en ACTIVA el comercio "socio".
+
+
+-------------------------------------------------------------------------------
+SI ALGO NO PASA LO QUE TIENE QUE PASAR
+-------------------------------------------------------------------------------
+
+* "El POS no muestra ningun aviso"
+  -> Confirma que el servidor sea 0.9.0+ (Configuracion lo muestra).
+  -> Confirma que corriste configurar-suscripcion.ps1 con el id correcto.
+  -> Reinicia el servidor y REABRI el POS (el POS consulta al abrir).
+
+* "Dice que no se pudo validar la suscripcion"
+  -> Esa PC no llega a internet, o no resuelve licencias.nexosoft.com.ar.
+     Probar en el navegador de esa PC: https://licencias.nexosoft.com.ar
+     (tiene que contestar algo, aunque sea un error en JSON).
+
+* "El panel dice que llegue al tope de bloqueos"
+  -> Es la proteccion: 3 bloqueos por dia. Se reinicia solo al dia siguiente.
+     Avisame si hace falta destrabarlo antes.
+
+* Logs del servidor, en la PC del socio:
+     C:\ProgramData\NexoSoft\logs\
+
+===============================================================================
