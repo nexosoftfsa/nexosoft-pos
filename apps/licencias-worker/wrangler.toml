@@ -1,0 +1,19 @@
+name = "nexosoft-licencias"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+# Dos hostnames, un solo Worker (ADR-0056 §1). El código decide qué cara
+# mostrar según el hostname: `admin.` es el panel, cualquier otro es la API
+# de licencias que consume el cloud-api de cada comercio.
+routes = [
+  { pattern = "licencias.nexosoft.com.ar", custom_domain = true },
+  { pattern = "admin.nexosoft.com.ar", custom_domain = true },
+]
+
+[[kv_namespaces]]
+binding = "CLIENTES"
+id = "6fb766caf4cf4287b2599481ad8a4a32"
+
+# Los secretos NO van acá. Se cargan con:
+#   wrangler secret put LICENCIAS_CLAVE_PRIVADA
+#   wrangler secret put ADMIN_TOKEN

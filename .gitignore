@@ -8,6 +8,11 @@ build/
 out/
 *.tsbuildinfo
 
+# Secretos locales de wrangler (Worker de licencias): ahi va la clave privada
+# que firma las licencias. NUNCA al repo.
+.dev.vars
+.wrangler/
+
 # Panel web compilado que el cloud-api sirve estatico. Lo genera el build de
 # admin-web (ver instalacion-primer-cliente.md y armar-paquete-servidor.ps1):
 # es un artefacto local, no codigo fuente.
