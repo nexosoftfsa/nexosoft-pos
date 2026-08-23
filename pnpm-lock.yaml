@@ -181,6 +181,9 @@ importers:
       '@nexosoft/hardware':
         specifier: workspace:*
         version: link:../../packages/hardware
+      '@nexosoft/licencias':
+        specifier: workspace:*
+        version: link:../../packages/licencias
       '@nexosoft/pagos':
         specifier: workspace:*
         version: link:../../packages/pagos
