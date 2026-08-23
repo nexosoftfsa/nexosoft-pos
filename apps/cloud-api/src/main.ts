@@ -51,7 +51,20 @@ async function bootstrap() {
   // Es la MISMA app de Nest: no se duplica nada, sólo se la escucha en dos
   // sockets distintos.
   const portRemoto = Number(process.env['PORT_REMOTO'] ?? 3001);
-  createServer(app.getHttpAdapter().getInstance()).listen(portRemoto, '127.0.0.1', () => {
+  const servidorRemoto = createServer(app.getHttpAdapter().getInstance());
+  // El acceso remoto es OPCIONAL: si este puerto no se puede abrir (otra app
+  // ya lo tiene), el comercio tiene que poder seguir vendiendo igual. Sin
+  // este manejador, Node emite un 'error' no capturado y se lleva puesto todo
+  // el servidor -- verificado: la parte de la LAN ya había arrancado bien y
+  // el proceso moría igual.
+  servidorRemoto.on('error', (e: NodeJS.ErrnoException) => {
+    console.error(
+      `No se pudo abrir el puerto del acceso remoto (${portRemoto}): ${e.code ?? e.message}. ` +
+        'El servidor sigue funcionando en la red del local; el panel no se va a ver desde afuera ' +
+        'hasta que se libere ese puerto o se cambie PORT_REMOTO.',
+    );
+  });
+  servidorRemoto.listen(portRemoto, '127.0.0.1', () => {
     console.log(`Acceso remoto (solo lectura) escuchando en 127.0.0.1:${portRemoto}`);
   });
 }
