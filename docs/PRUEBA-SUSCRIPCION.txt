@@ -33,13 +33,13 @@ ANTES DE EMPEZAR - en TU PC
 EN LA PC DEL SOCIO - preparar (una sola vez)
 -------------------------------------------------------------------------------
 
-3) Actualizar el servidor a la 0.9.0 o mas nueva.
+3) Actualizar el servidor a la 0.9.1 o mas nueva.
 
    En el POS de esa PC:  Configuracion -> Actualizaciones -> "Actualizar servidor"
    Windows va a pedir permiso de administrador. Tarda unos minutos.
 
    VERIFICAR: cuando termine, Configuracion tiene que mostrar
-       Servidor: 0.9.0   (o mas nuevo)
+       Servidor: 0.9.1   (o mas nuevo)
 
    Si el POS todavia no muestra la linea "Servidor:", actualiza primero el POS
    (el mismo boton de arriba, "Buscar actualizaciones").
@@ -58,14 +58,14 @@ EN LA PC DEL SOCIO - preparar (una sola vez)
 LA PRUEBA
 -------------------------------------------------------------------------------
 
-IMPORTANTE: el servidor consulta el estado UNA VEZ POR HORA. Para no esperar,
-despues de cada cambio en el panel forza la consulta reiniciando el servidor
-en la PC del socio (PowerShell como Administrador):
+El servidor consulta cada 5 minutos y el POS cada 1 minuto, asi que despues de
+cada cambio en el panel alcanza con ESPERAR: se actualiza solo, como mucho en
+6 minutos. No hay que reiniciar nada.
+
+Si querés apurarlo, en la PC del socio (PowerShell como Administrador):
 
     Stop-ScheduledTask -TaskName "NexoSoft cloud-api"
     Start-ScheduledTask -TaskName "NexoSoft cloud-api"
-
-Espera unos 20 segundos y despues cerra y volve a abrir el POS.
 
 
 PASO 1 - Todo normal
@@ -74,19 +74,19 @@ PASO 1 - Todo normal
 
 PASO 2 - Recordatorio (se acerca el pago)
   Panel: cambiar "socio" a RECORDATORIO
-  Reiniciar el servidor + reabrir el POS
+  Esperar unos minutos
   POS:   FRANJA AZUL arriba de todo, con la fecha de pago.
          La venta sigue funcionando normal.
 
 PASO 3 - Advertencia (vencio el plazo)
   Panel: cambiar a ADVERTENCIA
-  Reiniciar el servidor + reabrir el POS
+  Esperar unos minutos
   POS:   FRANJA NARANJA arriba, avisando que se va a bloquear.
          La venta TODAVIA funciona. Este es el ultimo aviso.
 
 PASO 4 - Bloqueo
   Panel: cambiar a BLOQUEADA
-  Reiniciar el servidor + reabrir el POS
+  Esperar unos minutos
   POS:   En Punto de Venta, PANTALLA DE BLOQUEO con el candado.
 
   Comprobar que el resto SIGUE ANDANDO (es lo importante):
@@ -99,7 +99,7 @@ PASO 4 - Bloqueo
 
 PASO 5 - Desbloqueo (el cliente pago)
   Panel: cambiar a ACTIVA
-  Reiniciar el servidor + reabrir el POS
+  Esperar unos minutos
   POS:   vuelve a la normalidad, sin rastros.
 
 
@@ -140,7 +140,7 @@ SI ALGO NO PASA LO QUE TIENE QUE PASAR
 -------------------------------------------------------------------------------
 
 * "El POS no muestra ningun aviso"
-  -> Confirma que el servidor sea 0.9.0+ (Configuracion lo muestra).
+  -> Confirma que el servidor sea 0.9.1+ (Configuracion lo muestra).
   -> Confirma que corriste configurar-suscripcion.ps1 con el id correcto.
   -> Reinicia el servidor y REABRI el POS (el POS consulta al abrir).
 

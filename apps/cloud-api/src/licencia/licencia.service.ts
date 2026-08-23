@@ -44,22 +44,28 @@ export class LicenciaService implements OnModuleInit {
   }
 
   /**
-   * Renovación **cada hora**, más el arranque del servidor.
+   * Renovación **cada 5 minutos**, más el arranque del servidor.
    *
-   * Se evaluó hacerla diaria de madrugada, para que un bloqueo nunca cayera
-   * en medio de la jornada. Se descartó por la asimetría que importa: cuando
-   * un comercio **paga**, quiere volver a vender ya — no al otro día. Que el
-   * desbloqueo tarde 24 horas es un problema real y frecuente; que el bloqueo
-   * tarde una hora no le hace mal a nadie, y de todos modos lo apretamos
-   * nosotros cuando queremos.
+   * No puede ser instantáneo: el servidor del comercio es una PC detrás del
+   * router de un local, sin dirección pública a la que podamos llamar. El
+   * modelo es **pull** — es él quien nos consulta. Lo único que elegimos es
+   * cada cuánto.
+   *
+   * Se probó con una hora y estaba mal por dos motivos. Uno: la cuota no era
+   * el problema que yo suponía (50 comercios cada 5 minutos son ~14.000
+   * pedidos diarios, y el plan gratuito da 100.000). Dos: el POS a su vez
+   * consulta a su servidor, así que los tiempos se SUMAN — con ambos en una
+   * hora, un cambio podía tardar dos.
+   *
+   * Lo que manda es la asimetría: cuando un comercio **paga**, quiere volver
+   * a vender ya. Que el desbloqueo tarde minutos es aceptable; que tarde
+   * horas, no.
    *
    * Contrapartida asumida: un bloqueo puede caer con el local abierto. Por eso
    * conviene apretar el botón de noche, y por eso el POS deja igual cerrar la
    * caja y ver lo histórico (ADR-0056 §4).
-   *
-   * Una consulta por hora por comercio es nada para el plan gratuito de KV.
    */
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async renovar(): Promise<void> {
     const comercioId = this.comercioId ?? this.config.get<string>('LICENCIAS_COMERCIO_ID') ?? null;
     if (comercioId === null || comercioId === '') {

@@ -351,9 +351,11 @@ function AppTauri() {
   useEffect(() => {
     if (fase !== "listo") return;
     void refrescarSuscripcion();
-    // Una vez por hora alcanza: el estado lo cambia una persona en el panel,
-    // no cambia solo minuto a minuto.
-    const id = setInterval(() => void refrescarSuscripcion(), 3_600_000);
+    // Cada minuto. Es una llamada al servidor de la propia sucursal (red
+    // local), así que no cuesta nada; y los tiempos se SUMAN con los del
+    // servidor contra el Worker, así que dejarla lenta acá arruinaba la
+    // latencia total aunque el servidor consultara seguido.
+    const id = setInterval(() => void refrescarSuscripcion(), 60_000);
     return () => clearInterval(id);
   }, [fase, refrescarSuscripcion]);
 
