@@ -156,40 +156,52 @@ ACCESO REMOTO  (ver el panel desde afuera del local) - OPCIONAL
 ===============================================================================
 
 Cada comercio queda en https://<comercio>.nexosoft.com.ar
-Los pasos 1 a 3 son EN TU PC, antes de salir. El 4 es en la PC del cliente.
+Los pasos 0 y 1 son EN TU PC, antes de salir. El 2 es en la PC del cliente.
 
-1) Cloudflare -> Zero Trust -> Networks -> Tunnels -> Create a tunnel
-   Tipo: Cloudflared.  Nombre: nexosoft-<comercio>
-   COPIAR EL TOKEN que muestra (arranca con eyJ...)
+NO entres a Cloudflare Zero Trust: te va a pedir una tarjeta de credito aunque
+el plan sea gratis, y no hace falta. Todo esto se hace por linea de comandos
+con tu cuenta normal de Cloudflare.
 
-2) En ese mismo tunel -> pestaña "Public Hostname" -> Add a public hostname:
+0) UNA SOLA VEZ, la primera vez que hagas esto en tu PC:
 
-      Subdomain: <comercio>          (ej: lagus)
-      Domain:    nexosoft.com.ar
-      Type:      HTTP
-      URL:       localhost:3000
+      cloudflared tunnel login
 
-   OJO: un solo nivel. lagus.nexosoft.com.ar SI.
+   Abre el navegador: elegir nexosoft.com.ar y autorizar.
+   Deja %USERPROFILE%\.cloudflared\cert.pem  ->  ESO ES UN SECRETO TUYO.
+   No lo subas a ningun lado ni lo copies a la PC de un cliente.
+
+   (Si no tenes cloudflared: sale de
+    .\scripts\release\preparar-runtimes-instalador.ps1)
+
+1) POR CADA COMERCIO, un solo comando en tu PC:
+
+      .\scripts\release\generar-codigo-acceso-remoto.ps1 -Subdominio lagus
+
+   Crea el tunel, apunta lagus.nexosoft.com.ar al tunel, y te devuelve UN
+   SOLO texto largo: ese es el codigo de activacion.
+
+   OJO: un solo nivel de subdominio. lagus.nexosoft.com.ar SI.
         panel.lagus.nexosoft.com.ar NO (falla el certificado).
 
-3) En tu PC, generar el codigo de activacion:
+   Mandaselo SOLO a ese comercio: quien lo tenga puede levantar su tunel.
 
-      .\scripts\release\generar-codigo-acceso-remoto.ps1 -Subdominio lagus -Token "eyJ..."
-
-   Te devuelve UN SOLO texto largo. Ese es el codigo.
-
-4) En la PC del cliente, cualquiera de las dos:
+2) En la PC del cliente, cualquiera de las dos:
 
       - Durante la instalacion: pegarlo en la pantalla "Acceso remoto".
       - Despues: en el POS -> Configuracion -> Acceso remoto -> pegar y
         "Activar". Windows pide permiso de administrador una vez.
 
-5) VERIFICAR: en el POS, la tarjeta de Acceso remoto tiene que decir
+3) VERIFICAR: en el POS, la tarjeta de Acceso remoto tiene que decir
    "Se esta viendo bien desde afuera", y ahi mismo aparece el QR.
    Probar la direccion desde un celular CON DATOS MOVILES (no el wifi
    del local).
 
 Para apagarlo: POS -> Configuracion -> Acceso remoto -> Desactivar.
+
+Desde tu PC podes ver los tuneles de todos los comercios:
+
+      cloudflared tunnel list
+      cloudflared tunnel info nexosoft-lagus
 
 
 ===============================================================================
@@ -221,7 +233,8 @@ TODOS los logs estan en:   C:\ProgramData\NexoSoft\logs\
 
    bootstrap.log        -> la instalacion del servidor (Paso 1)
    actualizador.log     -> la actualizacion automatica del servidor
-   acceso-remoto.log    -> el tunel / acceso remoto
+   acceso-remoto.log    -> el alta/baja del acceso remoto
+   cloudflared.log      -> el tunel corriendo (si la direccion no responde)
    postgres.log         -> la base de datos
 
 Abrilos con el Bloc de notas. El error real esta ahi, casi siempre en las
@@ -236,7 +249,7 @@ Comandos utiles (PowerShell como Administrador, en la PC de Caja):
    Start-ScheduledTask -TaskName "NexoSoft cloud-api"
 
    # ¿Esta el tunel corriendo?
-   Get-Service Cloudflared
+   Get-ScheduledTask -TaskName "NexoSoft Acceso Remoto" | Get-ScheduledTaskInfo
 
    # Estado del acceso remoto
    C:\NexoSoft-Servidor\scripts\instalar-acceso-remoto.ps1 -Accion estado
@@ -263,8 +276,10 @@ PROBLEMAS CONOCIDOS
      C:\NexoSoft-Servidor\scripts\abrir-firewall-servidor.ps1).
 
 * "La direccion de afuera no responde"
-  -> Que la PC tenga internet, que el servicio Cloudflared este corriendo, y
-     en Cloudflare que el Public Hostname apunte a localhost:3000.
+  -> Que la PC tenga internet y que la tarea "NexoSoft Acceso Remoto" este
+     corriendo. El detalle esta en logs\cloudflared.log. Desde tu PC,
+     "cloudflared tunnel info nexosoft-<comercio>" dice si el tunel tiene
+     conexiones activas.
 
 
 ===============================================================================

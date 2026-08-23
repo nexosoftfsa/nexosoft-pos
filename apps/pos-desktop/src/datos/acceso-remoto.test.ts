@@ -16,9 +16,21 @@ function codigoDe(datos: unknown): string {
   return btoa(JSON.stringify(datos));
 }
 
+/**
+ * Forma real del código que genera
+ * `scripts/release/generar-codigo-acceso-remoto.ps1`: el hostname del
+ * comercio más las credenciales de su túnel, que es lo que la PC necesita
+ * para levantarlo sin cuenta de Cloudflare propia.
+ */
 const CODIGO_VALIDO = codigoDe({
   hostname: "lagus.nexosoft.com.ar",
-  token: "eyJhIjoiMTIzNCIsInQiOiJhYmNkIiwicyI6Inh4eCJ9",
+  tunnelId: "6ff42ae2-765d-4adf-8112-31c55c1551ef",
+  credenciales: {
+    AccountTag: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+    TunnelID: "6ff42ae2-765d-4adf-8112-31c55c1551ef",
+    TunnelName: "nexosoft-lagus",
+    TunnelSecret: "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=",
+  },
 });
 
 /**
@@ -93,18 +105,34 @@ describe("validarCodigoActivacion", () => {
   });
 
   it("rechaza un código que no apunta a un dominio de NexoSoft", () => {
-    const ajeno = codigoDe({ hostname: "lagus.otrodominio.com", token: "abc" });
+    const ajeno = codigoDe({
+      hostname: "lagus.otrodominio.com",
+      tunnelId: "abc",
+      credenciales: { TunnelSecret: "xyz" },
+    });
     expect(validarCodigoActivacion(ajeno)).toContain("NexoSoft");
   });
 
   it("rechaza un subdominio de segundo nivel (no lo cubre el certificado)", () => {
-    const profundo = codigoDe({ hostname: "panel.lagus.nexosoft.com.ar", token: "abc" });
+    const profundo = codigoDe({
+      hostname: "panel.lagus.nexosoft.com.ar",
+      tunnelId: "abc",
+      credenciales: { TunnelSecret: "xyz" },
+    });
     expect(validarCodigoActivacion(profundo)).toContain("NexoSoft");
   });
 
-  it("rechaza un código sin token", () => {
-    const sinToken = codigoDe({ hostname: "lagus.nexosoft.com.ar", token: "" });
-    expect(validarCodigoActivacion(sinToken)).toContain("incompleto");
+  it("rechaza un código sin las credenciales del túnel", () => {
+    const sinCredenciales = codigoDe({ hostname: "lagus.nexosoft.com.ar", tunnelId: "abc" });
+    expect(validarCodigoActivacion(sinCredenciales)).toContain("incompleto");
+  });
+
+  it("rechaza un código sin el id del túnel", () => {
+    const sinId = codigoDe({
+      hostname: "lagus.nexosoft.com.ar",
+      credenciales: { TunnelSecret: "xyz" },
+    });
+    expect(validarCodigoActivacion(sinId)).toContain("incompleto");
   });
 
   it("rechaza base64 que no contiene JSON", () => {

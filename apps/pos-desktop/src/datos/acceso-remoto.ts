@@ -4,8 +4,8 @@
  *
  * El trabajo real lo hace `scripts/instalacion/instalar-acceso-remoto.ps1`
  * corriendo **elevado** (`Start-Process -Verb RunAs`, UAC nativo de Windows),
- * igual que el botón "Actualizar servidor" (ADR-0053): instalar un servicio
- * de Windows no se puede hacer desde el proceso del POS.
+ * igual que el botón "Actualizar servidor" (ADR-0053): registrar una tarea
+ * programada y escribir en ProgramData no se puede desde el proceso del POS.
  *
  * Los comandos y sus argumentos están fijados en
  * `src-tauri/capabilities/default.json`. El único dato que viaja del frontend
@@ -67,7 +67,7 @@ export const ARGS_DESACTIVAR_ACCESO_REMOTO: readonly string[] = [
 
 /** Códigos de salida de instalar-acceso-remoto.ps1 (y del envoltorio de arriba). */
 const SIN_INSTALACION = 2;
-const SIN_TOKEN = 3;
+const SIN_CODIGO = 3;
 const SIN_CLOUDFLARED = 4;
 const NO_RESPONDE = 5;
 const CODIGO_INVALIDO = 6;
@@ -100,12 +100,22 @@ export function validarCodigoActivacion(codigo: string): string | null {
   } catch {
     return "Ese código no se pudo leer. Copialo de nuevo, completo.";
   }
-  const hostname = (datos as { hostname?: unknown }).hostname;
-  const token = (datos as { token?: unknown }).token;
+  const { hostname, tunnelId, credenciales } = datos as {
+    hostname?: unknown;
+    tunnelId?: unknown;
+    credenciales?: { TunnelSecret?: unknown };
+  };
   if (typeof hostname !== "string" || !/^[a-z0-9-]+\.nexosoft\.com\.ar$/.test(hostname)) {
     return "Ese código no corresponde a una dirección de NexoSoft.";
   }
-  if (typeof token !== "string" || token.trim() === "") {
+  // Las credenciales del túnel son lo que hace falta para levantarlo: sin
+  // ellas el código no sirve para nada.
+  if (
+    typeof tunnelId !== "string" ||
+    tunnelId.trim() === "" ||
+    typeof credenciales?.TunnelSecret !== "string" ||
+    credenciales.TunnelSecret.trim() === ""
+  ) {
     return "Ese código está incompleto. Pedilo de nuevo.";
   }
   return null;
@@ -121,7 +131,7 @@ function explicar(codigo: number | null): string {
   switch (codigo) {
     case SIN_INSTALACION:
       return "No encontré el servidor instalado en esta PC. El acceso remoto se configura en la PC que aloja el servidor.";
-    case SIN_TOKEN:
+    case SIN_CODIGO:
       return "Esta PC no tiene acceso remoto dado de alta. Pedile el código de activación a NexoSoft.";
     case SIN_CLOUDFLARED:
       return "No se pudo descargar el componente del túnel. Revisá que la PC tenga internet y probá de nuevo.";
