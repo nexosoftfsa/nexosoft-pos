@@ -19,7 +19,7 @@
 #
 # Sale 0 si no quedo ningun proceso de la instalacion vivo, 1 si alguno
 # sobrevivio (en ese caso el instalador aborta antes de tocar nada, en vez de
-# fallar por la mitad).
+# fallar por la mitad). Deja siempre un log en <RaizDatos>\logs.
 
 param(
     [string]$RaizInstalacion = "C:\NexoSoft-Servidor",
@@ -29,22 +29,57 @@ param(
 
 $ErrorActionPreference = "Continue"
 
+$logDir = Join-Path $RaizDatos "logs"
+try {
+    New-Item -ItemType Directory -Force -Path $logDir -ErrorAction Stop | Out-Null
+    Start-Transcript -Path (Join-Path $logDir "detener-servidor.log") -Force | Out-Null
+} catch {
+    # Sin log se sigue igual: detener el servidor importa mas que registrarlo.
+}
+
 function Aviso($t) { Write-Host $t -ForegroundColor Yellow }
 function Ok($t) { Write-Host "OK: $t" -ForegroundColor Green }
 
-Write-Host "Deteniendo el servidor NexoSoft en $RaizInstalacion"
+$raiz = $RaizInstalacion.TrimEnd('\')
+$dataDir = (Join-Path $RaizDatos "postgres-data").TrimEnd('\')
+Write-Host "Deteniendo el servidor NexoSoft"
+Write-Host "  Instalacion: $raiz"
+Write-Host "  Datos:       $dataDir"
 
-# Los procesos de ESTA instalacion. Se filtra por ruta y no por nombre: en la
-# PC puede haber otro node.exe o hasta otro PostgreSQL (el instalador avisa de
-# esa posibilidad al preguntar el puerto) y no es asunto nuestro.
+# Los procesos de ESTA instalacion.
+#
+# Se usa CIM y no Get-Process: la propiedad .Path de Get-Process abre un handle
+# al proceso y tira "Acceso denegado" con los que corren como SYSTEM -- que son
+# exactamente los nuestros, porque las tareas programadas se registran con ese
+# usuario. El filtro los descartaba en silencio, el script decia que no quedaba
+# nada vivo y el instalador se estrellaba igual contra el .dll de postgres.
+#
+# Se mira tambien la linea de comandos: un postgres arrancado desde una carpeta
+# vieja pero sirviendo NUESTRO directorio de datos tiene igual tomados los
+# archivos que nos importan.
 function ProcesosDeLaInstalacion {
-    $raiz = $RaizInstalacion.TrimEnd('\')
-    return @(Get-Process -Name node, postgres, pg_ctl, cloudflared -ErrorAction SilentlyContinue | Where-Object {
-        $ruta = $null
-        try { $ruta = $_.Path } catch { $ruta = $null }
-        $ruta -and $ruta.StartsWith($raiz, [System.StringComparison]::OrdinalIgnoreCase)
+    $nombres = @("node.exe", "postgres.exe", "pg_ctl.exe", "cloudflared.exe")
+    $todos = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+        Where-Object { $nombres -contains $_.Name })
+    return @($todos | Where-Object {
+        ($_.ExecutablePath -and $_.ExecutablePath.StartsWith($raiz, [System.StringComparison]::OrdinalIgnoreCase)) -or
+        ($_.CommandLine -and $_.CommandLine.IndexOf($dataDir, [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
     })
 }
+
+# Ojo: `return @(...)` NO garantiza un array del otro lado -- PowerShell
+# desenvuelve las colecciones de un solo elemento al devolverlas. Cada llamada
+# se vuelve a envolver con @() porque de ese conteo depende el codigo de salida,
+# y confundir "uno" con "ninguno" haria que el instalador siga de largo con
+# PostgreSQL vivo, que es el bug que estamos arreglando.
+function Inventario($titulo) {
+    $vivos = @(ProcesosDeLaInstalacion)
+    Write-Host "$titulo ($($vivos.Count)):"
+    foreach ($p in $vivos) { Write-Host "  PID $($p.ProcessId)  $($p.Name)  $($p.ExecutablePath)" }
+    return $vivos
+}
+
+Inventario "Procesos de la instalacion al empezar" | Out-Null
 
 foreach ($tarea in @("NexoSoft cloud-api", "NexoSoft Actualizador", "NexoSoft PostgreSQL")) {
     try { Stop-ScheduledTask -TaskName $tarea -ErrorAction Stop; Write-Host "Tarea detenida: $tarea" }
@@ -55,37 +90,34 @@ foreach ($tarea in @("NexoSoft cloud-api", "NexoSoft Actualizador", "NexoSoft Po
 # termina enseguida, dejando al postmaster vivo por su cuenta. Hay que pedirle
 # el apagado a el. En modo "fast" corta las conexiones abiertas pero cierra
 # limpio, sin dejar la base para recuperar.
-$pgCtl = Join-Path $RaizInstalacion "postgres-portable\bin\pg_ctl.exe"
-$dataDir = Join-Path $RaizDatos "postgres-data"
+$pgCtl = Join-Path $raiz "postgres-portable\bin\pg_ctl.exe"
 if ((Test-Path $pgCtl) -and (Test-Path $dataDir)) {
     Write-Host "Apagando PostgreSQL (pg_ctl stop -m fast)..."
-    & $pgCtl stop -D $dataDir -m fast -w -t 30 | Out-Null
+    & $pgCtl stop -D $dataDir -m fast -w -t 30 2>&1 | ForEach-Object { Write-Host "  $_" }
 } else {
-    Write-Host "No hay PostgreSQL portable en esta ruta; nada que apagar."
+    Write-Host "No hay pg_ctl.exe o directorio de datos en estas rutas; se pasa al cierre por proceso."
 }
 
 for ($i = 0; $i -lt $SegundosEspera; $i++) {
-    $vivos = ProcesosDeLaInstalacion
+    $vivos = @(ProcesosDeLaInstalacion)
     if ($vivos.Count -eq 0) {
         Ok "No queda ningun proceso de la instalacion corriendo."
+        try { Stop-Transcript | Out-Null } catch {}
         exit 0
     }
     # Primero se les da tiempo a cerrar solos; recien despues se los baja a la
     # fuerza. Un postgres matado a lo bruto arranca haciendo recuperacion, que
     # es molesto pero no pierde datos confirmados.
-    if ($i -ge 15) {
+    if ($i -ge 10) {
         foreach ($p in $vivos) {
-            Aviso "No cerro solo, lo bajo a la fuerza: $($p.ProcessName) (PID $($p.Id))"
-            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            Aviso "No cerro solo, lo bajo a la fuerza: $($p.Name) (PID $($p.ProcessId))"
+            Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue
         }
     }
     Start-Sleep -Seconds 1
 }
 
-$quedan = ProcesosDeLaInstalacion
-if ($quedan.Count -eq 0) {
-    Ok "No queda ningun proceso de la instalacion corriendo."
-    exit 0
-}
-Aviso "Siguen vivos: $(($quedan | ForEach-Object { $_.ProcessName + ' (PID ' + $_.Id + ')' }) -join ', ')"
+$quedan = @(Inventario "Siguen vivos despues de esperar")
+try { Stop-Transcript | Out-Null } catch {}
+if ($quedan.Count -eq 0) { exit 0 }
 exit 1

@@ -94,13 +94,26 @@ var
   PaginaAccesoRemoto: TInputQueryWizardPage;
 
 { Version del servidor NexoSoft ya instalada en esta PC, leida de la clave de
-  desinstalacion que escribe el propio Inno. Vacio si no hay ninguna. }
+  desinstalacion que escribe el propio Inno. Vacio si no hay ninguna.
+
+  Se miran las DOS vistas del registro. En una instalacion de 64 bits Inno
+  escribe su clave en la vista de 64, pero RegQueryStringValue con HKLM a
+  secas lee la de 32: esto devolvia vacio SIEMPRE, y con eso el control de
+  downgrade de InitializeSetup nunca llego a dispararse. }
 function VersionYaInstalada(): String;
 var
   Valor: String;
+  Clave: String;
 begin
   Result := '';
-  if RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{7C6E2C6A-6C8B-4B7B-9C5E-2B7C9E9B5C1A}_is1', 'DisplayVersion', Valor) then
+  Clave := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{7C6E2C6A-6C8B-4B7B-9C5E-2B7C9E9B5C1A}_is1';
+  if IsWin64 then begin
+    if RegQueryStringValue(HKLM64, Clave, 'DisplayVersion', Valor) then begin
+      Result := Valor;
+      exit;
+    end;
+  end;
+  if RegQueryStringValue(HKLM32, Clave, 'DisplayVersion', Valor) then
     Result := Valor;
 end;
 
@@ -150,8 +163,12 @@ var
   Codigo: Integer;
 begin
   Result := '';
-  { En una PC limpia no hay nada corriendo que parar. }
-  if VersionYaInstalada() = '' then exit;
+  { La condicion es que exista la carpeta, NO que el registro diga que hay algo
+    instalado. Atarlo al registro fue el motivo de que este paso no corriera
+    nunca: la lectura daba vacio, y ademas un desinstalar-y-volver-a-instalar
+    borra la clave pero deja a postgres.exe vivo, que es justo el caso en el
+    que hace falta. }
+  if not DirExists(ExpandConstant('{app}')) then exit;
 
   ExtractTemporaryFile('detener-servidor.ps1');
   if not Exec('powershell.exe',
