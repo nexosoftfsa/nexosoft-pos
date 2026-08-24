@@ -100,10 +100,16 @@ export function modulosVisibles(rol: string | undefined): readonly DefinicionMod
   return MODULOS.filter((m) => m.roles.includes(r));
 }
 
-/** Módulo en el que arranca el POS al entrar: la pantalla operativa (Ventas). */
+/**
+ * Módulo en el que arranca el POS después del login: el panel general
+ * (Inicio). Antes caía directo en Ventas; se cambió porque Inicio da el
+ * estado del día de un vistazo y desde ahí se entra a vender con un clic,
+ * mientras que al revés hay que salir de la pantalla de venta para ver
+ * cualquier otra cosa.
+ */
 export function moduloInicial(rol: string | undefined): string {
   const visibles = modulosVisibles(rol);
-  return visibles.find((m) => m.id === "pos")?.id ?? visibles[0]?.id ?? "pos";
+  return visibles.find((m) => m.id === "inicio")?.id ?? visibles[0]?.id ?? "inicio";
 }
 
 /** Busca un módulo por id. */

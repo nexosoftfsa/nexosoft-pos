@@ -112,6 +112,21 @@ export class SesionManager {
     return this.estado?.sucursalId;
   }
 
+  /**
+   * La terminal identifica a la MÁQUINA (Caja 1, Depósito), no a la persona:
+   * si no se arrastrara al loguearse, cada cambio de turno obligaría a
+   * volver a elegirla. Importa desde que el POS pide credenciales en cada
+   * arranque.
+   */
+  private terminalActual(): Pick<SesionGuardada, "terminalId" | "terminalNombre"> {
+    return {
+      ...(this.estado?.terminalId !== undefined ? { terminalId: this.estado.terminalId } : {}),
+      ...(this.estado?.terminalNombre !== undefined
+        ? { terminalNombre: this.estado.terminalNombre }
+        : {}),
+    };
+  }
+
   /** Inicia sesión contra el servidor y persiste los tokens. */
   async login(credenciales: Credenciales): Promise<void> {
     const tokens = await this.auth.login(credenciales);
@@ -120,6 +135,7 @@ export class SesionManager {
       refreshToken: tokens.refreshToken,
       email: credenciales.email,
       sucursalId: decodificarSucursal(tokens.accessToken),
+      ...this.terminalActual(),
     };
     await guardarSesion(this.ejecutor, estado);
     this.estado = estado;
@@ -136,6 +152,7 @@ export class SesionManager {
       refreshToken: tokens.refreshToken,
       email: decodificarEmail(tokens.accessToken) ?? "",
       sucursalId: decodificarSucursal(tokens.accessToken),
+      ...this.terminalActual(),
     };
     await guardarSesion(this.ejecutor, estado);
     this.estado = estado;

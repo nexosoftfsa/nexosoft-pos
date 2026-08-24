@@ -10,8 +10,16 @@
     {
       "name": "pos",
       "runtimeExecutable": "corepack",
-      "runtimeArgs": ["pnpm", "-C", "E:\\Nexosoft\\Proyecto 1\\apps\\pos-desktop", "dev"],
-      "port": 5173
+      "runtimeArgs": [
+        "pnpm",
+        "-C",
+        "E:\\Nexosoft\\Proyecto 1\\apps\\pos-desktop",
+        "dev",
+        "--host",
+        "127.0.0.1"
+      ],
+      "port": 5173,
+      "url": "http://127.0.0.1:5173"
     },
     {
       "name": "admin-web",

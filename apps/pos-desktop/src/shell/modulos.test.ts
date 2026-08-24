@@ -81,10 +81,16 @@ describe("modulosVisibles", () => {
 });
 
 describe("moduloInicial", () => {
-  it("arranca en Punto de Venta para cualquier rol", () => {
-    expect(moduloInicial("ADMIN")).toBe("pos");
-    expect(moduloInicial("CAJERO")).toBe("pos");
-    expect(moduloInicial(undefined)).toBe("pos");
+  it("arranca en Inicio para cualquier rol", () => {
+    expect(moduloInicial("ADMIN")).toBe("inicio");
+    expect(moduloInicial("CAJERO")).toBe("inicio");
+    expect(moduloInicial(undefined)).toBe("inicio");
+  });
+
+  it("el módulo inicial lo ve el rol más bajo", () => {
+    // Si Inicio dejara de ser visible para CAJERO, el POS abriría en una
+    // pantalla vacía en vez de caer en el primer módulo permitido.
+    expect(modulosVisibles("CAJERO").map((m) => m.id)).toContain(moduloInicial("CAJERO"));
   });
 });
 

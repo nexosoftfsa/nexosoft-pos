@@ -107,7 +107,7 @@ export function AccesoRemoto({
   const yaExpuesto = estado?.estado === "activo";
 
   return (
-    <div className="card card__pad" style={{ marginTop: "1rem" }}>
+    <div className="card card__pad">
       <div className="section-title">Acceso remoto al panel</div>
 
       {error !== null && <div className="error">{error}</div>}

@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 
 import { CondicionIva } from "@nexosoft/domain";
 import { leerComoDataUrl } from "../archivos";
@@ -27,7 +27,19 @@ const EMISORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
   { valor: CondicionIva.Monotributo, etiqueta: "Monotributo" },
 ];
 
-/** Configuración de la terminal: servidor de sucursal + datos del comercio. */
+/**
+ * Configuración de la terminal: servidor de sucursal + datos del comercio.
+ *
+ * Ocupa la pantalla completa, con las opciones agrupadas en tarjetas sobre una
+ * grilla. Antes era una tarjeta de 420px en el medio de la pantalla y todo
+ * caía en una sola columna: había que scrollear para llegar a Acceso remoto y
+ * Actualizaciones, que quedaban abajo de todo. La grilla acomoda sola lo que
+ * se vaya sumando.
+ *
+ * Se muestra fuera del shell (`externo` en `shell/modulos.tsx`) porque guardar
+ * reconstruye el entorno, y porque también se abre desde el login — antes de
+ * que exista una sesión y, por lo tanto, un shell.
+ */
 export function PantallaConfig({
   valores,
   onGuardar,
@@ -98,207 +110,152 @@ export function PantallaConfig({
   }
 
   return (
-    <div style={fondo}>
-      <form style={tarjeta} onSubmit={enviar}>
-        <div style={titulo}>Configuración</div>
-
-        <label style={etiqueta}>
-          Servidor de sucursal
-          <input
-            style={campo}
-            value={servidorUrl}
-            onChange={(e) => setServidorUrl(e.target.value)}
-          />
-        </label>
-        <label style={etiqueta}>
-          Razón social
-          <input
-            style={campo}
-            value={razonSocial}
-            onChange={(e) => setRazonSocial(e.target.value)}
-          />
-        </label>
-        <label style={etiqueta}>
-          CUIT
-          <input style={campo} value={cuit} onChange={(e) => setCuit(e.target.value)} />
-        </label>
-        <label style={etiqueta}>
-          Condición frente al IVA
-          <select
-            style={campo}
-            value={condicion}
-            onChange={(e) => setCondicion(e.target.value as CondicionIva)}
-          >
-            {EMISORES.map((o) => (
-              <option key={o.valor} value={o.valor}>
-                {o.etiqueta}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label style={etiqueta}>
-          Logo del comercio
-          <div style={{ display: "flex", alignItems: "center", gap: "0.7rem" }}>
-            {logoDataUrl !== undefined && (
-              <img
-                src={logoDataUrl}
-                alt="Logo"
-                style={{ height: 40, maxWidth: 120, objectFit: "contain" }}
-              />
-            )}
-            <input
-              style={{ ...campo, padding: "0.4rem" }}
-              type="file"
-              accept="image/*"
-              onChange={(e) => void elegirLogo(e)}
-            />
-            {logoDataUrl !== undefined && (
-              <button type="button" style={enlace} onClick={() => setLogoDataUrl(undefined)}>
-                Quitar
-              </button>
-            )}
-          </div>
-        </label>
-        <label style={etiqueta}>
-          Punto de venta
-          <input
-            style={campo}
-            type="number"
-            min={1}
-            value={puntoDeVenta}
-            onChange={(e) => setPuntoDeVenta(e.target.value)}
-          />
-        </label>
-        <label style={{ ...etiqueta, flexDirection: "row", alignItems: "center", gap: "0.5rem" }}>
-          <input
-            type="checkbox"
-            checked={emiteFiscal}
-            onChange={(e) => setEmiteFiscal(e.target.checked)}
-          />
-          Ya está de alta en ARCA (emite Factura A/B/C)
-        </label>
-        {!emiteFiscal && (
-          <div style={ayuda}>
-            Mientras esté desmarcado, el sistema vende con un ticket interno sin CAE ni numeración
-            fiscal. Activalo cuando el comercio complete el alta en ARCA.
-          </div>
-        )}
-
-        <label style={{ ...etiqueta, flexDirection: "row", alignItems: "center", gap: "0.5rem" }}>
-          <input
-            type="checkbox"
-            checked={stockNegativo}
-            onChange={(e) => setStockNegativo(e.target.checked)}
-          />
-          Permitir vender sin stock suficiente (queda en negativo)
-        </label>
-        {stockNegativo && (
-          <div style={ayuda}>
-            Útil si el stock de productos de mucha rotación no se actualiza a tiempo: la venta no se
-            bloquea aunque figure stock cero o insuficiente, y el saldo queda en negativo hasta el
-            próximo ajuste.
-          </div>
-        )}
-
-        {error !== null && <div style={aviso}>{error}</div>}
-
-        <AccesoRemoto servidorUrl={servidorUrl} obtenerToken={obtenerToken} />
-
-        <Actualizaciones servidorUrl={servidorUrl} />
-
-        <div style={{ display: "flex", gap: "0.6rem", marginTop: "0.4rem" }}>
-          <button type="button" style={botonSec} onClick={onCancelar} disabled={guardando}>
+    <form className="config-pantalla" onSubmit={enviar}>
+      <header className="topbar">
+        <div>
+          <h1>Configuración</h1>
+          <div className="crumb">Comercio · Facturación · Sistema</div>
+        </div>
+        <div className="spacer" />
+        <div className="topbar__acciones">
+          <button type="button" className="pill-btn" onClick={onCancelar} disabled={guardando}>
             Cancelar
           </button>
-          <button
-            type="submit"
-            style={{ ...boton, opacity: guardando ? 0.6 : 1 }}
-            disabled={guardando}
-          >
+          <button type="submit" className="pill-btn pill-btn--primary" disabled={guardando}>
             {guardando ? "Guardando…" : "Guardar"}
           </button>
         </div>
-      </form>
-    </div>
+      </header>
+
+      <div className="gestion">
+        {error !== null && <div className="error config-error">{error}</div>}
+
+        <div className="config-grid">
+          <section className="card card__pad">
+            <div className="section-title">Comercio</div>
+            <div className="field">
+              <label htmlFor="cfg-razon">Razón social</label>
+              <input
+                id="cfg-razon"
+                className="input"
+                value={razonSocial}
+                onChange={(e) => setRazonSocial(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="cfg-cuit">CUIT</label>
+              <input
+                id="cfg-cuit"
+                className="input"
+                value={cuit}
+                onChange={(e) => setCuit(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="cfg-logo">Logo del comercio</label>
+              <div className="config-logo">
+                {logoDataUrl !== undefined && <img src={logoDataUrl} alt="Logo" />}
+                <input
+                  id="cfg-logo"
+                  className="input"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => void elegirLogo(e)}
+                />
+                {logoDataUrl !== undefined && (
+                  <button type="button" className="linkbtn" onClick={() => setLogoDataUrl(undefined)}>
+                    Quitar
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="card card__pad">
+            <div className="section-title">Facturación</div>
+            <div className="field">
+              <label htmlFor="cfg-iva">Condición frente al IVA</label>
+              <select
+                id="cfg-iva"
+                className="input"
+                value={condicion}
+                onChange={(e) => setCondicion(e.target.value as CondicionIva)}
+              >
+                {EMISORES.map((o) => (
+                  <option key={o.valor} value={o.valor}>
+                    {o.etiqueta}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="cfg-pv">Punto de venta</label>
+              <input
+                id="cfg-pv"
+                className="input"
+                type="number"
+                min={1}
+                value={puntoDeVenta}
+                onChange={(e) => setPuntoDeVenta(e.target.value)}
+              />
+            </div>
+            <label className="config-check">
+              <input
+                type="checkbox"
+                checked={emiteFiscal}
+                onChange={(e) => setEmiteFiscal(e.target.checked)}
+              />
+              Ya está de alta en ARCA (emite Factura A/B/C)
+            </label>
+            {!emiteFiscal && (
+              <div className="config-ayuda">
+                Mientras esté desmarcado, el sistema vende con un ticket interno sin CAE ni
+                numeración fiscal. Activalo cuando el comercio complete el alta en ARCA.
+              </div>
+            )}
+          </section>
+
+          <section className="card card__pad">
+            <div className="section-title">Venta y stock</div>
+            <label className="config-check">
+              <input
+                type="checkbox"
+                checked={stockNegativo}
+                onChange={(e) => setStockNegativo(e.target.checked)}
+              />
+              Permitir vender sin stock suficiente (queda en negativo)
+            </label>
+            {stockNegativo && (
+              <div className="config-ayuda">
+                Útil si el stock de productos de mucha rotación no se actualiza a tiempo: la venta
+                no se bloquea aunque figure stock cero o insuficiente, y el saldo queda en negativo
+                hasta el próximo ajuste.
+              </div>
+            )}
+          </section>
+
+          <section className="card card__pad">
+            <div className="section-title">Servidor de sucursal</div>
+            <div className="field">
+              <label htmlFor="cfg-servidor">Dirección del servidor</label>
+              <input
+                id="cfg-servidor"
+                className="input"
+                value={servidorUrl}
+                onChange={(e) => setServidorUrl(e.target.value)}
+              />
+            </div>
+            <div className="config-ayuda">
+              En la PC que aloja el servidor va <code>http://localhost:3000/api/v1</code>. En las
+              demás terminales, la IP de esa PC en la red del local.
+            </div>
+          </section>
+
+          <AccesoRemoto servidorUrl={servidorUrl} obtenerToken={obtenerToken} />
+
+          <Actualizaciones servidorUrl={servidorUrl} />
+        </div>
+      </div>
+    </form>
   );
 }
-
-const fondo: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "100vh",
-  overflowY: "auto",
-  padding: "2rem 0",
-  background: "#f1f5f9",
-  fontFamily: "system-ui, sans-serif",
-};
-const tarjeta: CSSProperties = {
-  width: "min(420px, 92vw)",
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.75rem",
-  padding: "2rem",
-  background: "#fff",
-  borderRadius: "12px",
-  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.12)",
-};
-const titulo: CSSProperties = { fontSize: "1.3rem", fontWeight: 700, color: "#0f172a" };
-const etiqueta: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.3rem",
-  fontSize: "0.85rem",
-  color: "#334155",
-};
-const campo: CSSProperties = {
-  padding: "0.55rem 0.7rem",
-  borderRadius: "8px",
-  border: "1px solid #cbd5e1",
-  fontSize: "1rem",
-};
-const boton: CSSProperties = {
-  flex: 1,
-  padding: "0.7rem",
-  borderRadius: "8px",
-  border: "none",
-  background: "#2563eb",
-  color: "#fff",
-  fontSize: "1rem",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-const botonSec: CSSProperties = {
-  flex: 1,
-  padding: "0.7rem",
-  borderRadius: "8px",
-  border: "1px solid #cbd5e1",
-  background: "#f8fafc",
-  color: "#334155",
-  fontSize: "1rem",
-  fontWeight: 600,
-  cursor: "pointer",
-};
-const aviso: CSSProperties = {
-  background: "#fef2f2",
-  color: "#b91c1c",
-  padding: "0.5rem 0.7rem",
-  borderRadius: "8px",
-  fontSize: "0.85rem",
-};
-const ayuda: CSSProperties = {
-  background: "#fffbeb",
-  color: "#92400e",
-  padding: "0.5rem 0.7rem",
-  borderRadius: "8px",
-  fontSize: "0.8rem",
-};
-const enlace: CSSProperties = {
-  background: "none",
-  border: "none",
-  color: "#2563eb",
-  fontSize: "0.85rem",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-};

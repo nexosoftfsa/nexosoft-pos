@@ -92,7 +92,7 @@ export function Actualizaciones({ servidorUrl }: { servidorUrl?: string }) {
   if (!estaEnTauri()) return null;
 
   return (
-    <div className="card card__pad" style={{ marginTop: "1rem" }}>
+    <div className="card card__pad">
       <div className="section-title">Actualizaciones</div>
       <p className="muted" style={{ marginTop: 2 }}>
         POS: {versionActual ?? "…"}

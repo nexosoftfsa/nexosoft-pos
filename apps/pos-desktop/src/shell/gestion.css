@@ -854,3 +854,68 @@ select.input {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Configuración ----------
+ * Ocupa la pantalla entera en vez de una tarjeta angosta: antes todo iba en
+ * una columna de 420px y había que scrollear para llegar a Actualizaciones.
+ * La grilla acomoda sola las tarjetas que se vayan agregando.
+ */
+.config-pantalla {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+  background: var(--bg);
+}
+.config-pantalla .topbar__acciones {
+  display: flex;
+  gap: 10px;
+}
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.config-grid .field + .field,
+.config-grid .field + .config-check,
+.config-grid .config-check + .field {
+  margin-top: 14px;
+}
+.config-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.config-logo img {
+  height: 44px;
+  max-width: 140px;
+  object-fit: contain;
+}
+.config-logo input[type="file"] {
+  height: auto;
+  padding: 9px 12px;
+  flex: 1;
+  min-width: 160px;
+}
+.config-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+  cursor: pointer;
+}
+.config-ayuda {
+  background: var(--warn-soft);
+  color: #7a5300;
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 12.5px;
+  margin-top: 10px;
+}
+.config-error {
+  margin-bottom: 16px;
+}

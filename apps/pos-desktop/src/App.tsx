@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { MockLectorDeBarras } from "@nexosoft/hardware";
+import { CondicionIva } from "@nexosoft/domain";
 
 import { Shell } from "./shell/Shell";
 import { PantallaLogin } from "./componentes/PantallaLogin";
@@ -91,8 +92,34 @@ export function App() {
   return estaEnTauri() ? <AppTauri /> : <AppNavegador />;
 }
 
-/** Navegador (desarrollo): datos en memoria, sin login. */
+/**
+ * Navegador (desarrollo): datos en memoria, sin login.
+ *
+ * `?pantalla=config` abre la Configuración con datos de mentira. Es la única
+ * forma de verla en el navegador: en modo demo no hay login ni fase de
+ * config, así que la pantalla quedaba fuera de todo desarrollo visual — tanto
+ * que sus tarjetas venían sin estilo (las clases `.card` viven bajo
+ * `.gestion` y nadie lo había notado).
+ */
 function AppNavegador() {
+  if (new URLSearchParams(location.search).get("pantalla") === "config") {
+    return (
+      <PantallaConfig
+        valores={{
+          servidorUrl: "http://localhost:3000/api/v1",
+          razonSocial: "NexoSoft Almacén (demo)",
+          cuit: "30-71234567-8",
+          condicionIvaEmisor: CondicionIva.ResponsableInscripto,
+          puntoDeVenta: 1,
+          emiteComprobantesFiscales: false,
+          permitirStockNegativo: true,
+        }}
+        onGuardar={async () => {}}
+        onCancelar={() => {}}
+        obtenerToken={() => null}
+      />
+    );
+  }
   return <AppDemo />;
 }
 
@@ -281,24 +308,38 @@ function AppTauri() {
   );
 
   /** Abre la base, lee la URL del servidor, carga la sesión y evalúa la fase. */
-  const inicializar = useCallback(async () => {
-    setFase("cargando");
-    try {
-      const ejecutor = ejecutorRef.current ?? (await abrirBaseTauri());
-      ejecutorRef.current = ejecutor;
-      await asegurarMaestros(ejecutor);
-      baseUrlRef.current = await leerServidorUrl(ejecutor);
-      setLogoDataUrl((await leerConfig(ejecutor)).logoDataUrl);
-      const sesion = await SesionManager.cargar(ejecutor, new ClienteAuthHttp(baseUrlRef.current));
-      sesionRef.current = sesion;
-      avanzar(sesion);
-    } catch (e) {
-      fallar(e);
-    }
-  }, [avanzar, fallar]);
+  const inicializar = useCallback(
+    async ({ pedirCredenciales = false }: { pedirCredenciales?: boolean } = {}) => {
+      setFase("cargando");
+      try {
+        const ejecutor = ejecutorRef.current ?? (await abrirBaseTauri());
+        ejecutorRef.current = ejecutor;
+        await asegurarMaestros(ejecutor);
+        baseUrlRef.current = await leerServidorUrl(ejecutor);
+        setLogoDataUrl((await leerConfig(ejecutor)).logoDataUrl);
+        const sesion = await SesionManager.cargar(ejecutor, new ClienteAuthHttp(baseUrlRef.current));
+        sesionRef.current = sesion;
+        // La sesión igual se carga: guarda la terminal elegida (que es de la
+        // máquina) y el refresh token. Lo que no se hace es entrar con ella
+        // sin preguntar.
+        if (pedirCredenciales) {
+          setFase("login");
+          return;
+        }
+        avanzar(sesion);
+      } catch (e) {
+        fallar(e);
+      }
+    },
+    [avanzar, fallar],
+  );
 
+  // Al abrir la app SIEMPRE se piden credenciales, aunque haya una sesión
+  // guardada y vigente. La terminal es compartida: si reabriera en la sesión
+  // de quien la usó antes, las ventas y los movimientos de caja quedarían a
+  // nombre de alguien que ya no está adelante de la pantalla.
   useEffect(() => {
-    void inicializar();
+    void inicializar({ pedirCredenciales: true });
   }, [inicializar]);
 
   // Chequeo de actualización en silencio al iniciar: si hay una nueva, se
@@ -397,7 +438,13 @@ function AppTauri() {
     setFase("login");
   }, []);
 
-  const onAbrirConfig = useCallback(async () => {
+  // Configuración se abre desde dos lados y hay que volver al que corresponde:
+  // desde el login (antes de entrar) o desde el shell (ya trabajando). Sin
+  // esto, cancelar en el login dejaba pasar sin credenciales.
+  const volverDeConfigRef = useRef<"login" | "listo">("listo");
+
+  const onAbrirConfig = useCallback(async (volverA: "login" | "listo") => {
+    volverDeConfigRef.current = volverA;
     const ejecutor = ejecutorRef.current;
     if (ejecutor === null) return;
     try {
@@ -441,10 +488,15 @@ function AppTauri() {
         v.servidorUrl,
         () => sesionRef.current?.obtenerToken() ?? null,
       ).actualizarLogo(v.logoDataUrl ?? "");
-      await inicializar(); // re-lee la URL, reconstruye el cliente y reevalúa la fase
+      // Re-lee la URL, reconstruye el cliente y vuelve de donde vino.
+      await inicializar({ pedirCredenciales: volverDeConfigRef.current === "login" });
     },
     [inicializar],
   );
+
+  const onSalirDeConfig = useCallback(() => {
+    void inicializar({ pedirCredenciales: volverDeConfigRef.current === "login" });
+  }, [inicializar]);
 
   const clienteTerminales = useCallback(
     () =>
@@ -466,7 +518,7 @@ function AppTauri() {
       <AppDemo
         onSalir={() => {
           setModoDemo(false);
-          void inicializar();
+          void inicializar({ pedirCredenciales: true });
         }}
       />
     );
@@ -503,7 +555,7 @@ function AppTauri() {
       <PantallaConfig
         valores={valoresConfig}
         onGuardar={onGuardarConfig}
-        onCancelar={() => void inicializar()}
+        onCancelar={onSalirDeConfig}
         obtenerToken={() => sesionRef.current?.obtenerToken() ?? null}
       />
     );
@@ -514,7 +566,7 @@ function AppTauri() {
         onLogin={onLogin}
         onLoginCredencial={onLoginCredencial}
         lector={lectorLoginRef.current}
-        onConfig={() => void onAbrirConfig()}
+        onConfig={() => void onAbrirConfig("login")}
         onModoDemo={() => setModoDemo(true)}
         {...(logoDataUrl !== undefined ? { logoDataUrl } : {})}
       />
@@ -585,7 +637,7 @@ function AppTauri() {
           ? { terminalNombre: sesionRef.current.terminalNombre }
           : {})}
         onCerrarSesion={() => void onCerrarSesion()}
-        onAbrirConfig={() => void onAbrirConfig()}
+        onAbrirConfig={() => void onAbrirConfig("listo")}
       />
     );
   }

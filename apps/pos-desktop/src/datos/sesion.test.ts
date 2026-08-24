@@ -113,6 +113,48 @@ describe("SesionManager", () => {
     expect(guardada?.terminalNombre).toBe("Caja 1");
   });
 
+  it("volver a loguearse conserva la terminal ya elegida", async () => {
+    auth.login.mockResolvedValue(tokens(EN_1H()));
+    const s1 = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
+    await s1.login({ email: "a@b.com", password: "x" });
+    await s1.elegirTerminal("term-1", "Caja 1");
+
+    // Arranque siguiente: la app vuelve a pedir credenciales, pero la
+    // terminal es de la máquina y no debería preguntarse otra vez.
+    const s2 = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
+    await s2.login({ email: "otro@b.com", password: "x" });
+
+    expect(s2.hayTerminal()).toBe(true);
+    expect(s2.terminalId).toBe("term-1");
+    expect(s2.terminalNombre).toBe("Caja 1");
+    expect((await leerSesion(ejecutor))?.terminalId).toBe("term-1");
+  });
+
+  it("el login por credencial también conserva la terminal", async () => {
+    auth.login.mockResolvedValue(tokens(EN_1H()));
+    auth.loginConCredencial.mockResolvedValue(tokens(EN_1H()));
+    const s1 = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
+    await s1.login({ email: "a@b.com", password: "x" });
+    await s1.elegirTerminal("term-2", "Depósito");
+
+    const s2 = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
+    await s2.loginConCredencial("NXSCRED:u1:token");
+
+    expect(s2.terminalId).toBe("term-2");
+  });
+
+  it("después de cerrar sesión sí se vuelve a preguntar la terminal", async () => {
+    auth.login.mockResolvedValue(tokens(EN_1H()));
+    const sesion = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
+    await sesion.login({ email: "a@b.com", password: "x" });
+    await sesion.elegirTerminal("term-1", "Caja 1");
+
+    await sesion.cerrar();
+    await sesion.login({ email: "a@b.com", password: "x" });
+
+    expect(sesion.hayTerminal()).toBe(false);
+  });
+
   it("asegurarTokenVigente no refresca si el token sigue válido", async () => {
     auth.login.mockResolvedValue(tokens(EN_1H()));
     const sesion = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
