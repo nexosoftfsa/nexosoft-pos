@@ -1,0 +1,86 @@
+﻿===========================================================================
+  NEXOSOFT - DESTRABAR EL INSTALADOR DEL SERVIDOR
+  Para: Sebastian - "DeleteFile fallo; codigo 5. Acceso denegado"
+===========================================================================
+
+QUE PASA
+--------
+El instalador esta tratando de reemplazar
+C:\NexoSoft-Servidor\postgres-portable\bin\icudt67.dll, pero PostgreSQL esta
+corriendo y tiene ese .dll cargado. Windows no deja tocar un archivo abierto.
+
+Es un bug del instalador: no detenia el servidor antes de copiar. Ya esta
+arreglado, pero el arreglo viene en el instalador nuevo -- para el que tenes
+abierto ahora hay que bajar PostgreSQL a mano.
+
+
+IMPORTANTE
+----------
+NO toques "Omitir este archivo". Ese .dll son los datos de ICU de PostgreSQL:
+si queda el viejo con binarios nuevos, Postgres no vuelve a arrancar.
+
+DEJA EL CARTEL ABIERTO. No canceles todavia.
+
+
+PASO 1 - BAJAR POSTGRESQL DESDE OTRA VENTANA
+--------------------------------------------
+1.1 Sin cerrar el instalador, abri PowerShell como administrador.
+
+1.2 Pega esto y apreta ENTER:
+
+Stop-ScheduledTask -TaskName "NexoSoft cloud-api" -ErrorAction SilentlyContinue; Stop-ScheduledTask -TaskName "NexoSoft Actualizador" -ErrorAction SilentlyContinue; & "C:\NexoSoft-Servidor\postgres-portable\bin\pg_ctl.exe" stop -D "C:\ProgramData\NexoSoft\postgres-data" -m fast -w -t 30
+
+1.3 Despues pega esto, que barre lo que haya quedado vivo:
+
+Get-Process node,postgres,pg_ctl,cloudflared -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "C:\NexoSoft-Servidor*" } | Stop-Process -Force
+
+1.4 Y esto para confirmar que no quedo nada:
+
+Get-Process node,postgres,pg_ctl,cloudflared -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "C:\NexoSoft-Servidor*" } | Select-Object Id, ProcessName, Path
+
+    [ ] No devolvio ninguna linea (vacio = perfecto).
+
+    Si devuelve algo, mandame la salida y PARA ACA.
+
+
+PASO 2 - REINTENTAR
+-------------------
+2.1 Volve al cartel del instalador.
+2.2 Toca "Reintentar".
+
+    [ ] La barra siguio avanzando.
+
+2.3 Deja que termine. Al final abre una consola de PowerShell que hace el
+    bootstrap (initdb si hace falta, migraciones, cliente Prisma): puede
+    tardar varios minutos. No la cierres.
+
+    [ ] Llego a la pantalla final del instalador.
+
+
+PASO 3 - CONFIRMAR QUE QUEDO ANDANDO
+------------------------------------
+3.1 En PowerShell:
+
+Get-ScheduledTask -TaskName "NexoSoft PostgreSQL","NexoSoft cloud-api" | Get-ScheduledTaskInfo | Select-Object TaskName, LastRunTime, LastTaskResult
+
+3.2 Y esto, que le pregunta la version al servidor:
+
+(Invoke-RestMethod http://localhost:3000/api/v1/health) | ConvertTo-Json
+
+    Version que contesta: ____________
+
+    [ ] Dice 0.9.4 o mas alto y status "ok".
+
+3.3 Abri el POS y fijate que puedas entrar.
+
+
+SI YA HABIAS CANCELADO
+----------------------
+No pasa nada grave, pero la instalacion quedo por la mitad: algunos archivos
+son nuevos y otros viejos. Hace el PASO 1 igual (para bajar todo) y despues
+volve a correr el instalador desde cero. Esta vez va a pasar de largo.
+
+Si el instalador nuevo (0.9.5 o mas) ya esta publicado, usa ese: detiene todo
+solo y este instructivo no hace falta.
+
+===========================================================================
