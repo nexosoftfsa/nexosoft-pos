@@ -1,9 +1,9 @@
 ﻿===============================================================================
 NEXOSOFT - PRUEBA DEL SISTEMA DE AVISOS Y BLOQUEO POR FALTA DE PAGO
-Instrucciones para hacer en TU PC
+Para: Sebastian - PC de prueba
 ===============================================================================
 
-Hola. Esta prueba es para verificar el mecanismo nuevo de suscripcion mensual
+Seba: esta prueba es para verificar el mecanismo nuevo de suscripcion mensual
 ANTES de usarlo con un cliente real.
 
 Vas a necesitar estar en contacto con Rodrigo mientras la haces (telefono o
@@ -34,9 +34,7 @@ LO QUE NECESITAS
 -------------------------------------------------------------------------------
 
   [ ] Tu PC con NexoSoft instalado y funcionando
-  [ ] Poder abrir PowerShell COMO ADMINISTRADOR
-      (boton de Windows -> escribir "powershell" -> clic derecho ->
-       "Ejecutar como administrador")
+  [ ] PowerShell como administrador
   [ ] Internet
   [ ] Rodrigo del otro lado del telefono
 
