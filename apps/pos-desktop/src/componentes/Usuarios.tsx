@@ -40,6 +40,17 @@ function mensaje(e: unknown): string {
   return String(e);
 }
 
+/**
+ * El POS se actualiza antes que el servidor (el servidor lo hace solo, de
+ * madrugada), así que hay una ventana en la que la app conoce un endpoint que
+ * el servidor todavía no tiene. Nest contesta "Cannot POST /..." con 404, que
+ * no le dice nada a nadie; el 404 propio del módulo dice "Usuario no
+ * encontrado" y ese sí hay que mostrarlo tal cual.
+ */
+function esEndpointInexistente(e: unknown): boolean {
+  return e instanceof ErrorUsuarios && e.status === 404 && e.message.startsWith("Cannot ");
+}
+
 function etiquetaRol(rol: RolUsuario): string {
   return ROLES.find((r) => r.valor === rol)?.etiqueta ?? rol;
 }
@@ -435,7 +446,11 @@ function ModalContrasena({
     try {
       onCambiada(await api.cambiarPassword(usuario.id, cambio));
     } catch (err) {
-      setErrores([mensaje(err)]);
+      setErrores([
+        esEndpointInexistente(err)
+          ? "El servidor de esta sucursal todavía no tiene esta función. Se actualiza solo esta madrugada; si no podés esperar, usá 'Actualizar servidor' en Configuración."
+          : mensaje(err),
+      ]);
       setGuardando(false);
     }
   }
