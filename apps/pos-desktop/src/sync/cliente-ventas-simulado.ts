@@ -3,6 +3,7 @@
  * Sembrado con algunas ventas; anular emite una Nota de Crédito (comprobante
  * asociado), marca el original ANULADA. Sin backend fiscal real (CAE simulado).
  */
+import { ventasDemo, type VentaDemo } from "../datos/ventas-demo";
 import {
   ErrorVentas,
   type Comprobante,
@@ -24,7 +25,14 @@ export class ClienteVentasSimulado implements ClienteVentas {
 
   constructor() {
     const base = Date.now();
-    this.comprobantes = [
+    // Historial real del demo: los mismos 30 días de ventas de los que salen
+    // los reportes (ventas-demo.ts). Antes acá había dos comprobantes escritos
+    // a mano que no coincidían con nada de lo que mostraba Reportes.
+    this.comprobantes = ventasDemo()
+      .slice(-120)
+      .reverse()
+      .map((v, i) => this.deVentaDemo(v, i, base));
+    this.comprobantes.push(
       {
         id: "cmp-1",
         estado: "COMPLETADA",
@@ -63,7 +71,33 @@ export class ClienteVentasSimulado implements ClienteVentas {
           { id: "pg2", medioPago: "TARJETA_CREDITO", monto: "7000.00" },
         ],
       },
-    ];
+    );
+  }
+
+  /** Una venta del historial demo como comprobante fiscal simulado. */
+  private deVentaDemo(v: VentaDemo, indice: number, base: number): Comprobante {
+    const bruto = v.total + v.descuento;
+    return {
+      id: v.id,
+      estado: "COMPLETADA",
+      subtotal: bruto.toFixed(2),
+      descuento: v.descuento.toFixed(2),
+      total: v.total.toFixed(2),
+      medioPago: v.medioPago,
+      cae: String(base + indice).padStart(14, "0").slice(-14),
+      caeFechaVto: new Date(base + 10 * 86400000).toISOString(),
+      numeroComprobante: v.numeroTicket,
+      tipoComprobante: "FacturaB",
+      creadaEn: v.fecha,
+      comprobanteAsociadoId: null,
+      items: v.lineas.map((l, j) => ({
+        id: `${v.id}-it${j}`,
+        cantidad: String(l.cantidad),
+        precioUnitario: l.unitario.toFixed(2),
+        subtotal: l.total.toFixed(2),
+        producto: { id: l.productoId, nombre: l.descripcion, codigo: l.codigo },
+      })),
+    };
   }
 
   async historial(): Promise<Comprobante[]> {

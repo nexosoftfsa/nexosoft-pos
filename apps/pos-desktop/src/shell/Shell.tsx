@@ -446,7 +446,15 @@ export function Shell({
               }}
             />
           ) : activo ? (
-            <Placeholder modulo={activo} />
+            <Placeholder
+              modulo={activo}
+              {...(activo.id === "config" && onAbrirConfig === undefined
+                ? {
+                    motivo:
+                      "El modo demo no usa servidor de sucursal, así que no hay nada que configurar acá. En el sistema instalado, esta pantalla tiene los datos del comercio, el punto de venta, el acceso remoto y las actualizaciones.",
+                  }
+                : {})}
+            />
           ) : null}
         </div>
       </div>

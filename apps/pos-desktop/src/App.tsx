@@ -65,6 +65,7 @@ import type { ClienteAsistenteConfig } from "./sync/cliente-asistente-config";
 import { ClienteAsistenteConfigHttp } from "./sync/cliente-asistente-config";
 import type { ClienteUsuarios } from "./sync/cliente-usuarios-http";
 import { ClienteUsuariosHttp } from "./sync/cliente-usuarios-http";
+import { ClienteUsuariosSimulado } from "./sync/cliente-usuarios-simulado";
 import type { ClienteCredenciales } from "./sync/cliente-credenciales-http";
 import { ClienteCredencialesHttp } from "./sync/cliente-credenciales-http";
 
@@ -144,8 +145,10 @@ function AppDemo({ onSalir }: { onSalir?: () => void } = {}) {
   const clienteRemitosRef = useRef<ClienteRemitos | null>(null);
   const clienteProveedoresRef = useRef<ClienteProveedores | null>(null);
   const clienteMediosPagoRef = useRef<ClienteMediosPago | null>(null);
+  const clienteUsuariosRef = useRef<ClienteUsuarios | null>(null);
   useEffect(() => {
     setEntorno(crearEntornoPos());
+    clienteUsuariosRef.current = new ClienteUsuariosSimulado();
     clienteCatalogoRef.current = new ClienteCatalogoAdminSimulado();
     clienteStockRef.current = new ClienteStockSimulado();
     clienteCajaRef.current = new ClienteCajaSimulado();
@@ -184,6 +187,9 @@ function AppDemo({ onSalir }: { onSalir?: () => void } = {}) {
         : {})}
       {...(clienteMediosPagoRef.current !== null
         ? { clienteMediosPago: clienteMediosPagoRef.current }
+        : {})}
+      {...(clienteUsuariosRef.current !== null
+        ? { clienteUsuarios: clienteUsuariosRef.current }
         : {})}
       {...(onSalir ? { onCerrarSesion: onSalir, tituloCerrarSesion: "Salir del modo demo" } : {})}
     />

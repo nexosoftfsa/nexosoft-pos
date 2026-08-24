@@ -1,9 +1,16 @@
 /**
- * Adaptador EN MEMORIA de reportes, para el desarrollo en el navegador. Devuelve
- * datos de ejemplo para ver la pantalla sin backend (los números son fijos; el
- * rango no los cambia).
+ * Adaptador EN MEMORIA de reportes, para el modo demo y el desarrollo en el
+ * navegador.
+ *
+ * Antes devolvía números fijos escritos a mano: no cambiaban al mover el
+ * rango, no tenían relación con el catálogo y el "top de productos" nombraba
+ * artículos que no existían. Ahora agrega sobre las ventas ficticias de
+ * `ventas-demo.ts` — 30 días de historia sobre los 711 artículos del catálogo
+ * demo — así que el demo se comporta como el sistema real: cambiar el período
+ * cambia los números, y los totales cierran entre pantallas.
  */
 import type { RangoFechas } from "../componentes/reportes-helpers";
+import { ventasEntre, type VentaDemo } from "../datos/ventas-demo";
 import type {
   ClienteReportes,
   LineaDetalleVenta,
@@ -15,118 +22,119 @@ import type {
   VentaPorRubro,
 } from "./cliente-reportes";
 
+const dosDecimales = (n: number): string => (Math.round(n * 100) / 100).toFixed(2);
+
+/** Suma por clave, devolviendo las entradas ordenadas de mayor a menor. */
+function agrupar<T>(
+  items: readonly T[],
+  clave: (t: T) => string,
+  valor: (t: T) => number,
+): Array<[string, { total: number; cantidad: number }]> {
+  const mapa = new Map<string, { total: number; cantidad: number }>();
+  for (const it of items) {
+    const k = clave(it);
+    const acc = mapa.get(k) ?? { total: 0, cantidad: 0 };
+    acc.total += valor(it);
+    acc.cantidad += 1;
+    mapa.set(k, acc);
+  }
+  return [...mapa.entries()].sort((a, b) => b[1].total - a[1].total);
+}
+
 export class ClienteReportesSimulado implements ClienteReportes {
-  async resumen(_rango: RangoFechas): Promise<ResumenVentas> {
-    void _rango;
+  private ventas(rango: RangoFechas): VentaDemo[] {
+    return ventasEntre(rango.desde, rango.hasta);
+  }
+
+  async resumen(rango: RangoFechas): Promise<ResumenVentas> {
+    const ventas = this.ventas(rango);
+    const total = ventas.reduce((a, v) => a + v.total, 0);
+    const descuentos = ventas.reduce((a, v) => a + v.descuento, 0);
     return {
-      cantidadVentas: 42,
-      totalVendido: "318500.00",
-      totalDescuentos: "4200.00",
-      ticketPromedio: "7583.33",
+      cantidadVentas: ventas.length,
+      totalVendido: dosDecimales(total),
+      totalDescuentos: dosDecimales(descuentos),
+      ticketPromedio: dosDecimales(ventas.length === 0 ? 0 : total / ventas.length),
     };
   }
 
-  async serie(_rango: RangoFechas): Promise<PuntoSerie[]> {
-    void _rango;
-    const base = new Date();
-    const totales = [24000, 31000, 28500, 42000, 39000, 51000, 63000];
-    return totales.map((t, i) => {
-      const d = new Date(base);
-      d.setDate(d.getDate() - (totales.length - 1 - i));
-      return { fecha: d.toISOString().slice(0, 10), total: t.toFixed(2), cantidad: Math.round(t / 7500) };
-    });
+  async serie(rango: RangoFechas): Promise<PuntoSerie[]> {
+    // Solo los días CON ventas, igual que el endpoint real: es lo que hace
+    // que el conteo por días trabajados de los reportes tenga sentido.
+    const porDia = agrupar(this.ventas(rango), (v) => v.dia, (v) => v.total);
+    return porDia
+      .map(([fecha, { total, cantidad }]) => ({ fecha, total: dosDecimales(total), cantidad }))
+      .sort((a, b) => a.fecha.localeCompare(b.fecha));
   }
 
-  async porMedioPago(_rango: RangoFechas): Promise<VentaPorMedio[]> {
-    void _rango;
-    return [
-      { medioPago: "EFECTIVO", total: "148000.00", cantidad: 22 },
-      { medioPago: "TARJETA_CREDITO", total: "92000.00", cantidad: 9 },
-      { medioPago: "MERCADOPAGO_QR", total: "54500.00", cantidad: 8 },
-      { medioPago: "CUENTA_CORRIENTE", total: "24000.00", cantidad: 3 },
-    ];
+  async porMedioPago(rango: RangoFechas): Promise<VentaPorMedio[]> {
+    return agrupar(this.ventas(rango), (v) => v.medioPago, (v) => v.total).map(
+      ([medioPago, { total, cantidad }]) => ({ medioPago, total: dosDecimales(total), cantidad }),
+    );
   }
 
-  async topProductos(_rango: RangoFechas, limite = 10): Promise<TopProducto[]> {
-    void _rango;
-    const datos: TopProducto[] = [
-      { productoId: "yerba", nombre: "Yerba mate 1 kg", codigo: "7790007", cantidad: "58", monto: "220400.00" },
-      { productoId: "gaseosa", nombre: "Gaseosa 1,5 L", codigo: "7790001", cantidad: "44", monto: "81400.00" },
-      { productoId: "pan", nombre: "Pan lactal", codigo: "7790006", cantidad: "37", monto: "77700.00" },
-      { productoId: "cafe", nombre: "Café molido 250 g", codigo: "7790004", cantidad: "19", monto: "81700.00" },
-      { productoId: "leche", nombre: "Leche entera 1 L", codigo: "7790005", cantidad: "15", monto: "20250.00" },
-    ];
-    return datos.slice(0, limite);
+  async porRubro(rango: RangoFechas): Promise<VentaPorRubro[]> {
+    const lineas = this.ventas(rango).flatMap((v) => v.lineas);
+    return agrupar(lineas, (l) => l.rubro, (l) => l.total).map(([rubro, { total }]) => ({
+      rubro,
+      total: dosDecimales(total),
+    }));
   }
 
-  async porRubro(_rango: RangoFechas): Promise<VentaPorRubro[]> {
-    void _rango;
-    return [
-      { rubro: "Almacén", total: "142000.00" },
-      { rubro: "Bebidas", total: "68000.00" },
-      { rubro: "Limpieza", total: "41500.00" },
-      { rubro: "Perfumería", total: "28000.00" },
-      { rubro: "Kiosco", total: "22000.00" },
-      { rubro: "Frutería-Verdulería", total: "17000.00" },
-    ];
+  async topProductos(rango: RangoFechas, limite = 10): Promise<TopProducto[]> {
+    const lineas = this.ventas(rango).flatMap((v) => v.lineas);
+    const porProducto = new Map<
+      string,
+      { nombre: string; codigo: string; cantidad: number; monto: number }
+    >();
+    for (const l of lineas) {
+      const acc = porProducto.get(l.productoId) ?? {
+        nombre: l.descripcion,
+        codigo: l.codigo,
+        cantidad: 0,
+        monto: 0,
+      };
+      acc.cantidad += l.cantidad;
+      acc.monto += l.total;
+      porProducto.set(l.productoId, acc);
+    }
+    return [...porProducto.entries()]
+      .sort((a, b) => b[1].monto - a[1].monto)
+      .slice(0, limite)
+      .map(([productoId, p]) => ({
+        productoId,
+        nombre: p.nombre,
+        codigo: p.codigo,
+        cantidad: String(p.cantidad),
+        monto: dosDecimales(p.monto),
+      }));
   }
 
-  async rentabilidad(_rango: RangoFechas): Promise<Rentabilidad> {
-    void _rango;
-    return { ventasTotal: "318500.00", costoTotal: "198200.00", gananciaBruta: "120300.00" };
+  async rentabilidad(rango: RangoFechas): Promise<Rentabilidad> {
+    const lineas = this.ventas(rango).flatMap((v) => v.lineas);
+    const ventas = lineas.reduce((a, l) => a + l.total, 0);
+    const costo = lineas.reduce((a, l) => a + l.costoUnitario * l.cantidad, 0);
+    return {
+      ventasTotal: dosDecimales(ventas),
+      costoTotal: dosDecimales(costo),
+      gananciaBruta: dosDecimales(ventas - costo),
+    };
   }
 
-  async detalleVentas(_rango: RangoFechas): Promise<LineaDetalleVenta[]> {
-    void _rango;
-    return [
-      {
-        sucursal: "NexoSoft Almacén (demo)",
-        fecha: "2026-08-15T13:02:00.000Z",
-        numeroTicket: 1,
-        codigo: "7790007",
-        descripcion: "Yerba mate 1 kg",
-        rubro: "Almacén",
-        cantidad: "2",
-        unitario: "3800.00",
-        total: "7600.00",
-        ganancia: "2280.00",
-      },
-      {
-        sucursal: "NexoSoft Almacén (demo)",
-        fecha: "2026-08-15T13:02:00.000Z",
-        numeroTicket: 1,
-        codigo: "7790001",
-        descripcion: "Gaseosa 1,5 L",
-        rubro: "Bebidas",
-        cantidad: "1",
-        unitario: "1850.00",
-        total: "1850.00",
-        ganancia: "555.00",
-      },
-      {
-        sucursal: "NexoSoft Almacén (demo)",
-        fecha: "2026-08-16T10:15:00.000Z",
-        numeroTicket: 2,
-        codigo: "00034",
-        descripcion: "Limón",
-        rubro: "Frutería-Verdulería",
-        cantidad: "0.5",
-        unitario: "1200.00",
-        total: "600.00",
-        ganancia: null, // ejemplo de venta sin snapshot de costo (previa al ADR-0048)
-      },
-      {
-        sucursal: "NexoSoft Almacén (demo)",
-        fecha: "2026-08-18T09:40:00.000Z",
-        numeroTicket: 3,
-        codigo: "7790006",
-        descripcion: "Pan lactal",
-        rubro: null, // ejemplo de producto sin rubro asignado
-        cantidad: "3",
-        unitario: "2100.00",
-        total: "6300.00",
-        ganancia: "1890.00",
-      },
-    ];
+  async detalleVentas(rango: RangoFechas): Promise<LineaDetalleVenta[]> {
+    return this.ventas(rango).flatMap((v) =>
+      v.lineas.map((l) => ({
+        sucursal: "Demo",
+        fecha: v.fecha,
+        numeroTicket: v.numeroTicket,
+        codigo: l.codigo,
+        descripcion: l.descripcion,
+        rubro: l.rubro,
+        cantidad: String(l.cantidad),
+        unitario: dosDecimales(l.unitario),
+        total: dosDecimales(l.total),
+        ganancia: dosDecimales(l.total - l.costoUnitario * l.cantidad),
+      })),
+    );
   }
 }
