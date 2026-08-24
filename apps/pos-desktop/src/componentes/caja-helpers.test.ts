@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 
 import {
   importeNoNegativo,
   importePositivo,
   leerDiferencia,
   normalizarImporte,
+  puedeVenderConCaja,
 } from "./caja-helpers";
 
 describe("normalizarImporte", () => {
@@ -39,5 +40,21 @@ describe("leerDiferencia", () => {
 
   it("devuelve null si no hay diferencia (turno abierto)", () => {
     expect(leerDiferencia(null)).toBeNull();
+  });
+});
+
+describe("puedeVenderConCaja", () => {
+  it("con la caja abierta se vende", () => {
+    expect(puedeVenderConCaja("abierta")).toBe(true);
+  });
+
+  it("con la caja cerrada NO se vende", () => {
+    expect(puedeVenderConCaja("cerrada")).toBe(false);
+  });
+
+  it("si no se pudo consultar, se vende igual", () => {
+    // Offline-first (ADR-0004): un corte de red no puede frenar la venta. El
+    // bloqueo es por caja cerrada, no por falta de servidor.
+    expect(puedeVenderConCaja("desconocida")).toBe(true);
   });
 });

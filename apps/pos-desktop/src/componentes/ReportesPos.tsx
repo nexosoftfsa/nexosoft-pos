@@ -25,7 +25,12 @@ import {
   aIsoFechaHora,
   PRESETS,
   porcentaje,
+  aIso,
+  DIAS_TRABAJADOS_POR_PRESET,
   rangoDe,
+  rangoDeDiasTrabajados,
+  ultimosDiasTrabajados,
+  ventanaDeBusqueda,
   sectoresDeTorta,
   type PresetRango,
   type RangoFechas,
@@ -72,31 +77,65 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const rango = useMemo(
-    () => (preset === "personalizado" ? rangoCustom : rangoDe(preset)),
-    [preset, rangoCustom],
-  );
+  // Rango efectivo del período. Para "7 días"/"30 días" ya no son días
+  // corridos: se resuelve contra los datos (ver `cargar`), porque cuáles son
+  // los últimos N días trabajados depende de cuándo abrió el comercio.
+  const [rangoResuelto, setRangoResuelto] = useState<RangoFechas | null>(null);
+  const rango = useMemo(() => {
+    if (preset === "personalizado") return rangoCustom;
+    return rangoResuelto ?? rangoDe(preset);
+  }, [preset, rangoCustom, rangoResuelto]);
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setError(null);
     try {
+      // Paso 1: qué días trabajó el comercio. La serie del servidor solo trae
+      // los días con ventas, así que se pide una ventana ancha y se recortan
+      // los últimos N. Con "personalizado" no se toca nada: ahí el rango lo
+      // eligió la persona.
+      const diasPreset = preset === "personalizado" ? 0 : DIAS_TRABAJADOS_POR_PRESET[preset];
+      let serieGrafico: PuntoSerie[] = [];
+      let rangoPeriodo = preset === "personalizado" ? rangoCustom : rangoDe(preset);
+
+      if (diasPreset > 0) {
+        const ventana = await cliente.serie(ventanaDeBusqueda(diasPreset));
+        serieGrafico = ultimosDiasTrabajados(ventana, diasPreset);
+        // "Hoy" es un día, no un período: los KPI siguen siendo los de hoy y
+        // los días trabajados anteriores están solo para comparar en el
+        // gráfico.
+        if (preset !== "hoy" && preset !== "mes") {
+          rangoPeriodo = rangoDeDiasTrabajados(serieGrafico);
+        }
+      }
+      setRangoResuelto(preset === "personalizado" ? null : rangoPeriodo);
+
       const [resumen, serie, medios, rubros, top, rentabilidad] = await Promise.all([
-        cliente.resumen(rango),
-        cliente.serie(rango),
-        cliente.porMedioPago(rango),
-        cliente.porRubro(rango),
-        cliente.topProductos(rango, 10),
-        cliente.rentabilidad(rango),
+        cliente.resumen(rangoPeriodo),
+        cliente.serie(rangoPeriodo),
+        cliente.porMedioPago(rangoPeriodo),
+        cliente.porRubro(rangoPeriodo),
+        cliente.topProductos(rangoPeriodo, 10),
+        cliente.rentabilidad(rangoPeriodo),
       ]);
-      setDatos({ resumen, serie, medios, rubros, top, rentabilidad });
+      setDatos({
+        resumen,
+        serie: diasPreset > 0 ? serieGrafico : serie,
+        medios,
+        rubros,
+        top,
+        rentabilidad,
+      });
     } catch (e) {
       setError(mensaje(e));
       setDatos(null);
     } finally {
       setCargando(false);
     }
-  }, [cliente, rango]);
+    // `rango` sale a propósito de las dependencias: lo calcula este mismo
+    // efecto y volvería a dispararse solo, en loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cliente, preset, rangoCustom]);
 
   useEffect(() => {
     void cargar();
@@ -291,22 +330,33 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
             <div className="card">
               <div className="card__head">
                 <h3>Evolución de ventas</h3>
+                <span className="muted" style={{ fontSize: 12.5 }}>
+                  {preset === "personalizado"
+                    ? "días con ventas del período"
+                    : `últimos ${DIAS_TRABAJADOS_POR_PRESET[preset]} días trabajados`}
+                </span>
               </div>
               <div className="card__pad">
                 {datos.serie.length === 0 ? (
                   <div className="muted">Sin ventas en el período.</div>
                 ) : (
                   <div className="bars">
-                    {datos.serie.map((p) => (
-                      <div
-                        key={p.fecha}
-                        className="bar"
-                        style={{ height: `${Math.max(4, (Number(p.total) / maxSerie) * 100)}%` }}
-                        title={`${p.fecha}: ${money(p.total)}`}
-                      >
-                        <i>{p.fecha.slice(8, 10)}</i>
-                      </div>
-                    ))}
+                    {datos.serie.map((p) => {
+                      // "Hoy" mostraba una sola barra al 100% ocupando la
+                      // tarjeta entera, que no se compara contra nada. Ahora
+                      // el día actual va resaltado entre los anteriores.
+                      const esHoy = p.fecha.slice(0, 10) === aIso(new Date());
+                      return (
+                        <div
+                          key={p.fecha}
+                          className={`bar${esHoy ? " bar--hoy" : ""}`}
+                          style={{ height: `${Math.max(4, (Number(p.total) / maxSerie) * 100)}%` }}
+                          title={`${p.fecha}${esHoy ? " (hoy)" : ""}: ${money(p.total)}`}
+                        >
+                          <i>{esHoy ? "hoy" : p.fecha.slice(8, 10)}</i>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 
 import { CondicionIva } from "@nexosoft/domain";
-import { leerComoDataUrl } from "../archivos";
+import { prepararLogo } from "../archivos";
 import { AccesoRemoto } from "./AccesoRemoto";
 import { Actualizaciones } from "./Actualizaciones";
 
@@ -19,8 +19,14 @@ export interface ValoresConfig {
   readonly logoDataUrl?: string;
 }
 
-/** Tamaño máximo del archivo de logo (queda embebido en SQLite y viaja en cada impresión). */
-const LOGO_MAX_BYTES = 300 * 1024;
+/**
+ * Tope del archivo de ORIGEN, solo para descartar algo disparatado antes de
+ * intentar procesarlo. El tamaño con el que se guarda lo resuelve
+ * `prepararLogo` reescalando — mismo criterio que la foto de perfil en
+ * Usuarios. Antes se rechazaba de plano cualquier logo de más de 300 KB, que
+ * es lo que pasaba con cualquier archivo salido de un diseñador.
+ */
+const ARCHIVO_LOGO_MAX_BYTES = 20 * 1024 * 1024;
 
 const EMISORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
   { valor: CondicionIva.ResponsableInscripto, etiqueta: "Responsable Inscripto" },
@@ -67,12 +73,12 @@ export function PantallaConfig({
     const archivo = e.target.files?.[0];
     e.target.value = "";
     if (!archivo) return;
-    if (archivo.size > LOGO_MAX_BYTES) {
-      setError(`El logo no puede pesar más de ${Math.round(LOGO_MAX_BYTES / 1024)} KB.`);
+    if (archivo.size > ARCHIVO_LOGO_MAX_BYTES) {
+      setError("Ese archivo es enorme. Elegí una imagen de logo, no una foto sin recortar.");
       return;
     }
     try {
-      setLogoDataUrl(await leerComoDataUrl(archivo));
+      setLogoDataUrl(await prepararLogo(archivo));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

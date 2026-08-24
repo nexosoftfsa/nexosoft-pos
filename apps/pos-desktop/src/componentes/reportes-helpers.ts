@@ -52,6 +52,68 @@ export function rangoDe(preset: PresetRango, hoy: Date = new Date()): RangoFecha
   return { desde: aIso(primero), hasta };
 }
 
+/**
+ * Cuántos días TRABAJADOS abarca cada preset. Un comercio que cierra los
+ * domingos y los lunes tenía, con "7 días", cuatro barras y cuatro días de
+ * facturación: el período se contaba en días corridos, no en jornadas.
+ *
+ * "Hoy" no es un período sino un día, pero el gráfico igual muestra los
+ * últimos días trabajados para poder comparar: una sola barra ocupando todo
+ * el ancho no dice nada.
+ */
+export const DIAS_TRABAJADOS_POR_PRESET: Readonly<Record<PresetRango, number>> = {
+  hoy: 10,
+  semana: 7,
+  treinta: 30,
+  mes: 31,
+  personalizado: 0,
+};
+
+/**
+ * Ventana de calendario en la que buscar esos días trabajados. Se pide de
+ * sobra porque no se sabe de antemano cuántos días cerró el comercio; el
+ * servidor devuelve solo los días con ventas, así que traer de más no agrega
+ * filas, solo alcance.
+ */
+export function ventanaDeBusqueda(diasTrabajados: number, hoy: Date = new Date()): RangoFechas {
+  const d = new Date(hoy);
+  d.setDate(d.getDate() - Math.max(30, diasTrabajados * 4));
+  return { desde: aIso(d), hasta: aIso(hoy) };
+}
+
+/** Un punto de la serie: fecha `YYYY-MM-DD` (o ISO con hora) y total. */
+interface PuntoConFecha {
+  readonly fecha: string;
+}
+
+/**
+ * Se queda con los últimos `cantidad` días trabajados de una serie. La serie
+ * del servidor ya trae únicamente los días con ventas, así que "trabajado" es
+ * "aparece en la serie".
+ */
+export function ultimosDiasTrabajados<T extends PuntoConFecha>(
+  serie: readonly T[],
+  cantidad: number,
+): T[] {
+  const ordenada = [...serie].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  return cantidad <= 0 ? ordenada : ordenada.slice(-cantidad);
+}
+
+/**
+ * Rango que cubre exactamente esos días trabajados: desde el más viejo hasta
+ * hoy. Los días cerrados que queden en el medio suman cero, así que los
+ * totales del período siguen siendo los de esas jornadas.
+ */
+export function rangoDeDiasTrabajados(
+  dias: readonly PuntoConFecha[],
+  hoy: Date = new Date(),
+): RangoFechas {
+  const hasta = aIso(hoy);
+  const primero = dias[0]?.fecha;
+  if (primero === undefined) return { desde: hasta, hasta };
+  return { desde: primero.slice(0, 10), hasta };
+}
+
 /** Porcentaje (0–100) de una parte sobre un total, para las barras. */
 export function porcentaje(parte: string, total: string): number {
   const t = Number(total);

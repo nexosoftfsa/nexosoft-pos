@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { aIso, aIsoFechaHora, porcentaje, rangoDe, sectoresDeTorta } from "./reportes-helpers";
+import {
+  aIso,
+  aIsoFechaHora,
+  DIAS_TRABAJADOS_POR_PRESET,
+  porcentaje,
+  rangoDe,
+  rangoDeDiasTrabajados,
+  sectoresDeTorta,
+  ultimosDiasTrabajados,
+  ventanaDeBusqueda,
+} from "./reportes-helpers";
 
 const HOY = new Date(2026, 6, 15); // 15/07/2026 (local)
 
@@ -72,5 +82,69 @@ describe("sectoresDeTorta", () => {
     const r = sectoresDeTorta([7, 13, 25, 5]);
     const suma = r.reduce((a, s) => a + s.porcentaje, 0);
     expect(suma).toBeCloseTo(100, 6);
+  });
+});
+
+// El caso que se reportó: se elige "7 días" pero solo se trabajaron 4, y el
+// panel mostraba 4 barras y la facturación de 4 jornadas. Ahora el período se
+// cuenta en días trabajados.
+describe("días trabajados", () => {
+  const serie = [
+    { fecha: "2026-07-01", total: "100" },
+    { fecha: "2026-07-02", total: "200" },
+    { fecha: "2026-07-05", total: "300" },
+    { fecha: "2026-07-08", total: "400" },
+    { fecha: "2026-07-09", total: "500" },
+  ];
+
+  it("toma los últimos N días con ventas, no los últimos N del calendario", () => {
+    const r = ultimosDiasTrabajados(serie, 3);
+    expect(r.map((p) => p.fecha)).toEqual(["2026-07-05", "2026-07-08", "2026-07-09"]);
+  });
+
+  it("si trabajó menos días que los pedidos, devuelve los que hay", () => {
+    expect(ultimosDiasTrabajados(serie, 20)).toHaveLength(5);
+  });
+
+  it("ordena por fecha aunque la serie venga al revés", () => {
+    const alReves = [...serie].reverse();
+    expect(ultimosDiasTrabajados(alReves, 2).map((p) => p.fecha)).toEqual([
+      "2026-07-08",
+      "2026-07-09",
+    ]);
+  });
+
+  it("el rango va del día trabajado más viejo hasta hoy", () => {
+    const r = rangoDeDiasTrabajados(ultimosDiasTrabajados(serie, 3), HOY);
+    expect(r).toEqual({ desde: "2026-07-05", hasta: "2026-07-15" });
+  });
+
+  it("sin ningún día trabajado, el rango es solo hoy", () => {
+    expect(rangoDeDiasTrabajados([], HOY)).toEqual({ desde: "2026-07-15", hasta: "2026-07-15" });
+  });
+
+  it("acepta fechas con hora y se queda con el día", () => {
+    const conHora = [{ fecha: "2026-07-05T10:30:00.000Z" }];
+    expect(rangoDeDiasTrabajados(conHora, HOY).desde).toBe("2026-07-05");
+  });
+
+  it("la ventana de búsqueda mira bastante más atrás que los días pedidos", () => {
+    const v = ventanaDeBusqueda(7, HOY);
+    expect(v.hasta).toBe("2026-07-15");
+    // 7 * 4 = 28 días, pero el mínimo es 30.
+    expect(v.desde).toBe("2026-06-15");
+  });
+
+  it("para 30 días trabajados busca 120 días de calendario", () => {
+    expect(ventanaDeBusqueda(30, HOY).desde).toBe("2026-03-17");
+  });
+
+  it('"Hoy" igual pide varios días, para poder comparar', () => {
+    expect(DIAS_TRABAJADOS_POR_PRESET.hoy).toBeGreaterThan(1);
+  });
+
+  it("el rango personalizado no se toca", () => {
+    expect(DIAS_TRABAJADOS_POR_PRESET.personalizado).toBe(0);
+    expect(ultimosDiasTrabajados(serie, 0).map((p) => p.fecha)).toEqual(serie.map((p) => p.fecha));
   });
 });

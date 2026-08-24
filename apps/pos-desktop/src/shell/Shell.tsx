@@ -31,6 +31,8 @@ import { IndicadorSync } from "../sync/IndicadorSync";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
 import { BannerSuscripcion, PantallaSuscripcionBloqueada } from "../componentes/AvisoSuscripcion";
+import { PantallaCajaCerrada } from "../componentes/AvisoCajaCerrada";
+import { puedeVenderConCaja, type EstadoCaja } from "../componentes/caja-helpers";
 import { CatalogoAbm } from "../componentes/CatalogoAbm";
 import { StockAbm } from "../componentes/StockAbm";
 import { CajaPanel } from "../componentes/CajaPanel";
@@ -179,6 +181,26 @@ export function Shell({
       return nuevo;
     });
   }
+
+  // Estado de la caja (Fase 17.F): sin turno abierto no se vende.
+  //
+  // Se refresca al entrar a Ventas y al volver de Caja, que son los dos
+  // momentos en los que puede haber cambiado. No hace falta un intervalo: el
+  // turno lo abre y lo cierra esta misma terminal.
+  const [estadoCaja, setEstadoCaja] = useState<EstadoCaja>("desconocida");
+  useEffect(() => {
+    if (!clienteCaja || terminalId === undefined) return;
+    let vivo = true;
+    clienteCaja
+      .turnoActual(terminalId)
+      .then((t) => vivo && setEstadoCaja(t === null ? "cerrada" : "abierta"))
+      // Sin respuesta del servidor NO se bloquea: vender no depende de la red
+      // (ADR-0004). Ver `puedeVenderConCaja`.
+      .catch(() => vivo && setEstadoCaja("desconocida"));
+    return () => {
+      vivo = false;
+    };
+  }, [clienteCaja, terminalId, activoId]);
 
   // Clientes para vender en cuenta corriente (fiado) desde la pantalla de ventas.
   const [clientesVenta, setClientesVenta] = useState<{ id: string; nombre: string }[]>([]);
@@ -379,6 +401,8 @@ export function Shell({
                 estado={suscripcion}
                 onCerrarCaja={() => navegar("caja")}
               />
+            ) : !puedeVenderConCaja(estadoCaja) ? (
+              <PantallaCajaCerrada onAbrirCaja={() => navegar("caja")} />
             ) : (
               <PantallaPos
                 entorno={entorno}

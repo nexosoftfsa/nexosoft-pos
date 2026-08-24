@@ -638,12 +638,17 @@
 .bars {
   display: flex;
   align-items: flex-end;
+  justify-content: center;
   gap: 10px;
   height: 170px;
   padding: 8px 4px 0;
 }
 .bars .bar {
-  flex: 1;
+  flex: 1 1 0;
+  /* Sin tope, un solo dia (el caso "Hoy") daba una barra del ancho de toda la
+     tarjeta: impactante y completamente inutil, porque no se compara contra
+     nada. */
+  max-width: 64px;
   background: var(--teal-soft);
   border-radius: 8px 8px 0 0;
   position: relative;
@@ -659,8 +664,15 @@
   color: var(--muted);
   font-style: normal;
 }
-.bars .bar:last-child {
+/* El resaltado es del dia de HOY, no del ultimo del grafico. Antes lo llevaba
+   :last-child, que marcaba como "hoy" al ultimo dia trabajado aunque el
+   comercio no hubiera vendido nada todavia hoy. */
+.bars .bar--hoy {
   background: var(--grad);
+}
+.bars .bar--hoy i {
+  color: var(--teal);
+  font-weight: 700;
 }
 .barra-prop {
   margin-bottom: 14px;
