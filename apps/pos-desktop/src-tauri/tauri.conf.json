@@ -1,7 +1,7 @@
 {
     "$schema":  "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName":  "NexoSoft POS",
-    "version":  "0.1.30",
+    "version":  "0.1.31",
     "identifier":  "ar.nexosoft.pos",
     "build":  {
                   "frontendDist":  "../dist",
