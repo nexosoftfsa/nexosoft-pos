@@ -1,0 +1,83 @@
+﻿===========================================================================
+  NEXOSOFT - EL POS NO ACEPTA EL USUARIO QUE PUSE AL INSTALAR
+  Para: Sebastian
+===========================================================================
+
+QUE PASABA
+----------
+No era la version del POS. Era el instalador: el usuario y la contrasena que
+te pide en pantalla NO se creaban cuando ya habia una instalacion previa en
+esa PC.
+
+Por que: la base de datos vive en C:\ProgramData\NexoSoft y NO se borra al
+desinstalar (a proposito, son los datos del comercio). Al reinstalar ya hay
+usuarios, y el servidor cierra el alta de usuarios sin sesion de administrador
+apenas existe uno. El instalador intentaba, le decian que no, se lo guardaba
+para si mismo y seguia como si nada.
+
+Ya esta arreglado en el servidor 0.9.7.
+
+
+PASO 0 - PROBA LAS CREDENCIALES VIEJAS (30 segundos)
+-----------------------------------------------------
+Si te acordas del usuario y la clave de la PRIMERA vez que instalaste en esa
+PC, probalos ahora. Esos si existen: son los unicos que se llegaron a crear.
+
+    [ ] Entre con las viejas -> listo, no hagas nada mas. Avisame igual.
+    [ ] No me acuerdo / no andan -> segui al PASO 1.
+
+
+PASO 1 - INSTALAR 0.9.7
+------------------------
+1.1 Baja NexoSoft-Servidor-0.9.7-Setup.exe (o mas nuevo).
+
+1.2 Correlo. Cuando te pida el usuario administrador, poné el que quieras
+    usar de ahora en adelante. Anotalo:
+
+    Usuario: ____________________
+    Clave:   ____________________
+
+1.3 Cuando te pida el nombre del comercio, poné el mismo de antes si te
+    acordas. Si ponés otro, no pasa nada: renombra la sucursal que ya existe,
+    no crea una nueva.
+
+1.4 Deja que termine. Al final, LEE LA ULTIMA PANTALLA:
+
+    - Si dice que el servidor esta funcionando, con las direcciones del
+      panel, salio todo bien.
+    - Si dice "LA CONFIGURACION NO TERMINO BIEN", PARA y mandame el archivo
+      que nombra ahi.
+
+    [ ] Salio bien.
+
+1.5 Abri el POS y entra con lo que anotaste en 1.2.
+
+    [ ] Entre.
+
+Si entraste, terminaste. Ese usuario queda como ADMIN y ya podes crear los
+demas desde Usuarios (ahora tambien podes cambiarles la contrasena desde
+ahi, es nuevo).
+
+
+SI 1.5 TAMPOCO ANDA
+-------------------
+Corre esto en PowerShell como administrador, cambiando NOMBRE, USUARIO y
+CLAVE por lo que quieras. Es exactamente lo que hace el instalador, pero a
+mano y mostrando lo que hizo:
+
+cd C:\NexoSoft-Servidor\dist-servidor
+$env:DATABASE_URL = ((Get-Content .env | Select-String "^DATABASE_URL=").Line -replace "^DATABASE_URL=","")
+..\node-portable\node.exe scripts\asegurar-admin.mjs --comercio "NOMBRE DEL COMERCIO" --usuario "USUARIO" --password "CLAVE"
+
+Tiene que imprimir dos lineas: una que empieza con SUCURSAL y otra con ADMIN
+CREADO o ADMIN ACTUALIZADO. Mandame lo que diga.
+
+
+PARA QUE SEPAS
+--------------
+Ahora reinstalar el servidor es tambien la forma de recuperar el acceso si
+nadie se acuerda de la contrasena del administrador: el instalador se la
+cambia al usuario que le digas. Tiene sentido porque para correrlo hay que
+estar fisicamente en la PC del servidor y con permisos de administrador.
+
+===========================================================================
