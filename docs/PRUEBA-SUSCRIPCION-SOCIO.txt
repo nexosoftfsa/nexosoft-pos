@@ -55,7 +55,7 @@ Si ofrece una version nueva, instalala. El POS se va a reiniciar solo.
 
 Cuando termine, volve a Configuracion y fijate que diga:
 
-    POS: 0.1.29      (o un numero mas alto)
+    POS: 0.1.30      (o un numero mas alto)
 
 
 PASO 1.2 - Actualizar el servidor
@@ -70,7 +70,7 @@ No cierres nada hasta que termine.
 
 Cuando termine, cerra y volve a abrir la Configuracion. Tiene que decir:
 
-    Servidor: 0.9.1     (o un numero mas alto)
+    Servidor: 0.9.2     (o un numero mas alto)
 
     [ ] Anotá lo que dice: POS ________   Servidor ________
 
@@ -91,9 +91,10 @@ Tiene que terminar diciendo:
 
 Si dice otra cosa, PARA ACA y avisale a Rodrigo.
 
-SI DICE `no se reconoce como nombre de un cmdlet`: es que a tu PC le falta
-ese archivo. Pediselo a Rodrigo y guardalo en C:\NexoSoft-Servidor\scripts\
-antes de volver a intentar.
+SI DICE `no se reconoce como nombre de un cmdlet`: a tu PC le falta ese
+archivo. Desde la version 0.9.2 del servidor se instala solo, asi que primero
+fijate que el PASO 1.2 haya llegado a 0.9.2 o mas nuevo. Si aun asi falta,
+pediselo a Rodrigo y guardalo en C:\NexoSoft-Servidor\scripts\
 
 
 ===============================================================================
@@ -302,7 +303,7 @@ SI ALGO NO FUNCIONA
 ===============================================================================
 
 * "El POS no muestra ningun aviso, en ningun paso"
-  -> Fijate en Configuracion que el servidor sea 0.9.1 o mas nuevo.
+  -> Fijate en Configuracion que el servidor sea 0.9.2 o mas nuevo.
   -> Fijate que el paso 1.3 haya terminado con "Servidor arriba".
   -> Espera al menos 6 minutos: el sistema se actualiza solo.
 

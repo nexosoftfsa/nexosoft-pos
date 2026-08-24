@@ -33,13 +33,13 @@ ANTES DE EMPEZAR - en TU PC
 EN LA PC DEL SOCIO - preparar (una sola vez)
 -------------------------------------------------------------------------------
 
-3) Actualizar el servidor a la 0.9.1 o mas nueva.
+3) Actualizar el servidor a la 0.9.2 o mas nueva.
 
    En el POS de esa PC:  Configuracion -> Actualizaciones -> "Actualizar servidor"
    Windows va a pedir permiso de administrador. Tarda unos minutos.
 
    VERIFICAR: cuando termine, Configuracion tiene que mostrar
-       Servidor: 0.9.1   (o mas nuevo)
+       Servidor: 0.9.2   (o mas nuevo)
 
    Si el POS todavia no muestra la linea "Servidor:", actualiza primero el POS
    (el mismo boton de arriba, "Buscar actualizaciones").
@@ -140,7 +140,7 @@ SI ALGO NO PASA LO QUE TIENE QUE PASAR
 -------------------------------------------------------------------------------
 
 * "El POS no muestra ningun aviso"
-  -> Confirma que el servidor sea 0.9.1+ (Configuracion lo muestra).
+  -> Confirma que el servidor sea 0.9.2+ (Configuracion lo muestra).
   -> Confirma que corriste configurar-suscripcion.ps1 con el id correcto.
   -> Espera al menos 6 minutos: el sistema se actualiza solo.
 

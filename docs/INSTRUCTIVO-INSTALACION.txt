@@ -13,8 +13,8 @@ REGLAS DE ORO  (leer SIEMPRE antes de salir)
 
 1) EL POS Y EL SERVIDOR TIENEN NUMERACIONES DISTINTAS.
 
-      POS       ->  v0.1.29         (tags: v0.1.29)
-      SERVIDOR  ->  servidor-v0.9.1 (tags: servidor-v0.9.1)
+      POS       ->  v0.1.30         (tags: v0.1.30)
+      SERVIDOR  ->  servidor-v0.9.2 (tags: servidor-v0.9.2)
 
    NUNCA uses el numero del POS para el servidor. Ya paso: se compilo un
    instalador de servidor con el numero del POS (0.1.17) cuando el servidor
