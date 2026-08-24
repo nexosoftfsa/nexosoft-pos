@@ -9,9 +9,16 @@ El instalador esta tratando de reemplazar
 C:\NexoSoft-Servidor\postgres-portable\bin\icudt67.dll, pero PostgreSQL esta
 corriendo y tiene ese .dll cargado. Windows no deja tocar un archivo abierto.
 
-Es un bug del instalador: no detenia el servidor antes de copiar. Ya esta
-arreglado, pero el arreglo viene en el instalador nuevo -- para el que tenes
-abierto ahora hay que bajar PostgreSQL a mano.
+Es un bug del instalador: no detenia el servidor antes de copiar.
+
+OJO: la 0.9.5 decia arreglarlo y NO lo arreglaba -- el paso estaba escrito
+pero no llegaba a ejecutarse. Recien la 0.9.6 lo hace de verdad.
+
+  -> Si tenes el instalador 0.9.6 o mas nuevo, no necesitas este instructivo:
+     correlo y listo. Si te falla igual, saltea al final ("SI LA 0.9.6
+     TAMBIEN FALLA").
+
+  -> Si estas con el 0.9.5 o anterior abierto y trabado, segui aca.
 
 
 IMPORTANTE
@@ -80,7 +87,25 @@ No pasa nada grave, pero la instalacion quedo por la mitad: algunos archivos
 son nuevos y otros viejos. Hace el PASO 1 igual (para bajar todo) y despues
 volve a correr el instalador desde cero. Esta vez va a pasar de largo.
 
-Si el instalador nuevo (0.9.5 o mas) ya esta publicado, usa ese: detiene todo
-solo y este instructivo no hace falta.
+Mejor todavia: baja el instalador 0.9.6 (o mas nuevo), que detiene todo solo.
+
+
+---------------------------------------------------------------------------
+  SI LA 0.9.6 TAMBIEN FALLA
+---------------------------------------------------------------------------
+
+Necesito UN dato para saber que paso. Corre esto y mandame el resultado:
+
+Get-Content "C:\ProgramData\NexoSoft\logs\detener-servidor.log" -Tail 40
+
+Ese log lo escribe el paso que detiene el servidor, con la lista de procesos
+que encontro antes y despues.
+
+  - Si el archivo NO EXISTE, el paso ni siquiera arranco: el problema esta en
+    el instalador, no en tu PC.
+  - Si existe y dice "Siguen vivos", ahi va a estar el proceso que no se deja
+    cerrar, con su PID y su ruta.
+
+Mandame lo que diga y no toques nada mas.
 
 ===========================================================================
