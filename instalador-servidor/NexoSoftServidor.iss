@@ -63,6 +63,11 @@ Source: "..\scripts\instalacion\abrir-firewall-servidor.ps1"; DestDir: "{app}\sc
 Source: "..\scripts\instalacion\actualizador-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\instalar-acceso-remoto.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\configurar-suscripcion.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "..\scripts\instalacion\detener-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+; Y otra vez, sin copiar: PrepareToInstall lo necesita ANTES de que empiece la
+; copia de archivos, que es cuando {app}\scripts todavia tiene la version
+; vieja (o no existe).
+Source: "..\scripts\instalacion\detener-servidor.ps1"; Flags: dontcopy
 
 [Run]
 ; No "runhidden": se deja visible la consola de PowerShell durante este
@@ -73,6 +78,13 @@ Filename: "powershell.exe"; \
     Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\bootstrap-servidor-standalone.ps1"" -NombreComercio ""{code:GetNombreComercio}"" -AdminUsuario ""{code:GetAdminUsuario}"" -AdminPassword ""{code:GetAdminPassword}"" -NodeDir ""{app}\node-portable"" -PostgresDir ""{app}\postgres-portable"" -ServidorDir ""{app}\dist-servidor"" -PuertoPostgres {code:GetPuertoPostgres} -CodigoAccesoRemoto ""{code:GetCodigoAccesoRemoto}"""; \
     StatusMsg: "Configurando el servidor (puede tardar varios minutos)..."; \
     Flags: waituntilterminated
+
+[UninstallRun]
+; Mismo motivo que PrepareToInstall: no se pueden borrar archivos que un
+; proceso vivo tiene abiertos.
+Filename: "powershell.exe"; \
+    Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\detener-servidor.ps1"" -RaizInstalacion ""{app}"""; \
+    Flags: runhidden; RunOnceId: "DetenerServidorNexoSoft"
 
 [Code]
 var
@@ -118,6 +130,40 @@ begin
            'numeraciones distintas) y volve a intentar.', mbError, MB_OK);
     Result := False;
   end;
+end;
+
+{ Baja el servidor que ya esta corriendo ANTES de empezar a copiar archivos.
+
+  Sin esto, reinstalar sobre una instalacion andando moria a mitad de camino:
+  Windows no deja reemplazar un archivo que un proceso vivo tiene abierto, y
+  postgres.exe mantiene cargados los .dll de postgres-portable\bin. El
+  instalador mostraba "DeleteFile fallo; codigo 5. Acceso denegado" sobre
+  icudt67.dll, con las tres salidas malas: reintentar (falla igual), omitir el
+  archivo (deja un PostgreSQL con binarios de dos versiones distintas) o
+  cancelar (con archivos ya reemplazados).
+
+  Si no se puede detener, se aborta ACA, antes de tocar un solo archivo: es
+  preferible no instalar a dejar la instalacion por la mitad. El bootstrap del
+  final vuelve a levantar las tareas. }
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  Codigo: Integer;
+begin
+  Result := '';
+  { En una PC limpia no hay nada corriendo que parar. }
+  if VersionYaInstalada() = '' then exit;
+
+  ExtractTemporaryFile('detener-servidor.ps1');
+  if not Exec('powershell.exe',
+              '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{tmp}\detener-servidor.ps1') +
+              '" -RaizInstalacion "' + ExpandConstant('{app}') + '"',
+              '', SW_HIDE, ewWaitUntilTerminated, Codigo) then begin
+    Result := 'No se pudo ejecutar el paso que detiene el servidor. Cerra el instalador y avisale a NexoSoft.';
+    exit;
+  end;
+  if Codigo <> 0 then
+    Result := 'No se pudo detener el servidor que esta corriendo en esta PC, asi que no se toco ningun archivo.' + #13#10 + #13#10 +
+              'Reinicia la PC y volve a correr este instalador ANTES de abrir el POS.';
 end;
 
 procedure InitializeWizard;
