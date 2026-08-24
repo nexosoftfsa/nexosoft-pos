@@ -239,26 +239,30 @@ if (-not $salud) { Write-Error "El servidor no respondio a tiempo en el puerto $
 Ok "Servidor respondiendo: $($salud.status)"
 
 Titulo "Sucursal y primer ADMIN"
+# Un solo script idempotente por Prisma (asegurar-admin.mjs), en vez de
+# crear-sucursal.mjs + POST /auth/register.
+#
+# El camino viejo fallaba en SILENCIO en toda reinstalacion, y era grave
+# porque el instalador pide usuario y contrasena en pantalla: la base vive en
+# C:\ProgramData\NexoSoft y no se borra al desinstalar, asi que al reinstalar
+# ya hay usuarios; con usuarios en la base RegistroGuard cierra
+# /auth/register salvo sesion de ADMIN (que el instalador no tiene), y si
+# encima la sucursal ya existia, la salida de crear-sucursal.mjs no matcheaba
+# el parseo del id y ni se intentaba. Las dos fallas quedaban en un warning
+# amarillo y la instalacion se declaraba exitosa; despues el POS rechazaba las
+# credenciales recien elegidas.
+#
+# Y si ahora falla, se corta: es preferible una instalacion que avisa que una
+# que dice OK y deja a la persona afuera de su propio sistema.
 Push-Location $ServidorDir
-$sucursal = & $nodeExe "scripts\crear-sucursal.mjs" --nombre "$NombreComercio" 2>&1 | Out-String
-Pop-Location
-Write-Host $sucursal
-$sucursalId = ($sucursal | Select-String -Pattern 'id:\s*(\S+)').Matches.Groups[1].Value
-if ($sucursalId) {
-    $body = @{
-        email         = $AdminUsuario
-        nombreDisplay = $NombreComercio
-        password      = $AdminPassword
-        rol           = "ADMIN"
-        sucursalId    = $sucursalId
-    } | ConvertTo-Json
-    try {
-        Invoke-RestMethod -Uri "http://localhost:$Puerto/api/v1/auth/register" -Method Post -Body $body -ContentType "application/json" | Out-Null
-        Ok "ADMIN '$AdminUsuario' creado"
-    } catch {
-        Write-Host "No se pudo crear el ADMIN automaticamente (¿ya existia?). Revisar a mano si hace falta." -ForegroundColor Yellow
+try {
+    Correr "asegurar-admin" {
+        & $nodeExe "scripts\asegurar-admin.mjs" --comercio "$NombreComercio" --usuario "$AdminUsuario" --password "$AdminPassword"
     }
+} finally {
+    Pop-Location
 }
+Ok "Sucursal y ADMIN '$AdminUsuario' listos"
 
 if ($CodigoAccesoRemoto) {
     Titulo "Acceso remoto (Fase 17.A)"
@@ -288,4 +292,10 @@ Write-Host "IP de esta PC para configurar Deposito/Oficina: $ip"
 # El instalador (Fase 13.C) lee este archivo para mostrar la IP en la
 # pantalla final del wizard.
 [System.IO.File]::WriteAllText((Join-Path $RaizDatos "ip-servidor.txt"), "$ip`n$Puerto")
+# Marca de "llegue hasta el final". El instalador la borra antes de arrancar y
+# la lee en la pantalla final: sin esto, Inno da por exitosa la instalacion
+# aunque este script se haya muerto a la mitad, porque [Run] no mira el codigo
+# de salida. Fue lo que dejo a alguien con un servidor instalado y credenciales
+# que no existian.
+[System.IO.File]::WriteAllText((Join-Path $RaizDatos "instalacion-ok.txt"), "$AdminUsuario`n$(Get-Date -Format o)")
 Stop-Transcript | Out-Null

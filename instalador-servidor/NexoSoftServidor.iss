@@ -93,6 +93,15 @@ var
   PaginaBase: TInputQueryWizardPage;
   PaginaAccesoRemoto: TInputQueryWizardPage;
 
+{ Marca que escribe el bootstrap al llegar al final. Su ausencia en la pantalla
+  final es la unica senal de que la configuracion se murio a la mitad: Inno da
+  por exitosa la instalacion pase lo que pase, porque [Run] espera al script
+  pero no mira su codigo de salida. }
+function ArchivoInstalacionOk(): String;
+begin
+  Result := ExpandConstant('{commonappdata}\NexoSoft\instalacion-ok.txt');
+end;
+
 { Version del servidor NexoSoft ya instalada en esta PC, leida de la clave de
   desinstalacion que escribe el propio Inno. Vacio si no hay ninguna.
 
@@ -163,11 +172,17 @@ var
   Codigo: Integer;
 begin
   Result := '';
-  { La condicion es que exista la carpeta, NO que el registro diga que hay algo
-    instalado. Atarlo al registro fue el motivo de que este paso no corriera
-    nunca: la lectura daba vacio, y ademas un desinstalar-y-volver-a-instalar
-    borra la clave pero deja a postgres.exe vivo, que es justo el caso en el
-    que hace falta. }
+  { Se borra siempre, incluso en una instalacion "limpia": la carpeta de datos
+    (C:\ProgramData\NexoSoft) sobrevive al desinstalar, asi que la marca de la
+    corrida anterior puede seguir ahi y haria pasar por exitosa una
+    instalacion que fallo. }
+  DeleteFile(ArchivoInstalacionOk());
+
+  { La condicion para detener el servidor es que exista la carpeta, NO que el
+    registro diga que hay algo instalado. Atarlo al registro fue el motivo de
+    que este paso no corriera nunca: la lectura daba vacio, y ademas un
+    desinstalar-y-volver-a-instalar borra la clave pero deja a postgres.exe
+    vivo, que es justo el caso en el que hace falta. }
   if not DirExists(ExpandConstant('{app}')) then exit;
 
   ExtractTemporaryFile('detener-servidor.ps1');
@@ -300,6 +315,20 @@ var
   ArchivoIp: String;
 begin
   if CurPageID = wpFinished then begin
+    { Inno da por exitosa la instalacion pase lo que pase: [Run] espera al
+      bootstrap pero no mira su codigo de salida. Sin este chequeo, un
+      bootstrap muerto a la mitad terminaba en una pantalla que decia que
+      estaba todo listo -- y recien se descubria en el POS, rechazando el
+      usuario y la contrasena recien elegidos. }
+    if not FileExists(ArchivoInstalacionOk()) then begin
+      WizardForm.FinishedLabel.Caption :=
+        'LA CONFIGURACION NO TERMINO BIEN.' + #13#10 + #13#10 +
+        'Los archivos se copiaron, pero el paso que arma la base de datos y el usuario ' +
+        'administrador no llego al final, asi que el sistema NO esta listo para usar.' + #13#10 + #13#10 +
+        'No lo intentes desde el POS todavia. Mandale este archivo a NexoSoft:' + #13#10 +
+        ExpandConstant('{commonappdata}\NexoSoft\logs\bootstrap.log');
+      exit;
+    end;
     ArchivoIp := ExpandConstant('{commonappdata}\NexoSoft\ip-servidor.txt');
     if FileExists(ArchivoIp) and LoadStringFromFile(ArchivoIp, Contenido) then begin
       Lineas := StringSplit(Contenido, [#13#10], stExcludeEmpty);

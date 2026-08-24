@@ -75,14 +75,16 @@ New-Item -ItemType Directory -Force "$Destino\panel" | Out-Null
 Copy-Item "apps\admin-web\dist\*" "$Destino\panel" -Recurse -Force
 Ok "panel copiado"
 
-Titulo "Copiando script de alta de sucursal"
+Titulo "Copiando scripts de alta"
 New-Item -ItemType Directory -Force "$Destino\scripts" | Out-Null
-Copy-Item "apps\cloud-api\scripts\crear-sucursal.mjs" "$Destino\scripts\crear-sucursal.mjs" -Force
-Ok "script de alta copiado"
+foreach ($s in @("crear-sucursal.mjs", "asegurar-admin.mjs")) {
+    Copy-Item "apps\cloud-api\scripts\$s" "$Destino\scripts\$s" -Force
+}
+Ok "scripts de alta copiados"
 
 Titulo "Listo"
 $tamanioMB = [Math]::Round((Get-ChildItem $Destino -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB, 1)
 Write-Host "Paquete armado en: $Destino ($tamanioMB MB)"
-Write-Host "Contiene: dist/, prisma/ (schema+migraciones), node_modules/ (produccion), panel/, scripts/crear-sucursal.mjs"
+Write-Host "Contiene: dist/, prisma/ (schema+migraciones), node_modules/ (produccion), panel/, scripts/ (crear-sucursal.mjs, asegurar-admin.mjs)"
 Write-Host "NO contiene: codigo fuente (src/, test/), .env, devDependencies, cliente Prisma generado."
 Write-Host "`nPara probarlo standalone: copiar un .env, correr 'node node_modules\prisma\build\index.js generate --schema=prisma\schema.prisma', y recien ahi 'node dist\main.js' parado en $Destino."
