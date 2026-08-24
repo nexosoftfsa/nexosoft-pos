@@ -51,6 +51,37 @@ describe("ClienteUsuariosHttp", () => {
     vi.unstubAllGlobals();
   });
 
+  it("cambiarPassword() pega POST /usuarios/:id/password", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "u2" }) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
+    await cliente.cambiarPassword("u2", { passwordNueva: "una-clave-larga-99" });
+
+    const [url, opciones] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("http://server/usuarios/u2/password");
+    expect((opciones as { method: string }).method).toBe("POST");
+    expect(JSON.parse((opciones as { body: string }).body)).toEqual({
+      passwordNueva: "una-clave-larga-99",
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("cambiarPassword() manda la actual cuando es la propia", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "u2" }) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
+    await cliente.cambiarPassword("u2", {
+      passwordNueva: "una-clave-larga-99",
+      passwordActual: "la-de-antes",
+    });
+
+    const body = JSON.parse((fetchMock.mock.calls[0]![1] as { body: string }).body);
+    expect(body.passwordActual).toBe("la-de-antes");
+    vi.unstubAllGlobals();
+  });
+
   it("obtenerFoto() pega GET /usuarios/:id/foto", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ fotoBase64: null }) });
     vi.stubGlobal("fetch", fetchMock);

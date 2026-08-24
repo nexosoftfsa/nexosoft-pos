@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Put, UseGuards, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { RolUsuario } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -6,6 +16,7 @@ import { Roles } from '../auth/roles.decorator';
 import { UsuariosService } from './usuarios.service';
 import { ActualizarUsuarioDto } from './dto/actualizar-usuario.dto';
 import { ActualizarFotoDto } from './dto/actualizar-foto.dto';
+import { CambiarPasswordDto } from './dto/cambiar-password.dto';
 
 interface UsuarioJwt {
   id: string;
@@ -33,6 +44,15 @@ export class UsuariosController {
     @Body() dto: ActualizarUsuarioDto,
   ) {
     return this.usuarios.actualizar(id, req.user.sucursalId, req.user.id, dto);
+  }
+
+  @Post(':id/password')
+  cambiarPassword(
+    @Request() req: { user: UsuarioJwt },
+    @Param('id') id: string,
+    @Body() dto: CambiarPasswordDto,
+  ) {
+    return this.usuarios.cambiarPassword(id, req.user.sucursalId, req.user.id, dto);
   }
 
   @Get(':id/foto')

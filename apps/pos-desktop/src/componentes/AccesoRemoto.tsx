@@ -143,8 +143,9 @@ export function AccesoRemoto({
             ))}
           </ul>
           <div style={{ marginTop: "0.4rem" }}>
-            Se cambian en Usuarios. Una contraseña de 12 caracteres o más, que no tenga el nombre
-            del comercio, alcanza.
+            Se cambian en Usuarios, con el botón <b>Contraseña</b> de cada fila. Una contraseña de
+            12 caracteres o más, que no tenga el nombre del comercio, alcanza. Este aviso se
+            actualiza apenas la cambiás.
           </div>
         </div>
       )}

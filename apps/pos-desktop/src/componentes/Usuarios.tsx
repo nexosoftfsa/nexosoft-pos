@@ -11,6 +11,7 @@ import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
 import {
   ErrorUsuarios,
+  type CambioPassword,
   type ClienteUsuarios,
   type NuevoUsuario,
   type RolUsuario,
@@ -68,6 +69,8 @@ export function Usuarios({
   const [error, setError] = useState<string | null>(null);
   const [creando, setCreando] = useState(false);
   const [credencialUsuario, setCredencialUsuario] = useState<UsuarioRemoto | null>(null);
+  const [claveUsuario, setClaveUsuario] = useState<UsuarioRemoto | null>(null);
+  const [avisoOk, setAvisoOk] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -149,6 +152,7 @@ export function Usuarios({
       </div>
 
       {error !== null && <div className="error">{error}</div>}
+      {avisoOk !== null && <div className="aviso-ok">{avisoOk}</div>}
 
       <div className="card">
         <div className="tablewrap">
@@ -220,6 +224,16 @@ export function Usuarios({
                       </td>
                       <td>{fecha(u.creadoEn)}</td>
                       <td className="acciones">
+                        <button
+                          type="button"
+                          className="linkbtn"
+                          onClick={() => {
+                            setAvisoOk(null);
+                            setClaveUsuario(u);
+                          }}
+                        >
+                          Contraseña
+                        </button>
                         {clienteCredenciales !== undefined && (
                           <button
                             type="button"
@@ -258,6 +272,19 @@ export function Usuarios({
           onCreado={() => {
             setCreando(false);
             void cargar();
+          }}
+        />
+      )}
+
+      {claveUsuario !== null && (
+        <ModalContrasena
+          api={api}
+          usuario={claveUsuario}
+          esUnoMismo={claveUsuario.id === propioId}
+          onCerrar={() => setClaveUsuario(null)}
+          onCambiada={(u) => {
+            setClaveUsuario(null);
+            setAvisoOk(`Contraseña cambiada para "${u.nombreDisplay}".`);
           }}
         />
       )}
@@ -357,6 +384,136 @@ function FotoCelda({
         disabled={subiendo}
       />
     </label>
+  );
+}
+
+/**
+ * Cambio de contraseña (Fase 17.E).
+ *
+ * Existe porque faltaba: Configuración avisa que hay contraseñas flojas antes
+ * de publicar el panel en internet y manda a cambiarlas "en Usuarios" — pero
+ * no había ninguna forma de cambiar una, ni acá ni en el servidor.
+ *
+ * La fortaleza la juzga el servidor (`evaluarFortaleza`, es el único que ve la
+ * contraseña en claro). Acá solo se valida lo que evita un viaje al pedo y el
+ * error de tipeo que dejaría a alguien afuera: por eso la confirmación.
+ */
+function ModalContrasena({
+  api,
+  usuario,
+  esUnoMismo,
+  onCerrar,
+  onCambiada,
+}: {
+  api: ClienteUsuarios;
+  usuario: UsuarioRemoto;
+  esUnoMismo: boolean;
+  onCerrar: () => void;
+  onCambiada: (u: UsuarioRemoto) => void;
+}) {
+  const [actual, setActual] = useState("");
+  const [nueva, setNueva] = useState("");
+  const [repetida, setRepetida] = useState("");
+  const [errores, setErrores] = useState<string[]>([]);
+  const [guardando, setGuardando] = useState(false);
+
+  async function guardar() {
+    const e: string[] = [];
+    if (esUnoMismo && actual === "") e.push("Escribí tu contraseña actual.");
+    if (nueva.length < 8) e.push("La contraseña nueva debe tener al menos 8 caracteres.");
+    if (nueva !== repetida) e.push("Las dos contraseñas nuevas no coinciden.");
+    if (e.length > 0) {
+      setErrores(e);
+      return;
+    }
+    const cambio: CambioPassword = {
+      passwordNueva: nueva,
+      ...(esUnoMismo ? { passwordActual: actual } : {}),
+    };
+    setGuardando(true);
+    setErrores([]);
+    try {
+      onCambiada(await api.cambiarPassword(usuario.id, cambio));
+    } catch (err) {
+      setErrores([mensaje(err)]);
+      setGuardando(false);
+    }
+  }
+
+  return (
+    <div className="modal modal--show" onClick={onCerrar}>
+      <div className="modal__box" onClick={(e) => e.stopPropagation()}>
+        <div className="modal__head">
+          <h3>Contraseña de {usuario.nombreDisplay}</h3>
+          <button type="button" className="modal__x" onClick={onCerrar} aria-label="Cerrar">
+            ×
+          </button>
+        </div>
+        <div className="modal__body">
+          {esUnoMismo ? (
+            <div className="field">
+              <label>Tu contraseña actual</label>
+              <input
+                className="input"
+                type="password"
+                autoComplete="current-password"
+                value={actual}
+                onChange={(e) => setActual(e.target.value)}
+              />
+            </div>
+          ) : (
+            <p className="muted" style={{ margin: 0 }}>
+              Le vas a poner una contraseña nueva a {usuario.email}. No hace falta saber la
+              anterior. Decísela y pedile que la cambie cuando entre.
+            </p>
+          )}
+          <div className="field">
+            <label>Contraseña nueva</label>
+            <input
+              className="input"
+              type="password"
+              autoComplete="new-password"
+              value={nueva}
+              onChange={(e) => setNueva(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label>Repetila</label>
+            <input
+              className="input"
+              type="password"
+              autoComplete="new-password"
+              value={repetida}
+              onChange={(e) => setRepetida(e.target.value)}
+            />
+          </div>
+          <div className="config-ayuda">
+            Si el panel se va a ver por internet, que tenga 12 caracteres o más y que no incluya el
+            nombre del comercio ni el del usuario. Configuración avisa cuáles quedan flojas.
+          </div>
+          {errores.length > 0 && (
+            <div className="error">
+              {errores.map((e, i) => (
+                <div key={i}>{e}</div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="modal__foot">
+          <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
+            {guardando ? "Guardando…" : "Cambiar contraseña"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

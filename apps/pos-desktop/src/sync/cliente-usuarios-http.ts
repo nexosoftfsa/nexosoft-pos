@@ -33,11 +33,18 @@ export interface EstadoFoto {
   readonly fotoBase64: string | null;
 }
 
+export interface CambioPassword {
+  readonly passwordNueva: string;
+  /** Solo hace falta al cambiar la propia; el backend la exige en ese caso. */
+  readonly passwordActual?: string;
+}
+
 /** Puerto: lo que la pantalla de Usuarios necesita (testeable con un doble). */
 export interface ClienteUsuarios {
   listar(): Promise<UsuarioRemoto[]>;
   crear(datos: NuevoUsuario): Promise<UsuarioRemoto>;
   actualizar(id: string, cambios: CambiosUsuario): Promise<UsuarioRemoto>;
+  cambiarPassword(id: string, cambio: CambioPassword): Promise<UsuarioRemoto>;
   obtenerFoto(id: string): Promise<EstadoFoto>;
   actualizarFoto(id: string, fotoBase64: string): Promise<EstadoFoto>;
 }
@@ -70,6 +77,10 @@ export class ClienteUsuariosHttp implements ClienteUsuarios {
 
   actualizar(id: string, cambios: CambiosUsuario): Promise<UsuarioRemoto> {
     return this.pedir("PATCH", `/usuarios/${id}`, cambios);
+  }
+
+  cambiarPassword(id: string, cambio: CambioPassword): Promise<UsuarioRemoto> {
+    return this.pedir("POST", `/usuarios/${id}/password`, cambio);
   }
 
   obtenerFoto(id: string): Promise<EstadoFoto> {
