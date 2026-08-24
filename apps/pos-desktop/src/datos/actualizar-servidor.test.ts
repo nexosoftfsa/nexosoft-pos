@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, it, expect } from "vitest";
-import { ARGS_ACTUALIZAR_SERVIDOR, esServidorLocal } from "./actualizar-servidor";
+import { ARGS_ACTUALIZAR_SERVIDOR, detalleDeSalida, esServidorLocal } from "./actualizar-servidor";
 
 /**
  * El scope de `shell:allow-execute` fija los argumentos en tiempo de
@@ -35,6 +35,52 @@ describe("el comando coincide con el scope de Tauri", () => {
     const script = ARGS_ACTUALIZAR_SERVIDOR.join(" ");
     expect(script).toContain("C:\\NexoSoft-Servidor\\scripts\\actualizador-servidor.ps1");
     expect(script).toContain("C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1");
+  });
+});
+
+/**
+ * Los códigos de salida son un contrato entre el script de PowerShell y el
+ * POS, y viven en repos distintos del árbol. Si alguien agrega uno en el
+ * script y se olvida del mensaje, la persona vuelve a ver un número pelado —
+ * que es exactamente lo que pasó con el "código 1".
+ */
+describe("mensajes por código de salida", () => {
+  const CODIGOS = [3, 4, 5, 6, 7, 8];
+
+  it.each(CODIGOS)("el código %i tiene un mensaje propio, no un número", (codigo) => {
+    const detalle = detalleDeSalida(codigo);
+    expect(detalle).not.toContain(`código ${codigo}`);
+    expect(detalle.length).toBeGreaterThan(40);
+  });
+
+  it("dice que el servidor está caído solo en el código 5", () => {
+    expect(detalleDeSalida(5)).toContain("CAÍDO");
+    for (const otro of CODIGOS.filter((c) => c !== 5)) {
+      expect(detalleDeSalida(otro)).not.toContain("CAÍDO");
+    }
+  });
+
+  it("aclara que no se perdió nada cuando se pudo revertir", () => {
+    expect(detalleDeSalida(8)).toContain("No perdiste nada");
+  });
+
+  it("cae en un mensaje genérico con el número para un código desconocido", () => {
+    expect(detalleDeSalida(42)).toContain("código 42");
+    expect(detalleDeSalida(null)).toContain("desconocido");
+  });
+
+  it("cubre todos los códigos que define el script de PowerShell", () => {
+    const script = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "../../../../scripts/instalacion/actualizador-servidor.ps1"),
+      "utf8",
+    );
+    const definidos = [...script.matchAll(/^\$SALIDA_[A-Z_]+ = (\d+)/gm)].map((m) => Number(m[1]));
+    expect(definidos.length).toBeGreaterThan(0);
+    for (const codigo of definidos) {
+      expect(detalleDeSalida(codigo), `falta el mensaje del código ${codigo}`).not.toContain(
+        `código ${codigo}`,
+      );
+    }
   });
 });
 

@@ -18,6 +18,9 @@ export default tseslint.config(
       // código de este paquete. Sin esto, lintear un bundle minificado tira
       // más de mil errores.
       "apps/cloud-api/panel/**",
+      // Bundles que arma `wrangler dev` para servir el Worker. Es código
+      // generado y ya empaquetado; lintearlo repite cada error del fuente.
+      "**/.wrangler/**",
     ],
   },
   js.configs.recommended,
@@ -46,6 +49,27 @@ export default tseslint.config(
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+    },
+  },
+  {
+    // El Worker de licencias corre en el runtime de Cloudflare, no en Node:
+    // sus globals son los de la plataforma web (Request/Response/crypto/...).
+    // Sin esto ESLint los marca como no-undef y el lint del repo queda rojo.
+    files: ["apps/licencias-worker/**/*.ts"],
+    languageOptions: {
+      globals: {
+        Request: "readonly",
+        Response: "readonly",
+        Headers: "readonly",
+        URL: "readonly",
+        crypto: "readonly",
+        atob: "readonly",
+        btoa: "readonly",
+        TextEncoder: "readonly",
+        TextDecoder: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+      },
     },
   },
   {

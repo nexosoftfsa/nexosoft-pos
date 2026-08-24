@@ -102,3 +102,42 @@ Al tocarlo:
   elevar automáticamente no agrega riesgo real (el usuario ya tiene que
   aprobar el UAC, y lo que se ejecuta está fijado en el binario, no lo
   decide el frontend en tiempo de ejecución).
+
+## Revisión 2026-08-24: el "código 1"
+
+El punto 4 ("el POS solo ve el código de salida") resultó más frágil de lo
+que se anticipó, y falló de dos maneras a la vez en la PC de un cliente.
+
+**Un solo repo de releases para dos productos.** El POS y el servidor comparten
+`nexosoftfsa/nexosoft-pos-releases` para no ensuciar el `latest.json` del
+autoupdate del POS. El actualizador buscaba los `servidor-v*` en
+`GET /releases`, que devuelve **30 por página y no ordena por fecha de
+publicación**. Al publicarse el POS v0.1.30 —el release número 30 de esa
+línea— todos los `servidor-v*` cayeron fuera de la primera página: el
+actualizador pasó a contestar "no hay releases de servidor publicados" y la
+tarea nocturna dejó de actualizar a **todos** los comercios sin emitir un solo
+error. Se detectó recién porque una PC quedó clavada en 0.9.1 con 0.9.2
+publicada. Ahora se recorren las páginas completas (`per_page=100` + `page`).
+El publicador ya lo hacía bien, lo que dejó el control de versión funcionando
+y ocultó el problema del lado del cliente.
+
+**El código de salida mentía.** Las rutas de salida limpia llamaban
+`Stop-Transcript` antes de `exit 0` y otra vez en el `finally`; la segunda
+llamada falla ("el host no está transcribiendo") y, con
+`$ErrorActionPreference = "Stop"`, convertía un `exit 0` en `exit 1`. O sea:
+el chequeo exitoso se reportaba como "el script terminó con error". Queda un
+solo `Stop-Transcript`, en el `finally`.
+
+De ahí dos reglas nuevas:
+
+1. **Los códigos de salida son un contrato**, y cada uno corresponde a una
+   acción distinta de quien está adelante de la máquina: 4 = no se pudo tocar
+   nada y seguís trabajando; 5 = el servidor quedó caído, es urgente; 6 = falta
+   internet; 7 = la instalación está incompleta; 8 = falló pero se revirtió
+   sola. El POS los traduce a castellano (`datos/actualizar-servidor.ts`) y un
+   test lee el `.ps1` para que no puedan quedar códigos sin mensaje.
+2. **Un fallo del actualizador tiene que ser ruidoso.** El modo silencioso de
+   la tarea nocturna es útil para no molestar, pero significa que un bug como
+   el de la paginación puede vivir semanas sin que nadie lo note. El panel de
+   Configuración muestra la versión del servidor justamente para eso; conviene
+   mirarla cuando se publica algo.

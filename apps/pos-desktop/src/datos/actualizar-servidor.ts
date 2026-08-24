@@ -37,12 +37,39 @@ export const ARGS_ACTUALIZAR_SERVIDOR = [
   "$standalone='C:\\NexoSoft-Servidor\\scripts\\actualizador-servidor.ps1'; $legacy='C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1'; if (Test-Path $standalone) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$standalone,'-ServidorDir','C:\\NexoSoft-Servidor\\dist-servidor','-NodeDir','C:\\NexoSoft-Servidor\\node-portable') } elseif (Test-Path $legacy) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$legacy) } else { exit 3 }; $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
 ];
 
-/** El comando sale con este código cuando no encuentra servidor instalado. */
-const SIN_INSTALACION = 3;
+const LOG = 'C:\\NexoSoft-Servidor\\logs\\actualizador.log (o la carpeta "logs" del repo si el servidor se instaló con git)';
+
+/**
+ * Cada código de salida del actualizador corresponde a una acción distinta de
+ * quien está adelante de la máquina — no es lo mismo "no pasó nada, seguí
+ * trabajando" que "el servidor quedó caído". Los define
+ * `scripts/instalacion/actualizador-servidor.ps1`: si se agrega uno hay que
+ * tocar los dos lados.
+ *
+ * Antes acá solo se mostraba el número, y un `código 1` podía ser cualquier
+ * cosa; peor todavía, el script devolvía 1 hasta cuando había salido todo bien.
+ */
+const MENSAJES: Readonly<Record<number, string>> = {
+  3: "No encontré el servidor instalado en esta PC (ni en C:\\NexoSoft-Servidor ni en C:\\NexoSoft). Si el servidor corre en otra máquina, actualizalo desde ahí.",
+  4: "No se pudo cerrar el servidor para actualizarlo, así que no se tocó nada: seguís trabajando con la versión de siempre. Probá de nuevo con el negocio cerrado, o reiniciá la PC y volvé a intentar.",
+  5: "La actualización falló y no se pudo volver a la versión anterior: EL SERVIDOR ESTÁ CAÍDO y las terminales no van a poder vender contra él. Avisá a soporte ahora. El detalle está en el log: " +
+    LOG,
+  6: "No se pudo consultar ni descargar la actualización. Revisá que esta PC tenga internet y probá de nuevo. No se cambió nada.",
+  7: "La instalación del servidor está incompleta: falta la carpeta del programa. Puede haber quedado por la mitad una actualización anterior. El log dice cómo recuperarla: " +
+    LOG,
+  8: "La actualización falló y se volvió sola a la versión anterior, que quedó funcionando. No perdiste nada. El motivo está en el log: " +
+    LOG,
+};
 
 export interface ResultadoActualizarServidor {
   readonly ok: boolean;
   readonly detalle: string;
+}
+
+/** Qué decirle a la persona según cómo terminó el script. */
+export function detalleDeSalida(codigo: number | null): string {
+  if (codigo !== null && codigo in MENSAJES) return MENSAJES[codigo] as string;
+  return `El script terminó con error (código ${codigo ?? "desconocido"}). El detalle está en el log: ${LOG}.`;
 }
 
 /**
@@ -74,19 +101,11 @@ export async function actualizarServidor(): Promise<ResultadoActualizarServidor>
     const comando = Command.create("actualizar-servidor", ARGS_ACTUALIZAR_SERVIDOR);
     const resultado = await comando.execute();
     if (resultado.code === 0) {
-      return { ok: true, detalle: "Servidor actualizado y respondiendo OK." };
+      // Salida 0 cubre tanto "se actualizó" como "ya estaba al día": el script
+      // no distingue, y la versión que quedó se ve arriba, en el panel.
+      return { ok: true, detalle: "Listo: el servidor quedó en la última versión y responde bien." };
     }
-    if (resultado.code === SIN_INSTALACION) {
-      return {
-        ok: false,
-        detalle:
-          "No encontré el servidor instalado en esta PC (ni en C:\\NexoSoft-Servidor ni en C:\\NexoSoft). Si el servidor corre en otra máquina, actualizalo desde ahí.",
-      };
-    }
-    return {
-      ok: false,
-      detalle: `El script terminó con error (código ${resultado.code ?? "desconocido"}). El detalle está en el log: C:\\NexoSoft-Servidor\\logs\\actualizador.log (o la carpeta "logs" del repo si el servidor se instaló con git).`,
-    };
+    return { ok: false, detalle: detalleDeSalida(resultado.code) };
   } catch (e) {
     return { ok: false, detalle: e instanceof Error ? e.message : String(e) };
   }
