@@ -122,6 +122,28 @@ if (-not $exeInstalador) {
 }
 Ok "Instalador compilado: $($exeInstalador.Name) ($([Math]::Round($exeInstalador.Length/1MB,1)) MB)"
 
+Titulo "Scripts de instalacion que viajan con la actualizacion"
+# Los scripts de C:\NexoSoft-Servidor\scripts los escribia SOLO el instalador
+# completo: el paquete de actualizacion lleva unicamente dist-servidor\. Por
+# eso una PC que se actualiza con el boton "Actualizar servidor" nunca recibia
+# un script nuevo -- paso con configurar-suscripcion.ps1, que existia en el
+# instalador 0.9.0 pero no en la PC de alguien que venia actualizando.
+#
+# Ahora viajan dentro del paquete y el actualizador los copia a su lugar al
+# terminar (ver actualizador-servidor.ps1).
+$scriptsDestino = Join-Path $raiz "dist-servidor\scripts-instalacion"
+if (Test-Path $scriptsDestino) { Remove-Item $scriptsDestino -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $scriptsDestino | Out-Null
+foreach ($s in @(
+        "instalar-servicio-servidor.ps1",
+        "abrir-firewall-servidor.ps1",
+        "actualizador-servidor.ps1",
+        "instalar-acceso-remoto.ps1",
+        "configurar-suscripcion.ps1")) {
+    Copy-Item (Join-Path $raiz "scripts\instalacion\$s") $scriptsDestino -Force
+}
+Ok "$((Get-ChildItem $scriptsDestino -File).Count) scripts incluidos en el paquete"
+
 Titulo "Armando el paquete liviano de actualizacion (sin runtimes)"
 $zipActualizacion = "instalador-servidor\Output\NexoSoft-Servidor-Update-$Version.zip"
 if (Test-Path $zipActualizacion) { Remove-Item $zipActualizacion -Force }

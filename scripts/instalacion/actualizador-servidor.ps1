@@ -115,6 +115,30 @@ try {
         }
         $exitoso = $true
         Ok "Actualizado a $versionNueva y respondiendo bien"
+
+        # Los scripts de <raiz>\scripts los escribia SOLO el instalador
+        # completo, asi que una PC que se actualiza con el boton nunca recibia
+        # uno nuevo. Ahora viajan en el paquete y se copian aca.
+        #
+        # Best-effort y archivo por archivo: este mismo script vive en esa
+        # carpeta y puede estar tomado por PowerShell mientras corre. Si uno
+        # falla, se copia en la proxima actualizacion; que no se copie un
+        # script no justifica revertir un servidor que ya quedo funcionando.
+        $scriptsNuevos = Join-Path $ServidorDir "scripts-instalacion"
+        if (Test-Path $scriptsNuevos) {
+            $scriptsDestino = Join-Path $raizInstalacion "scripts"
+            New-Item -ItemType Directory -Force -Path $scriptsDestino | Out-Null
+            $copiados = 0
+            foreach ($s in Get-ChildItem $scriptsNuevos -File) {
+                try {
+                    Copy-Item $s.FullName $scriptsDestino -Force -ErrorAction Stop
+                    $copiados += 1
+                } catch {
+                    Write-Host "No se pudo actualizar $($s.Name) (en uso). Se reintenta en la proxima." -ForegroundColor Yellow
+                }
+            }
+            Ok "$copiados scripts de instalacion actualizados"
+        }
     } catch {
         Titulo "Algo fallo -- revirtiendo a $versionLocal"
         Write-Host $_.Exception.Message -ForegroundColor Yellow

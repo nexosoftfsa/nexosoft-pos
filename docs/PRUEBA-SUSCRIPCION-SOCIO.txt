@@ -91,6 +91,10 @@ Tiene que terminar diciendo:
 
 Si dice otra cosa, PARA ACA y avisale a Rodrigo.
 
+SI DICE `no se reconoce como nombre de un cmdlet`: es que a tu PC le falta
+ese archivo. Pediselo a Rodrigo y guardalo en C:\NexoSoft-Servidor\scripts\
+antes de volver a intentar.
+
 
 ===============================================================================
 PARTE 2 - LA PRUEBA
