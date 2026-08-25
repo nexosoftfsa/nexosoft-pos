@@ -64,6 +64,7 @@ Source: "..\scripts\instalacion\actualizador-servidor.ps1"; DestDir: "{app}\scri
 Source: "..\scripts\instalacion\instalar-acceso-remoto.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\configurar-suscripcion.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "..\scripts\instalacion\detener-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "..\scripts\instalacion\reparar-servidor.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 ; Y otra vez, sin copiar: PrepareToInstall lo necesita ANTES de que empiece la
 ; copia de archivos, que es cuando {app}\scripts todavia tiene la version
 ; vieja (o no existe).

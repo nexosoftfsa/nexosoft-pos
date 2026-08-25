@@ -155,11 +155,39 @@ if ($primeraVez) {
     Ok "Rol y base creados"
 } else {
     Write-Host "Ya estaba inicializado — no toco el cluster." -ForegroundColor Yellow
-    $tarea = Get-ScheduledTask -TaskName "NexoSoft PostgreSQL" -ErrorAction SilentlyContinue
-    if (-not $tarea -or $tarea.State -ne "Running") {
-        Start-ScheduledTask -TaskName "NexoSoft PostgreSQL" -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 3
+    # Se arranca SIEMPRE y se ESPERA a que acepte conexiones.
+    #
+    # Antes eran tres segundos a ciegas, y alcanzaba de casualidad: hasta la
+    # version 0.9.5 el instalador no paraba PostgreSQL, asi que al llegar aca
+    # ya estaba corriendo. Cuando se agrego el paso que lo detiene (para poder
+    # reemplazar sus .dll), esos tres segundos pasaron a ser el unico margen
+    # real para un arranque en frio -- y si no llegaba, `prisma migrate deploy`
+    # fallaba, el bootstrap se cortaba ahi y el cloud-api (que se arranca mas
+    # abajo) nunca llegaba a levantar. El sintoma en la PC del cliente era el
+    # POS diciendo "No se pudo conectar con el servidor".
+    #
+    # Ojo tambien con `$tarea.State`: la tarea corre `pg_ctl start`, que
+    # termina enseguida, asi que su estado es "Ready" incluso con PostgreSQL
+    # arriba. No sirve para saber si la base esta viva; para eso esta
+    # pg_isready.
+    Start-ScheduledTask -TaskName "NexoSoft PostgreSQL" -ErrorAction SilentlyContinue
+    $listo = $false
+    for ($i = 0; $i -lt 45; $i++) {
+        Start-Sleep -Seconds 1
+        $ErrorActionPreference = "Continue"
+        & "$pgBin\pg_isready.exe" -h localhost -p $PuertoPostgres -U postgres *> $null
+        $codigo = $LASTEXITCODE
+        $ErrorActionPreference = "Stop"
+        if ($codigo -eq 0) { $listo = $true; break }
+        # Un solo reintento de arranque a mitad de camino, por si la tarea no
+        # llego a disparar.
+        if ($i -eq 20) { Start-ScheduledTask -TaskName "NexoSoft PostgreSQL" -ErrorAction SilentlyContinue }
     }
+    if (-not $listo) {
+        Write-Error "PostgreSQL no acepto conexiones despues de 45 segundos. Revisa $logDir\postgres.log."
+        exit 1
+    }
+    Ok "PostgreSQL respondiendo"
 }
 
 Titulo "Configurando .env"
