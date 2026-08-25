@@ -322,11 +322,20 @@ begin
       estaba todo listo -- y recien se descubria en el POS, rechazando el
       usuario y la contrasena recien elegidos. }
     if not FileExists(ArchivoInstalacionOk()) then begin
+      { El label de esta pagina esta dimensionado para el texto corto de Inno y
+        recorta sin avisar: la primera version de este mensaje se cortaba justo
+        antes de decir donde estaba el log, que era lo unico que importaba.
+        Se le da alto de sobra Y se mantiene el texto corto, porque de las dos
+        cosas la unica que no depende del tema visual es la segunda. }
+      WizardForm.FinishedLabel.AutoSize := False;
+      WizardForm.FinishedLabel.WordWrap := True;
+      WizardForm.FinishedLabel.Height :=
+        WizardForm.FinishedLabel.Parent.ClientHeight - WizardForm.FinishedLabel.Top - 8;
       WizardForm.FinishedLabel.Caption :=
-        'LA CONFIGURACION NO TERMINO BIEN.' + #13#10 + #13#10 +
-        'Los archivos se copiaron, pero el paso que arma la base de datos y el usuario ' +
-        'administrador no llego al final, asi que el sistema NO esta listo para usar.' + #13#10 + #13#10 +
-        'No lo intentes desde el POS todavia. Mandale este archivo a NexoSoft:' + #13#10 +
+        'LA CONFIGURACION NO TERMINO BIEN. El sistema NO esta listo.' + #13#10 + #13#10 +
+        'Abri PowerShell como administrador y corre:' + #13#10 +
+        ExpandConstant('{app}\scripts\reparar-servidor.ps1') + #13#10 + #13#10 +
+        'Si no alcanza, mandale este archivo a NexoSoft:' + #13#10 +
         ExpandConstant('{commonappdata}\NexoSoft\logs\bootstrap.log');
       exit;
     end;
