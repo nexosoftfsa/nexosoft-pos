@@ -57,9 +57,7 @@ try {
     foreach ($ruta in @($servidorDir, $nodeExe, $pgBin, $dataDir)) {
         if (-not (Test-Path $ruta)) { throw "Falta $ruta. La instalacion esta incompleta: hay que correr el instalador." }
     }
-    $envPath = Join-Path $servidorDir ".env"
-    if (-not (Test-Path $envPath)) { throw "Falta $envPath. Sin el no se sabe con que usuario conectarse a la base." }
-    Ok "Estan las carpetas y el .env"
+    Ok "Estan las carpetas"
 
     Titulo "PostgreSQL"
     Start-ScheduledTask -TaskName "NexoSoft PostgreSQL" -ErrorAction SilentlyContinue
@@ -81,6 +79,23 @@ try {
     }
     if (-not $listo) { throw "PostgreSQL no acepta conexiones en el puerto $PuertoPostgres. Mira $logDir\postgres.log." }
     Ok "PostgreSQL respondiendo en el puerto $PuertoPostgres"
+
+    Titulo "Configuracion del servidor (.env)"
+    # Puede faltar: desinstalar borra C:\NexoSoft-Servidor y deja los datos en
+    # C:\ProgramData\NexoSoft. asegurar-env.ps1 recupera el acceso a la base
+    # en ese caso, sin tocar los datos.
+    $envPath = Join-Path $servidorDir ".env"
+    $asegurarEnv = Join-Path $PSScriptRoot "asegurar-env.ps1"
+    if (-not (Test-Path $envPath)) {
+        if (-not (Test-Path $asegurarEnv)) { throw "Falta $envPath y no esta asegurar-env.ps1 para recuperarlo." }
+        Correr "asegurar-env" {
+            & $asegurarEnv -ServidorDir $servidorDir `
+                -PostgresDir (Join-Path $RaizInstalacion "postgres-portable") `
+                -RaizDatos $RaizDatos -Puerto $Puerto -PuertoPostgres $PuertoPostgres
+        }
+    }
+    if (-not (Test-Path $envPath)) { throw "Sigue sin haber .env en $servidorDir." }
+    Ok ".env en su lugar"
 
     Titulo "Cliente Prisma y migraciones"
     $env:DATABASE_URL = ((Get-Content $envPath | Select-String "^DATABASE_URL=").ToString()).Substring("DATABASE_URL=".Length)

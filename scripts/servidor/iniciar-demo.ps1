@@ -1,4 +1,4 @@
-# Levanta una demo de NexoSoft POS en esta PC, autocontenida: base de datos
+﻿# Levanta una demo de NexoSoft POS en esta PC, autocontenida: base de datos
 # de prueba (PostgreSQL embebido, no hace falta instalar nada aparte) con
 # catalogo, ventas y usuarios ya cargados. Pensado para que alguien que NO
 # es programador pueda mostrar el sistema sin tener que configurar nada a

@@ -1,4 +1,4 @@
-# Acceso remoto al panel: instala y controla el tunel de Cloudflare de este
+﻿# Acceso remoto al panel: instala y controla el tunel de Cloudflare de este
 # comercio (Fase 17.A, ver ADR-0055 y docs/acceso-remoto-cloudflare.md).
 #
 # Cada comercio tiene un subdominio FIJO bajo nexosoft.com.ar (por ejemplo

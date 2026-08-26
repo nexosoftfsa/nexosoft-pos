@@ -1,4 +1,4 @@
-# Deja el servidor de un comercio atado a su suscripcion (Fase 17.B, ADR-0056).
+﻿# Deja el servidor de un comercio atado a su suscripcion (Fase 17.B, ADR-0056).
 #
 # Escribe LICENCIAS_COMERCIO_ID en el .env del servidor y lo reinicia, para
 # que empiece a pedirle la licencia al Worker de licencias.nexosoft.com.ar.

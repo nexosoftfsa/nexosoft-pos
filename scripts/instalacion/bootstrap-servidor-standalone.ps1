@@ -192,32 +192,24 @@ if ($primeraVez) {
 
 Titulo "Configurando .env"
 $envPath = Join-Path $ServidorDir ".env"
-if (-not (Test-Path $envPath)) {
-    if (-not $nexosoftPassword) {
-        Write-Error "El cluster ya existia pero falta apps\.env — no tengo la password del rol 'nexosoft' para generarlo. Completalo a mano."
-        exit 1
-    }
-    $jwtSecret = NuevaClave 48
-    $jwtRefresh = NuevaClave 48
-    @"
-NODE_ENV=production
-PORT=$Puerto
-PORT_REMOTO=$PuertoRemoto
-DATABASE_URL=postgresql://nexosoft:$nexosoftPassword@localhost:$PuertoPostgres/nexosoft
-JWT_SECRET=$jwtSecret
-JWT_ACCESS_EXPIRY=15m
-JWT_REFRESH_SECRET=$jwtRefresh
-JWT_REFRESH_EXPIRY=30d
-JWT_REFRESH_DAYS=30
-ARCA_ENV=homologacion
-SYNC_BACKEND=custom
-RESPALDO_RUTA=$RaizDatos\respaldos
-RESPALDO_RETENER=7
-"@ | Out-File -FilePath $envPath -Encoding utf8
-    Ok ".env generado (secretos aleatorios)"
-} else {
-    Write-Host ".env ya existia — no lo toco." -ForegroundColor Yellow
+# Delegado en asegurar-env.ps1, que ademas sabe RECUPERAR el acceso a la base
+# cuando el .env se perdio. Antes esto cortaba con "no tengo la password del
+# rol 'nexosoft'": desinstalar borra C:\NexoSoft-Servidor (con el .env) pero
+# deja los datos en C:\ProgramData\NexoSoft, asi que reinstalar despues de
+# desinstalar terminaba siempre en ese callejon.
+$argsEnv = @{
+    ServidorDir    = $ServidorDir
+    PostgresDir    = $PostgresDir
+    RaizDatos      = $RaizDatos
+    Puerto         = $Puerto
+    PuertoRemoto   = $PuertoRemoto
+    PuertoPostgres = $PuertoPostgres
 }
+# La primera vez la password del rol la acabamos de generar acá arriba; en una
+# reinstalación no la tenemos y el script la recupera.
+if ($nexosoftPassword) { $argsEnv["PasswordNexosoft"] = $nexosoftPassword }
+Correr "asegurar-env" { & (Join-Path $PSScriptRoot "asegurar-env.ps1") @argsEnv }
+if (-not (Test-Path $envPath)) { Write-Error "Sigue sin haber .env en $ServidorDir."; exit 1 }
 # DATABASE_URL para las migraciones de abajo (mismo valor que el .env).
 $dbUrlLinea = (Get-Content $envPath | Select-String "^DATABASE_URL=").ToString()
 $env:DATABASE_URL = $dbUrlLinea.Substring("DATABASE_URL=".Length)
