@@ -19,6 +19,7 @@ export * from "./dinero/money.js";
 export * from "./fiscal/condicion-iva.js";
 export * from "./fiscal/alicuota-iva.js";
 export * from "./fiscal/tipo-comprobante.js";
+export * from "./fiscal/cuit.js";
 
 // Catálogo: artículos, listas de precios, costeo/marcación y promos (ADR-0014)
 export * from "./catalogo/unidad-de-medida.js";

@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+﻿import { join } from 'node:path';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
@@ -25,17 +25,18 @@ import { ComercioModule } from './comercio/comercio.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { CredencialesModule } from './credenciales/credenciales.module';
 import { LicenciaModule } from './licencia/licencia.module';
+import { FiscalModule } from './fiscal/fiscal.module';
 import { AccesoRemotoModule } from './acceso-remoto/acceso-remoto.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     // Rate-limiting global (Fase 15.B, prerrequisito de seguridad antes de
-    // exponer admin-web/login a internet vía túnel -- ver ADR-0052). Límite
-    // generoso acá; los endpoints de login tienen su propio límite más
+    // exponer admin-web/login a internet vÃ­a tÃºnel -- ver ADR-0052). LÃ­mite
+    // generoso acÃ¡; los endpoints de login tienen su propio lÃ­mite mÃ¡s
     // estricto con @Throttle (ver auth.controller.ts).
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
-    // Sirve el panel web (admin-web) estático desde el mismo servidor de sucursal.
+    // Sirve el panel web (admin-web) estÃ¡tico desde el mismo servidor de sucursal.
     // Apuntar PANEL_RUTA al build (apps/admin-web/dist) o copiarlo a ./panel.
     // Se excluye /api para no pisar la API. Si la carpeta no existe, no sirve nada.
     ServeStaticModule.forRoot({
@@ -64,6 +65,7 @@ import { AccesoRemotoModule } from './acceso-remoto/acceso-remoto.module';
     CredencialesModule,
     AccesoRemotoModule,
     LicenciaModule,
+    FiscalModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

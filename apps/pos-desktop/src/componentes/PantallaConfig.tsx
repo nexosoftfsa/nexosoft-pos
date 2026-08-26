@@ -3,6 +3,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { CondicionIva } from "@nexosoft/domain";
 import { prepararLogo } from "../archivos";
 import { AccesoRemoto } from "./AccesoRemoto";
+import { CertificadoArca } from "./CertificadoArca";
 import { Actualizaciones } from "./Actualizaciones";
 
 export interface ValoresConfig {
@@ -256,6 +257,13 @@ export function PantallaConfig({
               demás terminales, la IP de esa PC en la red del local.
             </div>
           </section>
+
+          <CertificadoArca
+            servidorUrl={servidorUrl}
+            cuit={cuit}
+            razonSocial={razonSocial}
+            obtenerToken={obtenerToken}
+          />
 
           <AccesoRemoto servidorUrl={servidorUrl} obtenerToken={obtenerToken} />
 
