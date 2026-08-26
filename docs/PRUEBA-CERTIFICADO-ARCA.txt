@@ -1,0 +1,108 @@
+﻿===========================================================================
+  NEXOSOFT - PROBAR EL CERTIFICADO DE ARCA
+  Para: Sebastian
+  Tiempo: 20 minutos, la mayoria esperando a ARCA
+===========================================================================
+
+QUE ESTAMOS PROBANDO
+--------------------
+Para que ARCA autorice comprobantes (el CAE), cada comercio necesita un
+certificado a su nombre. Conseguirlo tenia una parte fea: generar un archivo
+con openssl y tipear a mano un texto que ARCA no perdona.
+
+Ahora esa parte la hace el sistema. Vos vas a probar los tres pasos y a
+decirme donde se traba, si se traba.
+
+OJO CON ESTO: al final de esta prueba el sistema TODAVIA NO va a emitir
+facturas con CAE. Lo que se prueba es sacar y cargar el certificado, que es el
+paso previo. Falta construir la conexion con ARCA, y es lo que sigue.
+
+Vas a usar tu propio CUIT y tu Clave Fiscal, en el entorno de PRUEBA de ARCA
+(homologacion). Nada de esto emite comprobantes reales.
+
+
+PASO 1 - ACTUALIZAR
+-------------------
+1.1 Abri el POS > Configuracion > Actualizaciones.
+
+    Anota que ves:  POS: ____________   Servidor: ____________
+
+1.2 Si el servidor no dice 0.10.0 o mas, toca "Actualizar servidor" y espera.
+1.3 Si el POS ofrece una version nueva, instalala y volve a entrar.
+
+    [ ] POS 0.1.35 o mas, Servidor 0.10.0 o mas.
+
+
+PASO 2 - GENERAR EL PEDIDO
+--------------------------
+2.1 En Configuracion, fijate que esten cargados RAZON SOCIAL y CUIT. Si el
+    CUIT esta mal, el sistema te lo va a rechazar (valida el digito
+    verificador).
+2.2 Busca la tarjeta "Facturacion electronica (ARCA)".
+2.3 Toca "Generar pedido".
+
+    [ ] Aparecio un cuadro con un texto que empieza con "C=AR, O=..."
+
+    Copiame ese texto:
+    ______________________________________________________________
+
+2.4 Toca "Guardar archivo .csr" y guardalo en el Escritorio.
+
+    [ ] Se guardo el archivo.
+
+
+PASO 3 - EL TRAMITE EN ARCA (esto lo hace una persona, no el sistema)
+---------------------------------------------------------------------
+3.1 Entra con tu Clave Fiscal al portal de PRUEBA:
+
+        https://wsass-homo.afip.gob.ar/wsass/portal/main.aspx
+
+    IMPORTANTE: es ese, no el de siempre. El de Clave Fiscal normal
+    (serviciosweb.afip.gob.ar) emite certificados de PRODUCCION, que no
+    sirven contra los servidores de prueba.
+
+3.2 Busca la opcion para crear un certificado de homologacion y subi el
+    archivo .csr del paso 2.4.
+3.3 Descarga el certificado que te devuelve (.crt).
+
+    [ ] Lo descargue.
+
+    Si ARCA rechaza el archivo, PARA y copiame el mensaje exacto. Eso es lo
+    que mas me sirve de toda la prueba.
+
+3.4 Despues, en "Administrador de Relaciones", asocia el servicio de
+    Facturacion Electronica a ese certificado.
+
+    [ ] Hecho. (Si no encontras como, avisame y lo vemos juntos.)
+
+
+PASO 4 - CARGARLO EN EL SISTEMA
+-------------------------------
+4.1 Volve al POS > Configuracion > Facturacion electronica (ARCA).
+4.2 En el paso 3 de la tarjeta, elegi el archivo .crt que bajaste.
+
+    [ ] Dijo "Certificado guardado" y muestra una fecha de vencimiento.
+
+    Fecha que muestra: ____________________
+
+
+PASO 5 - PROBAR QUE AVISE BIEN
+------------------------------
+Esto es a proposito: quiero ver que el sistema rechace lo que no corresponde.
+
+5.1 Proba cargar cualquier otro archivo (un .txt, una foto renombrada a .crt).
+
+    [ ] Lo rechazo con un mensaje entendible.
+
+    Que dijo: ____________________________________________
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  - El texto del paso 2.3
+  - La fecha del paso 4.2
+  - El mensaje del paso 5.1
+  - Cualquier pantalla de ARCA que te haya rechazado algo
+
+Si algo se traba antes del paso 4, no sigas: avisame con lo que anotaste.
+===========================================================================
