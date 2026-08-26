@@ -1,67 +1,71 @@
 ﻿===========================================================================
-  NEXOSOFT - LEVANTAR EL SERVIDOR (no reinstalar)
-  Para: Sebastian - "No se pudo conectar con el servidor"
-  Tiempo: 3 minutos
+  NEXOSOFT - LEVANTAR EL SERVIDOR
+  Para: Sebastian
+  Tiempo: 5 minutos. NO hay que reinstalar ni borrar nada.
 ===========================================================================
 
-QUE PASA
---------
-El error cambio: ya no dice que el usuario o la contrasena esten mal, dice que
-no puede CONECTAR. O sea que el servidor no esta corriendo. No es un problema
-de credenciales.
+QUE PASABA (ya con el log en la mano, no adivinando)
+-----------------------------------------------------
+Cuando desinstalaste antes de reinstalar, Windows borro
+C:\NexoSoft-Servidor -- y adentro estaba el archivo de configuracion con la
+clave de la base de datos. Los datos NO se borraron: viven aparte, en
+C:\ProgramData\NexoSoft, porque son del comercio.
 
-La culpa es mia y es de un cambio que hice ayer. Cuando le agregue al
-instalador el paso que detiene PostgreSQL (hacia falta para poder reemplazar
-sus archivos), quedo con solo 3 segundos de margen para volver a levantarlo
-antes de migrar la base. Si no llegaba, el instalador se cortaba justo antes
-de arrancar el servidor -- y como se cortaba despues de copiar todo, parecia
-que habia terminado bien.
+O sea: quedo la base llena de datos y la llave para abrirla en la basura. El
+instalador llegaba a ese punto, no podia seguir, y se cortaba justo antes de
+arrancar el servidor. Por eso el POS decia "No se pudo conectar".
 
-NO hace falta reinstalar. Hay un script que lo levanta.
+Se recupera. La clave del superusuario si quedo guardada del lado de los
+datos, y con esa se le pone una clave nueva a la base.
+
+TUS DATOS ESTAN INTACTOS. No borres nada.
 
 
-PASO 1 - ABRIR POWERSHELL COMO ADMINISTRADOR
---------------------------------------------
+PASO 1 - POWERSHELL COMO ADMINISTRADOR
+---------------------------------------
 Tecla Windows -> escribi "powershell" -> clic derecho -> Ejecutar como
 administrador.
 
-    [ ] Arriba de la ventana dice "Administrador".
+    [ ] Arriba dice "Administrador".
 
 
-PASO 2 - BAJAR EL SCRIPT
-------------------------
-Pega este renglon (es uno solo) y ENTER:
+PASO 2 - BAJAR LOS DOS SCRIPTS
+-------------------------------
+Pega estos dos renglones (uno por vez) y ENTER:
 
-[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/nexosoftfsa/nexosoft-pos/main/scripts/instalacion/reparar-servidor.ps1" -OutFile "C:\NexoSoft-Servidor\scripts\reparar-servidor.ps1"
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/nexosoftfsa/nexosoft-pos/main/scripts/instalacion/asegurar-env.ps1" -OutFile "C:\NexoSoft-Servidor\scripts\asegurar-env.ps1"
 
-    [ ] No aparecio texto rojo.
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/nexosoftfsa/nexosoft-pos/main/scripts/instalacion/reparar-servidor.ps1" -OutFile "C:\NexoSoft-Servidor\scripts\reparar-servidor.ps1"
+
+    [ ] Ninguno de los dos dio texto rojo.
 
 
 PASO 3 - LEVANTARLO
 -------------------
-Pega este renglon, cambiando USUARIO y CLAVE por los que quieras usar para
-entrar al POS. La clave tiene que tener 8 caracteres o mas.
+Cambia USUARIO y CLAVE por los que quieras usar en el POS (clave de 8
+caracteres o mas) y pega el renglon:
 
 & "C:\NexoSoft-Servidor\scripts\reparar-servidor.ps1" -AdminUsuario "USUARIO" -AdminPassword "CLAVE"
 
-Va a tardar hasta un minuto. Al final tiene que decir:
+Tarda hasta un minuto. Tiene que terminar con estas tres:
 
-    OK: Servidor respondiendo: ok, version 0.9.7
+    OK: .env en su lugar
+    OK: Servidor respondiendo: ok, version 0.9.x
     OK: Usuario 'USUARIO' listo para entrar
 
-y despues mostrarte la direccion del servidor.
+Si en el camino dice "recuperando el acceso al rol 'nexosoft'", perfecto: es
+justo el arreglo haciendo su trabajo.
 
-    [ ] Dijo las dos lineas OK.
+    [ ] Termino con las tres lineas OK.
 
-    Direccion que te mostro para ESTA PC: ______________________________
+    Direccion que te mostro al final: ____________________________
 
 
 PASO 4 - ENTRAR AL POS
 ----------------------
 4.1 Abri el POS.
-4.2 Antes de entrar, tocá "Configuracion del servidor" (el enlace debajo del
-    boton Ingresar) y fijate que la direccion sea EXACTAMENTE la que te
-    mostro el paso 3. Normalmente:
+4.2 Tocá "Configuracion del servidor" (debajo del boton Ingresar) y fijate
+    que diga exactamente:
 
         http://localhost:3000/api/v1
 
@@ -69,18 +73,20 @@ PASO 4 - ENTRAR AL POS
 
 4.3 Entra con el USUARIO y la CLAVE del paso 3.
 
-    [ ] Entre.
+    [ ] ENTRE.
 
-Si entraste, terminaste. Avisame.
+Listo. Avisame y seguimos con la prueba de suscripcion, que era lo que
+queriamos hacer hace dos dias.
 
 
-SI ALGO FALLA
--------------
-El script dice en cada paso que fue lo que no pudo hacer. Copiame ese mensaje
-y mandame ademas este archivo:
+SI FALLA
+--------
+El script dice en cada paso que no pudo hacer. Copiame ese mensaje y mandame:
 
   C:\ProgramData\NexoSoft\logs\reparar-servidor.log
 
-Con eso ya se exactamente donde se traba. No hagas nada mas: lo miramos.
+Si llegara a decir que falta "postgres-superuser.txt": PARA AHI y avisame
+antes de tocar nada. Los datos siguen estando y se recuperan igual, pero a
+mano.
 
 ===========================================================================
