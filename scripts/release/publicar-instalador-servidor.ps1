@@ -142,7 +142,8 @@ foreach ($s in @(
         "configurar-suscripcion.ps1",
         "detener-servidor.ps1",
         "reparar-servidor.ps1",
-        "asegurar-env.ps1")) {
+        "asegurar-env.ps1",
+        "limpiar-instalacion.ps1")) {
     Copy-Item (Join-Path $raiz "scripts\instalacion\$s") $scriptsDestino -Force
 }
 Ok "$((Get-ChildItem $scriptsDestino -File).Count) scripts incluidos en el paquete"
