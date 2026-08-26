@@ -1,0 +1,104 @@
+﻿===========================================================================
+  NEXOSOFT - INSTALACION LIMPIA, COMO UN CLIENTE NUEVO
+  Para: Sebastian
+  Tiempo: 25 minutos
+===========================================================================
+
+POR QUE NO ALCANZA CON DESINSTALAR
+-----------------------------------
+Desinstalar saca C:\NexoSoft-Servidor pero DEJA C:\ProgramData\NexoSoft, que
+es donde estan la base de datos y los certificados. Eso es a proposito: en un
+cliente real, desinstalar no puede llevarse sus ventas.
+
+Pero para vos es un problema: al reinstalar, el sistema encuentra esa base y
+la reusa. El comercio "nuevo" arrancaria con la sucursal, los articulos y las
+ventas del anterior. No seria una prueba valida.
+
+Tampoco se daban de baja las tareas programadas, que quedaban dando vueltas.
+
+Por eso hay un script que borra TODO. Deja un respaldo antes, por las dudas.
+
+
+ORDEN IMPORTANTE
+----------------
+Hace esto ANTES de la prueba del certificado de ARCA. Si limpias despues,
+perdes el certificado y hay que rehacer el tramite.
+
+
+PASO 1 - ACTUALIZAR PRIMERO (para tener el script)
+---------------------------------------------------
+1.1 En el POS: Configuracion > Actualizaciones > "Actualizar servidor".
+1.2 Espera a que diga que el servidor quedo en 0.10.1 o mas.
+
+    [ ] Servidor 0.10.1 o mas.
+
+Si el POS no puede actualizar el servidor, baja el instalador 0.10.1 y
+correlo. Con eso tambien queda el script en la PC.
+
+
+PASO 2 - LIMPIAR
+----------------
+2.1 PowerShell como administrador.
+2.2 Primero mira lo que va a borrar, SIN borrar nada:
+
+& "C:\NexoSoft-Servidor\scripts\limpiar-instalacion.ps1"
+
+    Te va a listar que borra y terminar diciendo que no borro nada.
+
+    [ ] Lei la lista.
+
+2.3 Ahora si, la limpieza de verdad:
+
+& "C:\NexoSoft-Servidor\scripts\limpiar-instalacion.ps1" -SiEstoySeguro
+
+    Deja un .zip de respaldo en tu Escritorio antes de borrar.
+
+    [ ] Termino diciendo "La PC quedo como si NexoSoft nunca hubiera estado
+        instalado".
+
+    Nombre del zip de respaldo: ____________________________
+
+    Si algo no se pudo borrar, te va a decir cual. Reinicia la PC y corre el
+    comando de nuevo.
+
+
+PASO 3 - INSTALAR COMO CLIENTE NUEVO
+-------------------------------------
+3.1 Baja NexoSoft-Servidor-0.10.1-Setup.exe (o mas nuevo) y correlo.
+3.2 Completa como si fueras un comercio nuevo:
+
+    Nombre del comercio: ____________________
+    Usuario admin:       ____________________
+    Contrasena:          ____________________
+
+    Dejá el puerto en 5432.
+
+3.3 Al final, LEE LA ULTIMA PANTALLA.
+
+    [ ] Dijo que el servidor esta funcionando (NO "LA CONFIGURACION NO
+        TERMINO BIEN").
+
+3.4 Abri el POS y entra con ese usuario.
+
+    [ ] Entre, y el sistema esta VACIO: sin articulos, sin ventas, sin otros
+        usuarios.
+
+    Esto ultimo es lo que estamos probando. Si aparecen datos viejos,
+    avisame: significa que la limpieza no fue completa.
+
+
+PASO 4 - Y AHORA SI, EL CERTIFICADO DE ARCA
+--------------------------------------------
+Segui con el otro instructivo (PRUEBA-CERTIFICADO-ARCA.txt), desde el paso 2.
+
+===========================================================================
+  SI ALGO FALLA
+===========================================================================
+Mandame lo que anotaste mas estos archivos si existen:
+
+  C:\ProgramData\NexoSoft\logs\bootstrap.log
+  C:\ProgramData\NexoSoft\logs\reparar-servidor.log
+
+Y acordate: el zip del Escritorio tiene los datos viejos. No lo borres hasta
+que la prueba termine bien.
+===========================================================================
