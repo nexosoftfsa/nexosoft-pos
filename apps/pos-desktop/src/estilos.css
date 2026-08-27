@@ -1293,3 +1293,27 @@ body {
     border-top: 1px solid var(--borde);
   }
 }
+
+/* ---------- QR fiscal de ARCA (RG 4892/2020) ----------
+   Va impreso en el ticket y en el A4. El tamano importa: por debajo de ~1cm
+   los lectores de celular no lo enganchan. */
+.qr-fiscal {
+  text-align: center;
+  margin-top: 6px;
+}
+.qr-fiscal img {
+  display: block;
+  margin: 0 auto;
+  /* Sin esto, al imprimir el navegador puede suavizar el QR y volverlo
+     ilegible para el lector. */
+  image-rendering: pixelated;
+}
+.qr-fiscal__pie {
+  font-size: 9px;
+  margin-top: 2px;
+}
+.a4-footer--con-qr {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}

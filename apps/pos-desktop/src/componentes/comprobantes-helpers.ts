@@ -3,6 +3,8 @@
  * número formateado y reglas de anulación.
  */
 import { Cantidad, etiquetaCondicionIva, Money } from "@nexosoft/domain";
+import type { TipoComprobante } from "@nexosoft/domain";
+import { codigoComprobanteArca } from "@nexosoft/fiscal";
 import type { DatosTicket } from "@nexosoft/hardware";
 import type { ConfiguracionComercio } from "@nexosoft/app";
 import type { Comprobante } from "../sync/cliente-ventas";
@@ -95,5 +97,21 @@ export function datosTicketDeComprobante(
     vuelto: Money.cero(),
     ...(c.cae !== null ? { cae: c.cae } : {}),
     ...(c.caeFechaVto !== null ? { vencimientoCae: new Date(c.caeFechaVto) } : {}),
+    ...(codigoArcaDe(c.tipoComprobante) !== null
+      ? { codigoComprobanteArca: codigoArcaDe(c.tipoComprobante) as number }
+      : {}),
   };
+}
+
+/**
+ * Código numérico de ARCA para el QR fiscal. `null` si el comprobante no es
+ * fiscal (un ticket interno no lleva QR: no hay nada que verificar).
+ */
+function codigoArcaDe(tipo: string | null): number | null {
+  if (tipo === null) return null;
+  try {
+    return codigoComprobanteArca(tipo as TipoComprobante);
+  } catch {
+    return null;
+  }
 }

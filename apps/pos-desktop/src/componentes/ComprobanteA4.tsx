@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Fase 10.4: layout imprimible A4 de un comprobante. Presentacional puro
- * (mismo `DatosTicket` que ya arma la impresora térmica — ver
+ * (mismo `DatosTicket` que ya arma la impresora tÃ©rmica â€” ver
  * `packages/hardware/src/impresora.ts`), oculto en pantalla y mostrado solo
  * durante `window.print()` (ver `.hoja-a4` / `body.modo-impresion-a4` en
  * `estilos.css`).
@@ -8,6 +8,7 @@
 import type { Cantidad } from "@nexosoft/domain";
 import type { DatosTicket } from "@nexosoft/hardware";
 import { pesos } from "../formato";
+import { QrFiscal } from "./QrFiscal";
 
 /** "1" para cantidades enteras (lo usual), "1.500" para fraccionadas (venta por peso). */
 function cantidadFormateada(c: Cantidad): string {
@@ -32,7 +33,7 @@ export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
         </div>
         <div className="a4-comprobante">
           <div className="a4-tipo">{datos.tipoComprobante}</div>
-          <div>N° {numeroFormateado}</div>
+          <div>NÂ° {numeroFormateado}</div>
           <div>{datos.fecha.toLocaleDateString("es-AR")}</div>
           {esFiscal && datos.condicionIvaReceptor !== "" && (
             <div>Receptor: {datos.condicionIvaReceptor}</div>
@@ -42,14 +43,14 @@ export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
 
       {!esFiscal && (
         <div className="a4-aviso-no-fiscal">
-          COMPROBANTE NO VÁLIDO COMO FACTURA — comercio sin alta en ARCA
+          COMPROBANTE NO VÃLIDO COMO FACTURA â€” comercio sin alta en ARCA
         </div>
       )}
 
       <table className="a4-items">
         <thead>
           <tr>
-            <th>Descripción</th>
+            <th>DescripciÃ³n</th>
             <th>Cantidad</th>
             <th>P. Unitario</th>
             <th>Importe</th>
@@ -99,19 +100,23 @@ export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
         </div>
       )}
 
-      <footer className="a4-footer">
-        {esFiscal ? (
-          datos.cae ? (
-            <div>
-              CAE {datos.cae}
-              {datos.vencimientoCae && ` — Vto. ${datos.vencimientoCae.toLocaleDateString("es-AR")}`}
-            </div>
+      <footer className="a4-footer a4-footer--con-qr">
+        {esFiscal && <QrFiscal datos={datos} tamanio={90} />}
+        <div>
+          {esFiscal ? (
+            datos.cae ? (
+              <>
+                CAE {datos.cae}
+                {datos.vencimientoCae &&
+                  ` â€” Vto. ${datos.vencimientoCae.toLocaleDateString("es-AR")}`}
+              </>
+            ) : (
+              "Pendiente de autorizaciÃ³n de ARCA."
+            )
           ) : (
-            <div>Pendiente de autorización de ARCA.</div>
-          )
-        ) : (
-          <div>Documento interno, sin validez fiscal.</div>
-        )}
+            "Documento interno, sin validez fiscal."
+          )}
+        </div>
       </footer>
     </div>
   );

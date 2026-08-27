@@ -65,6 +65,12 @@ export interface DatosTicket {
 
   // Fiscal (opcional: no disponible si el CAE está pendiente)
   readonly cae?: string;
+  /**
+   * Código de tipo de comprobante de ARCA (Factura C = 11, etc.), necesario
+   * para armar el QR fiscal. Va aparte de `tipoComprobante`, que es el texto
+   * que se imprime ("Factura C"): el QR lleva el número.
+   */
+  readonly codigoComprobanteArca?: number;
   readonly vencimientoCae?: Date;
 }
 

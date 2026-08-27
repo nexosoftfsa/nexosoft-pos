@@ -9,6 +9,7 @@
 import type { Cantidad } from "@nexosoft/domain";
 import type { DatosTicket } from "@nexosoft/hardware";
 import { pesos } from "../formato";
+import { QrFiscal } from "./QrFiscal";
 
 function cantidadFormateada(c: Cantidad): string {
   return c.esEntera() ? c.aDecimalString(0) : c.aDecimalString(3);
@@ -93,6 +94,8 @@ export function ComprobanteTicket({ datos }: { datos: DatosTicket }) {
             : "Pendiente de autorización de ARCA"
           : "Documento interno, sin validez fiscal"}
       </div>
+
+      {esFiscal && <QrFiscal datos={datos} tamanio={110} />}
     </div>
   );
 }
