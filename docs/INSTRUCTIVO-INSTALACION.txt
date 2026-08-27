@@ -1,6 +1,6 @@
 ﻿===============================================================================
 NEXOSOFT - INSTRUCTIVO DE INSTALACION EN UN CLIENTE
-Ultima actualizacion: 23/08/2026
+Ultima actualizacion: 27/08/2026
 ===============================================================================
 
 Este archivo se abre con el Bloc de notas. Imprimilo o llevalo en el pendrive.
@@ -13,8 +13,11 @@ REGLAS DE ORO  (leer SIEMPRE antes de salir)
 
 1) EL POS Y EL SERVIDOR TIENEN NUMERACIONES DISTINTAS.
 
-      POS       ->  v0.1.30         (tags: v0.1.30)
-      SERVIDOR  ->  servidor-v0.9.2 (tags: servidor-v0.9.2)
+      POS       ->  v0.1.35          (tags: v0.1.35)
+      SERVIDOR  ->  servidor-v0.10.2 (tags: servidor-v0.10.2)
+
+   Ojo con el orden de los numeros del servidor: 0.10.2 es MAS NUEVO que
+   0.9.9. Diez es mayor que nueve, aunque escrito parezca al reves.
 
    NUNCA uses el numero del POS para el servidor. Ya paso: se compilo un
    instalador de servidor con el numero del POS (0.1.17) cuando el servidor
@@ -32,6 +35,23 @@ REGLAS DE ORO  (leer SIEMPRE antes de salir)
 
 4) NUNCA copies la carpeta del proyecto por USB (node_modules son decenas de
    miles de archivos y falla a mitad). El pendrive es para los .exe.
+
+5) PARA ACTUALIZAR UN CLIENTE QUE YA TIENE EL SISTEMA, USA EL POS, NO EL
+   INSTALADOR.
+
+      POS -> Configuracion -> "Actualizar servidor"
+
+   El actualizador REVIERTE SOLO si algo sale mal: el comercio se queda con la
+   version anterior funcionando. El instalador NO revierte: si falla, te deja
+   el servidor caido y sin vuelta atras. Ya paso.
+
+   El instalador es para instalaciones NUEVAS o para reparar algo roto.
+
+6) NUNCA desinstales para reinstalar encima.
+   Desinstalar borra C:\NexoSoft-Servidor pero deja los datos en
+   C:\ProgramData\NexoSoft. El sistema se recupera solo, pero es un rodeo al
+   pedo. Si necesitas de verdad empezar de cero (una PC de prueba), esta
+   scripts\limpiar-instalacion.ps1, que borra todo y deja un respaldo antes.
 
 
 ===============================================================================
@@ -147,15 +167,55 @@ no existe: usar el POS.
 
 
 ===============================================================================
-PASO 4 - PRUEBA FINAL (no te vayas sin esto)
+PASO 4 - CERTIFICADO DE ARCA (si el comercio factura con CAE)
 ===============================================================================
 
+Si el comercio NO esta de alta en ARCA todavia, saltealo: dejalo con el tilde
+"Ya esta de alta en ARCA" APAGADO y el sistema vende con ticket interno, sin
+CAE. Se puede activar despues sin reinstalar nada.
+
+Si SI factura, esto se hace con el comercio al lado, porque hace falta SU
+Clave Fiscal. Nosotros no la pedimos ni la guardamos: el la escribe.
+
+   POS -> Configuracion -> tarjeta "Facturacion electronica (ARCA)"
+
+   4.1 Antes que nada, que la razon social y el CUIT esten bien cargados
+       arriba. El CUIT se valida solo: si esta mal, no deja seguir.
+
+   4.2 "Generar pedido" -> "Guardar archivo .csr".
+
+   4.3 El comercio entra a ARCA con SU Clave Fiscal, sube el .csr y descarga
+       el certificado. La pantalla muestra la direccion exacta.
+
+   4.4 En "Administrador de Relaciones", asociar el servicio de Facturacion
+       Electronica a ESE certificado.
+       ESTE PASO SE OLVIDA SIEMPRE. Sin el, ARCA rechaza los comprobantes con
+       un error que no dice que falta la delegacion.
+
+   4.5 Volver al POS y cargar el .crt en el paso 3 de la tarjeta.
+       Tiene que decir "Certificado guardado" y mostrar el vencimiento.
+
+   [ ] Anotar el vencimiento en la ficha del cliente. Cuando venza, deja de
+       poder facturar. El POS avisa cuando faltan menos de 30 dias.
+
+OJO: a la fecha de este instructivo el sistema TODAVIA NO emite CAE. El
+certificado es el paso previo; la conexion con ARCA esta en construccion.
+Dejalo cargado igual: cuando salga, ya va a estar listo.
+
+
+===============================================================================
+PASO 5 - PRUEBA FINAL (no te vayas sin esto)
+===============================================================================
+
+   [ ] Abrir la caja (sin turno abierto NO se puede vender: es a proposito)
    [ ] Una venta de prueba completa
    [ ] Imprimir el ticket chico
    [ ] Imprimir el A4
    [ ] El panel http://localhost:3000/ muestra el logo y los reportes
    [ ] Desde otra PC de la red: http://<IP-de-la-caja>:3000/
    [ ] El catalogo esta completo (contar los articulos)
+   [ ] Cerrar sesion y volver a entrar con el usuario del comercio
+       (desde ahora el POS pide usuario y clave CADA VEZ que se abre)
    [ ] Reiniciar la PC de Caja y confirmar que el servidor levanta SOLO
        (volver a abrir el health del Paso 1.5)
 
