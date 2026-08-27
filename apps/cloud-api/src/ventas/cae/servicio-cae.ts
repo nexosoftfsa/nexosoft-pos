@@ -6,10 +6,39 @@
  * adaptador real se enchufa sin tocar el módulo de ventas.
  */
 
+/** Un renglón del detalle de IVA que pide ARCA. */
+export interface RenglonIvaSolicitud {
+  readonly codigoArca: number;
+  readonly base: string;
+  readonly importe: string;
+}
+
 export interface SolicitudCae {
   tipoComprobante: string;
   total: string;
   sucursalId: string;
+  /**
+   * Lo que sigue lo necesita ARCA de verdad; el mock lo ignora. Es opcional
+   * para no romper a quien ya llamaba con lo mínimo (por ejemplo el reintento
+   * de las pendientes, que reconstruye lo que puede).
+   */
+  /** CbteTipo de ARCA. Si no viene, el adaptador real no puede emitir. */
+  codigoComprobante?: number;
+  fecha?: Date;
+  /** `ImpNeto`. En un comprobante C es el total. */
+  neto?: string;
+  iva?: string;
+  exento?: string;
+  renglonesIva?: readonly RenglonIvaSolicitud[];
+  /** 80=CUIT, 96=DNI, 99=consumidor final. */
+  tipoDocReceptor?: number;
+  nroDocReceptor?: string;
+  /**
+   * Condición del comprador frente al IVA, en el código de ARCA
+   * (1=Responsable Inscripto, 4=Exento, 5=Consumidor Final, 6=Monotributo).
+   * Obligatoria en el comprobante desde la RG 5616/2024.
+   */
+  condicionIvaReceptor?: number;
 }
 
 export interface ResultadoCae {

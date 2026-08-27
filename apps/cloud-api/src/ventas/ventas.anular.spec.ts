@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { esComprobanteFiscal, notaCreditoDe, resumenMedioPago, VentasService } from './ventas.service';
 import { LibroDeVentasEnMemoria } from './libro/libro-de-ventas-en-memoria';
+import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
 
 function ventaConItems(overrides: Record<string, unknown> = {}) {
   return {
@@ -68,6 +69,8 @@ describe('esComprobanteFiscal', () => {
 describe('VentasService.anular', () => {
   let prisma: {
     venta: { findFirst: ReturnType<typeof vi.fn> };
+    // Lo usa el desglose de IVA de la NC para saber la alícuota de cada ítem.
+    producto: { findMany: ReturnType<typeof vi.fn> };
     $transaction: ReturnType<typeof vi.fn>;
   };
   let tx: {
@@ -98,6 +101,7 @@ describe('VentasService.anular', () => {
     };
     prisma = {
       venta: { findFirst: vi.fn().mockResolvedValue(ventaConItems()) },
+      producto: { findMany: vi.fn().mockResolvedValue([{ id: 'p1', tipoIva: 'IVA_21' }]) },
       $transaction: vi.fn((cb: (t: typeof tx) => unknown) => cb(tx)),
     };
     cae = {
@@ -114,6 +118,7 @@ describe('VentasService.anular', () => {
       new LibroDeVentasEnMemoria() as never,
       { crearRespaldo: vi.fn() } as never,
       { get: vi.fn() } as never,
+      new DesgloseDeVentaService(prisma as never),
     );
   });
 
@@ -156,7 +161,18 @@ describe('VentasService.anular', () => {
   it('pide el CAE para la Nota de Crédito con la letra heredada', async () => {
     await service.anular('s1', 'v1');
     expect(cae.autorizar).toHaveBeenCalledWith(
-      expect.objectContaining({ tipoComprobante: 'NotaCreditoB', total: '200' }),
+      expect.objectContaining({ tipoComprobante: 'NotaCreditoB', total: '200.00' }),
+    );
+  });
+
+  it('la NC lleva el mismo desglose de IVA que el original', async () => {
+    await service.anular('s1', 'v1');
+    expect(cae.autorizar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        neto: '165.29', // 200 - 34.71
+        iva: '34.71', // 200 × 21 / 121
+        codigoComprobante: 8, // Nota de Crédito B
+      }),
     );
   });
 

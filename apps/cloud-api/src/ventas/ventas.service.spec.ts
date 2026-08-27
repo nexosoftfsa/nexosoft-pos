@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { VentasService } from './ventas.service';
 import { LibroDeVentasEnMemoria } from './libro/libro-de-ventas-en-memoria';
 import { ErrorCaeNoDisponible, ErrorCaeRechazado } from './cae/servicio-cae';
+import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
 
 const USUARIO = { id: 'u1', email: 'cajero@nexo.com', sucursalId: 's1' };
 
@@ -44,6 +45,8 @@ describe('VentasService', () => {
     comboComponente: { findMany: ReturnType<typeof vi.fn> };
     producto: { findMany: ReturnType<typeof vi.fn> };
     lote: { findMany: ReturnType<typeof vi.fn> };
+    // Para saber si el comprador va identificado ante ARCA.
+    cliente: { findUnique: ReturnType<typeof vi.fn> };
     movimientoStock: { findMany: ReturnType<typeof vi.fn> };
     $transaction: ReturnType<typeof vi.fn>;
   };
@@ -74,6 +77,7 @@ describe('VentasService', () => {
       // Sin productos perecederos por defecto → sin FEFO (tramos sin lote).
       producto: { findMany: vi.fn().mockResolvedValue([]) },
       lote: { findMany: vi.fn().mockResolvedValue([]) },
+      cliente: { findUnique: vi.fn().mockResolvedValue(null) },
       movimientoStock: { findMany: vi.fn().mockResolvedValue([]) },
       $transaction: vi.fn((cb: (t: typeof tx) => unknown) => cb(tx)),
     };
@@ -95,6 +99,7 @@ describe('VentasService', () => {
       libro as never,
       motor as never,
       config as never,
+      new DesgloseDeVentaService(prisma as never),
     );
   });
 
@@ -161,7 +166,8 @@ describe('VentasService', () => {
     it('pide CAE con el total calculado', async () => {
       await service.registrar(USUARIO, DTO);
       expect(cae.autorizar).toHaveBeenCalledWith(
-        expect.objectContaining({ total: '240', sucursalId: 's1' }),
+        // Con dos decimales: es el formato que pide ARCA.
+        expect.objectContaining({ total: '240.00', sucursalId: 's1' }),
       );
     });
 
@@ -375,6 +381,7 @@ describe('VentasService', () => {
         libroRoto as never,
         motor as never,
         config as never,
+        new DesgloseDeVentaService(prisma as never),
       );
 
       const result = await service.registrar(USUARIO, DTO);

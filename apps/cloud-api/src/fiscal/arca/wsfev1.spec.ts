@@ -84,6 +84,20 @@ describe('solicitarCae', () => {
     numero: 42,
     total: '1500.00',
     fecha: new Date(2026, 7, 27),
+    neto: '1500.00',
+    iva: '0.00',
+    exento: '0.00',
+    renglonesIva: [],
+  };
+
+  /** Los mismos importes, pero como Factura B (discrimina IVA). */
+  const FACTURA_B = {
+    ...DATOS,
+    codigoComprobante: 6,
+    neto: '1239.67',
+    iva: '260.33',
+    exento: '0.00',
+    renglonesIva: [{ codigoArca: 5, base: '1239.67', importe: '260.33' }],
   };
 
   it('devuelve el CAE y su vencimiento', async () => {
@@ -117,12 +131,84 @@ describe('solicitarCae', () => {
     expect(body).not.toContain('<Iva>');
   });
 
-  it('se planta con Factura A o B en vez de inventar el desglose', async () => {
+  it('una Factura B manda el detalle por alícuota', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
+    await cliente(fetchMock as never).solicitarCae(TICKET, FACTURA_B);
+    const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
+    expect(body).toContain('<ImpNeto>1239.67</ImpNeto>');
+    expect(body).toContain('<ImpIVA>260.33</ImpIVA>');
+    expect(body).toContain('<Iva><AlicIva><Id>5</Id><BaseImp>1239.67</BaseImp><Importe>260.33</Importe></AlicIva></Iva>');
+  });
+
+  it('varias alícuotas van como renglones separados', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
+    await cliente(fetchMock as never).solicitarCae(TICKET, {
+      ...FACTURA_B,
+      renglonesIva: [
+        { codigoArca: 4, base: '100.00', importe: '10.50' },
+        { codigoArca: 5, base: '200.00', importe: '42.00' },
+      ],
+    });
+    const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
+    expect((body.match(/<AlicIva>/g) ?? []).length).toBe(2);
+    expect(body).toContain('<Id>4</Id>');
+    expect(body).toContain('<Id>5</Id>');
+  });
+
+  it('las operaciones exentas van en ImpOpEx', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
+    await cliente(fetchMock as never).solicitarCae(TICKET, { ...FACTURA_B, exento: '500.00' });
+    expect((fetchMock.mock.calls[0]![1] as { body: string }).body).toContain(
+      '<ImpOpEx>500.00</ImpOpEx>',
+    );
+  });
+
+  it('una Factura A sin CUIT del cliente se corta antes de llamar a ARCA', async () => {
+    // ARCA la rechazaria igual; mejor decir por que.
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await expect(
-      cliente(fetchMock as never).solicitarCae(TICKET, { ...DATOS, codigoComprobante: 6 }),
+      cliente(fetchMock as never).solicitarCae(TICKET, { ...FACTURA_B, codigoComprobante: 1 }),
     ).rejects.toBeInstanceOf(ErrorWsfeNoSoportado);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('una Factura A con CUIT del cliente sí sale', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
+    await cliente(fetchMock as never).solicitarCae(TICKET, {
+      ...FACTURA_B,
+      codigoComprobante: 1,
+      tipoDocReceptor: 80,
+      nroDocReceptor: '30712345671',
+    });
+    const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
+    expect(body).toContain('<DocTipo>80</DocTipo>');
+    expect(body).toContain('<DocNro>30712345671</DocNro>');
+  });
+
+  it('sin receptor asume consumidor final', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
+    await cliente(fetchMock as never).solicitarCae(TICKET, DATOS);
+    const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
+    expect(body).toContain('<DocTipo>99</DocTipo>');
+    expect(body).toContain('<DocNro>0</DocNro>');
+    // La RG 5616/2024 la volvio obligatoria: sin ella el comprobante rebota.
+    expect(body).toContain('<CondicionIVAReceptorId>5</CondicionIVAReceptorId>');
+  });
+
+  it('manda la condicion del receptor que le pasan', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
+    await cliente(fetchMock as never).solicitarCae(TICKET, {
+      ...FACTURA_B,
+      codigoComprobante: 1,
+      tipoDocReceptor: 80,
+      nroDocReceptor: '30712345671',
+      condicionIvaReceptor: 1,
+    });
+    const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
+    expect(body).toContain('<CondicionIVAReceptorId>1</CondicionIVAReceptorId>');
+    // El XSD de WSFEv1 es una secuencia: va despues de MonCotiz y antes de Iva.
+    expect(body.indexOf('<CondicionIVAReceptorId>')).toBeGreaterThan(body.indexOf('<MonCotiz>'));
+    expect(body.indexOf('<CondicionIVAReceptorId>')).toBeLessThan(body.indexOf('<Iva>'));
   });
 });
 

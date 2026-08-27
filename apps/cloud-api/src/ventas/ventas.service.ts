@@ -10,6 +10,8 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { EstadoFiscal, MedioPago, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MotorDeRespaldo } from '../respaldo/motor-de-respaldo';
+import { codigoComprobanteArcaOpcional, type DesgloseIva } from '@nexosoft/domain';
+import type { ReceptorArca } from './cae/receptor-arca';
 import {
   ErrorCaeNoDisponible,
   ErrorCaeRechazado,
@@ -17,6 +19,7 @@ import {
   type ResultadoCae,
   type ServicioCae,
 } from './cae/servicio-cae';
+import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
 import { expandirStockDeVenta, type ComponenteCombo } from './combo';
@@ -47,6 +50,7 @@ export class VentasService {
     @Inject(LIBRO_DE_VENTAS) private readonly libro: LibroDeVentas,
     private readonly motor: MotorDeRespaldo,
     private readonly config: ConfigService,
+    private readonly desgloses: DesgloseDeVentaService,
   ) {}
 
   historial(sucursalId: string) {
@@ -87,13 +91,27 @@ export class VentasService {
     }
 
     const tipoNc = notaCreditoDe(original.tipoComprobante);
+    // La Nota de Crédito refleja el mismo desglose que el original.
+    const desgloseNc = await this.desgloses.deLineas(
+      original.items.map((it) => ({ productoId: it.productoId, subtotal: it.subtotal })),
+      tipoNc,
+      original.total,
+    );
     // Fase 10.1: un TicketNoFiscal no tiene Nota de Crédito (no es fiscal) — se
     // anula reflejando el mismo tipo, sin pedir CAE.
     //
     // Igual que en la venta: si ARCA no responde, la anulación se registra y el
     // CAE de la Nota de Crédito se consigue después. Devolverle la plata a un
     // cliente no puede depender de que AFIP esté en línea.
-    const fiscal = await this.pedirCae(tipoNc, original.total, sucursalId);
+    // La NC va al mismo receptor que la factura que anula.
+    const receptorNc = await this.desgloses.receptorDe(original.clienteId ?? null);
+    const fiscal = await this.pedirCae(
+      tipoNc,
+      original.total,
+      sucursalId,
+      desgloseNc,
+      receptorNc,
+    );
     const cae = fiscal.cae;
 
     const notaCredito = await this.conNumeroUnico(() =>
@@ -183,6 +201,8 @@ export class VentasService {
     tipoComprobante: string,
     total: Decimal,
     sucursalId: string,
+    desglose: DesgloseIva,
+    receptor: ReceptorArca,
   ): Promise<{ cae: ResultadoCae | null; estadoFiscal: EstadoFiscal; motivo: string | null }> {
     if (!esComprobanteFiscal(tipoComprobante)) {
       return { cae: null, estadoFiscal: 'NO_APLICA', motivo: null };
@@ -190,8 +210,23 @@ export class VentasService {
     try {
       const cae = await this.cae.autorizar({
         tipoComprobante,
-        total: total.toString(),
+        total: total.toFixed(2),
         sucursalId,
+        fecha: new Date(),
+        neto: desglose.neto.aDecimalString(2),
+        iva: desglose.iva.aDecimalString(2),
+        exento: desglose.exento.aDecimalString(2),
+        renglonesIva: desglose.porAlicuota.map((r) => ({
+          codigoArca: r.codigoArca,
+          base: r.base.aDecimalString(2),
+          importe: r.importe.aDecimalString(2),
+        })),
+        tipoDocReceptor: receptor.tipoDocReceptor,
+        nroDocReceptor: receptor.nroDocReceptor,
+        condicionIvaReceptor: receptor.condicionIvaReceptor,
+        ...(codigoComprobanteArcaOpcional(tipoComprobante) !== null
+          ? { codigoComprobante: codigoComprobanteArcaOpcional(tipoComprobante) as number }
+          : {}),
       });
       return { cae, estadoFiscal: 'AUTORIZADA', motivo: null };
     } catch (e) {
@@ -271,7 +306,15 @@ export class VentasService {
           : new Decimal(0);
 
     // Autorización fiscal. Nunca corta la venta: ver `pedirCae`.
-    const fiscal = await this.pedirCae(tipoComprobante, total, usuario.sucursalId);
+    const desglose = await this.desgloses.deLineas(itemsData, tipoComprobante, total);
+    const receptor = await this.desgloses.receptorDe(dto.clienteId ?? null);
+    const fiscal = await this.pedirCae(
+      tipoComprobante,
+      total,
+      usuario.sucursalId,
+      desglose,
+      receptor,
+    );
     const cae = fiscal.cae;
 
     // Transacción: venta + ítems + pagos + movimientos de stock VENTA (atómico).

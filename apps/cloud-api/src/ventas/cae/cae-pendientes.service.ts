@@ -1,6 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { codigoComprobanteArcaOpcional } from '@nexosoft/domain';
 import { PrismaService } from '../../prisma/prisma.service';
+import { DesgloseDeVentaService } from './desglose-de-venta.service';
 import {
   ErrorCaeNoDisponible,
   ErrorCaeRechazado,
@@ -37,6 +39,7 @@ export class CaePendientesService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(SERVICIO_CAE) private readonly cae: ServicioCae,
+    private readonly desgloses: DesgloseDeVentaService,
   ) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES)
@@ -85,11 +88,37 @@ export class CaePendientesService {
     let rechazadas = 0;
 
     for (const venta of pendientes) {
+      const tipoComprobante = venta.tipoComprobante ?? 'FacturaB';
       try {
+        // El desglose se reconstruye desde los ítems guardados. Mandar sólo el
+        // total dejaría la factura con IVA en cero: ARCA la rechazaría, y si la
+        // aceptara sería peor.
+        const desglose = await this.desgloses.deVentaGuardada(
+          venta.id,
+          tipoComprobante,
+          venta.total,
+        );
+        const receptor = await this.desgloses.receptorDe(venta.clienteId ?? null);
+        const codigoComprobante = codigoComprobanteArcaOpcional(tipoComprobante);
         const cae = await this.cae.autorizar({
-          tipoComprobante: venta.tipoComprobante ?? 'FacturaB',
-          total: venta.total.toString(),
+          tipoComprobante,
+          total: venta.total.toFixed(2),
           sucursalId: venta.sucursalId,
+          // La fecha del comprobante es la de la venta, no la del reintento:
+          // es la que ya salió impresa en el ticket del cliente.
+          fecha: venta.creadaEn,
+          neto: desglose.neto.aDecimalString(2),
+          iva: desglose.iva.aDecimalString(2),
+          exento: desglose.exento.aDecimalString(2),
+          renglonesIva: desglose.porAlicuota.map((r) => ({
+            codigoArca: r.codigoArca,
+            base: r.base.aDecimalString(2),
+            importe: r.importe.aDecimalString(2),
+          })),
+          tipoDocReceptor: receptor.tipoDocReceptor,
+          nroDocReceptor: receptor.nroDocReceptor,
+          condicionIvaReceptor: receptor.condicionIvaReceptor,
+          ...(codigoComprobante !== null ? { codigoComprobante } : {}),
         });
         await this.prisma.venta.update({
           where: { id: venta.id },

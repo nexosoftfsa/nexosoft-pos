@@ -26,6 +26,20 @@ model ConfiguracionSistema {
   /// No es un secreto -- solo se puede leer, no falsificar.
   licenciaToken String?
   licenciaComercioId String?
+
+  /// Datos fiscales del comercio (Fase 18). Hasta ahora vivían sólo en la
+  /// copia local del POS, pero para pedirle el CAE a ARCA los necesita el
+  /// SERVIDOR: es el que habla con ARCA, y cada terminal podría tener una
+  /// copia distinta. El POS los empuja acá al guardar Configuración.
+  cuit          String?
+  razonSocial   String?
+  puntoDeVenta  Int?
+  /// "ResponsableInscripto" | "Monotributo" — decide si se emite A/B o C.
+  condicionIvaEmisor String?
+  /// "homologacion" | "produccion". Se arranca en homologación a propósito:
+  /// facturar de verdad tiene que ser una decisión explícita.
+  arcaEntorno   String?  @default("homologacion")
+
   actualizadoEn DateTime @updatedAt
 
   @@map("configuracion_sistema")

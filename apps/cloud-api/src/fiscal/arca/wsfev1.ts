@@ -7,11 +7,19 @@
  *    numeración, y exige que sea correlativa.
  *  - `FECAESolicitar`: manda el comprobante y devuelve el CAE.
  *
- * ALCANCE ACTUAL: **Factura C** (Monotributo), que no lleva desglose de IVA.
- * Para Responsable Inscripto (Factura A/B) hay que mandar neto, IVA y el
- * detalle por alícuota, y hoy la solicitud que llega desde ventas sólo trae el
- * total. Antes que mandarle a ARCA un desglose inventado —que sería declarar
- * mal— se corta con un mensaje claro. Ver `ErrorWsfeNoSoportado`.
+ * Soporta las tres condiciones fiscales:
+ *
+ *  - **C** (Monotributo): no discrimina IVA. El total va entero a `ImpNeto` y
+ *    NO se manda el array de alícuotas. Mandarlo discriminado es rechazo.
+ *  - **B** (Responsable Inscripto a consumidor final): discrimina IVA en el
+ *    pedido aunque no se imprima discriminado.
+ *  - **A** (entre responsables inscriptos): igual que B, pero exige CUIT del
+ *    receptor. Sin eso se corta antes de llamar, porque ARCA lo rechazaría.
+ *
+ * ARCA valida que las cuentas cierren al centavo:
+ * `ImpTotal = ImpNeto + ImpIVA + ImpTotConc + ImpOpEx + ImpTrib`, y que la
+ * suma del array `Iva` dé `ImpIVA`. De eso se encarga `desglosarIvaIncluido`
+ * en el dominio.
  */
 import { type TicketAcceso } from './tra';
 
@@ -41,14 +49,38 @@ export class ErrorWsfeNoSoportado extends Error {
   }
 }
 
+/** Un renglón del array `Iva` de WSFEv1. Importes como string, nunca float. */
+export interface RenglonIva {
+  readonly codigoArca: number;
+  readonly base: string;
+  readonly importe: string;
+}
+
 export interface DatosComprobante {
   readonly puntoDeVenta: number;
-  /** CbteTipo de ARCA: Factura C = 11, Nota de Crédito C = 13. */
+  /** CbteTipo de ARCA: Factura A=1, B=6, C=11 (y sus notas). */
   readonly codigoComprobante: number;
   readonly numero: number;
   /** Total con dos decimales, como string (nunca un float). */
   readonly total: string;
   readonly fecha: Date;
+  /** `ImpNeto`. En un comprobante C es igual al total. */
+  readonly neto: string;
+  /** `ImpIVA`. Cero en un comprobante C. */
+  readonly iva: string;
+  /** `ImpOpEx`: operaciones exentas. */
+  readonly exento: string;
+  /** Detalle por alícuota. Vacío en un comprobante C. */
+  readonly renglonesIva: readonly RenglonIva[];
+  /** Tipo de documento del receptor (80=CUIT, 96=DNI, 99=consumidor final). */
+  readonly tipoDocReceptor?: number;
+  readonly nroDocReceptor?: string;
+  /**
+   * `CondicionIVAReceptorId`: la condición del comprador frente al IVA
+   * (1=Responsable Inscripto, 4=Exento, 5=Consumidor Final, 6=Monotributo).
+   * La RG 5616/2024 la volvió obligatoria en el comprobante.
+   */
+  readonly condicionIvaReceptor?: number;
 }
 
 export interface ResultadoAutorizacion {
@@ -65,11 +97,17 @@ export function aFechaArca(f: Date): string {
   return `${f.getFullYear()}${dd(f.getMonth() + 1)}${dd(f.getDate())}`;
 }
 
-/** Comprobantes tipo C: los únicos soportados por ahora. */
+/** Comprobantes tipo C (Monotributo): no discriminan IVA. */
 const CODIGOS_C = new Set([11, 12, 13]);
+/** Comprobantes tipo A: entre responsables inscriptos, exigen CUIT del receptor. */
+const CODIGOS_A = new Set([1, 2, 3]);
 
 export function esComprobanteC(codigo: number): boolean {
   return CODIGOS_C.has(codigo);
+}
+
+export function esComprobanteA(codigo: number): boolean {
+  return CODIGOS_A.has(codigo);
 }
 
 export class ClienteWsfev1 {
@@ -113,31 +151,56 @@ export class ClienteWsfev1 {
     ticket: TicketAcceso,
     datos: DatosComprobante,
   ): Promise<ResultadoAutorizacion> {
-    if (!esComprobanteC(datos.codigoComprobante)) {
+    const discrimina = !esComprobanteC(datos.codigoComprobante);
+    const tipoDoc = datos.tipoDocReceptor ?? 99;
+    const nroDoc = datos.nroDocReceptor ?? '0';
+
+    // Una Factura A es contra otro responsable inscripto: sin CUIT del
+    // receptor, ARCA la rechaza. Mejor cortar acá que mandar un 99/0 que
+    // seguro vuelve rechazado.
+    if (esComprobanteA(datos.codigoComprobante) && (tipoDoc !== 80 || nroDoc === '0')) {
       throw new ErrorWsfeNoSoportado(
-        'Por ahora sólo se pueden autorizar comprobantes tipo C (Monotributo). ' +
-          'Para Responsable Inscripto falta mandar el desglose de IVA, y prefiero no declarar algo inventado.',
+        'Una Factura A necesita el CUIT del cliente. Cargalo en la venta o emitila como Factura B.',
       );
     }
 
-    // En un comprobante C no hay IVA discriminado: el total es el neto y el
-    // resto va en cero. Mandar un desglose acá seria declarar mal.
+    // En un comprobante C no se discrimina IVA: el total va entero al neto y
+    // NO va el array de alícuotas. Mandarlo discriminado es rechazo.
+    const iva = discrimina && datos.renglonesIva.length > 0
+      ? '<Iva>' +
+        datos.renglonesIva
+          .map(
+            (r) =>
+              '<AlicIva>' +
+              `<Id>${r.codigoArca}</Id>` +
+              `<BaseImp>${r.base}</BaseImp>` +
+              `<Importe>${r.importe}</Importe>` +
+              '</AlicIva>',
+          )
+          .join('') +
+        '</Iva>'
+      : '';
+
     const detalle =
       '<FECAEDetRequest>' +
       '<Concepto>1</Concepto>' +
-      '<DocTipo>99</DocTipo>' +
-      '<DocNro>0</DocNro>' +
+      `<DocTipo>${tipoDoc}</DocTipo>` +
+      `<DocNro>${nroDoc}</DocNro>` +
       `<CbteDesde>${datos.numero}</CbteDesde>` +
       `<CbteHasta>${datos.numero}</CbteHasta>` +
       `<CbteFch>${aFechaArca(datos.fecha)}</CbteFch>` +
       `<ImpTotal>${datos.total}</ImpTotal>` +
       '<ImpTotConc>0</ImpTotConc>' +
-      `<ImpNeto>${datos.total}</ImpNeto>` +
-      '<ImpOpEx>0</ImpOpEx>' +
+      `<ImpNeto>${discrimina ? datos.neto : datos.total}</ImpNeto>` +
+      `<ImpOpEx>${discrimina ? datos.exento : '0'}</ImpOpEx>` +
       '<ImpTrib>0</ImpTrib>' +
-      '<ImpIVA>0</ImpIVA>' +
+      `<ImpIVA>${discrimina ? datos.iva : '0'}</ImpIVA>` +
       '<MonId>PES</MonId>' +
       '<MonCotiz>1</MonCotiz>' +
+      // El orden importa: el XSD de WSFEv1 es una secuencia, y
+      // CondicionIVAReceptorId va después de MonCotiz y antes del array Iva.
+      `<CondicionIVAReceptorId>${datos.condicionIvaReceptor ?? 5}</CondicionIVAReceptorId>` +
+      iva +
       '</FECAEDetRequest>';
 
     const cuerpo =

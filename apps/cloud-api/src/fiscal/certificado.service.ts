@@ -67,6 +67,26 @@ export class CertificadoService {
     };
   }
 
+  /** Carpeta raíz de los secretos, para que otros servicios ubiquen sus archivos. */
+  get raizSecrets(): string {
+    return this.raiz;
+  }
+
+  /**
+   * El par certificado + clave, para firmarle a ARCA. `null` si falta alguno.
+   *
+   * Es lo único que expone la clave privada, y sólo dentro del servidor: nunca
+   * sale por HTTP.
+   */
+  materialDeFirma(cuit: string): { certificadoPem: string; clavePrivadaPem: string } | null {
+    const r = this.rutas(cuit);
+    if (!existsSync(r.clave) || !existsSync(r.certificado)) return null;
+    return {
+      certificadoPem: readFileSync(r.certificado, 'utf8'),
+      clavePrivadaPem: readFileSync(r.clave, 'utf8'),
+    };
+  }
+
   estado(cuit: string): EstadoCertificado {
     const r = this.rutas(cuit);
     const tieneClave = existsSync(r.clave);

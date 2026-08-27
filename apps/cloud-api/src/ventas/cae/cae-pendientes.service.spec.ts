@@ -3,6 +3,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 
 import { CaePendientesService } from './cae-pendientes.service';
 import { ErrorCaeNoDisponible, ErrorCaeRechazado } from './servicio-cae';
+import { DesgloseDeVentaService } from './desglose-de-venta.service';
 
 function venta(id: string, creadaEn: string) {
   return {
@@ -17,6 +18,9 @@ function venta(id: string, creadaEn: string) {
 describe('CaePendientesService', () => {
   const prisma = {
     venta: { findMany: vi.fn(), update: vi.fn(), count: vi.fn() },
+    // El reintento reconstruye el desglose de IVA desde los ítems guardados.
+    itemVenta: { findMany: vi.fn() },
+    producto: { findMany: vi.fn() },
   };
   const cae = { autorizar: vi.fn() };
   let service: CaePendientesService;
@@ -25,7 +29,15 @@ describe('CaePendientesService', () => {
     vi.clearAllMocks();
     prisma.venta.count.mockResolvedValue(0);
     prisma.venta.update.mockResolvedValue({});
-    service = new CaePendientesService(prisma as never, cae as never);
+    prisma.itemVenta.findMany.mockResolvedValue([
+      { productoId: 'p1', subtotal: new Decimal('1000') },
+    ]);
+    prisma.producto.findMany.mockResolvedValue([{ id: 'p1', tipoIva: 'IVA_21' }]);
+    service = new CaePendientesService(
+      prisma as never,
+      cae as never,
+      new DesgloseDeVentaService(prisma as never),
+    );
   });
 
   it('sin pendientes no hace nada', async () => {
@@ -51,6 +63,32 @@ describe('CaePendientesService', () => {
     expect(data.cae).toBe('75123456789012');
     expect(data.estadoFiscal).toBe('AUTORIZADA');
     expect(data.motivoFiscal).toBeNull();
+  });
+
+  it('manda el desglose de IVA reconstruido, no sólo el total', async () => {
+    // Sin esto, una pendiente se reintentaría con IVA en cero: ARCA la
+    // rechazaría, y si la aceptara sería una factura mal emitida.
+    prisma.venta.findMany.mockResolvedValue([venta('v1', '2026-08-27T10:00:00Z')]);
+    cae.autorizar.mockResolvedValue({
+      cae: '75123456789012',
+      caeFechaVto: new Date('2026-09-10'),
+      numeroComprobante: 5,
+      tipoComprobante: 'FacturaB',
+    });
+
+    await service.reintentar();
+
+    const solicitud = cae.autorizar.mock.calls[0]?.[0];
+    expect(solicitud.total).toBe('1000.00');
+    expect(solicitud.neto).toBe('826.45'); // 1000 - 173.55
+    expect(solicitud.iva).toBe('173.55'); // 1000 × 21 / 121
+    expect(solicitud.renglonesIva).toEqual([
+      { codigoArca: 5, base: '826.45', importe: '173.55' },
+    ]);
+    expect(solicitud.codigoComprobante).toBe(6); // Factura B
+    // La fecha es la de la venta, no la del reintento: es la que ya salió
+    // impresa en el ticket del cliente.
+    expect(solicitud.fecha).toEqual(new Date('2026-08-27T10:00:00Z'));
   });
 
   it('las pide EN ORDEN de emisión', async () => {
