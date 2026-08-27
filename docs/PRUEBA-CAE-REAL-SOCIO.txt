@@ -1,0 +1,184 @@
+===========================================================================
+  NEXOSOFT - PRIMERA FACTURA CON CAE DE VERDAD
+  Para: Sebastian
+  Tiempo: 30 minutos
+===========================================================================
+
+QUE ESTAMOS PROBANDO
+--------------------
+Esto es lo que faltaba. Hasta ahora el sistema hacia todo menos lo ultimo:
+pedirle el numero de autorizacion (el CAE) a ARCA. Eso ya esta hecho.
+
+En esta prueba el sistema va a hablar con ARCA de verdad: le va a pedir un
+ticket de acceso firmado con tu certificado y le va a pedir el CAE de una
+factura. Si sale bien, el ticket que imprima va a tener un CAE y un codigo QR
+que se puede escanear.
+
+Seguimos en el entorno de PRUEBA de ARCA (homologacion). Los comprobantes NO
+tienen validez fiscal: no le estas declarando nada a nadie.
+
+Antes de empezar necesitas tener hecha la prueba anterior
+(PRUEBA-CERTIFICADO-ARCA.txt): certificado cargado y autorizado en ARCA.
+
+
+PASO 1 - ACTUALIZAR LOS DOS
+---------------------------
+1.1 Abri el POS > Configuracion > Actualizaciones.
+
+    Anota que ves:  POS: ____________   Servidor: ____________
+
+1.2 Si el servidor no dice 0.11.0 o mas, toca "Actualizar servidor" y espera
+    a que termine. Puede tardar varios minutos.
+1.3 Si el POS ofrece la 0.1.37, instalala y volve a entrar.
+
+    [ ] POS 0.1.37 o mas, Servidor 0.11.0 o mas.
+
+    Los DOS tienen que estar actualizados. El POS solo, o el servidor solo,
+    no alcanza.
+
+
+PASO 2 - CONFIRMAR QUE EL CERTIFICADO SEA EL AUTORIZADO
+--------------------------------------------------------
+Este es el paso que mas veces falla, y el error de ARCA no dice cual es el
+problema. En ARCA el permiso para facturar se le da a UN certificado, no al
+CUIT: si autorizaste otro, todo lo demas parece bien y los comprobantes se
+rechazan.
+
+2.1 POS > Configuracion > Facturacion electronica (ARCA).
+2.2 Fijate en "Nombre del certificado en ARCA".
+
+    Copialo tal cual: ______________________________________________
+
+2.3 Entra a https://wsass-homo.afip.gob.ar/wsass/portal/main.aspx con tu
+    Clave Fiscal y busca el certificado que autorizaste para Facturacion
+    Electronica.
+
+    [ ] Es EXACTAMENTE el mismo nombre.
+
+    Si NO coincide, para aca y avisame. Autorizar el correcto lleva dos
+    minutos, pero hay que hacerlo antes de seguir.
+
+2.4 En la misma tarjeta tiene que decir:
+    "Entorno: Homologacion (pruebas)".
+
+    [ ] Dice eso.
+
+    Si dijera PRODUCCION, tocá "Volver a homologacion (pruebas)". No
+    queremos emitir comprobantes reales todavia.
+
+
+PASO 3 - REVISAR LOS DATOS FISCALES
+------------------------------------
+3.1 En Configuracion, arriba, revisa que esten bien:
+
+    - Razon social
+    - CUIT (el tuyo)
+    - Condicion frente al IVA (Responsable Inscripto o Monotributo, lo que
+      corresponda a tu CUIT en ARCA)
+    - Punto de venta
+
+    OJO con el punto de venta: tiene que ser uno que exista en ARCA para tu
+    CUIT, dado de alta como "Factura Electronica - Webservice". Si pusiste
+    uno inventado, ARCA va a rechazar todo.
+
+    Punto de venta que tenes cargado: ____________
+
+3.2 Toca "Guardar", aunque no hayas cambiado nada. Eso le manda los datos al
+    servidor, que es el que habla con ARCA.
+
+    [ ] Guardo sin errores.
+
+
+PASO 4 - HACER UNA VENTA
+------------------------
+4.1 Abri la caja (Caja > Abrir caja) si no esta abierta.
+4.2 Anda al POS, carga un producto cualquiera y cobralo en efectivo.
+
+    [ ] La venta se completo.
+
+4.3 Mira el ticket que aparece.
+
+    [ ] Dice CAE y un numero largo (14 digitos).
+    [ ] Aparece un codigo QR.
+
+    CAE que salio: ______________________________
+
+    Si NO aparece el CAE, no es un fracaso: seguí al paso 5, que es
+    justamente para eso.
+
+
+PASO 5 - SI NO SALIO EL CAE
+----------------------------
+5.1 Anda a Comprobantes (el listado).
+5.2 Busca la venta que acabas de hacer.
+
+    Al lado de "Emitida" tendria que haber una etiqueta:
+
+    - "Sin CAE" (amarilla): ARCA no contesto. El servidor lo reintenta solo
+      cada 5 minutos. Espera 10 minutos, refresca la pantalla y fijate si
+      cambio.
+
+    - "Rechazada" (roja): ARCA contesto que algo esta mal. Eso NO se arregla
+      solo.
+
+    Que etiqueta salio: ____________________
+
+5.3 Pasa el mouse por encima de la etiqueta. Aparece el motivo.
+
+    COPIAME ESE TEXTO COMPLETO. Es lo mas util de toda la prueba:
+    ______________________________________________________________
+    ______________________________________________________________
+
+
+PASO 6 - VERIFICAR EL QR (solo si salio el CAE)
+------------------------------------------------
+6.1 Escanea el QR del ticket con el celular.
+6.2 Te va a abrir una pagina de ARCA.
+
+    [ ] Abrio una pagina de ARCA.
+
+    Que dice: ____________________________________________
+
+    Ojo: como es un comprobante de PRUEBA, es normal que ARCA diga que no lo
+    encuentra o que no es valido. Lo que estamos probando es que el QR se
+    arme bien y apunte a donde tiene que apuntar.
+
+
+PASO 7 - PROBAR QUE UNA CAIDA DE ARCA NO FRENE LA VENTA
+--------------------------------------------------------
+Esto es lo que mas me importa de todo. Un comercio no puede dejar de vender
+porque AFIP se cayo, y AFIP se cae seguido.
+
+7.1 Desconecta internet en la PC (sacá el cable o apaga el WiFi).
+7.2 Hace otra venta y cobrala.
+
+    [ ] La venta se completo igual, sin errores.
+    [ ] Imprimio el ticket.
+
+    Si la venta se traba o da error, PARA TODO y avisame. Eso es lo peor que
+    podria pasar.
+
+7.3 Anda a Comprobantes. Esa venta tiene que decir "Sin CAE".
+
+    [ ] Dice "Sin CAE".
+
+7.4 Volve a conectar internet y espera 5 minutos.
+7.5 Refresca Comprobantes.
+
+    [ ] La etiqueta "Sin CAE" desaparecio: el servidor consiguio el CAE solo.
+
+    Si despues de 10 minutos sigue sin CAE, copiame el motivo (paso 5.3).
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  - El nombre del certificado (paso 2.2) y si coincidia con ARCA
+  - El punto de venta (paso 3.1)
+  - El CAE que salio (paso 4.3), o el motivo del rechazo (paso 5.3)
+  - Si la venta sin internet funciono (paso 7.2)
+  - Si el CAE aparecio solo al volver internet (paso 7.5)
+
+Lo mas valioso son los mensajes de error TEXTUALES. Un "no anduvo" no me
+dice nada; el codigo y el texto de ARCA me dicen exactamente que arreglar.
+===========================================================================

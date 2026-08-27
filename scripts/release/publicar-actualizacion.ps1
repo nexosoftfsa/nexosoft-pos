@@ -96,9 +96,15 @@ $manifestPath = "$bundleDir\latest.json"
 [System.IO.File]::WriteAllText($manifestPath, $manifest, (New-Object System.Text.UTF8Encoding $false))
 
 Titulo "Publicando el release v$Version"
+# Las notas van por ARCHIVO y no por --notes: con un texto de varias lineas,
+# `gh release create --notes "$Notas"` falla despues de compilar y subir todo,
+# y el error queda tapado. Paso publicando el servidor 0.11.0.
+$archivoNotas = Join-Path $env:TEMP "nexosoft-notas-pos-$Version.md"
+Set-Content -Path $archivoNotas -Value $Notas -Encoding utf8
 $ErrorActionPreference = "Continue"
 & gh release create "v$Version" $exeSinEspacios $manifestPath `
-    --repo $RepoReleases --title "v$Version" --notes "$Notas"
+    --repo $RepoReleases --title "v$Version" --notes-file $archivoNotas
+Remove-Item $archivoNotas -ErrorAction SilentlyContinue
 $codigoRelease = $LASTEXITCODE
 $ErrorActionPreference = "Stop"
 if ($codigoRelease -ne 0) {
