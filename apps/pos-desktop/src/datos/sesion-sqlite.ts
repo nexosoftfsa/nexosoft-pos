@@ -101,3 +101,18 @@ export async function actualizarTerminal(
 export async function borrarSesion(ejecutor: EjecutorSql): Promise<void> {
   await ejecutor.ejecutar("DELETE FROM sesion WHERE id = 1");
 }
+
+/**
+ * Olvida la terminal elegida, dejando la sesión abierta.
+ *
+ * Hace falta cuando el servidor ya no conoce esa terminal: pasa al reinstalar
+ * el servidor desde cero, porque el POS guarda el id en SU base y ese id ya no
+ * existe del otro lado. Sin esto el POS queda en un callejón — no se puede
+ * abrir la caja y la sincronización rebota — y la única salida era cerrar
+ * sesión.
+ */
+export async function olvidarTerminal(ejecutor: EjecutorSql): Promise<void> {
+  await ejecutor.ejecutar(
+    "UPDATE sesion SET terminal_id = NULL, terminal_nombre = NULL WHERE id = 1",
+  );
+}

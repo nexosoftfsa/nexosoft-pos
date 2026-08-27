@@ -291,6 +291,7 @@ function AppTauri() {
       );
       setEntorno(env);
       setFase("listo");
+      void verificarTerminalRef.current();
     } catch (e) {
       // Refresh token inválido/expirado (servidor reinstalado, sesión vieja, etc.):
       // la sesión guardada ya no sirve. En vez de un error sin salida, limpiamos
@@ -512,6 +513,40 @@ function AppTauri() {
       ),
     [],
   );
+
+  /**
+   * Comprueba que el servidor todavía conozca la terminal guardada.
+   *
+   * El POS guarda el id de la terminal en SU base. Si el servidor se
+   * reinstala desde cero, ese id deja de existir del otro lado y el POS queda
+   * en un callejón: no se puede abrir la caja ("Terminal ... no encontrada") y
+   * cada venta rebota al sincronizar. La única salida era cerrar sesión, que
+   * nadie adivina.
+   *
+   * Si NO se puede consultar, no se toca nada: sin servidor no hay forma de
+   * saber si la terminal existe, y el POS tiene que poder trabajar igual
+   * (ADR-0004). Sólo se olvida cuando el servidor contestó que no está.
+   */
+  const verificarTerminal = useCallback(async () => {
+    const sesion = sesionRef.current;
+    const terminalId = sesion?.terminalId;
+    if (sesion === null || terminalId === undefined) return;
+    let terminales;
+    try {
+      terminales = await clienteTerminales().listar();
+    } catch {
+      return;
+    }
+    if (terminales.some((t) => t.id === terminalId)) return;
+    await sesion.olvidarTerminal();
+    setEntorno(null);
+    setFase("terminal");
+  }, [clienteTerminales]);
+
+  // Se guarda en un ref porque la llama `construirEntorno`, que se define
+  // antes: ponerla en sus dependencias sería una referencia circular.
+  const verificarTerminalRef = useRef(verificarTerminal);
+  verificarTerminalRef.current = verificarTerminal;
   const listarTerminales = useCallback(() => clienteTerminales().listar(), [clienteTerminales]);
   const crearTerminal = useCallback(
     (nombre: string) => clienteTerminales().crear(nombre),

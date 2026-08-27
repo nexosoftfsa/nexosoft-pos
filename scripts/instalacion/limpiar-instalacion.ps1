@@ -138,6 +138,40 @@ foreach ($ruta in @($RaizInstalacion, $RaizDatos)) {
     }
 }
 
+# --- POS ---------------------------------------------------------------------
+# El POS guarda SU propia base (sesion, terminal elegida, configuracion del
+# comercio y la cola de ventas por sincronizar). Borrar el servidor y dejarla
+# no simula un cliente nuevo: simula un cliente al que le reinstalaron el
+# servidor por atras. Y rompe de una forma fea -- la terminal guardada ya no
+# existe del otro lado, no se puede abrir la caja, y toda la cola pendiente
+# rebota contra datos que ya no estan.
+Titulo "Base local del POS"
+$carpetasPos = @(
+    (Join-Path $env:APPDATA "ar.nexosoft.pos"),
+    (Join-Path $env:LOCALAPPDATA "ar.nexosoft.pos")
+)
+$encontradas = @($carpetasPos | Where-Object { Test-Path $_ })
+if ($encontradas.Count -eq 0) {
+    Write-Host "  (no hay base local del POS en este usuario de Windows)"
+    Aviso "  OJO: si el POS lo usa otro usuario de Windows, corre esto tambien con SU sesion."
+} else {
+    foreach ($c in $encontradas) {
+        if (Get-Process -Name "NexoSoft POS" -ErrorAction SilentlyContinue) {
+            Write-Host "ERROR: el POS esta abierto. Cerralo y volve a correr esto." -ForegroundColor Red
+            exit 1
+        }
+        try {
+            Remove-Item -LiteralPath $c -Recurse -Force -ErrorAction Stop
+            Ok "Borrada: $c"
+        } catch {
+            Write-Host "ERROR: no se pudo borrar $c ($($_.Exception.Message))." -ForegroundColor Red
+            exit 1
+        }
+    }
+    Aviso "El POS va a arrancar sin configurar: hay que cargarle de nuevo la direccion"
+    Aviso "del servidor, los datos del comercio y el logo."
+}
+
 Titulo "Listo"
 Write-Host "La PC quedo como si NexoSoft nunca hubiera estado instalado."
 Write-Host "Ahora si, correr el instalador simula un cliente nuevo de verdad."

@@ -143,6 +143,29 @@ describe("SesionManager", () => {
     expect(s2.terminalId).toBe("term-2");
   });
 
+  it("olvidarTerminal deja la sesión abierta pero sin terminal", async () => {
+    // Pasa cuando se reinstala el servidor desde cero: el id que guardó el POS
+    // ya no existe del otro lado. Hay que poder elegir otra sin cerrar sesión.
+    auth.login.mockResolvedValue(tokens(EN_1H()));
+    const sesion = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
+    await sesion.login({ email: "a@b.com", password: "x" });
+    await sesion.elegirTerminal("term-vieja", "Caja 1");
+
+    await sesion.olvidarTerminal();
+
+    expect(sesion.haySesion()).toBe(true);
+    expect(sesion.hayTerminal()).toBe(false);
+    expect(sesion.terminalId).toBeUndefined();
+    const guardada = await leerSesion(ejecutor);
+    expect(guardada?.terminalId).toBeUndefined();
+    expect(guardada?.email).toBe("a@b.com"); // la sesión sigue
+  });
+
+  it("olvidarTerminal sin sesión no rompe", async () => {
+    const sesion = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
+    await expect(sesion.olvidarTerminal()).resolves.toBeUndefined();
+  });
+
   it("después de cerrar sesión sí se vuelve a preguntar la terminal", async () => {
     auth.login.mockResolvedValue(tokens(EN_1H()));
     const sesion = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);

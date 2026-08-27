@@ -15,6 +15,7 @@ import {
   borrarSesion,
   guardarSesion,
   leerSesion,
+  olvidarTerminal,
   type SesionGuardada,
 } from "./sesion-sqlite";
 
@@ -163,6 +164,18 @@ export class SesionManager {
     if (this.estado === null) throw new Error("No hay sesión para elegir terminal.");
     await actualizarTerminal(this.ejecutor, id, nombre);
     this.estado = { ...this.estado, terminalId: id, terminalNombre: nombre };
+  }
+
+  /**
+   * Olvida la terminal SIN cerrar la sesión, para poder elegir otra.
+   * Ver `olvidarTerminal` en sesion-sqlite: sirve cuando el servidor ya no
+   * conoce la terminal guardada.
+   */
+  async olvidarTerminal(): Promise<void> {
+    if (this.estado === null) return;
+    await olvidarTerminal(this.ejecutor);
+    const { terminalId: _id, terminalNombre: _nombre, ...resto } = this.estado;
+    this.estado = resto;
   }
 
   /**
