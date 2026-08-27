@@ -3,6 +3,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { Prisma } from '@prisma/client';
 import { VentasService } from './ventas.service';
 import { LibroDeVentasEnMemoria } from './libro/libro-de-ventas-en-memoria';
+import { ErrorCaeNoDisponible, ErrorCaeRechazado } from './cae/servicio-cae';
 
 const USUARIO = { id: 'u1', email: 'cajero@nexo.com', sucursalId: 's1' };
 
@@ -378,6 +379,77 @@ describe('VentasService', () => {
 
       const result = await service.registrar(USUARIO, DTO);
       expect(result.id).toBe('v1'); // la venta se devolvió igual
+    });
+  });
+
+  /**
+   * Lo más importante de todo el módulo fiscal: una caída de ARCA no puede
+   * frenar la venta. AFIP se cae seguido y el comercio ya entregó la
+   * mercadería y cobró.
+   */
+  describe('cuando ARCA no está disponible', () => {
+    it('registra la venta igual, sin CAE y marcada como PENDIENTE', async () => {
+      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin respuesta de AFIP'));
+
+      const result = await service.registrar(USUARIO, DTO);
+
+      expect(result.id).toBe('v1');
+      const data = tx.venta.create.mock.calls[0]?.[0]?.data;
+      expect(data.estado).toBe('COMPLETADA'); // comercialmente, la venta se hizo
+      expect(data.estadoFiscal).toBe('PENDIENTE');
+      expect(data.cae).toBeNull();
+      expect(data.motivoFiscal).toContain('sin respuesta de AFIP');
+    });
+
+    it('igual le asigna número, para no romper la correlatividad', async () => {
+      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin red'));
+      tx.venta.aggregate.mockResolvedValue({ _max: { numeroComprobante: 41 } });
+
+      await service.registrar(USUARIO, DTO);
+
+      expect(tx.venta.create.mock.calls[0]?.[0]?.data.numeroComprobante).toBe(42);
+    });
+
+    it('descuenta el stock igual: la mercadería salió del local', async () => {
+      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin red'));
+      await service.registrar(USUARIO, DTO);
+      expect(tx.movimientoStock.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('cuando ARCA rechaza el comprobante', () => {
+    it('registra la venta y la marca RECHAZADA con el motivo', async () => {
+      // Tampoco se deshace: el cliente ya se fue con la mercadería. Queda
+      // marcada para corregirla.
+      cae.autorizar.mockRejectedValue(new ErrorCaeRechazado('CUIT inválido', '10015'));
+
+      const result = await service.registrar(USUARIO, DTO);
+
+      expect(result.id).toBe('v1');
+      const data = tx.venta.create.mock.calls[0]?.[0]?.data;
+      expect(data.estadoFiscal).toBe('RECHAZADA');
+      expect(data.motivoFiscal).toContain('CUIT inválido');
+      expect(data.cae).toBeNull();
+    });
+  });
+
+  describe('estado fiscal cuando todo anda', () => {
+    it('una venta autorizada queda AUTORIZADA con su CAE', async () => {
+      const result = await service.registrar(USUARIO, DTO);
+      expect(result.id).toBe('v1');
+      const data = tx.venta.create.mock.calls[0]?.[0]?.data;
+      expect(data.estadoFiscal).toBe('AUTORIZADA');
+      expect(data.cae).toBe('12345678901234');
+    });
+
+    it('un comprobante no fiscal queda NO_APLICA y no molesta a ARCA', async () => {
+      const result = await service.registrar(USUARIO, {
+        ...DTO,
+        tipoComprobante: 'TicketNoFiscal',
+      });
+      expect(result.id).toBe('v1');
+      expect(cae.autorizar).not.toHaveBeenCalled();
+      expect(tx.venta.create.mock.calls[0]?.[0]?.data.estadoFiscal).toBe('NO_APLICA');
     });
   });
 });

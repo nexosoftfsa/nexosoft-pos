@@ -6,6 +6,7 @@ import { VentasController } from './ventas.controller';
 import { RespaldoModule } from '../respaldo/respaldo.module';
 import { SERVICIO_CAE } from './cae/servicio-cae';
 import { ServicioCaeMock } from './cae/servicio-cae-mock';
+import { CaePendientesService } from './cae/cae-pendientes.service';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import { LibroDeVentasExcel } from './libro/libro-de-ventas-excel';
 
@@ -14,6 +15,7 @@ import { LibroDeVentasExcel } from './libro/libro-de-ventas-excel';
   controllers: [VentasController],
   providers: [
     VentasService,
+    CaePendientesService,
     {
       // CAE mock; el real (@nexosoft/fiscal vía ARCA) se enchufa acá sin tocar nada más.
       provide: SERVICIO_CAE,
@@ -31,6 +33,6 @@ import { LibroDeVentasExcel } from './libro/libro-de-ventas-excel';
       inject: [ConfigService],
     },
   ],
-  exports: [VentasService],
+  exports: [VentasService, CaePendientesService],
 })
 export class VentasModule {}

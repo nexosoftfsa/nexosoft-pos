@@ -7,10 +7,16 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Decimal } from '@prisma/client/runtime/library';
-import { MedioPago, Prisma } from '@prisma/client';
+import { EstadoFiscal, MedioPago, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MotorDeRespaldo } from '../respaldo/motor-de-respaldo';
-import { SERVICIO_CAE, type ServicioCae } from './cae/servicio-cae';
+import {
+  ErrorCaeNoDisponible,
+  ErrorCaeRechazado,
+  SERVICIO_CAE,
+  type ResultadoCae,
+  type ServicioCae,
+} from './cae/servicio-cae';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
 import { expandirStockDeVenta, type ComponenteCombo } from './combo';
@@ -83,13 +89,12 @@ export class VentasService {
     const tipoNc = notaCreditoDe(original.tipoComprobante);
     // Fase 10.1: un TicketNoFiscal no tiene Nota de Crédito (no es fiscal) — se
     // anula reflejando el mismo tipo, sin pedir CAE.
-    const cae = esComprobanteFiscal(tipoNc)
-      ? await this.cae.autorizar({
-          tipoComprobante: tipoNc,
-          total: original.total.toString(),
-          sucursalId,
-        })
-      : null;
+    //
+    // Igual que en la venta: si ARCA no responde, la anulación se registra y el
+    // CAE de la Nota de Crédito se consigue después. Devolverle la plata a un
+    // cliente no puede depender de que AFIP esté en línea.
+    const fiscal = await this.pedirCae(tipoNc, original.total, sucursalId);
+    const cae = fiscal.cae;
 
     const notaCredito = await this.conNumeroUnico(() =>
       this.prisma.$transaction(async (tx) => {
@@ -107,6 +112,8 @@ export class VentasService {
             medioPago: original.medioPago,
             cae: cae?.cae ?? null,
             caeFechaVto: cae?.caeFechaVto ?? null,
+            estadoFiscal: fiscal.estadoFiscal,
+            motivoFiscal: fiscal.motivo,
             numeroComprobante,
             tipoComprobante: tipoFinal,
             sucursalId,
@@ -155,6 +162,49 @@ export class VentasService {
     );
 
     return { anulada: await this.obtener(sucursalId, id), notaCredito };
+  }
+
+  /**
+   * Pide el CAE, y **nunca deja que un problema de ARCA frene la venta**.
+   *
+   * La venta ya ocurrió: el cliente se llevó la mercadería y pagó. Que AFIP no
+   * conteste no puede deshacer eso, y AFIP no contesta seguido. Por eso:
+   *
+   *  - ARCA autoriza      -> AUTORIZADA, con su CAE.
+   *  - ARCA no responde   -> PENDIENTE. Se registra igual y el CAE se pide
+   *                          después (`CaePendientesService`). Es la razón de
+   *                          ser de todo esto.
+   *  - ARCA la rechaza    -> RECHAZADA, con el motivo. Tampoco se deshace la
+   *                          venta: se registra y queda marcada para corregir.
+   *                          Reintentar no serviría.
+   *  - No es fiscal       -> NO_APLICA (ticket interno, comercio sin alta).
+   */
+  private async pedirCae(
+    tipoComprobante: string,
+    total: Decimal,
+    sucursalId: string,
+  ): Promise<{ cae: ResultadoCae | null; estadoFiscal: EstadoFiscal; motivo: string | null }> {
+    if (!esComprobanteFiscal(tipoComprobante)) {
+      return { cae: null, estadoFiscal: 'NO_APLICA', motivo: null };
+    }
+    try {
+      const cae = await this.cae.autorizar({
+        tipoComprobante,
+        total: total.toString(),
+        sucursalId,
+      });
+      return { cae, estadoFiscal: 'AUTORIZADA', motivo: null };
+    } catch (e) {
+      if (e instanceof ErrorCaeNoDisponible) {
+        this.logger.warn(`Venta registrada SIN CAE (se reintenta): ${e.message}`);
+        return { cae: null, estadoFiscal: 'PENDIENTE', motivo: e.message };
+      }
+      if (e instanceof ErrorCaeRechazado) {
+        this.logger.error(`ARCA rechazó el comprobante: ${e.message}`);
+        return { cae: null, estadoFiscal: 'RECHAZADA', motivo: e.message };
+      }
+      throw e;
+    }
   }
 
   async registrar(usuario: UsuarioCtx, dto: CrearVentaDto) {
@@ -220,15 +270,9 @@ export class VentasService {
           ? total
           : new Decimal(0);
 
-    // Autorización fiscal (mock; el real es @nexosoft/fiscal vía ARCA).
-    // Fase 10.1: un TicketNoFiscal (comercio sin alta en ARCA) no pide CAE.
-    const cae = esComprobanteFiscal(tipoComprobante)
-      ? await this.cae.autorizar({
-          tipoComprobante,
-          total: total.toString(),
-          sucursalId: usuario.sucursalId,
-        })
-      : null;
+    // Autorización fiscal. Nunca corta la venta: ver `pedirCae`.
+    const fiscal = await this.pedirCae(tipoComprobante, total, usuario.sucursalId);
+    const cae = fiscal.cae;
 
     // Transacción: venta + ítems + pagos + movimientos de stock VENTA (atómico).
     const venta = await this.conNumeroUnico(() =>
@@ -247,6 +291,8 @@ export class VentasService {
             medioPago: medioPagoResumen,
             cae: cae?.cae ?? null,
             caeFechaVto: cae?.caeFechaVto ?? null,
+            estadoFiscal: fiscal.estadoFiscal,
+            motivoFiscal: fiscal.motivo,
             numeroComprobante,
             tipoComprobante: tipoFinal,
             sucursalId: usuario.sucursalId,

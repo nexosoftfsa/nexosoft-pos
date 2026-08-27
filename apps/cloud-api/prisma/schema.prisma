@@ -308,6 +308,18 @@ enum EstadoVenta {
   ANULADA
 }
 
+/// Situación del comprobante ante ARCA. Ver `Venta.estadoFiscal`.
+enum EstadoFiscal {
+  /// No lleva CAE: ticket interno, presupuesto, comercio sin alta en ARCA.
+  NO_APLICA
+  /// La venta está registrada y falta conseguir el CAE (ARCA no respondió).
+  PENDIENTE
+  /// ARCA la autorizó: tiene CAE y vencimiento.
+  AUTORIZADA
+  /// ARCA la rechazó por un problema del comprobante. Reintentar no sirve.
+  RECHAZADA
+}
+
 enum MedioPago {
   EFECTIVO
   TARJETA_DEBITO
@@ -334,6 +346,19 @@ model Venta {
   creadaEn        DateTime    @default(now())
   sincronizadaEn  DateTime?
 
+  /// Estado de la autorización fiscal, SEPARADO del estado comercial.
+  ///
+  /// Una venta que espera el CAE es una venta hecha y cobrada: tiene que
+  /// seguir contando en reportes, caja y stock. Si esto viviera en `estado`,
+  /// una caída de ARCA borraría las ventas del día de los reportes, porque
+  /// filtran por COMPLETADA.
+  estadoFiscal    EstadoFiscal @default(NO_APLICA)
+  /// Por qué ARCA la rechazó, para poder corregirla a mano.
+  motivoFiscal    String?
+  /// Cuántas veces se intentó pedir el CAE (para no reintentar para siempre).
+  intentosCae     Int         @default(0)
+  ultimoIntentoCae DateTime?
+
   sucursalId      String
   sucursal        Sucursal    @relation(fields: [sucursalId], references: [id])
 
@@ -359,6 +384,8 @@ model Venta {
 
   /// Correlativo por sucursal y tipo (fiscal vía CAE, no fiscal generado acá) — evita duplicados.
   @@unique([sucursalId, tipoComprobante, numeroComprobante])
+  /// Para buscar los pendientes de CAE en orden, en cada reintento.
+  @@index([estadoFiscal, creadaEn])
   @@map("ventas")
 }
 
