@@ -37,6 +37,13 @@ if (-not (Test-Path $main)) {
 
 # El cliente de Prisma se genera en la PC del cliente; aca hace falta para que
 # el arranque llegue a cargar los modulos nuestros, que es lo que se prueba.
+#
+# Pero hay que dejarlo como estaba: el paquete se zipea DESPUES de esta prueba,
+# y el cliente generado pesa ~25 MB que cada comercio se bajaria en cada
+# actualizacion, para nada -- el actualizador lo regenera igual en destino.
+$prismaGenerado = Join-Path $Destino "node_modules\.prisma"
+$habiaPrisma = Test-Path $prismaGenerado
+
 Push-Location $Destino
 try {
     $ErrorActionPreference = "Continue"
@@ -96,6 +103,11 @@ if ($salida -notmatch "Nest") {
     Write-Host "--- salida del arranque ---"
     Write-Host $salida
     exit 1
+}
+
+if (-not $habiaPrisma -and (Test-Path $prismaGenerado)) {
+    Remove-Item -LiteralPath $prismaGenerado -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "Cliente de Prisma generado para la prueba: borrado, el paquete queda como estaba."
 }
 
 Ok "El paquete arranca (los modulos cargan y Nest levanta)"
