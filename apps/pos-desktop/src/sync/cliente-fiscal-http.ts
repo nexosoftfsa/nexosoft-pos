@@ -45,6 +45,20 @@ export interface DatosFiscalesDelComercio {
   readonly condicionIvaEmisor: string;
 }
 
+export type EntornoArca = "homologacion" | "produccion";
+
+/** Lo que el servidor sabe de la identidad fiscal del comercio. */
+export interface ConfiguracionFiscalServidor {
+  readonly completa: boolean;
+  readonly config: {
+    readonly cuit: string;
+    readonly razonSocial: string;
+    readonly puntoDeVenta: number;
+    readonly discriminaIva: boolean;
+    readonly entorno: EntornoArca;
+  } | null;
+}
+
 export interface ClienteCertificadoArca {
   estado(cuit: string): Promise<EstadoCertificado>;
   generarCsr(datos: {
@@ -55,6 +69,8 @@ export interface ClienteCertificadoArca {
   }): Promise<CsrGenerado>;
   subirCertificado(cuit: string, certificadoPem: string): Promise<DatosCertificado>;
   guardarDatosFiscales(datos: DatosFiscalesDelComercio): Promise<{ completa: boolean }>;
+  configuracionFiscal(): Promise<ConfiguracionFiscalServidor>;
+  cambiarEntorno(entorno: EntornoArca): Promise<ConfiguracionFiscalServidor>;
 }
 
 export class ClienteCertificadoArcaHttp implements ClienteCertificadoArca {
@@ -89,6 +105,21 @@ export class ClienteCertificadoArcaHttp implements ClienteCertificadoArca {
    */
   guardarDatosFiscales(datos: DatosFiscalesDelComercio): Promise<{ completa: boolean }> {
     return this.pedir("PUT", "/fiscal/configuracion", datos);
+  }
+
+  configuracionFiscal(): Promise<ConfiguracionFiscalServidor> {
+    return this.pedir("GET", "/fiscal/configuracion");
+  }
+
+  /**
+   * Cambia entre homologación (pruebas) y producción (comprobantes reales).
+   *
+   * Va aparte del resto de la configuración a propósito: pasar a producción es
+   * empezar a emitir comprobantes de verdad, y no puede ser el efecto
+   * colateral de guardar otra cosa.
+   */
+  cambiarEntorno(entorno: EntornoArca): Promise<ConfiguracionFiscalServidor> {
+    return this.pedir("PUT", "/fiscal/configuracion", { arcaEntorno: entorno });
   }
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {

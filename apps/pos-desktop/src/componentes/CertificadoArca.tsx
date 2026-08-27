@@ -22,7 +22,9 @@ import { descargarBlob } from "../descargas";
 import {
   ClienteCertificadoArcaHttp,
   ErrorFiscalHttp,
+  type ConfiguracionFiscalServidor,
   type CsrGenerado,
+  type EntornoArca,
   type EstadoCertificado,
 } from "../sync/cliente-fiscal-http";
 
@@ -77,6 +79,7 @@ export function CertificadoArca({
   obtenerToken: () => string | null;
 }) {
   const [estado, setEstado] = useState<EstadoCertificado | null>(null);
+  const [fiscal, setFiscal] = useState<ConfiguracionFiscalServidor | null>(null);
   const [csr, setCsr] = useState<CsrGenerado | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -92,6 +95,9 @@ export function CertificadoArca({
     try {
       const cliente = new ClienteCertificadoArcaHttp(servidorUrl, () => tokenRef.current());
       setEstado(await cliente.estado(cuit));
+      // Si el servidor es viejo y no tiene el endpoint, no se rompe la
+      // pantalla: simplemente no se muestra el entorno.
+      setFiscal(await cliente.configuracionFiscal().catch(() => null));
       setError(null);
     } catch (e) {
       setError(mensaje(e));
@@ -119,6 +125,31 @@ export function CertificadoArca({
       const r = await cliente.generarCsr({ cuit, razonSocial, alias: aliasSugerido(razonSocial), forzar });
       setCsr(r);
       await cargar();
+    } catch (e) {
+      setError(mensaje(e));
+    } finally {
+      setTrabajando(false);
+    }
+  }
+
+  async function cambiarEntorno(entorno: EntornoArca) {
+    const aProduccion = entorno === "produccion";
+    const advertencia = aProduccion
+      ? "A partir de ahora los comprobantes se van a emitir DE VERDAD ante ARCA, con validez fiscal. Antes de seguir: ¿el certificado que subiste es el de producción y está autorizado en el Administrador de Relaciones? ¿Seguís?"
+      : "Los comprobantes van a dejar de tener validez fiscal: pasan a emitirse contra el entorno de pruebas de ARCA. ¿Seguís?";
+    if (!window.confirm(advertencia)) return;
+
+    setTrabajando(true);
+    setError(null);
+    setAviso(null);
+    try {
+      const cliente = new ClienteCertificadoArcaHttp(servidorUrl, () => tokenRef.current());
+      setFiscal(await cliente.cambiarEntorno(entorno));
+      setAviso(
+        aProduccion
+          ? "Listo: el comercio está facturando en PRODUCCIÓN."
+          : "Listo: el comercio volvió al entorno de pruebas (homologación).",
+      );
     } catch (e) {
       setError(mensaje(e));
     } finally {
@@ -195,6 +226,40 @@ export function CertificadoArca({
             <div className="config-ayuda">
               Está por vencer. Hay que sacar uno nuevo en ARCA antes de esa fecha, o el comercio
               deja de poder facturar.
+            </div>
+          )}
+          {/* El entorno decide si los comprobantes valen o son de prueba. Sin
+              esto a la vista, un comercio puede estar "facturando" meses
+              contra homologación y no tener nada declarado. */}
+          {fiscal?.config != null && (
+            <div className={fiscal.config.entorno === "produccion" ? "aviso-ok" : "config-ayuda"}>
+              {fiscal.config.entorno === "produccion" ? (
+                <>
+                  Entorno: <b>PRODUCCIÓN</b>. Los comprobantes que emite este comercio tienen
+                  validez fiscal.
+                </>
+              ) : (
+                <>
+                  Entorno: <b>Homologación (pruebas)</b>. Los comprobantes se autorizan contra el
+                  entorno de prueba de ARCA y <b>no tienen validez fiscal</b>. Cuando el comercio
+                  esté listo para facturar en serio, hay que pasarlo a producción.
+                </>
+              )}
+              <br />
+              <button
+                type="button"
+                className="linkbtn"
+                disabled={trabajando}
+                onClick={() =>
+                  void cambiarEntorno(
+                    fiscal.config?.entorno === "produccion" ? "homologacion" : "produccion",
+                  )
+                }
+              >
+                {fiscal.config.entorno === "produccion"
+                  ? "Volver a homologación (pruebas)"
+                  : "Pasar a producción"}
+              </button>
             </div>
           )}
           <button

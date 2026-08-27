@@ -161,6 +161,13 @@ if (Test-Path $zipActualizacion) { Remove-Item $zipActualizacion -Force }
 Compress-Archive -Path "dist-servidor\*" -DestinationPath $zipActualizacion -CompressionLevel Optimal
 Ok "Paquete de actualizacion: $([Math]::Round((Get-Item $zipActualizacion).Length/1MB,1)) MB"
 
+# Las notas van por ARCHIVO y no por --notes: con un texto de varias lineas,
+# `gh release create --notes "$Notas"` falla despues de tardar 20 minutos
+# armando y subiendo el paquete, y el error queda tapado. Se descubrio
+# publicando la 0.11.0.
+$archivoNotas = Join-Path $env:TEMP "nexosoft-notas-servidor-$Version.md"
+Set-Content -Path $archivoNotas -Value $Notas -Encoding utf8
+
 Titulo "Publicando servidor-v$Version"
 # --latest=false es NO NEGOCIABLE: este release comparte repo con las
 # publicaciones del POS (mismo $RepoReleases), y el updater del POS
@@ -171,8 +178,9 @@ Titulo "Publicando servidor-v$Version"
 # check en la PC de un cliente real.
 Correr "gh release create" {
     & gh release create "servidor-v$Version" $exeInstalador.FullName $zipActualizacion `
-        --repo $RepoReleases --title "Servidor v$Version" --notes "$Notas" --latest=false
+        --repo $RepoReleases --title "Servidor v$Version" --notes-file $archivoNotas --latest=false
 }
+Remove-Item $archivoNotas -ErrorAction SilentlyContinue
 
 Titulo "Listo"
 Write-Host "Publicado: https://github.com/$RepoReleases/releases/tag/servidor-v$Version"
