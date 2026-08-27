@@ -1,8 +1,29 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // Igual que @nexosoft/licencias: este paquete se compila a JavaScript de
+    // verdad (CommonJS) además de consumirse como fuente.
+    //
+    // El motivo: `cloud-api` lo necesita en TIEMPO DE EJECUCIÓN. Durante mucho
+    // tiempo lo importó sólo para tipos —que se borran al compilar— y por eso
+    // nunca hizo falta. El primer uso real (validación de CUIT para el
+    // certificado de ARCA) rompió el servidor al arrancar, en la PC de un
+    // cliente, con ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING: Node no puede
+    // cargar TypeScript desde node_modules.
+    //
+    // El POS lo sigue consumiendo como FUENTE (condición `import` en
+    // `exports`): Vite compila TypeScript sin problema y así no hay que
+    // reconstruir el paquete para ver un cambio en la app.
+    //
+    // `verbatimModuleSyntax` se apaga porque es incompatible con emitir
+    // CommonJS desde sintaxis ESM.
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "verbatimModuleSyntax": false,
+    "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
 }

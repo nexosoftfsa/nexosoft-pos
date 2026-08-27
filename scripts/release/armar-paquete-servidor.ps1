@@ -56,8 +56,14 @@ function Correr([string]$Descripcion, [scriptblock]$Comando) {
     }
 }
 
-Titulo "Compilando cloud-api"
-Correr "Build de cloud-api" { corepack pnpm --filter @nexosoft/cloud-api build }
+Titulo "Compilando cloud-api y sus dependencias del monorepo"
+# El "..." al final del filtro incluye las DEPENDENCIAS de cloud-api, no solo
+# cloud-api. Sin eso, packages/domain y packages/licencias se empaquetaban con
+# el dist/ que hubiera quedado de la ultima vez que alguien corrio "pnpm build"
+# a mano -- o sin dist/ directamente. Esos dos paquetes el servidor los usa en
+# TIEMPO DE EJECUCION, asi que un dist viejo o ausente rompe el arranque en la
+# PC del cliente y no acá.
+Correr "Build de cloud-api y dependencias" { corepack pnpm --filter "@nexosoft/cloud-api..." build }
 Ok "cloud-api compilado"
 
 Titulo "Compilando panel (admin-web)"

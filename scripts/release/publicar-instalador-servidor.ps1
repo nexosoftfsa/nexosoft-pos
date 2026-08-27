@@ -102,6 +102,13 @@ Correr "armar-paquete-servidor" { & "$raiz\scripts\release\armar-paquete-servido
 [System.IO.File]::WriteAllText((Join-Path $raiz "dist-servidor\VERSION"), $Version)
 Ok "dist-servidor listo, VERSION = $Version"
 
+Titulo "Probando que el paquete arranque"
+# Antes se publicaba sin comprobar que el servidor levantara. La 0.10.1 salio
+# con @nexosoft/domain sin compilar, no arrancaba, y eso se descubrio en la PC
+# de un cliente: la actualizacion se revertia sola y el instalador dejaba el
+# servidor caido. Publicar algo que no arranca no puede volver a ser posible.
+Correr "prueba de arranque" { & "$raiz\scripts\release\probar-arranque-paquete.ps1" -Destino (Join-Path $raiz "dist-servidor") }
+
 Titulo "Runtimes portables (Node y PostgreSQL)"
 $runtimeDir = Join-Path $raiz "instalador-servidor\runtime"
 $nodePortableOk = Test-Path (Join-Path $runtimeDir "node-portable\node.exe")
