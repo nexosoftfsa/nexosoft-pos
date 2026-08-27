@@ -5,6 +5,7 @@ import type { ConfiguracionComercio } from "@nexosoft/app";
 
 import type { Comprobante } from "../sync/cliente-ventas";
 import {
+  avisoFiscal,
   datosTicketDeComprobante,
   esAnulable,
   esFiscal,
@@ -135,5 +136,35 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
   it("sin desglose de IVA persistido (limitación conocida del backend): subtotalesIva vacío", () => {
     const datos = datosTicketDeComprobante(comprobante(), CONFIG);
     expect(datos.subtotalesIva).toEqual([]);
+  });
+});
+
+describe("avisoFiscal", () => {
+  it("una venta autorizada no avisa nada", () => {
+    expect(avisoFiscal("AUTORIZADA", null)).toBeNull();
+  });
+
+  it("un ticket no fiscal tampoco: no hay CAE que esperar", () => {
+    expect(avisoFiscal("NO_APLICA", null)).toBeNull();
+    expect(avisoFiscal(null, null)).toBeNull();
+    expect(avisoFiscal(undefined, undefined)).toBeNull();
+  });
+
+  it("una pendiente avisa que falta el CAE, sin alarmar: se resuelve sola", () => {
+    const aviso = avisoFiscal("PENDIENTE", "ARCA no responde");
+    expect(aviso?.etiqueta).toBe("Sin CAE");
+    expect(aviso?.tono).toBe("warn");
+    expect(aviso?.detalle).toContain("ARCA no responde");
+  });
+
+  it("una pendiente sin motivo igual explica qué pasa", () => {
+    expect(avisoFiscal("PENDIENTE", null)?.detalle).toContain("Se autoriza solo");
+  });
+
+  it("una rechazada avisa fuerte: esa NO se arregla sola", () => {
+    const aviso = avisoFiscal("RECHAZADA", "10016 Numero de comprobante invalido");
+    expect(aviso?.etiqueta).toBe("Rechazada");
+    expect(aviso?.tono).toBe("danger");
+    expect(aviso?.detalle).toContain("10016");
   });
 });

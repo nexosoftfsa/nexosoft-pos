@@ -37,6 +37,14 @@ export class ErrorFiscalHttp extends Error {
   }
 }
 
+/** Los datos con los que el SERVIDOR le pide el CAE a ARCA. */
+export interface DatosFiscalesDelComercio {
+  readonly cuit: string;
+  readonly razonSocial: string;
+  readonly puntoDeVenta: number;
+  readonly condicionIvaEmisor: string;
+}
+
 export interface ClienteCertificadoArca {
   estado(cuit: string): Promise<EstadoCertificado>;
   generarCsr(datos: {
@@ -46,6 +54,7 @@ export interface ClienteCertificadoArca {
     forzar?: boolean;
   }): Promise<CsrGenerado>;
   subirCertificado(cuit: string, certificadoPem: string): Promise<DatosCertificado>;
+  guardarDatosFiscales(datos: DatosFiscalesDelComercio): Promise<{ completa: boolean }>;
 }
 
 export class ClienteCertificadoArcaHttp implements ClienteCertificadoArca {
@@ -69,6 +78,17 @@ export class ClienteCertificadoArcaHttp implements ClienteCertificadoArca {
 
   subirCertificado(cuit: string, certificadoPem: string): Promise<DatosCertificado> {
     return this.pedir("PUT", "/fiscal/certificado", { cuit, certificadoPem });
+  }
+
+  /**
+   * Copia los datos fiscales al servidor.
+   *
+   * El POS los tiene para imprimir el ticket, pero el que habla con ARCA es el
+   * servidor: sin esto, el comercio ve sus datos cargados en Configuración y el
+   * servidor sigue sin poder facturar.
+   */
+  guardarDatosFiscales(datos: DatosFiscalesDelComercio): Promise<{ completa: boolean }> {
+    return this.pedir("PUT", "/fiscal/configuracion", datos);
   }
 
   private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {

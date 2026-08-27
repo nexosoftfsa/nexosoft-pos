@@ -15,6 +15,7 @@ import { pesos } from "../formato";
 import { ComprobanteA4 } from "./ComprobanteA4";
 import { ComprobanteTicket } from "./ComprobanteTicket";
 import {
+  avisoFiscal,
   datosTicketDeComprobante,
   esAnulable,
   esFiscal,
@@ -218,6 +219,20 @@ export function Comprobantes({
                       ) : (
                         <span className="badge badge--ok">Emitida</span>
                       )}
+                      {/* Si ARCA no autorizó, se muestra: enterarse en una
+                          inspección sale mucho más caro. */}
+                      {(() => {
+                        const aviso = avisoFiscal(c.estadoFiscal, c.motivoFiscal);
+                        return aviso === null ? null : (
+                          <span
+                            className={`badge badge--${aviso.tono}`}
+                            style={{ marginLeft: 6 }}
+                            title={aviso.detalle}
+                          >
+                            {aviso.etiqueta}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="acciones">
                       <button type="button" className="linkbtn" onClick={() => setReimprimir(c)}>

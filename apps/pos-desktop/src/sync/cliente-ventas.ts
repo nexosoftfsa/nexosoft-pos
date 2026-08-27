@@ -37,7 +37,18 @@ export interface Comprobante {
   readonly items: ItemComprobante[];
   /** Desglose de pagos (presente en ventas con pago combinado). */
   readonly pagos?: PagoComprobante[];
+  /**
+   * Cómo salió la autorización de ARCA. Una venta puede quedar sin CAE si ARCA
+   * no respondía: el comercio tiene que poder VERLO, no enterarse en la
+   * inspección.
+   */
+  readonly estadoFiscal?: EstadoFiscal | null;
+  /** Por qué quedó pendiente o rechazada, en castellano. */
+  readonly motivoFiscal?: string | null;
 }
+
+/** Estado de la autorización fiscal de un comprobante. */
+export type EstadoFiscal = "NO_APLICA" | "PENDIENTE" | "AUTORIZADA" | "RECHAZADA";
 
 export interface ResultadoAnulacion {
   readonly anulada: Comprobante;

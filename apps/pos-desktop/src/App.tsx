@@ -29,6 +29,7 @@ import { SesionManager } from "./datos/sesion";
 import { ClienteAuthHttp, ErrorAuth, type Credenciales } from "./sync/cliente-auth-http";
 import { ClienteTerminalesHttp } from "./sync/cliente-terminales-http";
 import { ClienteComercioHttp } from "./sync/cliente-comercio-http";
+import { ClienteCertificadoArcaHttp } from "./sync/cliente-fiscal-http";
 import type { ClienteCatalogoAdmin } from "./sync/cliente-catalogo-admin";
 import { ClienteCatalogoAdminHttp } from "./sync/cliente-catalogo-admin";
 import { ClienteCatalogoAdminSimulado } from "./sync/cliente-catalogo-admin-simulado";
@@ -491,10 +492,21 @@ function AppTauri() {
         ...(v.logoDataUrl !== undefined ? { logoDataUrl: v.logoDataUrl } : {}),
       });
       await guardarServidorUrl(ejecutor, v.servidorUrl);
-      void new ClienteComercioHttp(
-        v.servidorUrl,
-        () => sesionRef.current?.obtenerToken() ?? null,
-      ).actualizarLogo(v.logoDataUrl ?? "");
+      const token = () => sesionRef.current?.obtenerToken() ?? null;
+      void new ClienteComercioHttp(v.servidorUrl, token).actualizarLogo(v.logoDataUrl ?? "");
+      // El servidor necesita los datos fiscales para pedirle el CAE a ARCA. Si
+      // el envío falla (sin red, o guardando desde el login sin sesión) no se
+      // frena el guardado local: se reintenta la próxima vez que se guarde.
+      void new ClienteCertificadoArcaHttp(v.servidorUrl, token)
+        .guardarDatosFiscales({
+          cuit: v.cuit,
+          razonSocial: v.razonSocial,
+          puntoDeVenta: v.puntoDeVenta,
+          condicionIvaEmisor: v.condicionIvaEmisor,
+        })
+        .catch((e: unknown) => {
+          console.warn("No se pudieron enviar los datos fiscales al servidor", e);
+        });
       // Re-lee la URL, reconstruye el cliente y vuelve de donde vino.
       await inicializar({ pedirCredenciales: volverDeConfigRef.current === "login" });
     },

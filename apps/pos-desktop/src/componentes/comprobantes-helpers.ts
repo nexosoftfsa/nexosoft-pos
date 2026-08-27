@@ -50,6 +50,42 @@ export function esNotaCredito(tipo: string | null): boolean {
   return tipo?.startsWith("NotaCredito") ?? false;
 }
 
+/**
+ * Cómo mostrar el estado de la autorización fiscal.
+ *
+ * Una venta sin CAE porque ARCA no respondía es normal y se resuelve sola, pero
+ * el comercio tiene que poder verla: si no se muestra, la única forma de
+ * enterarse es una inspección. Una rechazada, en cambio, no se arregla sola.
+ *
+ * `null` cuando no hay nada que avisar: autorizada, o comprobante no fiscal.
+ */
+export function avisoFiscal(
+  estadoFiscal: string | null | undefined,
+  motivoFiscal: string | null | undefined,
+): { etiqueta: string; tono: "warn" | "danger"; detalle: string } | null {
+  if (estadoFiscal === "PENDIENTE") {
+    return {
+      etiqueta: "Sin CAE",
+      tono: "warn",
+      detalle:
+        motivoFiscal !== null && motivoFiscal !== undefined && motivoFiscal !== ""
+          ? `Esperando a ARCA: ${motivoFiscal}`
+          : "Esperando a ARCA. Se autoriza solo cuando vuelva el servicio.",
+    };
+  }
+  if (estadoFiscal === "RECHAZADA") {
+    return {
+      etiqueta: "Rechazada",
+      tono: "danger",
+      detalle:
+        motivoFiscal !== null && motivoFiscal !== undefined && motivoFiscal !== ""
+          ? `ARCA la rechazó: ${motivoFiscal}`
+          : "ARCA rechazó el comprobante. Hay que corregirlo a mano.",
+    };
+  }
+  return null;
+}
+
 /** Un `TicketNoFiscal` (Fase 10.1: comercio sin alta en ARCA) no lleva CAE. */
 export function esFiscal(tipo: string | null): boolean {
   return tipo !== "TicketNoFiscal";
