@@ -58,27 +58,11 @@ export const ENDPOINTS_ARCA: Record<
  * Factura A=1 · B=6 · C=11; Nota de Débito A=2 · B=7 · C=12;
  * Nota de Crédito A=3 · B=8 · C=13.
  */
-export function codigoComprobanteArca(tipo: TipoComprobante): number {
-  const letra = letraDe(tipo);
-  const esNotaCredito = tipo.startsWith("NotaCredito");
-  const esNotaDebito = tipo.startsWith("NotaDebito");
-  const base = letra === "A" ? "A" : letra === "B" ? "B" : letra === "C" ? "C" : undefined;
-  if (base === undefined) {
-    throw new ErrorFiscal(
-      "SIN_CODIGO_ARCA",
-      `El comprobante "${tipo}" no tiene código WSFEv1 (no es fiscal).`,
-    );
-  }
-  const TABLA: Record<"A" | "B" | "C", { factura: number; nc: number; nd: number }> = {
-    A: { factura: 1, nc: 3, nd: 2 },
-    B: { factura: 6, nc: 8, nd: 7 },
-    C: { factura: 11, nc: 13, nd: 12 },
-  };
-  const fila = TABLA[base];
-  if (esNotaCredito) return fila.nc;
-  if (esNotaDebito) return fila.nd;
-  return fila.factura;
-}
+// Se mudó a @nexosoft/domain: lo necesitan el POS y el SERVIDOR en tiempo de
+// ejecución, y este paquete todavía se publica como TypeScript sin compilar
+// —que Node no puede cargar desde node_modules—. Se re-exporta para no romper
+// a quien ya lo importaba desde acá.
+export { codigoComprobanteArca } from "@nexosoft/domain";
 
 const NO_IMPLEMENTADO =
   "Adaptador ARCA real no implementado: requiere certificado X.509, CUIT habilitado y completar WSAA/WSFEv1. Ver README de @nexosoft/fiscal. Mientras tanto, usar MockServicioFiscal.";

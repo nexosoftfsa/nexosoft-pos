@@ -21,6 +21,8 @@ export * from "./fiscal/alicuota-iva.js";
 export * from "./fiscal/tipo-comprobante.js";
 export * from "./fiscal/cuit.js";
 export * from "./fiscal/qr-arca.js";
+export * from "./fiscal/desglose-iva.js";
+export * from "./fiscal/codigo-comprobante-arca.js";
 
 // CatÃ¡logo: artÃ­culos, listas de precios, costeo/marcaciÃ³n y promos (ADR-0014)
 export * from "./catalogo/unidad-de-medida.js";
