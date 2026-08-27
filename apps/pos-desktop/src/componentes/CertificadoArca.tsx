@@ -51,6 +51,20 @@ function fecha(iso: string): string {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString("es-AR");
 }
 
+/**
+ * El CN del certificado: el nombre con el que ARCA lo identifica.
+ *
+ * Hay que mostrarlo sí o sí. En ARCA, el permiso para facturar se le da a UN
+ * certificado, no al CUIT: si el comercio autoriza otro (por ejemplo uno que
+ * generó antes por su cuenta), este sigue sin permiso y el rechazo llega
+ * después, sin decir que el problema es ése. Con el nombre a la vista se
+ * puede comparar contra lo que dice la pantalla de ARCA.
+ */
+export function nombreDelCertificado(subject: string): string | null {
+  const m = /CN=([^,]+)/.exec(subject);
+  return m?.[1]?.trim() ?? null;
+}
+
 export function CertificadoArca({
   servidorUrl,
   cuit,
@@ -167,6 +181,16 @@ export function CertificadoArca({
             Vence el <b>{fecha(estado.certificado.validoHasta)}</b>
             {estado.diasParaVencer !== null && ` (faltan ${estado.diasParaVencer} días)`}.
           </p>
+          <div className="config-ayuda">
+            Nombre del certificado en ARCA:{" "}
+            <b style={{ fontFamily: "monospace" }}>
+              {nombreDelCertificado(estado.certificado.subject) ?? "(sin nombre)"}
+            </b>
+            <br />
+            Comprobá que sea <b>exactamente este</b> el que autorizaste en ARCA para Facturación
+            Electrónica. El permiso se le da a un certificado puntual, no al CUIT: si autorizaste
+            otro, los comprobantes se van a rechazar y el error no va a decir por qué.
+          </div>
           {estado.diasParaVencer !== null && estado.diasParaVencer < 30 && (
             <div className="config-ayuda">
               Está por vencer. Hay que sacar uno nuevo en ARCA antes de esa fecha, o el comercio
