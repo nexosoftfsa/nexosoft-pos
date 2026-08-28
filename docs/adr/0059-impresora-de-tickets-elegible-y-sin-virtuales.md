@@ -60,6 +60,26 @@ cambian con el idioma y con cada producto nuevo; el puerto no.
 `verificarEstado()` hace la misma comprobación, así que el problema se puede
 detectar **antes** de la primera venta y no después de la vigésimo séptima.
 
+### Sin térmica, el ticket cae en la vista imprimible
+
+Rechazar el envío deja un hueco: en la app instalada la venta imprime **sólo**
+por ESC/POS —la vista previa está deshabilitada dentro de Tauri para no
+imprimir dos veces—, así que una caja sin térmica pasaría de generar archivos
+rotos a mostrar un error rojo en cada venta.
+
+Por eso `imprimirTicket` distingue el caso con `ErrorImpresoraVirtual` y abre la
+**vista imprimible** en vez de fallar. Ahí el diálogo de Windows permite elegir
+"Microsoft Print to PDF" y sale un PDF de verdad.
+
+Ese camino además **imprime el QR fiscal, que el ESC/POS no imprime**: el QR
+sólo existe en `ComprobanteTicket`/`ComprobanteA4`. Para mirar cómo queda un
+comprobante de homologación, la vista imprimible es el único camino que lo
+muestra.
+
+No se muestra un error porque no lo es: se abre un diálogo de impresión, que ya
+es señal de que el ticket no salió solo por la térmica. Lo que no puede volver a
+pasar es que no pase *nada*.
+
 ## Consecuencias
 
 - Un comercio sin térmica configurada ahora ve un error claro en vez de generar

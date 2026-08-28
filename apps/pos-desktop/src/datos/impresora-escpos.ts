@@ -86,6 +86,24 @@ export function configurarImpresora(nombre: string): void {
   } catch {
     // Sin localStorage se usa la predeterminada de Windows.
   }
+  // Cambió el destino: lo que sabíamos de él ya no vale.
+  olvidarImpresoras();
+}
+
+/**
+ * El destino del ticket no sirve para ESC/POS.
+ *
+ * Es una situación esperada, no una falla: un comercio que todavía no conectó
+ * la térmica (o una PC de prueba) tiene que poder vender igual. Quien lo reciba
+ * decide qué hacer — el POS cae en la vista imprimible.
+ */
+export class ErrorImpresoraVirtual extends Error {
+  constructor(readonly impresora: string) {
+    super(
+      `"${impresora}" es una impresora virtual: guarda el trabajo en un archivo en vez de imprimirlo.`,
+    );
+    this.name = "ErrorImpresoraVirtual";
+  }
 }
 
 /** Una impresora instalada en Windows, como la devuelve el comando nativo. */
@@ -125,6 +143,52 @@ export async function listarImpresoras(): Promise<ImpresoraDelSistema[]> {
 }
 
 /**
+ * Se cachea porque esto se consulta en CADA venta, y la lista de impresoras de
+ * una caja no cambia mientras el POS está abierto. Se olvida al elegir otra.
+ */
+let cacheImpresoras: readonly ImpresoraDelSistema[] | null = null;
+
+export function olvidarImpresoras(): void {
+  cacheImpresoras = null;
+}
+
+async function impresorasCacheadas(): Promise<readonly ImpresoraDelSistema[]> {
+  cacheImpresoras ??= await listarImpresoras();
+  return cacheImpresoras;
+}
+
+/**
+ * Se queja si el ticket iba a salir a una impresora virtual.
+ *
+ * El mismo control existe en Rust (`imprimir_raw`), que es el que de verdad
+ * protege. Este de acá está para poder distinguir el caso ANTES de mandar y
+ * reaccionar distinto: un destino que no sirve no es un error de impresión, es
+ * una caja sin térmica.
+ *
+ * Si no se puede averiguar (no hay comando nativo, falla la consulta) se deja
+ * pasar: el control de Rust sigue estando, y una duda nuestra no puede frenar
+ * una venta.
+ */
+async function verificarDestino(): Promise<void> {
+  let destino: string;
+  try {
+    destino = await impresoraEfectiva();
+  } catch {
+    return;
+  }
+  let instaladas: readonly ImpresoraDelSistema[];
+  try {
+    instaladas = await impresorasCacheadas();
+  } catch {
+    return;
+  }
+  const elegida = instaladas.find((i) => i.nombre === destino);
+  if (elegida !== undefined && !elegida.sirveParaTicket) {
+    throw new ErrorImpresoraVirtual(destino);
+  }
+}
+
+/**
  * La impresora a la que va a salir el ticket: la configurada, o la
  * predeterminada de Windows si no se eligió ninguna.
  */
@@ -139,6 +203,7 @@ export class ImpresoraEscPos implements ImpresoraTermica {
   constructor(private readonly columnas = 32) {}
 
   async imprimirTicket(datos: DatosTicket): Promise<void> {
+    await verificarDestino();
     const { invoke } = await import("@tauri-apps/api/core");
     const logo =
       datos.logoDataUrl !== undefined

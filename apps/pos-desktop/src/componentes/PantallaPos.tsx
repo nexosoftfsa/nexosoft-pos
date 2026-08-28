@@ -17,6 +17,7 @@ import type { IntentoPago } from "@nexosoft/pagos";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { estaEnTauri } from "../datos/ejecutor-sql-tauri";
+import { ErrorImpresoraVirtual } from "../datos/impresora-escpos";
 import { etiquetaComprobante, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
@@ -871,8 +872,8 @@ export function PantallaPos({
   async function imprimirTicket(venta: VentaConfirmada, pagosDeLaVenta: readonly PagoUi[] = pagos) {
     if (imprimiendo) return;
     setImprimiendo(true);
+    const datos = construirDatosTicket(venta, config, catalogo, pagosDeLaVenta, tarjetas);
     try {
-      const datos = construirDatosTicket(venta, config, catalogo, pagosDeLaVenta, tarjetas);
       await impresora.imprimirTicket(datos);
       // En la app instalada la impresora es la térmica real (ESC/POS directo
       // al spooler): el ticket ya salió y abrir además el diálogo del
@@ -880,7 +881,19 @@ export function PantallaPos({
       // queda solo para el navegador de desarrollo, donde no hay impresora.
       if (!estaEnTauri()) imprimirTicketPreview(datos);
     } catch (e) {
-      setError(`Error al imprimir: ${mensajeError(e)}`);
+      if (e instanceof ErrorImpresoraVirtual) {
+        // Esta caja no tiene térmica: el destino era una impresora virtual, que
+        // habría guardado los comandos ESC/POS crudos en un archivo ilegible.
+        // En vez de dejar al cliente sin nada, se abre la vista imprimible, que
+        // sí sale bien por "Microsoft Print to PDF" — y además lleva el QR
+        // fiscal, que el ESC/POS no imprime.
+        //
+        // No se muestra error: se abre un diálogo de impresión, que es señal
+        // suficiente de que el ticket no salió solo por la térmica.
+        imprimirTicketPreview(datos);
+      } else {
+        setError(`Error al imprimir: ${mensajeError(e)}`);
+      }
     } finally {
       setImprimiendo(false);
     }
