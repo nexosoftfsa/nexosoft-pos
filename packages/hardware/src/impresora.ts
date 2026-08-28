@@ -98,4 +98,9 @@ export interface ImpresoraTermica {
 
 export type EstadoImpresora =
   | { ok: true }
-  | { ok: false; razon: "sin_papel" | "sin_conexion" | "error" };
+  | {
+      ok: false;
+      razon: "sin_papel" | "sin_conexion" | "error";
+      /** Explicación para mostrarle al cajero, cuando el adaptador la tiene. */
+      detalle?: string;
+    };

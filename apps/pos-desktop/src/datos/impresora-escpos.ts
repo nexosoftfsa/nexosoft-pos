@@ -88,6 +88,53 @@ export function configurarImpresora(nombre: string): void {
   }
 }
 
+/** Una impresora instalada en Windows, como la devuelve el comando nativo. */
+export interface ImpresoraDelSistema {
+  readonly nombre: string;
+  readonly puerto: string;
+  readonly driver: string;
+  /**
+   * `false` en las impresoras virtuales (Microsoft Print to PDF, XPS, OneNote,
+   * fax): guardan el trabajo en un archivo, así que el ESC/POS termina en un
+   * `.pdf` que no abre nadie. Ver `src-tauri/src/impresion.rs`.
+   */
+  readonly sirveParaTicket: boolean;
+  readonly predeterminada: boolean;
+}
+
+/** Lo que devuelve el comando nativo, en snake_case. */
+interface ImpresoraCruda {
+  readonly nombre: string;
+  readonly puerto: string;
+  readonly driver: string;
+  readonly sirve_para_ticket: boolean;
+  readonly predeterminada: boolean;
+}
+
+/** Impresoras instaladas en Windows, para elegir la térmica en Configuración. */
+export async function listarImpresoras(): Promise<ImpresoraDelSistema[]> {
+  const { invoke } = await import("@tauri-apps/api/core");
+  const crudas = await invoke<ImpresoraCruda[]>("listar_impresoras");
+  return crudas.map((i) => ({
+    nombre: i.nombre,
+    puerto: i.puerto,
+    driver: i.driver,
+    sirveParaTicket: i.sirve_para_ticket,
+    predeterminada: i.predeterminada,
+  }));
+}
+
+/**
+ * La impresora a la que va a salir el ticket: la configurada, o la
+ * predeterminada de Windows si no se eligió ninguna.
+ */
+export async function impresoraEfectiva(): Promise<string> {
+  const elegida = nombreImpresoraConfigurada();
+  if (elegida !== "") return elegida;
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<string>("impresora_predeterminada");
+}
+
 export class ImpresoraEscPos implements ImpresoraTermica {
   constructor(private readonly columnas = 32) {}
 
@@ -115,13 +162,21 @@ export class ImpresoraEscPos implements ImpresoraTermica {
   }
 
   async verificarEstado(): Promise<EstadoImpresora> {
-    // El spooler no expone el estado de papel de la térmica por esta vía; se
-    // reporta OK si hay una impresora resoluble, y el fallo real aparece al
-    // imprimir (con su mensaje).
+    // El spooler no expone el estado de papel de la térmica por esta vía, así
+    // que el sin_papel real aparece recién al imprimir. Lo que sí se puede
+    // detectar acá —y es el caso que ya nos pasó— es que el ticket esté
+    // saliendo a una impresora virtual: el trabajo "se imprime" bien y termina
+    // en un archivo ilegible.
     try {
-      const { invoke } = await import("@tauri-apps/api/core");
-      if (nombreImpresoraConfigurada() === "") {
-        await invoke<string>("impresora_predeterminada");
+      const destino = await impresoraEfectiva();
+      const instaladas = await listarImpresoras();
+      const elegida = instaladas.find((i) => i.nombre === destino);
+      if (elegida !== undefined && !elegida.sirveParaTicket) {
+        return {
+          ok: false,
+          razon: "error",
+          detalle: `El ticket está saliendo a "${destino}", que es una impresora virtual: guarda un archivo en vez de imprimir. Elegí la impresora térmica en Configuración > Impresora de tickets.`,
+        };
       }
       return { ok: true };
     } catch {

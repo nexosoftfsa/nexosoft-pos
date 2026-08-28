@@ -4,6 +4,7 @@ import { CondicionIva } from "@nexosoft/domain";
 import { prepararLogo } from "../archivos";
 import { AccesoRemoto } from "./AccesoRemoto";
 import { CertificadoArca } from "./CertificadoArca";
+import { ImpresoraTickets } from "./ImpresoraTickets";
 import { Actualizaciones } from "./Actualizaciones";
 
 export interface ValoresConfig {
@@ -257,6 +258,8 @@ export function PantallaConfig({
               demás terminales, la IP de esa PC en la red del local.
             </div>
           </section>
+
+          <ImpresoraTickets />
 
           <CertificadoArca
             servidorUrl={servidorUrl}
