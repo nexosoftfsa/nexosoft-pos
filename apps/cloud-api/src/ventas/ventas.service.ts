@@ -16,9 +16,11 @@ import {
   ErrorCaeNoDisponible,
   ErrorCaeRechazado,
   SERVICIO_CAE,
+  type ComprobanteAsociadoSolicitud,
   type ResultadoCae,
   type ServicioCae,
 } from './cae/servicio-cae';
+import { comprobanteAsociadoDe } from './cae/comprobante-asociado';
 import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
@@ -105,12 +107,16 @@ export class VentasService {
     // cliente no puede depender de que AFIP esté en línea.
     // La NC va al mismo receptor que la factura que anula.
     const receptorNc = await this.desgloses.receptorDe(original.clienteId ?? null);
+    // ARCA exige que la Nota de Crédito diga qué comprobante corrige: sin
+    // `CbtesAsoc` la rechaza. Sale del original que se está anulando.
+    const asociados = comprobanteAsociadoDe(original);
     const fiscal = await this.pedirCae(
       tipoNc,
       original.total,
       sucursalId,
       desgloseNc,
       receptorNc,
+      asociados,
     );
     const cae = fiscal.cae;
 
@@ -203,6 +209,8 @@ export class VentasService {
     sucursalId: string,
     desglose: DesgloseIva,
     receptor: ReceptorArca,
+    /** Qué comprobante corrige, en una Nota de Crédito. ARCA lo exige. */
+    comprobantesAsociados?: readonly ComprobanteAsociadoSolicitud[],
   ): Promise<{ cae: ResultadoCae | null; estadoFiscal: EstadoFiscal; motivo: string | null }> {
     if (!esComprobanteFiscal(tipoComprobante)) {
       return { cae: null, estadoFiscal: 'NO_APLICA', motivo: null };
@@ -226,6 +234,9 @@ export class VentasService {
         condicionIvaReceptor: receptor.condicionIvaReceptor,
         ...(codigoComprobanteArcaOpcional(tipoComprobante) !== null
           ? { codigoComprobante: codigoComprobanteArcaOpcional(tipoComprobante) as number }
+          : {}),
+        ...(comprobantesAsociados !== undefined && comprobantesAsociados.length > 0
+          ? { comprobantesAsociados }
           : {}),
       });
       return { cae, estadoFiscal: 'AUTORIZADA', motivo: null };

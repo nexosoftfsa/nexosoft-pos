@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { firmarTraCms } from './firma-cms';
 import { construirTra, leerFaultSoap, leerTicketAcceso, type TicketAcceso } from './tra';
+import { esCorteDeTiempo } from './corte-de-tiempo';
 
 /**
  * WSAA: el servicio de autenticación de ARCA.
@@ -37,6 +38,12 @@ export class ErrorWsaa extends Error {
 /** Margen antes del vencimiento para pedir uno nuevo. */
 const MARGEN_RENOVACION_MS = 10 * 60_000;
 
+/**
+ * Cuánto se espera a WSAA. Más corto que el de facturación: acá todavía no se
+ * mandó ningún comprobante, así que cortar temprano no deja nada en duda.
+ */
+export const TIMEOUT_WSAA_MS = 15_000;
+
 interface TicketEnDisco {
   token: string;
   sign: string;
@@ -56,6 +63,7 @@ export class ClienteWsaa {
       readonly url?: string;
       /** Inyectable para tests. */
       readonly fetchImpl?: typeof fetch;
+      readonly timeoutMs?: number;
     },
   ) {}
 
@@ -82,14 +90,22 @@ export class ClienteWsaa {
     const url = this.opciones.url ?? URL_WSAA[this.opciones.entorno];
     const hacerFetch = this.opciones.fetchImpl ?? fetch;
 
+    const timeoutMs = this.opciones.timeoutMs ?? TIMEOUT_WSAA_MS;
     let res: Response;
     try {
       res = await hacerFetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: '' },
         body: sobreLoginCms(cms),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (e) {
+      if (esCorteDeTiempo(e)) {
+        throw new ErrorWsaa(
+          `ARCA no respondió en ${Math.round(timeoutMs / 1000)} segundos al autenticar.`,
+          true,
+        );
+      }
       throw new ErrorWsaa(
         `No se pudo contactar a ARCA (${(e as Error).message}). Revisá la conexión a internet.`,
         true,

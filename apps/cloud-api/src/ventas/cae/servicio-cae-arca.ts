@@ -9,6 +9,8 @@ import {
   type DatosComprobante,
 } from '../../fiscal/arca/wsfev1';
 import { ConfiguracionFiscalService } from '../../fiscal/configuracion-fiscal.service';
+import { ColaPorClave } from './cola-por-clave';
+import { solicitarConRecuperacion } from './solicitar-con-recuperacion';
 import {
   ErrorCaeNoDisponible,
   ErrorCaeRechazado,
@@ -32,10 +34,21 @@ import {
  *
  * Esa traducción es lo que decide si el comercio puede seguir vendiendo
  * cuando AFIP se cae.
+ *
+ * Dos cuidados que no se ven en el camino feliz:
+ *
+ * 1. **La numeración se pide en fila** (`ColaPorClave`). Preguntar el último
+ *    número y mandar el siguiente son dos llamadas, y dos cajas vendiendo al
+ *    mismo tiempo proponían el mismo número.
+ * 2. **Si la respuesta se pierde, se pregunta antes de reintentar.** Un timeout
+ *    no significa que ARCA no haya autorizado: puede haber emitido y haberse
+ *    cortado la vuelta.
  */
 @Injectable()
 export class ServicioCaeArca implements ServicioCae {
   private readonly log = new Logger(ServicioCaeArca.name);
+  /** Una fila por punto de venta y tipo: es el alcance en el que ARCA exige correlatividad. */
+  private readonly numeracion = new ColaPorClave();
 
   constructor(
     private readonly config: ConfiguracionFiscalService,
@@ -78,44 +91,71 @@ export class ServicioCaeArca implements ServicioCae {
     try {
       const ticket = await wsaa.obtenerTicket('wsfe');
 
-      // El número lo propone el sistema, pero tiene que seguir al último que
-      // ARCA autorizó: es la fuente de verdad de la numeración y valida que
-      // sea correlativa.
-      const ultimo = await wsfe.ultimoAutorizado(
-        ticket,
-        fiscal.puntoDeVenta,
-        codigoComprobante,
-      );
+      // Desde acá hasta que ARCA conteste, nadie más puede estar pidiendo un
+      // número para este mismo punto de venta y tipo de comprobante.
+      const clave = `${entorno}:${fiscal.cuit}:${fiscal.puntoDeVenta}:${codigoComprobante}`;
+      const { autorizacion: r, numeroPropuesto } = await this.numeracion.enFila(clave, async () => {
+        // El número lo propone el sistema, pero tiene que seguir al último que
+        // ARCA autorizó: es la fuente de verdad de la numeración y valida que
+        // sea correlativa.
+        const ultimo = await wsfe.ultimoAutorizado(
+          ticket,
+          fiscal.puntoDeVenta,
+          codigoComprobante,
+        );
 
-      const datos: DatosComprobante = {
-        puntoDeVenta: fiscal.puntoDeVenta,
-        codigoComprobante,
-        numero: ultimo + 1,
-        total: solicitud.total,
-        fecha: solicitud.fecha ?? new Date(),
-        neto: solicitud.neto ?? solicitud.total,
-        iva: solicitud.iva ?? '0.00',
-        exento: solicitud.exento ?? '0.00',
-        renglonesIva: solicitud.renglonesIva ?? [],
-        ...(solicitud.tipoDocReceptor !== undefined
-          ? { tipoDocReceptor: solicitud.tipoDocReceptor }
-          : {}),
-        ...(solicitud.nroDocReceptor !== undefined
-          ? { nroDocReceptor: solicitud.nroDocReceptor }
-          : {}),
-        ...(solicitud.condicionIvaReceptor !== undefined
-          ? { condicionIvaReceptor: solicitud.condicionIvaReceptor }
-          : {}),
-      };
+        const datos: DatosComprobante = {
+          puntoDeVenta: fiscal.puntoDeVenta,
+          codigoComprobante,
+          numero: ultimo + 1,
+          total: solicitud.total,
+          fecha: solicitud.fecha ?? new Date(),
+          neto: solicitud.neto ?? solicitud.total,
+          iva: solicitud.iva ?? '0.00',
+          exento: solicitud.exento ?? '0.00',
+          renglonesIva: solicitud.renglonesIva ?? [],
+          ...(solicitud.tipoDocReceptor !== undefined
+            ? { tipoDocReceptor: solicitud.tipoDocReceptor }
+            : {}),
+          ...(solicitud.nroDocReceptor !== undefined
+            ? { nroDocReceptor: solicitud.nroDocReceptor }
+            : {}),
+          ...(solicitud.condicionIvaReceptor !== undefined
+            ? { condicionIvaReceptor: solicitud.condicionIvaReceptor }
+            : {}),
+          // El comprobante que corrige una Nota de Crédito. El CUIT es el del
+          // propio comercio: la NC anula una factura que emitió él mismo.
+          ...(solicitud.comprobantesAsociados !== undefined &&
+          solicitud.comprobantesAsociados.length > 0
+            ? {
+                comprobantesAsociados: solicitud.comprobantesAsociados.map((a) => ({
+                  codigoComprobante: a.codigoComprobante,
+                  puntoDeVenta: a.puntoDeVenta ?? fiscal.puntoDeVenta,
+                  numero: a.numero,
+                  cuit: fiscal.cuit,
+                  ...(a.fecha !== undefined ? { fecha: a.fecha } : {}),
+                })),
+              }
+            : {}),
+        };
 
-      const r = await wsfe.solicitarCae(ticket, datos);
+        return {
+          autorizacion: await solicitarConRecuperacion(wsfe, ticket, datos, (m) =>
+            this.log.warn(m),
+          ),
+          // Por si ARCA no devuelve el número en la respuesta: el que propusimos
+          // es el que autorizó.
+          numeroPropuesto: datos.numero,
+        };
+      });
+
       if (r.observaciones.length > 0) {
         this.log.warn(`ARCA autorizó con observaciones: ${r.observaciones.join(' | ')}`);
       }
       return {
         cae: r.cae,
         caeFechaVto: r.caeFechaVto,
-        numeroComprobante: r.numero === 0 ? datos.numero : r.numero,
+        numeroComprobante: r.numero === 0 ? numeroPropuesto : r.numero,
         tipoComprobante: solicitud.tipoComprobante,
       };
     } catch (e) {

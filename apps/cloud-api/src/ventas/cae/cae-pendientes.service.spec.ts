@@ -5,19 +5,35 @@ import { CaePendientesService } from './cae-pendientes.service';
 import { ErrorCaeNoDisponible, ErrorCaeRechazado } from './servicio-cae';
 import { DesgloseDeVentaService } from './desglose-de-venta.service';
 
-function venta(id: string, creadaEn: string) {
+/**
+ * Fechas RELATIVAS a hoy, no fijas.
+ *
+ * ARCA sólo autoriza comprobantes de hasta 5 días (`ventana-de-fecha.ts`), así
+ * que una fecha fija en el fixture haría que estos tests empezaran a fallar
+ * solos al pasar esa cantidad de días.
+ */
+function haceDias(n: number, hora = 10): Date {
+  const f = new Date();
+  f.setDate(f.getDate() - n);
+  f.setHours(hora, 0, 0, 0);
+  return f;
+}
+
+function venta(id: string, creadaEn: Date = haceDias(1), extra: Record<string, unknown> = {}) {
   return {
     id,
-    creadaEn: new Date(creadaEn),
+    creadaEn,
     tipoComprobante: 'FacturaB',
     total: new Decimal('1000'),
     sucursalId: 's1',
+    comprobanteAsociadoId: null,
+    ...extra,
   };
 }
 
 describe('CaePendientesService', () => {
   const prisma = {
-    venta: { findMany: vi.fn(), update: vi.fn(), count: vi.fn() },
+    venta: { findMany: vi.fn(), update: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
     // El reintento reconstruye el desglose de IVA desde los ítems guardados.
     itemVenta: { findMany: vi.fn() },
     producto: { findMany: vi.fn() },
@@ -29,6 +45,7 @@ describe('CaePendientesService', () => {
     vi.clearAllMocks();
     prisma.venta.count.mockResolvedValue(0);
     prisma.venta.update.mockResolvedValue({});
+    prisma.venta.findUnique.mockResolvedValue(null);
     prisma.itemVenta.findMany.mockResolvedValue([
       { productoId: 'p1', subtotal: new Decimal('1000') },
     ]);
@@ -48,7 +65,7 @@ describe('CaePendientesService', () => {
   });
 
   it('autoriza las pendientes y les guarda el CAE', async () => {
-    prisma.venta.findMany.mockResolvedValue([venta('v1', '2026-08-27T10:00:00Z')]);
+    prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(3))]);
     cae.autorizar.mockResolvedValue({
       cae: '75123456789012',
       caeFechaVto: new Date('2026-09-10'),
@@ -68,7 +85,8 @@ describe('CaePendientesService', () => {
   it('manda el desglose de IVA reconstruido, no sólo el total', async () => {
     // Sin esto, una pendiente se reintentaría con IVA en cero: ARCA la
     // rechazaría, y si la aceptara sería una factura mal emitida.
-    prisma.venta.findMany.mockResolvedValue([venta('v1', '2026-08-27T10:00:00Z')]);
+    const emitida = haceDias(3);
+    prisma.venta.findMany.mockResolvedValue([venta('v1', emitida)]);
     cae.autorizar.mockResolvedValue({
       cae: '75123456789012',
       caeFechaVto: new Date('2026-09-10'),
@@ -88,7 +106,7 @@ describe('CaePendientesService', () => {
     expect(solicitud.codigoComprobante).toBe(6); // Factura B
     // La fecha es la de la venta, no la del reintento: es la que ya salió
     // impresa en el ticket del cliente.
-    expect(solicitud.fecha).toEqual(new Date('2026-08-27T10:00:00Z'));
+    expect(solicitud.fecha).toEqual(emitida);
   });
 
   it('las pide EN ORDEN de emisión', async () => {
@@ -103,9 +121,9 @@ describe('CaePendientesService', () => {
 
   it('si ARCA sigue caída, FRENA y no sigue con las siguientes', async () => {
     prisma.venta.findMany.mockResolvedValue([
-      venta('v1', '2026-08-27T10:00:00Z'),
-      venta('v2', '2026-08-27T11:00:00Z'),
-      venta('v3', '2026-08-27T12:00:00Z'),
+      venta('v1', haceDias(3)),
+      venta('v2', haceDias(2)),
+      venta('v3', haceDias(1)),
     ]);
     cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin respuesta'));
 
@@ -118,9 +136,9 @@ describe('CaePendientesService', () => {
 
   it('autoriza hasta que ARCA se cae, y ahí frena', async () => {
     prisma.venta.findMany.mockResolvedValue([
-      venta('v1', '2026-08-27T10:00:00Z'),
-      venta('v2', '2026-08-27T11:00:00Z'),
-      venta('v3', '2026-08-27T12:00:00Z'),
+      venta('v1', haceDias(3)),
+      venta('v2', haceDias(2)),
+      venta('v3', haceDias(1)),
     ]);
     cae.autorizar
       .mockResolvedValueOnce({
@@ -139,8 +157,8 @@ describe('CaePendientesService', () => {
 
   it('un RECHAZO no frena a las que vienen atrás, pero no se reintenta', async () => {
     prisma.venta.findMany.mockResolvedValue([
-      venta('v1', '2026-08-27T10:00:00Z'),
-      venta('v2', '2026-08-27T11:00:00Z'),
+      venta('v1', haceDias(3)),
+      venta('v2', haceDias(2)),
     ]);
     cae.autorizar
       .mockRejectedValueOnce(new ErrorCaeRechazado('CUIT del receptor inválido', '10015'))
@@ -161,7 +179,7 @@ describe('CaePendientesService', () => {
   });
 
   it('cuenta los intentos, para poder ver las que se trabaron', async () => {
-    prisma.venta.findMany.mockResolvedValue([venta('v1', '2026-08-27T10:00:00Z')]);
+    prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(3))]);
     cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin red'));
 
     await service.reintentar();
@@ -187,9 +205,80 @@ describe('CaePendientesService', () => {
   });
 
   it('un error inesperado se propaga, no se traga', async () => {
-    prisma.venta.findMany.mockResolvedValue([venta('v1', '2026-08-27T10:00:00Z')]);
+    prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(3))]);
     cae.autorizar.mockRejectedValue(new Error('bug de programación'));
 
     await expect(service.reintentar()).rejects.toThrow('bug de programación');
+  });
+
+  describe('pendientes que se pasaron del plazo de ARCA', () => {
+    it('una de más de 5 días no se manda: sería un rechazo seguro', async () => {
+      prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(9))]);
+
+      const r = await service.reintentar();
+
+      expect(cae.autorizar).not.toHaveBeenCalled();
+      expect(r.rechazadas).toBe(1);
+      const data = prisma.venta.update.mock.calls[0]?.[0]?.data;
+      expect(data.estadoFiscal).toBe('RECHAZADA');
+      expect(data.motivoFiscal).toContain('hace 9 días');
+    });
+
+    it('no frena a las que sí están en plazo', async () => {
+      // Una vieja sin arreglo no puede dejar sin autorizar a las de hoy.
+      prisma.venta.findMany.mockResolvedValue([venta('vieja', haceDias(9)), venta('nueva', haceDias(1))]);
+      cae.autorizar.mockResolvedValue({
+        cae: '1',
+        caeFechaVto: new Date(),
+        numeroComprobante: 1,
+        tipoComprobante: 'FacturaB',
+      });
+
+      const r = await service.reintentar();
+
+      expect(r.rechazadas).toBe(1);
+      expect(r.autorizadas).toBe(1);
+      expect(cae.autorizar).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('notas de crédito pendientes', () => {
+    it('mandan el comprobante que corrigen, que ARCA exige', async () => {
+      prisma.venta.findMany.mockResolvedValue([
+        venta('nc1', haceDias(1), {
+          tipoComprobante: 'NotaCreditoB',
+          comprobanteAsociadoId: 'v-original',
+        }),
+      ]);
+      prisma.venta.findUnique.mockResolvedValue({
+        tipoComprobante: 'FacturaB',
+        numeroComprobante: 41,
+      });
+      cae.autorizar.mockResolvedValue({
+        cae: '1',
+        caeFechaVto: new Date(),
+        numeroComprobante: 7,
+        tipoComprobante: 'NotaCreditoB',
+      });
+
+      await service.reintentar();
+
+      const solicitud = cae.autorizar.mock.calls[0]?.[0];
+      expect(solicitud.comprobantesAsociados).toEqual([{ codigoComprobante: 6, numero: 41 }]);
+    });
+
+    it('una factura común no manda nada de eso', async () => {
+      prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(1))]);
+      cae.autorizar.mockResolvedValue({
+        cae: '1',
+        caeFechaVto: new Date(),
+        numeroComprobante: 1,
+        tipoComprobante: 'FacturaB',
+      });
+
+      await service.reintentar();
+
+      expect(cae.autorizar.mock.calls[0]?.[0]).not.toHaveProperty('comprobantesAsociados');
+    });
   });
 });

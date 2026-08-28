@@ -176,6 +176,27 @@ describe('VentasService.anular', () => {
     );
   });
 
+  it('la NC dice qué comprobante corrige: sin eso ARCA la rechaza', async () => {
+    // `CbtesAsoc` es obligatorio en una Nota de Crédito. Mientras no se mandó,
+    // toda anulación contra ARCA real habría vuelto rechazada.
+    await service.anular('s1', 'v1');
+    expect(cae.autorizar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        comprobantesAsociados: [{ codigoComprobante: 6, numero: 7 }],
+      }),
+    );
+  });
+
+  it('anular un TicketNoFiscal no referencia nada: no existe en ARCA', async () => {
+    prisma.venta.findFirst.mockResolvedValue(
+      ventaConItems({ tipoComprobante: 'TicketNoFiscal', cae: null, caeFechaVto: null }),
+    );
+
+    await service.anular('s1', 'v1');
+
+    expect(cae.autorizar).not.toHaveBeenCalled();
+  });
+
   it('rechaza anular un comprobante ya anulado', async () => {
     prisma.venta.findFirst.mockResolvedValue(ventaConItems({ estado: 'ANULADA' }));
     await expect(service.anular('s1', 'v1')).rejects.toThrow(BadRequestException);

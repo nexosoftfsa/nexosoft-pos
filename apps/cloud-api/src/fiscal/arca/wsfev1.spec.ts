@@ -9,6 +9,8 @@ import {
   leerErrores,
   leerObservaciones,
   leerRespuestaCae,
+  leerRespuestaConsulta,
+  requiereComprobanteAsociado,
 } from './wsfev1';
 
 const TICKET = { token: 'TOK', sign: 'SIG', expiracion: new Date(Date.now() + 3600_000) };
@@ -245,6 +247,145 @@ describe('leerRespuestaCae', () => {
 
   it('sin CAE y sin error explicito, se marca transitorio', () => {
     expect(() => leerRespuestaCae('<Resultado>A</Resultado>')).toThrow(ErrorWsfe);
+  });
+});
+
+describe('requiereComprobanteAsociado', () => {
+  it('lo exige en notas de credito y de debito de las tres letras', () => {
+    for (const codigo of [2, 3, 7, 8, 12, 13]) {
+      expect(requiereComprobanteAsociado(codigo)).toBe(true);
+    }
+  });
+
+  it('una factura no lleva asociado', () => {
+    for (const codigo of [1, 6, 11]) {
+      expect(requiereComprobanteAsociado(codigo)).toBe(false);
+    }
+  });
+});
+
+describe('CbtesAsoc', () => {
+  const NOTA_CREDITO_B = {
+    puntoDeVenta: 4,
+    codigoComprobante: 8,
+    numero: 12,
+    total: '100.00',
+    fecha: new Date(2026, 7, 28),
+    neto: '82.64',
+    iva: '17.36',
+    exento: '0.00',
+    renglonesIva: [{ codigoArca: 5, base: '82.64', importe: '17.36' }],
+  };
+
+  it('manda el comprobante que corrige, en el orden que pide el XSD', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        respuesta('<Resultado>A</Resultado><CbteDesde>12</CbteDesde><CAE>7</CAE><CAEFchVto>20260907</CAEFchVto>'),
+      );
+
+    await cliente(fetchMock as never).solicitarCae(TICKET, {
+      ...NOTA_CREDITO_B,
+      comprobantesAsociados: [{ codigoComprobante: 6, puntoDeVenta: 4, numero: 9 }],
+    });
+
+    const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
+    expect(body).toContain('<CbtesAsoc><CbteAsoc><Tipo>6</Tipo><PtoVta>4</PtoVta><Nro>9</Nro></CbteAsoc></CbtesAsoc>');
+    // El XSD es una secuencia: CondicionIVAReceptorId -> CbtesAsoc -> Iva.
+    expect(body.indexOf('<CondicionIVAReceptorId>')).toBeLessThan(body.indexOf('<CbtesAsoc>'));
+    expect(body.indexOf('<CbtesAsoc>')).toBeLessThan(body.indexOf('<Iva>'));
+  });
+
+  it('una nota de credito sin el original no se manda: ARCA la rechazaria', async () => {
+    const fetchMock = vi.fn();
+
+    await expect(
+      cliente(fetchMock as never).solicitarCae(TICKET, NOTA_CREDITO_B),
+    ).rejects.toBeInstanceOf(ErrorWsfeNoSoportado);
+
+    // Ni siquiera se llamó a ARCA: el comprobante estaba mal armado de acá.
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('una factura no lleva el bloque', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        respuesta('<Resultado>A</Resultado><CbteDesde>1</CbteDesde><CAE>7</CAE><CAEFchVto>20260907</CAEFchVto>'),
+      );
+
+    await cliente(fetchMock as never).solicitarCae(TICKET, {
+      ...NOTA_CREDITO_B,
+      codigoComprobante: 6,
+    });
+
+    expect((fetchMock.mock.calls[0]![1] as { body: string }).body).not.toContain('<CbtesAsoc>');
+  });
+});
+
+describe('consultarComprobante', () => {
+  it('devuelve el CAE leyendo CodAutorizacion y FchVto', async () => {
+    // Ojo: en la consulta los campos NO se llaman como en FECAESolicitar.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        respuesta(
+          '<ResultGet><CbteDesde>42</CbteDesde><CodAutorizacion>75200312345678</CodAutorizacion><FchVto>20260907</FchVto></ResultGet>',
+        ),
+      );
+
+    const r = await cliente(fetchMock as never).consultarComprobante(TICKET, 4, 6, 42);
+
+    expect(r?.cae).toBe('75200312345678');
+    expect(r?.numero).toBe(42);
+    expect(r?.caeFechaVto).toEqual(new Date(2026, 8, 7));
+    const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
+    expect(body).toContain('<CbteTipo>6</CbteTipo>');
+    expect(body).toContain('<CbteNro>42</CbteNro>');
+    expect(body).toContain('<PtoVta>4</PtoVta>');
+  });
+
+  it('el 602 de ARCA significa que no existe, no que fallo la consulta', () => {
+    const xml =
+      '<Errors><Err><Code>602</Code><Msg>No existen datos en nuestros registros</Msg></Err></Errors>';
+    expect(leerRespuestaConsulta(xml)).toBeNull();
+  });
+
+  it('un comprobante sin CAE es, para el que pregunta, como si no existiera', () => {
+    expect(leerRespuestaConsulta('<ResultGet><CbteDesde>42</CbteDesde></ResultGet>')).toBeNull();
+  });
+
+  it('otro error de ARCA si es un error', () => {
+    const xml = '<Errors><Err><Code>600</Code><Msg>Token invalido</Msg></Err></Errors>';
+    expect(() => leerRespuestaConsulta(xml)).toThrow(ErrorWsfe);
+  });
+});
+
+describe('timeout', () => {
+  it('manda un AbortSignal para no quedarse colgado esperando a ARCA', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(respuesta('<FECompUltimoAutorizadoResult><CbteNro>1</CbteNro></FECompUltimoAutorizadoResult>'));
+
+    await cliente(fetchMock as never).ultimoAutorizado(TICKET, 1, 6);
+
+    const opciones = fetchMock.mock.calls[0]![1] as { signal?: AbortSignal };
+    expect(opciones.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('un corte por tiempo es transitorio: la venta queda pendiente, no rechazada', async () => {
+    const timeout = Object.assign(new Error('The operation was aborted'), {
+      name: 'TimeoutError',
+    });
+    const fetchMock = vi.fn().mockRejectedValue(timeout);
+
+    const e = await cliente(fetchMock as never)
+      .ultimoAutorizado(TICKET, 1, 6)
+      .catch((err: unknown) => err as ErrorWsfe);
+
+    expect(e).toBeInstanceOf(ErrorWsfe);
+    expect((e as ErrorWsfe).transitorio).toBe(true);
+    expect((e as ErrorWsfe).message).toMatch(/no respondió/i);
   });
 });
 

@@ -2,13 +2,20 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { codigoComprobanteArcaOpcional } from '@nexosoft/domain';
 import { PrismaService } from '../../prisma/prisma.service';
+import { comprobanteAsociadoDe } from './comprobante-asociado';
 import { DesgloseDeVentaService } from './desglose-de-venta.service';
 import {
   ErrorCaeNoDisponible,
   ErrorCaeRechazado,
   SERVICIO_CAE,
+  type ComprobanteAsociadoSolicitud,
   type ServicioCae,
 } from './servicio-cae';
+import {
+  fueraDeVentanaArca,
+  motivoVentanaVencida,
+  porVencerLaVentanaArca,
+} from './ventana-de-fecha';
 
 /**
  * Consigue el CAE de las ventas que se registraron sin él (ADR-0008, Fase 18).
@@ -87,8 +94,26 @@ export class CaePendientesService {
     let autorizadas = 0;
     let rechazadas = 0;
 
+    const ahora = new Date();
     for (const venta of pendientes) {
       const tipoComprobante = venta.tipoComprobante ?? 'FacturaB';
+
+      // ARCA no autoriza un comprobante con fecha de más de 5 días. Mandarlo
+      // igual sería un rechazo seguro, y encima uno que no explica nada.
+      if (fueraDeVentanaArca(venta.creadaEn, ahora)) {
+        const motivo = motivoVentanaVencida(venta.creadaEn, ahora);
+        await this.marcar(venta.id, 'RECHAZADA', motivo);
+        this.log.error(`Venta ${venta.id} sin CAE y fuera de plazo: ${motivo}`);
+        rechazadas += 1;
+        continue;
+      }
+      if (porVencerLaVentanaArca(venta.creadaEn, ahora)) {
+        this.log.warn(
+          `La venta ${venta.id} lleva días esperando el CAE y se acerca al plazo que acepta ARCA. ` +
+            'Si sigue sin autorizarse, va a haber que regularizarla a mano.',
+        );
+      }
+
       try {
         // El desglose se reconstruye desde los ítems guardados. Mandar sólo el
         // total dejaría la factura con IVA en cero: ARCA la rechazaría, y si la
@@ -100,6 +125,10 @@ export class CaePendientesService {
         );
         const receptor = await this.desgloses.receptorDe(venta.clienteId ?? null);
         const codigoComprobante = codigoComprobanteArcaOpcional(tipoComprobante);
+        // Si la pendiente es una Nota de Crédito, ARCA exige que diga qué
+        // comprobante corrige. Se reconstruye desde el original guardado, igual
+        // que el desglose de IVA.
+        const asociados = await this.asociadosDe(venta.comprobanteAsociadoId ?? null);
         const cae = await this.cae.autorizar({
           tipoComprobante,
           total: venta.total.toFixed(2),
@@ -119,6 +148,7 @@ export class CaePendientesService {
           nroDocReceptor: receptor.nroDocReceptor,
           condicionIvaReceptor: receptor.condicionIvaReceptor,
           ...(codigoComprobante !== null ? { codigoComprobante } : {}),
+          ...(asociados.length > 0 ? { comprobantesAsociados: asociados } : {}),
         });
         await this.prisma.venta.update({
           where: { id: venta.id },
@@ -155,6 +185,18 @@ export class CaePendientesService {
     if (autorizadas > 0) this.log.log(`${autorizadas} venta(s) autorizadas por ARCA.`);
     if (rechazadas > 0) this.log.error(`${rechazadas} venta(s) RECHAZADAS: hay que corregirlas.`);
     return { autorizadas, pendientes: quedan, rechazadas };
+  }
+
+  /** `CbtesAsoc` de una Nota de Crédito pendiente, desde el original que anula. */
+  private async asociadosDe(
+    comprobanteAsociadoId: string | null,
+  ): Promise<ComprobanteAsociadoSolicitud[]> {
+    if (comprobanteAsociadoId === null) return [];
+    const original = await this.prisma.venta.findUnique({
+      where: { id: comprobanteAsociadoId },
+      select: { tipoComprobante: true, numeroComprobante: true },
+    });
+    return original === null ? [] : comprobanteAsociadoDe(original);
   }
 
   private async marcar(id: string, estadoFiscal: 'PENDIENTE' | 'RECHAZADA', motivo: string) {

@@ -21,6 +21,7 @@
  * suma del array `Iva` dé `ImpIVA`. De eso se encarga `desglosarIvaIncluido`
  * en el dominio.
  */
+import { esCorteDeTiempo } from './corte-de-tiempo';
 import { type TicketAcceso } from './tra';
 
 export const URL_WSFEV1 = {
@@ -56,6 +57,22 @@ export interface RenglonIva {
   readonly importe: string;
 }
 
+/**
+ * Un comprobante al que este otro hace referencia (`CbtesAsoc`).
+ *
+ * Una Nota de Crédito no existe sola: corrige una factura concreta, y ARCA
+ * exige decir cuál. Sin esto la NC vuelve rechazada.
+ */
+export interface ComprobanteAsociado {
+  /** `CbteTipo` del comprobante que se corrige (Factura B = 6, etc.). */
+  readonly codigoComprobante: number;
+  readonly puntoDeVenta: number;
+  readonly numero: number;
+  /** CUIT del emisor. En una anulación propia es el del comercio. */
+  readonly cuit?: string;
+  readonly fecha?: Date;
+}
+
 export interface DatosComprobante {
   readonly puntoDeVenta: number;
   /** CbteTipo de ARCA: Factura A=1, B=6, C=11 (y sus notas). */
@@ -72,6 +89,11 @@ export interface DatosComprobante {
   readonly exento: string;
   /** Detalle por alícuota. Vacío en un comprobante C. */
   readonly renglonesIva: readonly RenglonIva[];
+  /**
+   * `CbtesAsoc`: qué comprobante corrige este. Obligatorio en Notas de Crédito
+   * y de Débito.
+   */
+  readonly comprobantesAsociados?: readonly ComprobanteAsociado[];
   /** Tipo de documento del receptor (80=CUIT, 96=DNI, 99=consumidor final). */
   readonly tipoDocReceptor?: number;
   readonly nroDocReceptor?: string;
@@ -101,6 +123,12 @@ export function aFechaArca(f: Date): string {
 const CODIGOS_C = new Set([11, 12, 13]);
 /** Comprobantes tipo A: entre responsables inscriptos, exigen CUIT del receptor. */
 const CODIGOS_A = new Set([1, 2, 3]);
+/**
+ * Notas de Débito (2, 7, 12) y de Crédito (3, 8, 13).
+ *
+ * Todas corrigen otro comprobante, y ARCA exige informar cuál en `CbtesAsoc`.
+ */
+const CODIGOS_NC_ND = new Set([2, 3, 7, 8, 12, 13]);
 
 export function esComprobanteC(codigo: number): boolean {
   return CODIGOS_C.has(codigo);
@@ -110,6 +138,20 @@ export function esComprobanteA(codigo: number): boolean {
   return CODIGOS_A.has(codigo);
 }
 
+/** ¿ARCA exige `CbtesAsoc` para este tipo de comprobante? */
+export function requiereComprobanteAsociado(codigo: number): boolean {
+  return CODIGOS_NC_ND.has(codigo);
+}
+
+/**
+ * Cuánto se espera a ARCA antes de dar la llamada por perdida.
+ *
+ * Sin esto la venta se queda colgada: el cajero no ve ni un CAE ni un error, y
+ * el sistema que se diseñó para seguir vendiendo con ARCA caída termina
+ * frenado por ARCA lenta, que es peor que ARCA caída.
+ */
+export const TIMEOUT_WSFE_MS = 20_000;
+
 export class ClienteWsfev1 {
   constructor(
     private readonly opciones: {
@@ -117,6 +159,7 @@ export class ClienteWsfev1 {
       readonly cuit: string;
       readonly url?: string;
       readonly fetchImpl?: typeof fetch;
+      readonly timeoutMs?: number;
     },
   ) {}
 
@@ -164,6 +207,15 @@ export class ClienteWsfev1 {
       );
     }
 
+    // Una Nota de Crédito o de Débito corrige un comprobante concreto y ARCA
+    // exige decir cuál. Sin esto vuelve rechazada, así que se corta antes.
+    const asociados = datos.comprobantesAsociados ?? [];
+    if (requiereComprobanteAsociado(datos.codigoComprobante) && asociados.length === 0) {
+      throw new ErrorWsfeNoSoportado(
+        'Una Nota de Crédito o de Débito tiene que informar el comprobante que corrige, y no se encontró el original.',
+      );
+    }
+
     // En un comprobante C no se discrimina IVA: el total va entero al neto y
     // NO va el array de alícuotas. Mandarlo discriminado es rechazo.
     const iva = discrimina && datos.renglonesIva.length > 0
@@ -181,6 +233,24 @@ export class ClienteWsfev1 {
         '</Iva>'
       : '';
 
+    const cbtesAsoc =
+      asociados.length > 0
+        ? '<CbtesAsoc>' +
+          asociados
+            .map(
+              (a) =>
+                '<CbteAsoc>' +
+                `<Tipo>${a.codigoComprobante}</Tipo>` +
+                `<PtoVta>${a.puntoDeVenta}</PtoVta>` +
+                `<Nro>${a.numero}</Nro>` +
+                (a.cuit !== undefined ? `<Cuit>${a.cuit}</Cuit>` : '') +
+                (a.fecha !== undefined ? `<CbteFch>${aFechaArca(a.fecha)}</CbteFch>` : '') +
+                '</CbteAsoc>',
+            )
+            .join('') +
+          '</CbtesAsoc>'
+        : '';
+
     const detalle =
       '<FECAEDetRequest>' +
       '<Concepto>1</Concepto>' +
@@ -197,9 +267,10 @@ export class ClienteWsfev1 {
       `<ImpIVA>${discrimina ? datos.iva : '0'}</ImpIVA>` +
       '<MonId>PES</MonId>' +
       '<MonCotiz>1</MonCotiz>' +
-      // El orden importa: el XSD de WSFEv1 es una secuencia, y
-      // CondicionIVAReceptorId va después de MonCotiz y antes del array Iva.
+      // El orden importa: el XSD de WSFEv1 es una secuencia, y va
+      // CondicionIVAReceptorId → CbtesAsoc → Iva, después de MonCotiz.
       `<CondicionIVAReceptorId>${datos.condicionIvaReceptor ?? 5}</CondicionIVAReceptorId>` +
+      cbtesAsoc +
       iva +
       '</FECAEDetRequest>';
 
@@ -218,6 +289,35 @@ export class ClienteWsfev1 {
 
     const xml = await this.llamar('FECAESolicitar', cuerpo);
     return leerRespuestaCae(xml);
+  }
+
+  /**
+   * Consulta un comprobante ya emitido. Devuelve `null` si ARCA no lo tiene.
+   *
+   * Sirve para el caso que no se puede resolver reintentando a ciegas: se pidió
+   * el CAE, ARCA lo otorgó, y la respuesta se perdió en el camino (timeout,
+   * corte de red). Del lado nuestro la venta quedó PENDIENTE; del lado de ARCA
+   * el comprobante existe. Reintentar sin preguntar emitiría OTRO comprobante
+   * con otro número y dejaría el primero vivo en ARCA sin registro acá.
+   */
+  async consultarComprobante(
+    ticket: TicketAcceso,
+    puntoDeVenta: number,
+    codigoComprobante: number,
+    numero: number,
+  ): Promise<ResultadoAutorizacion | null> {
+    const cuerpo =
+      `<FECompConsultar xmlns="${NS}">` +
+      this.auth(ticket) +
+      '<FeCompConsReq>' +
+      `<CbteTipo>${codigoComprobante}</CbteTipo>` +
+      `<CbteNro>${numero}</CbteNro>` +
+      `<PtoVta>${puntoDeVenta}</PtoVta>` +
+      '</FeCompConsReq>' +
+      '</FECompConsultar>';
+
+    const xml = await this.llamar('FECompConsultar', cuerpo);
+    return leerRespuestaConsulta(xml);
   }
 
   private auth(ticket: TicketAcceso): string {
@@ -240,6 +340,7 @@ export class ClienteWsfev1 {
       '</soap:Envelope>';
 
     const hacerFetch = this.opciones.fetchImpl ?? fetch;
+    const timeoutMs = this.opciones.timeoutMs ?? TIMEOUT_WSFE_MS;
     let res: Response;
     try {
       res = await hacerFetch(this.url, {
@@ -249,8 +350,15 @@ export class ClienteWsfev1 {
           SOAPAction: `${NS}${operacion}`,
         },
         body: sobre,
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (e) {
+      if (esCorteDeTiempo(e)) {
+        throw new ErrorWsfe(
+          `ARCA no respondió en ${Math.round(timeoutMs / 1000)} segundos.`,
+          true,
+        );
+      }
       throw new ErrorWsfe(
         `No se pudo contactar a ARCA (${(e as Error).message}). Revisá la conexión.`,
         true,
@@ -302,6 +410,58 @@ export function leerObservaciones(xml: string): string[] {
   return salida;
 }
 
+/** `yyyymmdd` de ARCA a `Date` local. */
+function desdeFechaArca(yyyymmdd: string): Date {
+  return new Date(
+    Number(yyyymmdd.slice(0, 4)),
+    Number(yyyymmdd.slice(4, 6)) - 1,
+    Number(yyyymmdd.slice(6, 8)),
+  );
+}
+
+/** Código de ARCA para "no existen datos para lo consultado". */
+const SIN_DATOS_EN_ARCA = '602';
+
+/**
+ * Interpreta la respuesta de FECompConsultar.
+ *
+ * `null` significa que ARCA **no tiene** ese comprobante, y es una respuesta
+ * legítima, no un error: es exactamente lo que se quería averiguar.
+ *
+ * Ojo con los nombres de los campos: en la consulta el CAE viene como
+ * `CodAutorizacion` y su vencimiento como `FchVto`, no como en FECAESolicitar.
+ * Se aceptan los dos por las dudas.
+ */
+export function leerRespuestaConsulta(xml: string): ResultadoAutorizacion | null {
+  const errores = leerErrores(xml);
+  if (errores.some((e) => e.codigo === SIN_DATOS_EN_ARCA)) return null;
+  if (errores.length > 0) {
+    throw new ErrorWsfe(
+      `ARCA: ${errores.map((e) => e.mensaje).join('. ')}`,
+      false,
+      errores[0]?.codigo,
+    );
+  }
+
+  const cae =
+    /<CodAutorizacion>(\d+)<\/CodAutorizacion>/.exec(xml)?.[1] ??
+    /<CAE>(\d+)<\/CAE>/.exec(xml)?.[1];
+  const vto =
+    /<FchVto>(\d{8})<\/FchVto>/.exec(xml)?.[1] ??
+    /<CAEFchVto>(\d{8})<\/CAEFchVto>/.exec(xml)?.[1];
+  // Sin CAE, el comprobante no está autorizado: para el que pregunta es lo
+  // mismo que si no existiera.
+  if (cae === undefined || vto === undefined) return null;
+
+  const numero = /<CbteDesde>(\d+)<\/CbteDesde>/.exec(xml)?.[1];
+  return {
+    cae,
+    caeFechaVto: desdeFechaArca(vto),
+    numero: numero === undefined ? 0 : Number(numero),
+    observaciones: leerObservaciones(xml),
+  };
+}
+
 /** Interpreta la respuesta de FECAESolicitar. */
 export function leerRespuestaCae(xml: string): ResultadoAutorizacion {
   const errores = leerErrores(xml);
@@ -334,11 +494,7 @@ export function leerRespuestaCae(xml: string): ResultadoAutorizacion {
 
   return {
     cae,
-    caeFechaVto: new Date(
-      Number(vto.slice(0, 4)),
-      Number(vto.slice(4, 6)) - 1,
-      Number(vto.slice(6, 8)),
-    ),
+    caeFechaVto: desdeFechaArca(vto),
     numero: numero === undefined ? 0 : Number(numero),
     observaciones,
   };
