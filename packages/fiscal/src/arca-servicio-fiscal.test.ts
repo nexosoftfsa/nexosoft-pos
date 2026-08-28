@@ -2,13 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { ErrorFiscal, TipoComprobante } from "@nexosoft/domain";
 
-import {
-  ArcaServicioFiscal,
-  codigoComprobanteArca,
-  type ConfiguracionArca,
-} from "./arca-servicio-fiscal.js";
-import type { SolicitudCae } from "./servicio-fiscal.js";
+import { codigoComprobanteArca } from "./arca-servicio-fiscal.js";
 
+/**
+ * `codigoComprobanteArca` vive en `@nexosoft/domain` y se re-exporta desde acá.
+ * Estos tests cuidan ese camino, que es el que usa el POS.
+ *
+ * El `ArcaServicioFiscal` que este archivo probaba antes ya no existe: la
+ * emisión real se implementó en `apps/cloud-api/src/fiscal/arca/` (ADR-0058).
+ */
 describe("codigoComprobanteArca (CbteTipo de WSFEv1)", () => {
   it("mapea facturas", () => {
     expect(codigoComprobanteArca(TipoComprobante.FacturaA)).toBe(1);
@@ -26,30 +28,5 @@ describe("codigoComprobanteArca (CbteTipo de WSFEv1)", () => {
 
   it("rechaza comprobantes no fiscales", () => {
     expect(() => codigoComprobanteArca(TipoComprobante.Remito)).toThrow(ErrorFiscal);
-  });
-});
-
-describe("ArcaServicioFiscal", () => {
-  const config: ConfiguracionArca = {
-    cuit: "30-71234567-8",
-    entorno: "homologacion",
-    certificadoPath: "/secrets/cert.crt",
-    clavePrivadaPath: "/secrets/cert.key",
-  };
-
-  it("resuelve los endpoints según el entorno", () => {
-    expect(new ArcaServicioFiscal(config).endpoints.wsaa).toContain("wsaahomo");
-    expect(new ArcaServicioFiscal({ ...config, entorno: "produccion" }).endpoints.wsfev1).toContain(
-      "servicios1.afip",
-    );
-  });
-
-  it("avisa que el adaptador real no está implementado", async () => {
-    const fiscal = new ArcaServicioFiscal(config);
-    const solicitud = { tipoComprobante: TipoComprobante.FacturaB } as SolicitudCae;
-    await expect(fiscal.solicitarCae(solicitud)).rejects.toBeInstanceOf(ErrorFiscal);
-    await expect(fiscal.ultimoNumeroAutorizado(1, TipoComprobante.FacturaB)).rejects.toThrow(
-      /no implementado/i,
-    );
   });
 });

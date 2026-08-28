@@ -62,11 +62,13 @@ Estas partes están **aisladas detrás de una interfaz**, con una implementació
 simulada que ya cumple todas las reglas de negocio, pero la conexión real al
 proveedor externo todavía no está hecha:
 
-- **Facturación fiscal ARCA (ex AFIP)**: `MockServicioFiscal` cubre todo el
-  flujo (numeración, CAE, reglas por tipo de comprobante). La implementación
-  real (`ArcaServicioFiscal`, WSAA + WSFEv1) está **documentada pero no
-  implementada** — necesita certificado X.509 + CUIT habilitado del cliente
-  real. Es el pendiente más importante para poder facturar legalmente.
+- **Facturación fiscal ARCA (ex AFIP)**: la implementación real **está hecha**,
+  en `apps/cloud-api/src/fiscal/arca/` (WSAA + WSFEv1, ADR-0058 y ADR-0060), no
+  en `@nexosoft/fiscal` — vive en el servidor porque necesita el certificado
+  X.509 del comercio. `MockServicioFiscal` sigue cubriendo todo el flujo para
+  desarrollo y para el comercio que todavía no está de alta en ARCA.
+  **Nunca se ejecutó contra ARCA de verdad**: acá no hay certificado
+  habilitado. Esa primera corrida es el pendiente más importante.
 - **Cobro electrónico con MercadoPago**: `MockPasarelaDePago` funciona
   completo; `MercadoPagoPoint` es un esqueleto que **lanza error** hasta que
   se instale el SDK y se carguen credenciales reales.

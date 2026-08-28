@@ -74,3 +74,6 @@ Consecuencias y Alternativas consideradas.
 | 0055 | [Acceso remoto con túnel con nombre y subdominio fijo por comercio](0055-acceso-remoto-tunel-con-nombre-por-comercio.md) | Aceptada |
 | 0056 | [Suscripción mensual: licencia firmada, tres avisos y panel de clientes](0056-suscripcion-mensual-y-panel-de-clientes.md) | Aceptada |
 | 0057 | [El acceso remoto es de sólo lectura, por un puerto propio, y queda auditado](0057-acceso-remoto-solo-lectura-y-auditado.md) | Aceptada |
+| 0058 | [CAE real contra ARCA: quién factura, qué pasa si ARCA se cae](0058-cae-real-contra-arca.md) | Aceptada |
+| 0059 | [La impresora de tickets se elige por terminal, y las virtuales se rechazan](0059-impresora-de-tickets-elegible-y-sin-virtuales.md) | Aceptada |
+| 0060 | [Emisión contra ARCA: lo que sólo falla con un certificado real](0060-emision-contra-arca-endurecida.md) | Aceptada |
