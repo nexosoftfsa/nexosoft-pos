@@ -1,7 +1,7 @@
 ===========================================================================
   NEXOSOFT - PRIMERA FACTURA CON CAE DE VERDAD
   Para: Sebastian
-  Tiempo: 30 minutos
+  Tiempo: 40 minutos
 ===========================================================================
 
 QUE ESTAMOS PROBANDO
@@ -11,14 +11,29 @@ pedirle el numero de autorizacion (el CAE) a ARCA. Eso ya esta hecho.
 
 En esta prueba el sistema va a hablar con ARCA de verdad: le va a pedir un
 ticket de acceso firmado con tu certificado y le va a pedir el CAE de una
-factura. Si sale bien, el ticket que imprima va a tener un CAE y un codigo QR
-que se puede escanear.
+factura. Si sale bien, el comprobante va a tener un CAE y un codigo QR que se
+puede escanear.
 
 Seguimos en el entorno de PRUEBA de ARCA (homologacion). Los comprobantes NO
 tienen validez fiscal: no le estas declarando nada a nadie.
 
 Antes de empezar necesitas tener hecha la prueba anterior
 (PRUEBA-CERTIFICADO-ARCA.txt): certificado cargado y autorizado en ARCA.
+
+NOVEDAD DE ESTA VERSION - LEELO ANTES DE EMPEZAR
+-------------------------------------------------
+Encontramos por que te salian esos archivos "Ticket NexoSoft (1).pdf",
+"(2)", "(3)"... que no abrian. No estaban rotos: el sistema le estaba
+mandando a "Microsoft Print to PDF" los comandos de una impresora termica,
+que no son un documento. Y lo peor: el POS creia que habia impreso bien.
+
+Eso ya esta arreglado. Como todavia no tenemos termica, en esta prueba el
+ticket va a salir por otro camino: se va a abrir el dialogo de impresion de
+Windows y desde ahi elegis "Microsoft Print to PDF". Ese PDF si abre, y es
+el que tiene el QR.
+
+(Dato util: el QR nunca hubiera aparecido en el camino viejo. La impresora
+termica no imprime QR; el QR solo existe en la vista imprimible.)
 
 
 PASO 1 - ACTUALIZAR LOS DOS
@@ -27,14 +42,16 @@ PASO 1 - ACTUALIZAR LOS DOS
 
     Anota que ves:  POS: ____________   Servidor: ____________
 
-1.2 Si el servidor no dice 0.11.0 o mas, toca "Actualizar servidor" y espera
+1.2 Si el servidor no dice 0.12.0 o mas, toca "Actualizar servidor" y espera
     a que termine. Puede tardar varios minutos.
-1.3 Si el POS ofrece la 0.1.37, instalala y volve a entrar.
+1.3 Si el POS ofrece la 0.1.38, instalala y volve a entrar.
 
-    [ ] POS 0.1.37 o mas, Servidor 0.11.0 o mas.
+    [ ] POS 0.1.38 o mas, Servidor 0.12.0 o mas.
 
     Los DOS tienen que estar actualizados. El POS solo, o el servidor solo,
     no alcanza.
+
+    Esta actualizacion NO toca la base de datos.
 
 
 PASO 2 - CONFIRMAR QUE EL CERTIFICADO SEA EL AUTORIZADO
@@ -63,7 +80,7 @@ rechazan.
 
     [ ] Dice eso.
 
-    Si dijera PRODUCCION, tocá "Volver a homologacion (pruebas)". No
+    Si dijera PRODUCCION, toca "Volver a homologacion (pruebas)". No
     queremos emitir comprobantes reales todavia.
 
 
@@ -89,28 +106,60 @@ PASO 3 - REVISAR LOS DATOS FISCALES
     [ ] Guardo sin errores.
 
 
-PASO 4 - HACER UNA VENTA
+PASO 4 - MIRAR LA IMPRESORA (nuevo)
+------------------------------------
+4.1 En Configuracion, busca la tarjeta "Impresora de tickets".
+
+    Que dice en la lista: ____________________________________
+
+4.2 Como no tenes termica, dejala en "Predeterminada de Windows".
+
+    Es probable que te aparezca un aviso en rojo diciendo que la
+    predeterminada guarda el ticket en un archivo. Esta bien que aparezca:
+    es justamente lo que antes pasaba en silencio.
+
+    [ ] Aparecio el aviso (o no, si tu predeterminada no es una de PDF).
+
+4.3 Toca "Probar impresora".
+
+    Que dice: ____________________________________
+
+    Lo esperado sin termica es que FALLE con un mensaje que nombre a la
+    impresora. Eso confirma que el arreglo esta puesto. Si en cambio te
+    genera otro archivo .pdf que no abre, avisame: quedo algo suelto.
+
+
+PASO 5 - HACER UNA VENTA
 ------------------------
-4.1 Abri la caja (Caja > Abrir caja) si no esta abierta.
-4.2 Anda al POS, carga un producto cualquiera y cobralo en efectivo.
+5.1 Abri la caja (Caja > Abrir caja) si no esta abierta.
+5.2 Anda al POS, carga un producto cualquiera y cobralo en efectivo.
 
     [ ] La venta se completo.
 
-4.3 Mira el ticket que aparece.
+5.3 Se te va a abrir el dialogo de impresion de Windows.
+
+    Elegi "Microsoft Print to PDF", dale Imprimir y guardalo donde quieras.
+
+    [ ] Se abrio el dialogo.
+    [ ] El PDF que guardaste ABRE (esto es lo que antes fallaba).
+
+5.4 Mira el PDF.
 
     [ ] Dice CAE y un numero largo (14 digitos).
     [ ] Aparece un codigo QR.
 
     CAE que salio: ______________________________
 
-    Si NO aparece el CAE, no es un fracaso: seguí al paso 5, que es
+    MANDAME ESE PDF. Es lo que quiero ver.
+
+    Si NO aparece el CAE, no es un fracaso: segui al paso 6, que es
     justamente para eso.
 
 
-PASO 5 - SI NO SALIO EL CAE
+PASO 6 - SI NO SALIO EL CAE
 ----------------------------
-5.1 Anda a Comprobantes (el listado).
-5.2 Busca la venta que acabas de hacer.
+6.1 Anda a Comprobantes (el listado).
+6.2 Busca la venta que acabas de hacer.
 
     Al lado de "Emitida" tendria que haber una etiqueta:
 
@@ -123,17 +172,17 @@ PASO 5 - SI NO SALIO EL CAE
 
     Que etiqueta salio: ____________________
 
-5.3 Pasa el mouse por encima de la etiqueta. Aparece el motivo.
+6.3 Pasa el mouse por encima de la etiqueta. Aparece el motivo.
 
     COPIAME ESE TEXTO COMPLETO. Es lo mas util de toda la prueba:
     ______________________________________________________________
     ______________________________________________________________
 
 
-PASO 6 - VERIFICAR EL QR (solo si salio el CAE)
+PASO 7 - VERIFICAR EL QR (solo si salio el CAE)
 ------------------------------------------------
-6.1 Escanea el QR del ticket con el celular.
-6.2 Te va a abrir una pagina de ARCA.
+7.1 Escanea con el celular el QR del PDF, directamente de la pantalla.
+7.2 Te va a abrir una pagina de ARCA.
 
     [ ] Abrio una pagina de ARCA.
 
@@ -144,40 +193,71 @@ PASO 6 - VERIFICAR EL QR (solo si salio el CAE)
     arme bien y apunte a donde tiene que apuntar.
 
 
-PASO 7 - PROBAR QUE UNA CAIDA DE ARCA NO FRENE LA VENTA
+PASO 8 - ANULAR LA VENTA (nuevo, y me importa mucho)
+------------------------------------------------------
+Esto NUNCA se probo contra ARCA. Hasta esta version el sistema mandaba la
+Nota de Credito sin decir que factura estaba anulando, y ARCA eso lo rechaza
+siempre. O sea: ninguna anulacion podria haber funcionado. Ya esta
+arreglado, pero quiero verlo andar.
+
+8.1 Anda a Comprobantes y busca la venta del paso 5.
+8.2 Anulala.
+
+    [ ] Se creo una Nota de Credito.
+
+8.3 Fijate en la Nota de Credito:
+
+    [ ] Tiene CAE propio (otro numero largo, distinto al de la factura).
+
+    CAE de la Nota de Credito: ______________________________
+
+    Si dice "Rechazada", copiame el motivo COMPLETO (como en el paso 6.3).
+    Ese texto es exactamente lo que necesito.
+    ______________________________________________________________
+
+
+PASO 9 - PROBAR QUE UNA CAIDA DE ARCA NO FRENE LA VENTA
 --------------------------------------------------------
 Esto es lo que mas me importa de todo. Un comercio no puede dejar de vender
 porque AFIP se cayo, y AFIP se cae seguido.
 
-7.1 Desconecta internet en la PC (sacá el cable o apaga el WiFi).
-7.2 Hace otra venta y cobrala.
+9.1 Desconecta internet en la PC (saca el cable o apaga el WiFi).
+9.2 Hace otra venta y cobrala.
 
     [ ] La venta se completo igual, sin errores.
-    [ ] Imprimio el ticket.
+    [ ] Se abrio el dialogo de impresion (podes cancelarlo, no importa).
 
     Si la venta se traba o da error, PARA TODO y avisame. Eso es lo peor que
     podria pasar.
 
-7.3 Anda a Comprobantes. Esa venta tiene que decir "Sin CAE".
+    Fijate en cuanto tarda: no tendria que quedarse pensando mas de 20
+    segundos. Si tarda mucho mas, anotalo.
+
+    Cuanto tardo: ____________
+
+9.3 Anda a Comprobantes. Esa venta tiene que decir "Sin CAE".
 
     [ ] Dice "Sin CAE".
 
-7.4 Volve a conectar internet y espera 5 minutos.
-7.5 Refresca Comprobantes.
+9.4 Volve a conectar internet y espera 5 minutos.
+9.5 Refresca Comprobantes.
 
     [ ] La etiqueta "Sin CAE" desaparecio: el servidor consiguio el CAE solo.
 
-    Si despues de 10 minutos sigue sin CAE, copiame el motivo (paso 5.3).
+    Si despues de 10 minutos sigue sin CAE, copiame el motivo (paso 6.3).
 
 
 ===========================================================================
   QUE MANDARME
 ===========================================================================
+  - El PDF de la factura (paso 5.4) <- lo mas importante
   - El nombre del certificado (paso 2.2) y si coincidia con ARCA
   - El punto de venta (paso 3.1)
-  - El CAE que salio (paso 4.3), o el motivo del rechazo (paso 5.3)
-  - Si la venta sin internet funciono (paso 7.2)
-  - Si el CAE aparecio solo al volver internet (paso 7.5)
+  - Que dijo "Probar impresora" (paso 4.3)
+  - El CAE que salio (paso 5.4), o el motivo del rechazo (paso 6.3)
+  - Si la Nota de Credito consiguio su CAE (paso 8.3)
+  - Si la venta sin internet funciono y cuanto tardo (paso 9.2)
+  - Si el CAE aparecio solo al volver internet (paso 9.5)
 
 Lo mas valioso son los mensajes de error TEXTUALES. Un "no anduvo" no me
 dice nada; el codigo y el texto de ARCA me dicen exactamente que arreglar.
