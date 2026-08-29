@@ -880,7 +880,7 @@ export function PantallaPos({
       // al spooler): el ticket ya salió y abrir además el diálogo del
       // navegador lo imprimiría dos veces y frenaría la caja. La vista previa
       // queda solo para el navegador de desarrollo, donde no hay impresora.
-      if (!estaEnTauri()) imprimirTicketPreview(datos);
+      if (!estaEnTauri()) void imprimirTicketPreview(datos);
     } catch (e) {
       if (e instanceof ErrorImpresoraVirtual) {
         // Esta caja no tiene térmica: el destino era una impresora virtual, que
@@ -891,7 +891,7 @@ export function PantallaPos({
         //
         // No se muestra error: se abre un diálogo de impresión, que es señal
         // suficiente de que el ticket no salió solo por la térmica.
-        imprimirTicketPreview(datos);
+        void imprimirTicketPreview(datos);
       } else {
         setError(`Error al imprimir: ${mensajeError(e)}`);
       }
@@ -1378,7 +1378,7 @@ export function PantallaPos({
               <button onClick={() => imprimirTicket(ultimaVenta)} disabled={imprimiendo}>
                 {imprimiendo ? "Imprimiendo…" : "Imprimir"}
               </button>
-              <button onClick={() => imprimirA4(construirDatosTicket(ultimaVenta, config, catalogo, pagos, tarjetas))}>
+              <button onClick={() => void imprimirA4(construirDatosTicket(ultimaVenta, config, catalogo, pagos, tarjetas))}>
                 Imprimir A4
               </button>
               <button

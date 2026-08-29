@@ -7,7 +7,7 @@
  * `estilos.css`, mismo patrón que `.hoja-a4`).
  */
 import type { Cantidad } from "@nexosoft/domain";
-import type { DatosTicket } from "@nexosoft/hardware";
+import type { DatosImpresion } from "./qr-fiscal-datos";
 import { pesos } from "../formato";
 import { QrFiscal } from "./QrFiscal";
 
@@ -15,7 +15,7 @@ function cantidadFormateada(c: Cantidad): string {
   return c.esEntera() ? c.aDecimalString(0) : c.aDecimalString(3);
 }
 
-export function ComprobanteTicket({ datos }: { datos: DatosTicket }) {
+export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
   const esFiscal = datos.esFiscal ?? true;
   const numeroFormateado = `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
 
@@ -95,7 +95,7 @@ export function ComprobanteTicket({ datos }: { datos: DatosTicket }) {
           : "Documento interno, sin validez fiscal"}
       </div>
 
-      {esFiscal && <QrFiscal datos={datos} tamanio={110} />}
+      {esFiscal && <QrFiscal qrDataUrl={datos.qrDataUrl} tamanio={110} />}
     </div>
   );
 }

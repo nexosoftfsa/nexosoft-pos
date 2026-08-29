@@ -1,7 +1,8 @@
 /** Vista previa/impresión del ticket chico (formato rollo térmico). Ver `usar-impresion.ts`. */
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import type { DatosTicket } from "@nexosoft/hardware";
+import { conQrFiscal, type DatosImpresion } from "./qr-fiscal-datos";
 import { useImpresion, type PaginaAMedida } from "./usar-impresion";
 
 /**
@@ -13,8 +14,8 @@ import { useImpresion, type PaginaAMedida } from "./usar-impresion";
 export const ANCHO_TICKET_MM = 48;
 
 export function useImpresionTicket(): {
-  readonly datosTicket: DatosTicket | null;
-  readonly imprimirTicketPreview: (datos: DatosTicket) => void;
+  readonly datosTicket: DatosImpresion | null;
+  readonly imprimirTicketPreview: (datos: DatosTicket) => Promise<void>;
 } {
   const pagina = useMemo<PaginaAMedida>(
     () => ({
@@ -25,6 +26,17 @@ export function useImpresionTicket(): {
     }),
     [],
   );
-  const { datos, imprimir } = useImpresion<DatosTicket>("modo-impresion-ticket", pagina);
-  return { datosTicket: datos, imprimirTicketPreview: imprimir };
+  const { datos, imprimir } = useImpresion<DatosImpresion>("modo-impresion-ticket", pagina);
+
+  // El QR se resuelve ANTES de imprimir. Además de que `window.print()` no
+  // espera promesas, el alto del papel se mide sobre el nodo ya renderizado:
+  // sin el QR presente, el ticket salía cortado.
+  const imprimirTicketPreview = useCallback(
+    async (d: DatosTicket) => {
+      imprimir(await conQrFiscal(d));
+    },
+    [imprimir],
+  );
+
+  return { datosTicket: datos, imprimirTicketPreview };
 }

@@ -6,8 +6,8 @@
  * `estilos.css`).
  */
 import type { Cantidad } from "@nexosoft/domain";
-import type { DatosTicket } from "@nexosoft/hardware";
 import { pesos } from "../formato";
+import type { DatosImpresion } from "./qr-fiscal-datos";
 import { QrFiscal } from "./QrFiscal";
 
 /** "1" para cantidades enteras (lo usual), "1.500" para fraccionadas (venta por peso). */
@@ -15,7 +15,7 @@ function cantidadFormateada(c: Cantidad): string {
   return c.esEntera() ? c.aDecimalString(0) : c.aDecimalString(3);
 }
 
-export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
+export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
   const esFiscal = datos.esFiscal ?? true;
   const numeroFormateado = `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
 
@@ -101,7 +101,7 @@ export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
       )}
 
       <footer className="a4-footer a4-footer--con-qr">
-        {esFiscal && <QrFiscal datos={datos} tamanio={90} />}
+        {esFiscal && <QrFiscal qrDataUrl={datos.qrDataUrl} tamanio={90} />}
         <div>
           {esFiscal ? (
             datos.cae ? (

@@ -420,10 +420,10 @@ function ModalReimpresion({
           </ul>
         )}
         <div className="ticket-acciones">
-          <button onClick={() => imprimirTicketPreview(datosTicketDeComprobante(comprobante, config))}>
+          <button onClick={() => void imprimirTicketPreview(datosTicketDeComprobante(comprobante, config))}>
             Imprimir
           </button>
-          <button onClick={() => imprimirA4(datosTicketDeComprobante(comprobante, config))}>
+          <button onClick={() => void imprimirA4(datosTicketDeComprobante(comprobante, config))}>
             Imprimir A4
           </button>
           <button className="primario" onClick={onCerrar}>
