@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ComandoVenta, PrevisualizacionVenta, VentaConfirmada } from "@nexosoft/app";
 import {
   Cantidad,
+  codigoComprobanteArcaOpcional,
   CondicionIva,
   ErrorDominio,
   EstadoCae,
@@ -1478,5 +1479,15 @@ function construirDatosTicket(
     vuelto: venta.vuelto,
     ...(venta.cae !== undefined ? { cae: venta.cae } : {}),
     ...(venta.vencimientoCae !== undefined ? { vencimientoCae: venta.vencimientoCae } : {}),
+    // Sin esto NO se dibuja el QR fiscal, aunque el CAE esté: `QrFiscal` exige
+    // las dos cosas, porque el código de comprobante es parte de lo que ARCA
+    // codifica adentro. Faltaba sólo acá —la reimpresión desde Comprobantes sí
+    // lo mandaba—, así que el ticket recién emitido salía sin QR y el mismo
+    // comprobante reimpreso salía con QR.
+    ...(codigoComprobanteArcaOpcional(venta.tipoComprobante) !== null
+      ? {
+          codigoComprobanteArca: codigoComprobanteArcaOpcional(venta.tipoComprobante) as number,
+        }
+      : {}),
   };
 }
