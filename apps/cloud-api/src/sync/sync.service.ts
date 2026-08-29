@@ -4,6 +4,7 @@ import { validate } from 'class-validator';
 import { VentasService } from '../ventas/ventas.service';
 import { CrearVentaDto } from '../ventas/dto/crear-venta.dto';
 import type { OperacionEntranteDto, SincronizarDto } from './dto/sincronizar.dto';
+import { mensajeDeReferenciaRota } from './referencia-rota';
 
 /**
  * Resultado de aplicar UNA operación. Mismo contrato que `ResultadoEnvio` de
@@ -63,13 +64,34 @@ export class SyncService {
     const errores = await validate(dtoVenta, { whitelist: true });
     if (errores.length > 0) {
       // Payload inválido: reintentar no lo va a arreglar.
-      return { ok: false, error: 'Payload de venta inválido', reintentable: false };
+      //
+      // El mensaje nombra los campos: decir sólo "payload inválido" obligaba a
+      // adivinar cuál, y encima esta rama no dejaba rastro en el log.
+      const campos = errores.map((e) => e.property).join(', ');
+      this.logger.error(`Operación ${operacion.operacionId} con payload inválido: ${campos}`);
+      return {
+        ok: false,
+        error: `La venta llegó con datos que el servidor no acepta (${campos}).`,
+        reintentable: false,
+      };
     }
 
     try {
       const venta = await this.ventas.registrar(usuario, dtoVenta);
       return { ok: true, idRemoto: venta.id };
     } catch (error) {
+      // Una referencia rota (catálogo/terminal desfasados) no se arregla
+      // reintentando, y el texto de Prisma no le dice nada a nadie. Va primero
+      // porque es el caso que más veces nos dejó ventas dando vueltas en la
+      // cola sin que se entendiera por qué.
+      const referencia = mensajeDeReferenciaRota(error);
+      if (referencia !== null) {
+        this.logger.error(
+          `Operación ${operacion.operacionId} apunta a datos que no existen: ${(error as Error).message}`,
+        );
+        return { ok: false, error: referencia, reintentable: false };
+      }
+
       // 4xx = problema del dato (no reintentable); el resto (DB, 5xx) sí.
       const reintentable = !(error instanceof HttpException && error.getStatus() < 500);
       this.logger.warn(
