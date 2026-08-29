@@ -55,4 +55,15 @@ export class AlmacenEnMemoria implements AlmacenDeOperaciones {
     }
     return Promise.resolve(n);
   }
+
+  descartarFallidas(): Promise<number> {
+    let n = 0;
+    for (const [id, op] of this.cola) {
+      if (op.estado === "fallida") {
+        this.cola.delete(id);
+        n++;
+      }
+    }
+    return Promise.resolve(n);
+  }
 }

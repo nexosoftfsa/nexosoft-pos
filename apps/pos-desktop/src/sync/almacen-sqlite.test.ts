@@ -126,4 +126,43 @@ describe("AlmacenSqlite", () => {
       expect((await almacen.obtener("op-1"))?.estado).toBe("pendiente");
     });
   });
+
+  describe("descartarFallidas", () => {
+    it("saca de la cola las fallidas y deja el resto", async () => {
+      // Son las que no pueden entrar nunca: su payload apunta a datos que el
+      // servidor ya no tiene. Mientras esten en la cola, el aviso de error
+      // queda encendido para siempre y tapa las fallas nuevas.
+      await almacen.encolar(op("op-1"));
+      await almacen.encolar(op("op-2"));
+      await almacen.encolar(op("op-3"));
+      await almacen.marcar("op-1", "fallida", { intentos: 5, ultimoError: "Foreign key" });
+      await almacen.marcar("op-2", "completada");
+
+      const n = await almacen.descartarFallidas();
+
+      expect(n).toBe(1);
+      expect(await almacen.obtener("op-1")).toBeUndefined();
+      expect((await almacen.obtener("op-2"))?.estado).toBe("completada");
+      expect((await almacen.obtener("op-3"))?.estado).toBe("pendiente");
+    });
+
+    it("no toca las pendientes: esas todavia pueden entrar", async () => {
+      await almacen.encolar(op("op-1"));
+
+      expect(await almacen.descartarFallidas()).toBe(0);
+      expect((await almacen.obtener("op-1"))?.estado).toBe("pendiente");
+    });
+
+    it("descartar y despues encolar la misma operacion la vuelve a aceptar", async () => {
+      // `encolar` es INSERT OR IGNORE por operacionId: si la fila quedara, una
+      // venta reencolada con el mismo id se perderia en silencio.
+      await almacen.encolar(op("op-1"));
+      await almacen.marcar("op-1", "fallida", { intentos: 5 });
+      await almacen.descartarFallidas();
+
+      await almacen.encolar(op("op-1"));
+
+      expect((await almacen.obtener("op-1"))?.estado).toBe("pendiente");
+    });
+  });
 });

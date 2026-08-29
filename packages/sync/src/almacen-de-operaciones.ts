@@ -34,4 +34,18 @@ export interface AlmacenDeOperaciones {
    * Devuelve cuántas operaciones se reactivaron.
    */
   reintentarFallidas(): Promise<number>;
+
+  /**
+   * Saca de la cola las operaciones `fallida`. Devuelve cuántas sacó.
+   *
+   * Para las que **no pueden entrar nunca**: su payload es una foto del momento
+   * de la venta, y si apunta a datos que el servidor ya no tiene (un catálogo
+   * reemplazado, un servidor reinstalado), reintentarlas da siempre el mismo
+   * rechazo. Mientras siguen ahí, el contador de errores queda encendido para
+   * siempre y **tapa cualquier falla nueva**: pasa de 1167 a 1168 y nadie lo ve.
+   *
+   * Sólo saca la copia encolada. **La venta sigue guardada en la terminal**: lo
+   * que se pierde es el intento de subirla, no la venta.
+   */
+  descartarFallidas(): Promise<number>;
 }

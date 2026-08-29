@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { confirmacionDescartar } from "./indicador-sync-helpers";
 import type { EstadoSync } from "./useSync";
 
 /** Píldora de estado de sincronización para la barra superior. */
@@ -12,8 +13,26 @@ export function IndicadorSync({ estado }: { estado: EstadoSync }) {
     detalleFallidas,
     sincronizarAhora,
     reintentarFallidasYSincronizar,
+    descartarFallidas,
   } = estado;
   const [verDetalle, setVerDetalle] = useState(false);
+  const [descartando, setDescartando] = useState(false);
+
+  /**
+   * Saca de la cola lo que no puede entrar nunca. Se pregunta antes, y la
+   * pregunta dice explícitamente que NO se borra ninguna venta: es lo primero
+   * que se malinterpreta.
+   */
+  async function descartar() {
+    if (!window.confirm(confirmacionDescartar(detalleFallidas))) return;
+    setDescartando(true);
+    try {
+      await descartarFallidas();
+      setVerDetalle(false);
+    } finally {
+      setDescartando(false);
+    }
+  }
 
   let clase = "sync-ok";
   let texto = "Sincronizado";
@@ -97,6 +116,18 @@ export function IndicadorSync({ estado }: { estado: EstadoSync }) {
                 }
               >
                 Reintentar todas
+              </button>
+              {/*
+                Para las que no pueden entrar nunca (apuntan a datos que el
+                servidor ya no tiene). Mientras siguen acá el aviso queda
+                encendido para siempre y tapa cualquier falla nueva.
+              */}
+              <button
+                className="linkbtn linkbtn--danger"
+                onClick={() => void descartar()}
+                disabled={descartando}
+              >
+                {descartando ? "Descartando…" : "Descartar"}
               </button>
               <button onClick={() => setVerDetalle(false)}>Cerrar</button>
             </div>

@@ -108,10 +108,7 @@ export class AlmacenSqlite implements AlmacenDeOperaciones {
   }
 
   async reintentarFallidas(): Promise<number> {
-    const previas = await this.ejecutor.consultar<{ n: number }>(
-      `SELECT COUNT(*) AS n FROM operacion_sync WHERE estado = 'fallida'`,
-    );
-    const n = Number(previas[0]?.n ?? 0);
+    const n = await this.cuantasFallidas();
     if (n > 0) {
       await this.ejecutor.ejecutar(
         `UPDATE operacion_sync SET estado = 'pendiente', intentos = 0, ultimo_error = NULL
@@ -119,5 +116,27 @@ export class AlmacenSqlite implements AlmacenDeOperaciones {
       );
     }
     return n;
+  }
+
+  /**
+   * Borra las fallidas en vez de marcarlas con un estado nuevo: el `CHECK` de
+   * la tabla no admite otro valor, y `CREATE TABLE IF NOT EXISTS` no lo
+   * actualiza en las bases que ya están instaladas. Cambiarlo obligaría a
+   * reconstruir la tabla en cada POS del campo, y el riesgo no compensa: lo que
+   * se borra es una copia que no puede entrar a ningún lado. La venta queda.
+   */
+  async descartarFallidas(): Promise<number> {
+    const n = await this.cuantasFallidas();
+    if (n > 0) {
+      await this.ejecutor.ejecutar(`DELETE FROM operacion_sync WHERE estado = 'fallida'`);
+    }
+    return n;
+  }
+
+  private async cuantasFallidas(): Promise<number> {
+    const filas = await this.ejecutor.consultar<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM operacion_sync WHERE estado = 'fallida'`,
+    );
+    return Number(filas[0]?.n ?? 0);
   }
 }
