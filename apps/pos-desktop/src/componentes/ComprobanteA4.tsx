@@ -1,6 +1,6 @@
-﻿/**
+/**
  * Fase 10.4: layout imprimible A4 de un comprobante. Presentacional puro
- * (mismo `DatosTicket` que ya arma la impresora tÃ©rmica â€” ver
+ * (mismo `DatosTicket` que ya arma la impresora térmica — ver
  * `packages/hardware/src/impresora.ts`), oculto en pantalla y mostrado solo
  * durante `window.print()` (ver `.hoja-a4` / `body.modo-impresion-a4` en
  * `estilos.css`).
@@ -33,7 +33,7 @@ export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
         </div>
         <div className="a4-comprobante">
           <div className="a4-tipo">{datos.tipoComprobante}</div>
-          <div>NÂ° {numeroFormateado}</div>
+          <div>N° {numeroFormateado}</div>
           <div>{datos.fecha.toLocaleDateString("es-AR")}</div>
           {esFiscal && datos.condicionIvaReceptor !== "" && (
             <div>Receptor: {datos.condicionIvaReceptor}</div>
@@ -43,14 +43,14 @@ export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
 
       {!esFiscal && (
         <div className="a4-aviso-no-fiscal">
-          COMPROBANTE NO VÃLIDO COMO FACTURA â€” comercio sin alta en ARCA
+          COMPROBANTE NO VÁLIDO COMO FACTURA — comercio sin alta en ARCA
         </div>
       )}
 
       <table className="a4-items">
         <thead>
           <tr>
-            <th>DescripciÃ³n</th>
+            <th>Descripción</th>
             <th>Cantidad</th>
             <th>P. Unitario</th>
             <th>Importe</th>
@@ -108,10 +108,10 @@ export function ComprobanteA4({ datos }: { datos: DatosTicket }) {
               <>
                 CAE {datos.cae}
                 {datos.vencimientoCae &&
-                  ` â€” Vto. ${datos.vencimientoCae.toLocaleDateString("es-AR")}`}
+                  ` — Vto. ${datos.vencimientoCae.toLocaleDateString("es-AR")}`}
               </>
             ) : (
-              "Pendiente de autorizaciÃ³n de ARCA."
+              "Pendiente de autorización de ARCA."
             )
           ) : (
             "Documento interno, sin validez fiscal."

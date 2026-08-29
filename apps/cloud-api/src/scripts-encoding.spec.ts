@@ -31,6 +31,32 @@ function archivosPs1(dir: string): string[] {
   return salida;
 }
 
+/** Carpetas de código fuente donde se busca texto ya corrompido. */
+const FUENTES = ['apps/cloud-api/src', 'apps/pos-desktop/src', 'apps/admin-web/src', 'packages'];
+
+function archivosFuente(dir: string): string[] {
+  const salida: string[] = [];
+  for (const entrada of readdirSync(dir)) {
+    if (entrada === 'node_modules' || entrada === 'dist') continue;
+    const completo = join(dir, entrada);
+    if (statSync(completo).isDirectory()) salida.push(...archivosFuente(completo));
+    else if (/\.(ts|tsx)$/.test(entrada) && !entrada.endsWith('scripts-encoding.spec.ts')) {
+      salida.push(completo);
+    }
+  }
+  return salida;
+}
+
+/**
+ * Rastro de un texto UTF-8 que alguien leyó como Windows-1252 y volvió a
+ * guardar como UTF-8: `ó` queda como `Ã³`, `°` como `Â°`, `—` como `â€"`.
+ *
+ * No es teórico. `ComprobanteA4.tsx` tenía `<th>DescripciÃ³n</th>` guardado así
+ * en el repo, y como ese componente sólo se renderiza al imprimir, nadie lo vio
+ * hasta que salió impreso en una factura con CAE real.
+ */
+const MOJIBAKE = /Ã[©³¡­º±ƒ]|Â[°¡¿]|â€/;
+
 describe('los scripts de PowerShell los puede leer Windows PowerShell 5.1', () => {
   const archivos = CARPETAS.flatMap((c) => archivosPs1(join(RAIZ, c)));
 
@@ -52,4 +78,25 @@ describe('los scripts de PowerShell los puede leer Windows PowerShell 5.1', () =
       ).toBe(0);
     },
   );
+});
+
+describe('el código fuente no tiene texto ya corrompido', () => {
+  const archivos = FUENTES.flatMap((c) => archivosFuente(join(RAIZ, c)));
+
+  it('hay archivos para revisar', () => {
+    expect(archivos.length).toBeGreaterThan(0);
+  });
+
+  it('ningún archivo tiene acentos mal codificados', () => {
+    const rotos = archivos
+      .filter((a) => MOJIBAKE.test(readFileSync(a, 'utf8')))
+      .map((a) => a.slice(RAIZ.length + 1));
+
+    expect(
+      rotos,
+      'Estos archivos tienen texto UTF-8 leído como Windows-1252 y vuelto a guardar ' +
+        '("Descripción" quedó como "DescripciÃ³n"). Suele pasar al editarlos con una ' +
+        'herramienta que no respeta la codificación. Reabrilos como UTF-8 y corregí el texto.',
+    ).toEqual([]);
+  });
 });
