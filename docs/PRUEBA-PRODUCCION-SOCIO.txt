@@ -16,9 +16,15 @@ despues una NOTA DE CREDITO que la anula.
   *** Los dos comprobantes son fiscales y quedan en los registros de ARCA
       a tu nombre. No se pueden borrar. ***
 
-La factura es de $100 y la nota de credito la cancela, asi que el efecto neto
-es cero. Pero los dos comprobantes existen y hay que declararlos. Si tenes
-contador, avisale ANTES de hacer esto.
+La factura es de $10, para que sea lo mas chica posible. Pero ojo: el monto NO
+es lo que la hace inofensiva. Un comprobante de $10 es tan fiscal como uno de
+$100 y queda igual en los registros de ARCA.
+
+Lo que neutraliza el efecto es la NOTA DE CREDITO del paso 10, que la cancela:
+factura $10 + nota de credito $10 = neto cero.
+
+Igual quedan DOS comprobantes emitidos a tu nombre. Si tenes contador,
+avisale ANTES de hacer esto. El monto chico no reemplaza ese aviso.
 
 Si no queres emitir nada real todavia, no sigas. Todo lo que se puede probar
 sin produccion, ya lo probamos.
@@ -148,11 +154,11 @@ PASO 6 - PASAR A PRODUCCION
     A partir de este momento TODO lo que factures es real.
 
 
-PASO 7 - LA FACTURA DE $100
-----------------------------
+PASO 7 - LA FACTURA DE $10
+---------------------------
 7.1 Abri la caja si no esta abierta.
 7.2 Carga un producto (o cambiale el precio a uno) para que el total de
-    $100 y cobralo en efectivo.
+    $10 y cobralo en efectivo.
 
     [ ] La venta se completo.
 
@@ -241,8 +247,8 @@ Decidi con calma, no hace falta hacerlo hoy:
     homologacion (por eso te pedi guardarlo) y recien despues cambiar el
     entorno.
 
-Los dos comprobantes ($100 y su nota de credito) quedan en ARCA. Pasaselos
-al contador.
+Los dos comprobantes ($10 y su nota de credito) quedan en ARCA. Pasaselos
+al contador. Se cancelan entre si, pero existen los dos.
 
 
 ===========================================================================
