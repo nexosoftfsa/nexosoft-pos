@@ -66,6 +66,32 @@ export class RepositorioArticulosSqlite implements RepositorioArticulos {
     );
   }
 
+  /** Ids de los artículos vendibles hoy. Lo usa el pull para detectar bajas. */
+  async idsActivos(): Promise<string[]> {
+    const filas = await this.db.consultar<{ id: string }>(
+      "SELECT id FROM articulo WHERE activo = 1",
+    );
+    return filas.map((f) => f.id);
+  }
+
+  /**
+   * Da de baja artículos por id. **No los borra**: siguen referenciados por
+   * ventas locales y por operaciones que todavía están en la cola de sync.
+   *
+   * Se manda de a tandas porque SQLite tiene un tope de parámetros por
+   * sentencia, y un catálogo importado puede tener miles de artículos.
+   */
+  async desactivar(ids: readonly string[]): Promise<void> {
+    const TANDA = 400;
+    for (let i = 0; i < ids.length; i += TANDA) {
+      const tanda = ids.slice(i, i + TANDA);
+      await this.db.ejecutar(
+        `UPDATE articulo SET activo = 0 WHERE id IN (${tanda.map(() => "?").join(",")})`,
+        [...tanda],
+      );
+    }
+  }
+
   /**
    * Fase 17: toggle local de la estrella "grilla rápida" — a propósito no
    * pasa por `guardar()` (el upsert de sync), así un catálogo que llega de

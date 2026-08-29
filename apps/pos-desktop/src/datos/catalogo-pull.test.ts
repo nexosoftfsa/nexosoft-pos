@@ -77,7 +77,7 @@ describe("sincronizarCatalogo", () => {
       config,
       { reemplazarStock: true },
     );
-    expect(r).toEqual({ productos: 1, stockInicializado: 1 });
+    expect(r).toEqual({ productos: 1, stockInicializado: 1, dadosDeBaja: 0 });
 
     const articulo = await repos.articulos.obtener("p1");
     expect(articulo?.codigoInterno).toBe("001");
@@ -136,6 +136,70 @@ describe("sincronizarCatalogo", () => {
     expect(existencia?.cantidad.aDecimalString(0)).toBe("7");
   });
 
+  describe("bajas: lo que el servidor ya no tiene deja de venderse", () => {
+    /** Los artículos que el POS deja ver y vender. */
+    async function vendibles(): Promise<string[]> {
+      const filas = await ejecutor.consultar<{ id: string }>(
+        "SELECT id FROM articulo WHERE activo = 1 ORDER BY id",
+      );
+      return filas.map((f) => f.id);
+    }
+
+    it("da de baja el catálogo viejo cuando el servidor trae otro", async () => {
+      // Este es el caso que rompió de verdad: se reinstaló el servidor, quedó
+      // con el catálogo demo, y el POS le sumó el suyo en vez de reemplazarlo.
+      // Los artículos viejos seguían vendibles y cada venta rebotaba contra el
+      // servidor con "Foreign key constraint violated".
+      await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
+      expect(await vendibles()).toEqual(["p1"]);
+
+      const demo: ProductoRemoto = { ...PROD, id: "demo1", codigo: "D1", nombre: "Aceite" };
+      const r = await sincronizarCatalogo(repos, clienteFalso([demo], []), config);
+
+      expect(r.dadosDeBaja).toBe(1);
+      expect(await vendibles()).toEqual(["demo1"]);
+    });
+
+    it("no borra el artículo: la venta local vieja lo sigue encontrando", async () => {
+      // Se desactiva, no se borra: hay ventas locales y operaciones en la cola
+      // que todavía lo referencian.
+      await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
+      await sincronizarCatalogo(repos, clienteFalso([{ ...PROD, id: "otro", codigo: "002" }], []), config);
+
+      expect(await repos.articulos.obtener("p1")).toBeDefined();
+      expect((await repos.articulos.obtener("p1"))?.activo).toBe(false);
+    });
+
+    it("un artículo que vuelve al servidor vuelve a venderse", async () => {
+      await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
+      await sincronizarCatalogo(repos, clienteFalso([{ ...PROD, id: "otro", codigo: "002" }], []), config);
+      expect((await repos.articulos.obtener("p1"))?.activo).toBe(false);
+
+      await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
+      expect((await repos.articulos.obtener("p1"))?.activo).toBe(true);
+    });
+
+    it("un catálogo vacío NO deja al comercio sin nada que vender", async () => {
+      // Si el servidor contesta vacío por un error o una base a medio migrar,
+      // dar de baja todo dejaría la caja sin poder vender. Ante la duda, no se
+      // toca nada.
+      await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
+
+      const r = await sincronizarCatalogo(repos, clienteFalso([], []), config);
+
+      expect(r.dadosDeBaja).toBe(0);
+      expect(await vendibles()).toEqual(["p1"]);
+    });
+
+    it("no toca nada cuando el catálogo no cambió", async () => {
+      await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
+      const r = await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
+
+      expect(r.dadosDeBaja).toBe(0);
+      expect(await vendibles()).toEqual(["p1"]);
+    });
+  });
+
   it("un combo persiste sus componentes y NO crea existencia propia (Fase 8.1.b)", async () => {
     const combo: ProductoRemoto = {
       id: "combo1",
@@ -166,7 +230,7 @@ describe("sincronizarCatalogo", () => {
       { reemplazarStock: true },
     );
     // Se procesan 3 productos; el combo no inicializa existencia (solo p1 y p2).
-    expect(r).toEqual({ productos: 3, stockInicializado: 2 });
+    expect(r).toEqual({ productos: 3, stockInicializado: 2, dadosDeBaja: 0 });
 
     const comps = await repos.combos.componentesDe("combo1");
     expect(comps.map((c) => [c.articuloId, c.cantidad.aDecimalString(0)])).toEqual([
