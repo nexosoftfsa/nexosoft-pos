@@ -10,7 +10,12 @@ import type { ConfiguracionComercio } from "@nexosoft/app";
 
 import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
-import { ErrorVentas, type Comprobante, type ClienteVentas } from "../sync/cliente-ventas";
+import {
+  ErrorVentas,
+  type Comprobante,
+  type ClienteVentas,
+  type VerificacionArca,
+} from "../sync/cliente-ventas";
 import { pesos } from "../formato";
 import { ComprobanteA4 } from "./ComprobanteA4";
 import { ComprobanteTicket } from "./ComprobanteTicket";
@@ -72,6 +77,8 @@ export function Comprobantes({
   const [soloHoy, setSoloHoy] = useState(true);
   const [reimprimir, setReimprimir] = useState<Comprobante | null>(null);
   const [anulando, setAnulando] = useState<string | null>(null);
+  const [verificando, setVerificando] = useState<string | null>(null);
+  const [verificacion, setVerificacion] = useState<VerificacionArca | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -88,6 +95,31 @@ export function Comprobantes({
   useEffect(() => {
     void cargar();
   }, [cargar]);
+
+  /**
+   * Le pregunta a ARCA qué tiene registrado de este comprobante.
+   *
+   * Es de sólo lectura y no toca la venta. Existe porque en homologación el
+   * comprobante no aparece en ninguna página pública de ARCA, así que era la
+   * única forma de confirmar que ARCA lo hubiera registrado.
+   */
+  async function verificar(c: Comprobante) {
+    setVerificando(c.id);
+    setVerificacion(null);
+    try {
+      setVerificacion(await cliente.verificarEnArca(c.id));
+    } catch (e) {
+      // Que falle la consulta no dice nada del comprobante: puede estar bien y
+      // ser ARCA (o la red) lo que no responde.
+      setVerificacion({
+        estado: "NO_SE_PUDO",
+        mensaje: mensajeError(e),
+        diferencias: [],
+      });
+    } finally {
+      setVerificando(null);
+    }
+  }
 
   const filtrados = useMemo(
     () => (soloHoy ? comprobantes.filter((c) => esDeHoy(c.creadaEn)) : comprobantes),
@@ -238,6 +270,18 @@ export function Comprobantes({
                       <button type="button" className="linkbtn" onClick={() => setReimprimir(c)}>
                         Reimprimir
                       </button>
+                      {/* Sólo tiene sentido preguntar por un comprobante que
+                          creemos emitido en ARCA. */}
+                      {c.cae !== null && (
+                        <button
+                          type="button"
+                          className="linkbtn"
+                          onClick={() => void verificar(c)}
+                          disabled={verificando === c.id}
+                        >
+                          {verificando === c.id ? "Consultando…" : "Verificar en ARCA"}
+                        </button>
+                      )}
                       {esAnulable(c) && (
                         <button
                           type="button"
@@ -259,6 +303,71 @@ export function Comprobantes({
       {reimprimir !== null && (
         <ModalReimpresion comprobante={reimprimir} config={config} onCerrar={() => setReimprimir(null)} />
       )}
+
+      {verificacion !== null && (
+        <ResultadoVerificacion
+          verificacion={verificacion}
+          onCerrar={() => setVerificacion(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Cómo se pinta cada respuesta de ARCA. */
+const TONO_VERIFICACION: Record<VerificacionArca["estado"], { clase: string; titulo: string }> = {
+  AUTORIZADO: { clase: "badge--ok", titulo: "ARCA lo tiene registrado" },
+  DIFIERE: { clase: "badge--danger", titulo: "ARCA lo tiene, pero con otros datos" },
+  NO_ESTA: { clase: "badge--warn", titulo: "ARCA no lo tiene" },
+  NO_APLICA: { clase: "badge--warn", titulo: "No es un comprobante fiscal" },
+  NO_SE_PUDO: { clase: "badge--warn", titulo: "No se pudo consultar" },
+};
+
+function ResultadoVerificacion({
+  verificacion,
+  onCerrar,
+}: {
+  verificacion: VerificacionArca;
+  onCerrar: () => void;
+}) {
+  const tono = TONO_VERIFICACION[verificacion.estado];
+  return (
+    <div className="overlay" onClick={onCerrar}>
+      <div className="sync-detalle" onClick={(e) => e.stopPropagation()}>
+        <h3>{tono.titulo}</h3>
+        <p className="sync-detalle-ayuda">{verificacion.mensaje}</p>
+
+        {verificacion.diferencias.length > 0 && (
+          <ul className="sync-detalle-lista">
+            {verificacion.diferencias.map((d) => (
+              <li key={d}>
+                <div className="sync-detalle-error">{d}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {verificacion.enArca !== undefined && (
+          <div className="config-ayuda">
+            <div>
+              <strong>Lo que tiene ARCA</strong>
+            </div>
+            <div>CAE {verificacion.enArca.cae}</div>
+            <div>
+              Vence el {new Date(verificacion.enArca.caeFechaVto).toLocaleDateString("es-AR")}
+            </div>
+            {verificacion.enArca.importeTotal !== undefined && (
+              <div>Total {money(verificacion.enArca.importeTotal)}</div>
+            )}
+          </div>
+        )}
+
+        <div className="sync-detalle-acciones">
+          <button className="primario" onClick={onCerrar}>
+            Cerrar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -111,6 +111,12 @@ export interface ResultadoAutorizacion {
   readonly numero: number;
   /** Avisos de ARCA que no impiden emitir, pero conviene registrar. */
   readonly observaciones: readonly string[];
+  /**
+   * `ImpTotal` tal como lo tiene ARCA. Sólo viene al **consultar** un
+   * comprobante: es lo que permite comparar contra lo que guardamos nosotros y
+   * detectar un comprobante autorizado por otro importe.
+   */
+  readonly importeTotal?: string;
 }
 
 /** `yyyymmdd`, el formato de fecha de WSFEv1. */
@@ -454,11 +460,13 @@ export function leerRespuestaConsulta(xml: string): ResultadoAutorizacion | null
   if (cae === undefined || vto === undefined) return null;
 
   const numero = /<CbteDesde>(\d+)<\/CbteDesde>/.exec(xml)?.[1];
+  const importe = /<ImpTotal>([\d.]+)<\/ImpTotal>/.exec(xml)?.[1];
   return {
     cae,
     caeFechaVto: desdeFechaArca(vto),
     numero: numero === undefined ? 0 : Number(numero),
     observaciones: leerObservaciones(xml),
+    ...(importe === undefined ? {} : { importeTotal: importe }),
   };
 }
 

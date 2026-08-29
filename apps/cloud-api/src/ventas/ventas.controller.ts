@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { VentasService } from './ventas.service';
+import { VerificacionArcaService } from './cae/verificacion-arca.service';
 import { CrearVentaDto } from './dto/crear-venta.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -13,7 +14,10 @@ interface UsuarioJwt {
 @UseGuards(JwtAuthGuard)
 @Controller('ventas')
 export class VentasController {
-  constructor(private readonly ventasService: VentasService) {}
+  constructor(
+    private readonly ventasService: VentasService,
+    private readonly verificacion: VerificacionArcaService,
+  ) {}
 
   @Get()
   historial(@Request() req: { user: UsuarioJwt }) {
@@ -36,5 +40,15 @@ export class VentasController {
   @Post(':id/anular')
   anular(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
     return this.ventasService.anular(req.user.sucursalId, id);
+  }
+
+  /**
+   * Le pregunta a ARCA qué tiene registrado de este comprobante. Sólo lectura:
+   * no emite ni modifica nada. Es la única forma de confirmar un comprobante de
+   * homologación, que no aparece en las páginas públicas de ARCA.
+   */
+  @Get(':id/verificar-arca')
+  verificarEnArca(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
+    return this.verificacion.verificar(req.user.sucursalId, id);
   }
 }

@@ -9,6 +9,7 @@ import {
   type Comprobante,
   type ClienteVentas,
   type ResultadoAnulacion,
+  type VerificacionArca,
 } from "./cliente-ventas";
 
 function notaCreditoDe(tipo: string | null): string {
@@ -104,6 +105,21 @@ export class ClienteVentasSimulado implements ClienteVentas {
     return [...this.comprobantes]
       .sort((a, b) => b.creadaEn.localeCompare(a.creadaEn))
       .map((c) => ({ ...c }));
+  }
+
+  /**
+   * En el navegador no hay ARCA ni certificado: se contesta lo mismo que
+   * contestaría el servidor sin alta fiscal, en vez de inventar un "autorizado"
+   * que daría una confianza falsa.
+   */
+  async verificarEnArca(id: string): Promise<VerificacionArca> {
+    const c = this.comprobantes.find((x) => x.id === id);
+    if (!c) throw new ErrorVentas(`Comprobante ${id} no encontrado`, 404);
+    return {
+      estado: "NO_SE_PUDO",
+      mensaje: "No se pudo consultar a ARCA: esta es la versión de desarrollo, sin certificado.",
+      diferencias: [],
+    };
   }
 
   async anular(id: string): Promise<ResultadoAnulacion> {

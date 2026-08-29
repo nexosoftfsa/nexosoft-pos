@@ -55,9 +55,23 @@ export interface ResultadoAnulacion {
   readonly notaCredito: Comprobante;
 }
 
+/** Qué contestó ARCA sobre un comprobante nuestro. Ver `verificacion-arca.ts` del servidor. */
+export interface VerificacionArca {
+  readonly estado: "AUTORIZADO" | "DIFIERE" | "NO_ESTA" | "NO_APLICA" | "NO_SE_PUDO";
+  readonly mensaje: string;
+  readonly diferencias: readonly string[];
+  readonly enArca?: {
+    readonly cae: string;
+    readonly caeFechaVto: string;
+    readonly importeTotal?: string;
+  };
+}
+
 export interface ClienteVentas {
   historial(): Promise<Comprobante[]>;
   anular(id: string): Promise<ResultadoAnulacion>;
+  /** Le pregunta a ARCA qué tiene registrado. Sólo lectura: no emite nada. */
+  verificarEnArca(id: string): Promise<VerificacionArca>;
 }
 
 export class ErrorVentas extends Error {
@@ -82,6 +96,10 @@ export class ClienteVentasHttp implements ClienteVentas {
 
   anular(id: string): Promise<ResultadoAnulacion> {
     return this.pedir<ResultadoAnulacion>("POST", `/ventas/${id}/anular`);
+  }
+
+  verificarEnArca(id: string): Promise<VerificacionArca> {
+    return this.pedir<VerificacionArca>("GET", `/ventas/${id}/verificar-arca`);
   }
 
   private async pedir<T>(metodo: string, ruta: string): Promise<T> {

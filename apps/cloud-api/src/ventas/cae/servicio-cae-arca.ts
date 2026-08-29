@@ -7,6 +7,7 @@ import {
   ErrorWsfe,
   ErrorWsfeNoSoportado,
   type DatosComprobante,
+  type ResultadoAutorizacion,
 } from '../../fiscal/arca/wsfev1';
 import { ConfiguracionFiscalService } from '../../fiscal/configuracion-fiscal.service';
 import { ColaPorClave } from './cola-por-clave';
@@ -55,7 +56,18 @@ export class ServicioCaeArca implements ServicioCae {
     private readonly certificados: CertificadoService,
   ) {}
 
-  async autorizar(solicitud: SolicitudCae): Promise<ResultadoCae> {
+  /**
+   * Arma los clientes de ARCA con el certificado y los datos del comercio.
+   *
+   * Falla con `ErrorCaeNoDisponible` si el comercio todavía no está de alta: es
+   * transitorio en el sentido de que se resuelve cargando los datos, no
+   * reintentando la llamada.
+   */
+  private async clientes(): Promise<{
+    fiscal: NonNullable<Awaited<ReturnType<ConfiguracionFiscalService['obtener']>>>;
+    wsaa: ClienteWsaa;
+    wsfe: ClienteWsfev1;
+  }> {
     const fiscal = await this.config.obtener();
     if (fiscal === null) {
       throw new ErrorCaeNoDisponible(
@@ -71,13 +83,50 @@ export class ServicioCaeArca implements ServicioCae {
     }
 
     const entorno: EntornoArca = fiscal.entorno;
-    const wsaa = new ClienteWsaa({
-      entorno,
-      certificadoPem: material.certificadoPem,
-      clavePrivadaPem: material.clavePrivadaPem,
-      rutaCache: rutaCacheTicket(this.certificados.raizSecrets, fiscal.cuit, entorno),
-    });
-    const wsfe = new ClienteWsfev1({ entorno, cuit: fiscal.cuit });
+    return {
+      fiscal,
+      wsaa: new ClienteWsaa({
+        entorno,
+        certificadoPem: material.certificadoPem,
+        clavePrivadaPem: material.clavePrivadaPem,
+        rutaCache: rutaCacheTicket(this.certificados.raizSecrets, fiscal.cuit, entorno),
+      }),
+      wsfe: new ClienteWsfev1({ entorno, cuit: fiscal.cuit }),
+    };
+  }
+
+  /**
+   * Le pregunta a ARCA qué tiene registrado para un comprobante ya emitido.
+   *
+   * No emite nada: es de sólo lectura. Sirve para confirmar contra la fuente
+   * —sobre todo en homologación, donde el comprobante no aparece en ninguna
+   * página pública de ARCA y no hay otra forma de verificarlo.
+   *
+   * Devuelve `null` si ARCA no lo tiene, que es una respuesta legítima y es
+   * justamente lo que se quiere saber.
+   */
+  async consultar(
+    codigoComprobante: number,
+    numero: number,
+  ): Promise<{ resultado: ResultadoAutorizacion | null; entorno: EntornoArca; puntoDeVenta: number }> {
+    const { fiscal, wsaa, wsfe } = await this.clientes();
+    try {
+      const ticket = await wsaa.obtenerTicket('wsfe');
+      const resultado = await wsfe.consultarComprobante(
+        ticket,
+        fiscal.puntoDeVenta,
+        codigoComprobante,
+        numero,
+      );
+      return { resultado, entorno: fiscal.entorno, puntoDeVenta: fiscal.puntoDeVenta };
+    } catch (e) {
+      throw this.traducir(e);
+    }
+  }
+
+  async autorizar(solicitud: SolicitudCae): Promise<ResultadoCae> {
+    const { fiscal, wsaa, wsfe } = await this.clientes();
+    const entorno: EntornoArca = fiscal.entorno;
 
     // Sin código de ARCA no hay comprobante que emitir: es un ticket interno o
     // un tipo que no existe en WSFEv1. No se arregla reintentando.

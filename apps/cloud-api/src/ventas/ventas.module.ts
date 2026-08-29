@@ -11,6 +11,7 @@ import { ServicioCaeArca } from './cae/servicio-cae-arca';
 import { ServicioCaeSelector } from './cae/servicio-cae-selector';
 import { CaePendientesService } from './cae/cae-pendientes.service';
 import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
+import { VerificacionArcaService } from './cae/verificacion-arca.service';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import { LibroDeVentasExcel } from './libro/libro-de-ventas-excel';
 
@@ -24,6 +25,7 @@ import { LibroDeVentasExcel } from './libro/libro-de-ventas-excel';
     VentasService,
     CaePendientesService,
     DesgloseDeVentaService,
+    VerificacionArcaService,
     ServicioCaeArca,
     ServicioCaeMock,
     {
