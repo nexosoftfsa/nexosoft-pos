@@ -1,0 +1,261 @@
+===========================================================================
+  NEXOSOFT - PRIMERA FACTURA REAL Y PRIMERA ANULACION (PRODUCCION)
+  Para: Sebastian
+  Tiempo: 1 hora, la mayoria son tramites en ARCA
+===========================================================================
+
+LEER ESTO ANTES DE EMPEZAR
+--------------------------
+Hasta ahora todo lo que probamos fue en HOMOLOGACION: comprobantes de mentira
+contra un servidor de prueba de ARCA. Salio bien: ARCA da el CAE, el QR se
+arma bien y ARCA lo lee.
+
+Esta prueba es distinta. Vas a emitir una FACTURA DE VERDAD, con tu CUIT, y
+despues una NOTA DE CREDITO que la anula.
+
+  *** Los dos comprobantes son fiscales y quedan en los registros de ARCA
+      a tu nombre. No se pueden borrar. ***
+
+La factura es de $100 y la nota de credito la cancela, asi que el efecto neto
+es cero. Pero los dos comprobantes existen y hay que declararlos. Si tenes
+contador, avisale ANTES de hacer esto.
+
+Si no queres emitir nada real todavia, no sigas. Todo lo que se puede probar
+sin produccion, ya lo probamos.
+
+
+DOS COSAS QUE TE VAN A SORPRENDER (son normales)
+------------------------------------------------
+1. La numeracion arranca de cero. En homologacion vas por 0002-00000101; en
+   produccion ese punto de venta empieza en 1. Tu factura va a ser la
+   0002-00000001 (o el numero que corresponda). Esta bien: el numero lo pide
+   el sistema a ARCA, no lo inventa.
+
+2. Al cargar el certificado de produccion se PISA el de homologacion. El
+   sistema guarda un solo certificado por CUIT. Volver a probar en
+   homologacion despues va a requerir volver a cargar el otro .crt, asi que
+   GUARDA los dos archivos en una carpeta y no los pierdas.
+
+
+PASO 1 - ACTUALIZAR LOS DOS
+---------------------------
+1.1 POS > Configuracion > Actualizaciones.
+
+    Anota:  POS: ____________   Servidor: ____________
+
+1.2 Si el servidor no dice 0.12.2 o mas, toca "Actualizar servidor".
+1.3 Si el POS ofrece la 0.1.44, instalala y volve a entrar.
+
+    [ ] POS 0.1.44 o mas, Servidor 0.12.2 o mas.
+
+
+PASO 2 - LIMPIAR LA COLA VIEJA (aprovechamos)
+----------------------------------------------
+2.1 Arriba a la derecha tendria que decir algo como "1167 con error".
+2.2 Tocalo, y en el panel que se abre toca "Descartar".
+2.3 Leelo y confirma.
+
+    [ ] El contador quedo en cero (o desaparecio el aviso rojo).
+
+    No se borra ninguna venta: son intentos de subir ventas viejas que
+    apuntan a productos que el servidor ya no tiene. Lo hacemos ahora para
+    que, si algo falla despues, lo veas.
+
+
+PASO 3 - EL PUNTO DE VENTA, EN PRODUCCION
+------------------------------------------
+Esto es lo que mas veces falla y el error de ARCA no lo dice. Un punto de
+venta habilitado en homologacion NO existe en produccion: son dos mundos
+separados.
+
+3.1 Entra con tu Clave Fiscal al portal de SIEMPRE:
+
+        https://auth.afip.gob.ar/  (o como entres normalmente)
+
+    OJO: NO es el de homologacion (wsass-homo). Ese es el de las pruebas.
+
+3.2 Busca el servicio de puntos de venta (suele llamarse "Administracion de
+    puntos de venta y domicilios").
+3.3 Fijate si tenes dado de alta el punto de venta 2.
+
+    Que punto(s) de venta tenes: ____________________
+
+    IMPORTANTE: el tipo tiene que ser el de WEB SERVICES, no el de
+    "Comprobantes en linea". El nombre exacto varia segun tu condicion
+    (sos Monotributo), pero tiene que decir "Web Service" en algun lado.
+    Si tenes el de "Comprobantes en linea", ese NO sirve para el sistema.
+
+3.4 Si el 2 no existe o no es de Web Services, da de alta uno nuevo.
+
+    Numero que quedo: ____________
+
+    Si te quedo un numero distinto del 2, avisame ANTES de seguir: hay que
+    cambiarlo en Configuracion del POS.
+
+    [ ] Tengo un punto de venta de Web Services en produccion.
+
+
+PASO 4 - EL CERTIFICADO DE PRODUCCION
+--------------------------------------
+Se usa el MISMO pedido (.csr) que ya generaste para homologacion. No generes
+uno nuevo: si regeneras la clave, el certificado que ya tenes deja de servir.
+
+4.1 En el portal de Clave Fiscal (el de siempre, no el de homologacion),
+    busca "Administracion de Certificados Digitales".
+4.2 Crea un certificado nuevo y subi el mismo archivo .csr de antes.
+
+    Si no lo tenes a mano, esta en la PC del servidor, en:
+    C:\ProgramData\NexoSoft\secrets\arca\<TU CUIT>\pedido.csr
+
+4.3 Descarga el .crt que te da ARCA. GUARDALO con un nombre claro, tipo
+    "produccion.crt", en una carpeta donde no se pierda.
+
+    [ ] Lo descargue y lo guarde aparte del de homologacion.
+
+4.4 Anda a "Administrador de Relaciones" y asocia el servicio de
+    Facturacion Electronica a ESE certificado nuevo.
+
+    [ ] Hecho.
+
+    Este paso es invisible: si falta, todo lo demas parece bien y los
+    comprobantes se rechazan sin decir por que.
+
+
+PASO 5 - CARGARLO EN EL SISTEMA
+--------------------------------
+5.1 POS > Configuracion > Facturacion electronica (ARCA).
+5.2 Carga el .crt de PRODUCCION.
+
+    [ ] Dijo "Certificado guardado" y muestra vencimiento.
+
+    Vencimiento que muestra: ____________________
+
+5.3 Anota el "Nombre del certificado en ARCA" que muestra la tarjeta y
+    compara que sea el mismo que autorizaste en el paso 4.4.
+
+    [ ] Coincide.
+
+    Recorda: acabas de pisar el certificado de homologacion.
+
+
+PASO 6 - PASAR A PRODUCCION
+----------------------------
+6.1 En la misma tarjeta, toca la opcion para pasar a produccion.
+6.2 Va a aparecer una advertencia. Leela y confirma.
+
+    [ ] Ahora dice: "Entorno: PRODUCCION".
+
+    A partir de este momento TODO lo que factures es real.
+
+
+PASO 7 - LA FACTURA DE $100
+----------------------------
+7.1 Abri la caja si no esta abierta.
+7.2 Carga un producto (o cambiale el precio a uno) para que el total de
+    $100 y cobralo en efectivo.
+
+    [ ] La venta se completo.
+
+7.3 Se abre el dialogo de impresion. Elegi "Microsoft Print to PDF" y
+    guarda el PDF.
+
+    [ ] El PDF abre y se ve el QR.
+
+    Numero de comprobante: 0002-________
+    CAE: ______________________________
+
+    MANDAME ESE PDF.
+
+    Si NO salio el CAE, anda a Comprobantes, pasa el mouse por la etiqueta
+    y copiame el motivo COMPLETO. Ese texto es lo mas util de toda la
+    prueba.
+
+
+PASO 8 - VERIFICAR DESDE EL POS
+--------------------------------
+8.1 Anda a Comprobantes.
+8.2 En la fila de esa factura, toca "Verificar en ARCA".
+
+    [ ] Dice "ARCA lo tiene registrado".
+
+    Que dice exactamente: ____________________________________
+
+    Ahora tendria que decir "produccion" y NO la aclaracion de que es un
+    comprobante de prueba.
+
+
+PASO 9 - LA PRUEBA DEFINITIVA: CONSTATAR EL QR
+-----------------------------------------------
+Esto es lo que en homologacion no se podia hacer.
+
+9.1 Escanea con el celular el QR del PDF.
+9.2 Se abre la pagina de ARCA con todos los campos ya completos.
+9.3 Escribi los caracteres de la imagen y toca CONSULTAR.
+
+    [ ] ARCA devolvio los datos del comprobante (NO la lista de errores).
+
+    Que muestra: ____________________________________
+
+    SACALE UNA FOTO A ESA PANTALLA Y MANDAMELA.
+
+    Si sale la lista de errores igual que en homologacion, PARA ACA y
+    avisame: eso si seria un problema de verdad.
+
+
+PASO 10 - ANULAR (esto nunca se probo contra ARCA)
+---------------------------------------------------
+Es la parte que mas me interesa. Hasta la version 0.12.0 el sistema mandaba
+la Nota de Credito sin decir que factura anulaba, y ARCA eso lo rechaza
+siempre. Esta corregido, pero nunca se ejecuto de verdad.
+
+10.1 En Comprobantes, en la fila de la factura del paso 7, toca "Anular".
+10.2 Confirma.
+
+    [ ] Se creo una Nota de Credito C.
+
+    Numero de la NC: 0002-________
+    CAE de la NC: ______________________________
+
+    Si dice "Rechazada", copiame el motivo COMPLETO. Palabra por palabra,
+    incluido el codigo de error de ARCA si aparece.
+    ______________________________________________________________
+    ______________________________________________________________
+
+10.3 Con la NC creada, tocale "Verificar en ARCA".
+
+    [ ] Dice que ARCA la tiene registrada.
+
+10.4 Reimprimi la NC y fijate que tenga su propio QR.
+
+    [ ] Tiene QR.
+
+    Mandame tambien ese PDF.
+
+
+PASO 11 - DESPUES DE LA PRUEBA
+-------------------------------
+Decidi con calma, no hace falta hacerlo hoy:
+
+  - Si vas a seguir facturando en serio con este CUIT, dejalo en produccion.
+  - Si preferis volver a pruebas, hay que volver a cargar el .crt de
+    homologacion (por eso te pedi guardarlo) y recien despues cambiar el
+    entorno.
+
+Los dos comprobantes ($100 y su nota de credito) quedan en ARCA. Pasaselos
+al contador.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. El PDF de la factura (paso 7.3)
+  2. La foto de la pantalla de ARCA constatando el QR (paso 9.3)  <- clave
+  3. El PDF de la nota de credito (paso 10.4)
+  4. Que dijo "Verificar en ARCA" en los pasos 8.2 y 10.3
+  5. Si algo se rechazo: el motivo TEXTUAL, completo
+
+Si algo falla antes del paso 7, no sigas: avisame con lo que anotaste.
+
+Lo mas valioso siguen siendo los mensajes de error literales. Un "no anduvo"
+no me dice nada; el texto de ARCA me dice exactamente que arreglar.
+===========================================================================
