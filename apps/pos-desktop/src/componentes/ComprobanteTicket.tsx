@@ -95,7 +95,7 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
           : "Documento interno, sin validez fiscal"}
       </div>
 
-      {esFiscal && <QrFiscal qrDataUrl={datos.qrDataUrl} tamanio={110} />}
+      {esFiscal && <QrFiscal qr={datos.qr} tamanio={110} />}
     </div>
   );
 }

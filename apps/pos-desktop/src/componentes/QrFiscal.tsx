@@ -5,23 +5,38 @@
  * cualquiera lo escanea y ARCA le confirma si el comprobante existe. Un ticket
  * sin QR está mal emitido.
  *
- * Este componente NO genera nada: pinta una imagen ya resuelta. La generación
- * vive en `qr-fiscal-datos.ts` y ocurre antes de imprimir, porque
- * `window.print()` no espera promesas — el QR se armaba tarde y el comprobante
- * salía sin él.
+ * Se dibuja como SVG en línea y NO como `<img>`: una imagen —aunque sea un
+ * data URL ya generado— tiene que decodificarse antes de pintarse, y
+ * `window.print()` no espera eso. Con `<img>` el comprobante salía con el
+ * recuadro del QR vacío. Un SVG es parte del DOM y se dibuja con el layout.
+ *
+ * La generación vive en `qr-fiscal-datos.ts`; acá sólo se pinta.
  */
+import type { DatosImpresion } from "./qr-fiscal-datos";
+
 export function QrFiscal({
-  qrDataUrl,
+  qr,
   tamanio = 110,
 }: {
-  qrDataUrl: string | undefined;
+  qr: DatosImpresion["qr"];
   tamanio?: number;
 }) {
-  if (qrDataUrl === undefined) return null;
+  if (qr === undefined) return null;
 
   return (
     <div className="qr-fiscal">
-      <img src={qrDataUrl} alt="Código QR de ARCA" width={tamanio} height={tamanio} />
+      <svg
+        className="qr-fiscal__svg"
+        width={tamanio}
+        height={tamanio}
+        viewBox={`0 0 ${qr.lado} ${qr.lado}`}
+        role="img"
+        aria-label="Código QR de ARCA"
+      >
+        {/* El fondo blanco es parte del código: sobre otro color no se lee. */}
+        <rect width={qr.lado} height={qr.lado} fill="#ffffff" />
+        <path d={qr.path} fill="#000000" />
+      </svg>
       <div className="qr-fiscal__pie">Comprobante autorizado por ARCA</div>
     </div>
   );

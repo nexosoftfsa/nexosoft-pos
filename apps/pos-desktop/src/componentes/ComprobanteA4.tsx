@@ -101,7 +101,7 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
       )}
 
       <footer className="a4-footer a4-footer--con-qr">
-        {esFiscal && <QrFiscal qrDataUrl={datos.qrDataUrl} tamanio={90} />}
+        {esFiscal && <QrFiscal qr={datos.qr} tamanio={90} />}
         <div>
           {esFiscal ? (
             datos.cae ? (

@@ -1301,12 +1301,13 @@ body {
   text-align: center;
   margin-top: 6px;
 }
-.qr-fiscal img {
+.qr-fiscal__svg {
   display: block;
   margin: 0 auto;
-  /* Sin esto, al imprimir el navegador puede suavizar el QR y volverlo
-     ilegible para el lector. */
-  image-rendering: pixelated;
+  /* El QR es vectorial: escala sin perder definición y sale nítido en
+     cualquier impresora. Antes era un <img>, que además de suavizarse al
+     imprimir tenía que decodificarse — y salía vacío. */
+  shape-rendering: crispEdges;
 }
 .qr-fiscal__pie {
   font-size: 9px;
