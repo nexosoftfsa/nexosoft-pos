@@ -8,9 +8,11 @@
  * que se imprimió y la impresora corta por comando, sin diálogo de Windows ni
  * tamaño de papel fijo.
  */
+import { llevaQrFiscal, urlQrArca } from "@nexosoft/domain";
 import {
   construirEscPos,
   PUNTOS_POR_COLUMNA,
+  qrARaster,
   type DatosTicket,
   type EstadoImpresora,
   type ImpresoraTermica,
@@ -64,6 +66,42 @@ export async function logoARaster(
       }
     }
     return { anchoPuntos: ancho, alto, bits };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Arma el QR fiscal de ARCA como mapa de bits para la térmica.
+ *
+ * El ticket de papel es el que se lleva el cliente, así que es el que tiene que
+ * llevar el QR (RG 4892/2020). Hasta acá el QR sólo existía en la vista HTML:
+ * un comercio con térmica imprimía comprobantes sin QR, o sea mal emitidos.
+ *
+ * Devuelve `null` si el comprobante no lleva QR (ticket interno, o todavía sin
+ * CAE) o si falla la generación: un ticket sin QR es mucho mejor que una venta
+ * que no se imprime.
+ */
+async function qrFiscalRaster(
+  datos: DatosTicket,
+  anchoPuntos: number,
+): Promise<LogoRaster | null> {
+  if (!llevaQrFiscal(datos.cae) || typeof datos.codigoComprobanteArca !== "number") return null;
+  try {
+    const url = urlQrArca({
+      fecha: datos.fecha,
+      cuit: datos.cuit,
+      puntoDeVenta: datos.puntoDeVenta,
+      tipoComprobante: datos.codigoComprobanteArca,
+      numeroComprobante: datos.numero,
+      importe: datos.total.aDecimalString(2),
+      cae: datos.cae as string,
+    });
+    const { create } = await import("qrcode");
+    // `create` da la matriz de módulos sin dibujar nada: no hace falta canvas,
+    // y el rasterizado queda en una función pura y testeable del dominio de
+    // hardware.
+    return qrARaster(create(url, { errorCorrectionLevel: "M" }).modules, anchoPuntos);
   } catch {
     return null;
   }
@@ -205,11 +243,11 @@ export class ImpresoraEscPos implements ImpresoraTermica {
   async imprimirTicket(datos: DatosTicket): Promise<void> {
     await verificarDestino();
     const { invoke } = await import("@tauri-apps/api/core");
+    const anchoPuntos = this.columnas * PUNTOS_POR_COLUMNA;
     const logo =
-      datos.logoDataUrl !== undefined
-        ? await logoARaster(datos.logoDataUrl, this.columnas * PUNTOS_POR_COLUMNA)
-        : null;
-    const bytes = construirEscPos(datos, this.columnas, logo ?? undefined);
+      datos.logoDataUrl !== undefined ? await logoARaster(datos.logoDataUrl, anchoPuntos) : null;
+    const qr = await qrFiscalRaster(datos, anchoPuntos);
+    const bytes = construirEscPos(datos, this.columnas, logo ?? undefined, qr ?? undefined);
     await invoke("imprimir_escpos", {
       impresora: nombreImpresoraConfigurada() || null,
       // El comando espera Vec<u8>; un Uint8Array no serializa a JSON.

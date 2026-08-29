@@ -8,6 +8,7 @@ import {
   comandoImagenRaster,
   construirEscPos,
   filaIzquierdaDerecha,
+  qrARaster,
 } from "./escpos.js";
 import type { DatosTicket } from "./impresora.js";
 
@@ -241,6 +242,95 @@ describe("comandoImagenRaster (logo del comercio)", () => {
 
 // Alícuotas se importan para asegurar que el paquete de dominio resuelve en
 // este contexto de test (mismo criterio que hardware.test.ts).
+describe("qrARaster (QR fiscal en la termica)", () => {
+  /** ¿Está encendido el punto (x, y) del mapa de bits? */
+  function punto(r: { anchoPuntos: number; bits: Uint8Array }, x: number, y: number): boolean {
+    const bytesPorFila = Math.ceil(r.anchoPuntos / 8);
+    return ((r.bits[y * bytesPorFila + (x >> 3)] ?? 0) & (0x80 >> (x & 7))) !== 0;
+  }
+
+  /** Matriz de 3x3 con una sola cruz encendida en el centro. */
+  const cruz = { size: 3, data: Uint8Array.from([0, 1, 0, 1, 1, 1, 0, 1, 0]) };
+
+  it("deja la zona silenciosa de 4 modulos alrededor", () => {
+    // Sin ese margen blanco muchos lectores no enganchan el codigo.
+    const r = qrARaster(cruz, 11); // 3 + 4 + 4 = 11 modulos, escala 1
+    expect(r.anchoPuntos).toBe(11);
+    expect(r.alto).toBe(11);
+
+    for (let i = 0; i < 4; i++) {
+      expect(punto(r, i, 5)).toBe(false); // margen izquierdo
+      expect(punto(r, 5, i)).toBe(false); // margen superior
+      expect(punto(r, 10 - i, 5)).toBe(false); // margen derecho
+      expect(punto(r, 5, 10 - i)).toBe(false); // margen inferior
+    }
+  });
+
+  it("dibuja los modulos donde corresponde", () => {
+    const r = qrARaster(cruz, 11);
+    // La cruz arranca en (4,4): centro encendido, esquinas apagadas.
+    expect(punto(r, 5, 5)).toBe(true);
+    expect(punto(r, 5, 4)).toBe(true);
+    expect(punto(r, 4, 4)).toBe(false);
+    expect(punto(r, 6, 6)).toBe(false);
+  });
+
+  it("agranda el QR para aprovechar el ancho del papel", () => {
+    // Un QR mas grande se escanea mejor; el limite lo pone el rollo.
+    const r = qrARaster(cruz, 384);
+    expect(r.anchoPuntos).toBe(11 * 34); // floor(384 / 11) = 34
+    expect(r.anchoPuntos).toBeLessThanOrEqual(384);
+    // Cada modulo pasa a ser un cuadrado de 34x34 puntos.
+    expect(punto(r, 4 * 34, 5 * 34)).toBe(true);
+    expect(punto(r, 4 * 34 + 33, 5 * 34 + 33)).toBe(true);
+  });
+
+  it("nunca se pasa del ancho, ni con un QR grande", () => {
+    const grande = { size: 57, data: new Uint8Array(57 * 57).fill(1) };
+    for (const ancho of [384, 576]) {
+      expect(qrARaster(grande, ancho).anchoPuntos).toBeLessThanOrEqual(ancho);
+    }
+  });
+
+  it("el raster que produce lo acepta comandoImagenRaster", () => {
+    // Si las medidas no cerraran, comandoImagenRaster tira.
+    expect(() => comandoImagenRaster(qrARaster(cruz, 384))).not.toThrow();
+  });
+});
+
+describe("el ticket termico lleva el QR fiscal", () => {
+  const qr = qrARaster({ size: 3, data: Uint8Array.from([1, 0, 1, 0, 1, 0, 1, 0, 1]) }, 100);
+  const marcaImagen = [0x1d, 0x76, 0x30];
+
+  function posicionDe(bytes: Uint8Array, marca: readonly number[], desde = 0): number {
+    for (let i = desde; i < bytes.length; i++) {
+      if (marca.every((m, j) => bytes[i + j] === m)) return i;
+    }
+    return -1;
+  }
+
+  it("imprime el QR cuando se lo pasan", () => {
+    // El ticket de papel es el que se lleva el cliente: es el que necesita QR.
+    const bytes = construirEscPos(ticket({ cae: "86350824926273" }), COLUMNAS_58MM, undefined, qr);
+    expect(posicionDe(bytes, marcaImagen)).toBeGreaterThan(-1);
+  });
+
+  it("sin QR el ticket sale igual (comercio sin alta, o venta sin CAE)", () => {
+    const bytes = construirEscPos(ticket(), COLUMNAS_58MM);
+    expect(posicionDe(bytes, marcaImagen)).toBe(-1);
+  });
+
+  it("el QR va despues del CAE, no arriba con el logo", () => {
+    const logo = { anchoPuntos: 16, alto: 2, bits: Uint8Array.from([0xff, 0x00, 0x0f, 0xf0]) };
+    const bytes = construirEscPos(ticket({ cae: "86350824926273" }), COLUMNAS_58MM, logo, qr);
+
+    const posLogo = posicionDe(bytes, marcaImagen);
+    const posQr = posicionDe(bytes, marcaImagen, posLogo + 1);
+    expect(posLogo).toBeGreaterThan(-1);
+    expect(posQr).toBeGreaterThan(posLogo);
+  });
+});
+
 describe("dominio disponible", () => {
   it("tiene la alícuota del 21%", () => {
     expect(ALICUOTAS_IVA.VEINTIUNO.porcentaje).toBe(21);

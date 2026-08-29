@@ -8,6 +8,7 @@ export { ErrorBalanza } from "./balanza.js";
 export {
   construirEscPos,
   comandoImagenRaster,
+  qrARaster,
   aAsciiImprimible,
   envolver,
   filaIzquierdaDerecha,
@@ -16,7 +17,7 @@ export {
   COLUMNAS_58MM,
   PUNTOS_POR_COLUMNA,
 } from "./escpos.js";
-export type { LogoRaster } from "./escpos.js";
+export type { LogoRaster, ModulosQr } from "./escpos.js";
 
 // Mocks (usados en desarrollo y tests)
 export { MockImpresoraTermica, MockLectorDeBarras, MockBalanza } from "./mocks/index.js";

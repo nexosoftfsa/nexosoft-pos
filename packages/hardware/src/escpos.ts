@@ -45,6 +45,54 @@ const TAMANO_NORMAL = [GS, 0x21, 0x00];
 /** GS V 66 n: avanza n puntos y corta. Deja pestaña para agarrar el ticket. */
 const CORTAR = [GS, 0x56, 0x42, 0x00];
 
+/** Matriz de módulos de un QR: `data` trae un byte por módulo (0 = blanco). */
+export interface ModulosQr {
+  readonly size: number;
+  readonly data: Uint8Array | readonly number[];
+}
+
+/**
+ * Zona silenciosa alrededor del QR, en módulos. La norma pide 4; sin ella
+ * muchos lectores no enganchan el código, sobre todo pegado a texto.
+ */
+const MARGEN_QR = 4;
+
+/**
+ * Convierte los módulos de un QR en un mapa de bits para `GS v 0`.
+ *
+ * El QR fiscal se imprime como IMAGEN y no con los comandos nativos de QR de
+ * ESC/POS (`GS ( k`) a propósito: esos comandos no los soporta todo modelo, y
+ * si el modelo no los entiende imprime basura o nada — y nadie se entera hasta
+ * que un cliente no puede escanear su comprobante. El camino de imagen es el
+ * mismo que ya usa el logo del comercio: si el logo sale, el QR sale.
+ *
+ * La escala se calcula para ocupar el ancho disponible sin pasarse: un QR más
+ * grande se escanea mejor, y el papel térmico da lo que da.
+ */
+export function qrARaster(modulos: ModulosQr, anchoMaxPuntos: number): LogoRaster {
+  const lado = modulos.size + MARGEN_QR * 2;
+  const escala = Math.max(1, Math.floor(anchoMaxPuntos / lado));
+  const anchoPuntos = lado * escala;
+  const bytesPorFila = Math.ceil(anchoPuntos / 8);
+  const bits = new Uint8Array(bytesPorFila * anchoPuntos);
+
+  for (let fila = 0; fila < modulos.size; fila++) {
+    for (let col = 0; col < modulos.size; col++) {
+      if (modulos.data[fila * modulos.size + col] === 0) continue;
+      // Cada módulo es un cuadrado de `escala` puntos.
+      for (let dy = 0; dy < escala; dy++) {
+        const y = (fila + MARGEN_QR) * escala + dy;
+        for (let dx = 0; dx < escala; dx++) {
+          const x = (col + MARGEN_QR) * escala + dx;
+          bits[y * bytesPorFila + (x >> 3)]! |= 0x80 >> (x & 7);
+        }
+      }
+    }
+  }
+
+  return { anchoPuntos, alto: anchoPuntos, bits };
+}
+
 /**
  * `GS v 0`: imprime un mapa de bits. El ancho va en BYTES por fila (no en
  * puntos) y tanto el ancho como el alto viajan en dos bytes little-endian.
@@ -214,6 +262,7 @@ export function construirEscPos(
   datos: DatosTicket,
   columnas = COLUMNAS_58MM,
   logo?: LogoRaster,
+  qrFiscal?: LogoRaster,
 ): Uint8Array {
   const b = new Buffer(columnas);
   const pesos = pesosTicket;
@@ -277,6 +326,16 @@ export function construirEscPos(
     if (datos.vencimientoCae) b.linea(`Vto. ${fecha(datos.vencimientoCae)}`);
   }
   b.comando(ALINEAR_CENTRO);
+
+  // El QR fiscal (RG 4892/2020) va en el ticket de papel, no sólo en el A4:
+  // es el ticket lo que se lleva el cliente. Un comprobante electrónico sin QR
+  // está mal emitido.
+  if (qrFiscal !== undefined) {
+    b.linea();
+    b.comando(comandoImagenRaster(qrFiscal));
+    b.linea();
+  }
+
   b.linea();
   if (datos.esFiscal === false) b.linea("Documento interno, sin validez fiscal");
   b.linea("Gracias por su compra");
