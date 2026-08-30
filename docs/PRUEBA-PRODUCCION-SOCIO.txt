@@ -50,9 +50,12 @@ PASO 1 - ACTUALIZAR LOS DOS
     Anota:  POS: ____________   Servidor: ____________
 
 1.2 Si el servidor no dice 0.12.2 o mas, toca "Actualizar servidor".
-1.3 Si el POS ofrece la 0.1.44, instalala y volve a entrar.
+1.3 Si el POS ofrece la 0.1.45, instalala y volve a entrar.
 
-    [ ] POS 0.1.44 o mas, Servidor 0.12.2 o mas.
+    [ ] POS 0.1.45 o mas, Servidor 0.12.2 o mas.
+
+    La 0.1.45 es imprescindible: en las anteriores no se puede cargar un
+    segundo certificado, que es justo lo que hace falta para produccion.
 
 
 PASO 2 - LIMPIAR LA COLA VIEJA (aprovechamos)
@@ -129,8 +132,19 @@ uno nuevo: si regeneras la clave, el certificado que ya tenes deja de servir.
 
 PASO 5 - CARGARLO EN EL SISTEMA
 --------------------------------
+    OJO CON EL ORDEN: primero se carga el certificado, DESPUES se pasa a
+    produccion. Si ya pasaste a produccion con el certificado de
+    homologacion todavia cargado, NO VENDAS hasta terminar este paso.
+
+    Necesitas POS 0.1.45 o mas. En versiones anteriores, con un certificado
+    ya cargado, el campo para subir otro no aparecia.
+
 5.1 POS > Configuracion > Facturacion electronica (ARCA).
-5.2 Carga el .crt de PRODUCCION.
+5.2 Busca "Tenes otro certificado para cargar?" y elegi el .crt de
+    PRODUCCION.
+
+    NO uses "Generar un pedido nuevo (renovacion)": eso regenera la clave y
+    deja inservible el certificado que ya tenes.
 
     [ ] Dijo "Certificado guardado" y muestra vencimiento.
 
@@ -146,6 +160,13 @@ PASO 5 - CARGARLO EN EL SISTEMA
 
 PASO 6 - PASAR A PRODUCCION
 ----------------------------
+    Antes de tocar nada, mira el "Nombre del certificado en ARCA" de la
+    tarjeta. Tiene que ser el de PRODUCCION, no el que usaste para las
+    pruebas. Si todavia dice el de pruebas, volve al paso 5.
+
+    El sistema NO puede darse cuenta solo de esto: los dos certificados se
+    ven iguales y el nombre lo elegiste vos. Por eso hay que mirarlo.
+
 6.1 En la misma tarjeta, toca la opcion para pasar a produccion.
 6.2 Va a aparecer una advertencia. Leela y confirma.
 
