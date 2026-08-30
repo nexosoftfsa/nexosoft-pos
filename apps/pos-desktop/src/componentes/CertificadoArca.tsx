@@ -262,6 +262,35 @@ export function CertificadoArca({
               </button>
             </div>
           )}
+          {/*
+            Cargar OTRO certificado sin tocar la clave privada.
+            Hacía falta y no estaba: con un certificado ya cargado se ocultaba
+            todo el bloque de los tres pasos, y con él el campo para subir el
+            .crt. Para pasar a producción hay que cargar el certificado de
+            producción, y la única opción a la vista era "generar un pedido
+            nuevo" — que regenera la clave e invalida el certificado que ya
+            está. Justo lo contrario de lo que se necesita.
+          */}
+          <div className="config-ayuda">
+            <b>¿Tenés otro certificado para cargar?</b>
+            <br />
+            Es lo que hay que hacer para pasar a producción: el certificado de producción es
+            distinto del de homologación y se saca por otro portal de ARCA. Se sube{" "}
+            <b>con el mismo pedido (.csr)</b> que ya generaste, así que no hace falta generar uno
+            nuevo.
+            <div className="field" style={{ marginTop: 6 }}>
+              <input
+                className="input"
+                type="file"
+                accept=".crt,.pem,.cer,application/x-x509-ca-cert"
+                disabled={trabajando}
+                onChange={(e) => void subirCertificado(e)}
+              />
+            </div>
+            Reemplaza al que está cargado ahora, pero <b>no toca la clave privada</b>: si después
+            querés volver al anterior, alcanza con subir ese .crt de nuevo. Guardá los dos
+            archivos.
+          </div>
           <button
             type="button"
             className="linkbtn"
@@ -270,6 +299,11 @@ export function CertificadoArca({
           >
             Generar un pedido nuevo (renovación)
           </button>
+          <div className="config-ayuda">
+            Esto último es sólo para <b>renovar</b> un certificado vencido. Genera una clave nueva
+            y deja inservible el certificado actual: no es lo que hay que usar para pasar a
+            producción.
+          </div>
         </>
       ) : (
         <>
