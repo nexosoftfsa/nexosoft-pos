@@ -27,20 +27,21 @@ mandaste, asi que eso ya no hay que revisarlo.
 
 QUE VA A ESTAR DISTINTO
 ------------------------
-- Al confirmar una venta fiscal, el POS ahora espera hasta 8 segundos a que
-  ARCA conteste, para que el ticket salga con CAE, QR y el numero de ARCA.
-  Si tarda un poco mas que antes en imprimir, es eso. Es normal.
-- Si ARCA no contesta, el ticket sale como antes y la venta NO se frena.
-- Un ticket no fiscal se imprime al instante, igual que siempre.
+- Al confirmar una venta fiscal, el POS ahora espera a que ARCA conteste para
+  que el ticket salga con CAE, QR y el numero de ARCA. Normalmente son 1 a 3
+  segundos, y vas a ver el cartel 'Autorizando en ARCA...'. Es normal.
+- Si ARCA no contesta en 5 segundos, deja de esperar: el ticket sale como
+  antes, la venta NO se frena y el CAE se consigue despues.
+- Un ticket no fiscal se imprime al instante y no toca ARCA, igual que siempre.
 
 
 PASO 1 - ACTUALIZAR LOS DOS
 ---------------------------
 1.1 POS > Configuracion > Actualizaciones.
 1.2 Si el servidor no dice 0.12.4 o mas, toca "Actualizar servidor".
-1.3 Si el POS ofrece la 0.1.47, instalala y volve a entrar.
+1.3 Si el POS ofrece la 0.1.48, instalala y volve a entrar.
 
-    [ ] POS 0.1.47 o mas, Servidor 0.12.4 o mas.
+    [ ] POS 0.1.48 o mas, Servidor 0.12.4 o mas.
 
 
 PASO 2 - EL MOTIVO (esto es lo que mas necesito)
@@ -111,8 +112,10 @@ PASO 5 - UNA VENTA NUEVA DE $10
 --------------------------------
 5.1 Hace una venta de $10 y cobrala en efectivo.
 
-    Puede tardar unos segundos en imprimir. Es a proposito: esta esperando
-    el CAE.
+    Vas a ver "Autorizando en ARCA..." un par de segundos. Es a proposito:
+    esta esperando el CAE para poder imprimir el ticket definitivo.
+
+    Cronometralo, asi sabemos cuanto tarda de verdad: ________ segundos
 
 5.2 Guarda el PDF.
 
