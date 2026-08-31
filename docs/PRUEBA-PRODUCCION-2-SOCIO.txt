@@ -1,0 +1,182 @@
+===========================================================================
+  NEXOSOFT - POR QUE NO SALIO EL CAE EN PRODUCCION (segunda vuelta)
+  Para: Sebastian
+  Tiempo: 30 minutos
+===========================================================================
+
+GRACIAS POR EL INFORME
+----------------------
+Estuvo muy bien hecho. Con eso encontre dos cosas:
+
+  1. Los puntos 8 y 9 (no aparecia "Verificar en ARCA", no habia QR) NO eran
+     errores aparte: sin CAE no hay QR, y el boton estaba escondido cuando no
+     habia CAE. Los dos eran consecuencia del punto 7.
+
+  2. El "dato curioso" que marcaste era lo mas importante de todo. El ticket
+     que se lleva el cliente NUNCA podia tener CAE ni QR: el POS numeraba por
+     su cuenta y no esperaba la respuesta del servidor. Por eso veias 31 en el
+     ticket y 103 en Comprobantes. Ya esta corregido.
+
+Lo que sigue sin saberse es POR QUE produccion no dio el CAE. Ese dato lo
+tiene el sistema y no lo podiamos leer: estaba en un cartelito que aparecia al
+pasar el mouse y no se podia copiar. Eso tambien esta arreglado.
+
+Tu punto de venta y tu certificado estan bien. Lo verifique con los PDF que
+mandaste, asi que eso ya no hay que revisarlo.
+
+
+QUE VA A ESTAR DISTINTO
+------------------------
+- Al confirmar una venta fiscal, el POS ahora espera hasta 8 segundos a que
+  ARCA conteste, para que el ticket salga con CAE, QR y el numero de ARCA.
+  Si tarda un poco mas que antes en imprimir, es eso. Es normal.
+- Si ARCA no contesta, el ticket sale como antes y la venta NO se frena.
+- Un ticket no fiscal se imprime al instante, igual que siempre.
+
+
+PASO 1 - ACTUALIZAR LOS DOS
+---------------------------
+1.1 POS > Configuracion > Actualizaciones.
+1.2 Si el servidor no dice 0.12.4 o mas, toca "Actualizar servidor".
+1.3 Si el POS ofrece la 0.1.47, instalala y volve a entrar.
+
+    [ ] POS 0.1.47 o mas, Servidor 0.12.4 o mas.
+
+
+PASO 2 - EL MOTIVO (esto es lo que mas necesito)
+-------------------------------------------------
+Hacelo ANTES de tocar cualquier otra cosa.
+
+2.1 Anda a Comprobantes.
+2.2 Vas a ver las dos ventas de $100 de ayer, con una etiqueta amarilla que
+    dice "Sin CAE".
+2.3 TOCA esa etiqueta. Ahora se abre un panel con el motivo completo.
+2.4 Toca "Copiar el motivo".
+
+    [ ] Se abrio el panel y pude copiar.
+
+    PEGAME ESE TEXTO ACA (o mandamelo por WhatsApp):
+    ______________________________________________________________
+    ______________________________________________________________
+    ______________________________________________________________
+
+    Con ese texto te digo exactamente que falta. Es el dato que vengo
+    pidiendo hace tres dias y hasta ahora no se podia sacar.
+
+
+PASO 3 - MI SOSPECHA PRINCIPAL: LA DELEGACION
+----------------------------------------------
+Mientras tanto, revisemos lo unico que queda sin verificar. En ARCA, el
+permiso para facturar NO se le da al CUIT: se le da a UN certificado. Y la
+delegacion de homologacion NO sirve en produccion: son dos mundos separados.
+
+3.1 Entra con tu Clave Fiscal al portal de siempre (produccion).
+3.2 Anda a "Administrador de Relaciones".
+3.3 Busca las relaciones/servicios asociados y fijate si figura:
+
+        Facturacion Electronica  ->  computador fiscal "nexosoft-prueba"
+
+    (Ese es el nombre del certificado de produccion que cargaste. Ojo: NO es
+    "SebastianPrueba", que era el de las pruebas.)
+
+    Que ves: ____________________________________________
+
+    [ ] Esta la relacion, apuntando a nexosoft-prueba.
+
+3.4 Si NO esta, creala: "Adherir servicio" > Facturacion Electronica, y
+    cuando pregunte el representante/computador fiscal, elegi
+    nexosoft-prueba.
+
+    [ ] Creada.
+
+    Si no encontras como, sacale una foto a la pantalla y avisame. No
+    inventes: es preferible que lo veamos juntos.
+
+
+PASO 4 - MIRAR SI SE ARREGLARON SOLAS
+--------------------------------------
+Las ventas pendientes se reintentan solas cada 5 minutos. Si el problema era
+la delegacion, se autorizan sin que hagas nada.
+
+4.1 Espera 10 minutos.
+4.2 Refresca Comprobantes.
+
+    [ ] La etiqueta "Sin CAE" desaparecio en las dos.
+
+    Si desaparecio: EXCELENTE, era la delegacion. Segui al paso 5.
+    Si sigue: mandame el motivo del paso 2 y PARA ACA.
+
+
+PASO 5 - UNA VENTA NUEVA DE $10
+--------------------------------
+5.1 Hace una venta de $10 y cobrala en efectivo.
+
+    Puede tardar unos segundos en imprimir. Es a proposito: esta esperando
+    el CAE.
+
+5.2 Guarda el PDF.
+
+    [ ] El ticket tiene CAE.
+    [ ] El ticket tiene el QR dibujado.
+
+    Numero que dice el TICKET: 0002-________
+    CAE: ______________________________
+
+5.3 Anda a Comprobantes y busca esa venta.
+
+    Numero que dice COMPROBANTES: ________
+
+    [ ] ES EL MISMO NUMERO que el del ticket.
+
+    Esto es lo que ayer no coincidia (31 contra 103). Si vuelven a ser
+    distintos, avisame: significa que el arreglo no funciono.
+
+    MANDAME ESE PDF.
+
+
+PASO 6 - CONSTATAR EL QR (la prueba definitiva)
+------------------------------------------------
+Esto en homologacion no se podia hacer.
+
+6.1 Escanea el QR del ticket con el celular.
+6.2 Se abre la pagina de ARCA con los campos completos.
+6.3 Escribi los caracteres de la imagen y toca CONSULTAR.
+
+    [ ] ARCA devolvio los datos del comprobante.
+
+    SACALE UNA FOTO Y MANDAMELA.
+
+    Ahora SI tiene que encontrarlo. Si sale la lista de errores como en
+    homologacion, para aca y avisame.
+
+
+PASO 7 - ANULAR (esto nunca se probo contra ARCA)
+--------------------------------------------------
+7.1 En Comprobantes, en la fila de esa venta, toca "Anular".
+
+    [ ] Se creo una Nota de Credito con su propio CAE.
+
+    Numero de la NC: 0002-________
+    CAE de la NC: ______________________________
+
+    Si dice "Rechazada", toca la etiqueta y copiame el motivo completo.
+    ______________________________________________________________
+
+7.2 Reimprimi la NC y fijate que tenga QR.
+
+    [ ] Tiene QR. Mandame el PDF.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. EL MOTIVO del paso 2.4  <- lo mas importante, aunque no hagas nada mas
+  2. Que viste en Administrador de Relaciones (paso 3.3)
+  3. Si las pendientes se autorizaron solas (paso 4.2)
+  4. El PDF del ticket nuevo, y si los dos numeros coinciden (paso 5.3)
+  5. La foto de ARCA constatando el QR (paso 6.3)
+  6. El PDF de la nota de credito (paso 7.2)
+
+Si el paso 2 te da el motivo y no entendes que dice, mandamelo igual y
+frena ahi. Con ese texto resuelvo el resto yo.
+===========================================================================
