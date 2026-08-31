@@ -33,16 +33,27 @@ ofrecer el sistema.
 
 ## Decisión
 
-### La venta fiscal espera el CAE antes de imprimir, hasta 8 segundos
+### La venta fiscal espera el CAE antes de imprimir, hasta 5 segundos
 
 Al confirmar una venta **fiscal**, el POS encola la operación y espera a que el
 servidor conteste. Si contesta a tiempo, el ticket sale con el CAE, el QR y **el
 número que asignó ARCA**. El resultado del comprobante viaja de vuelta con la
 respuesta del sync (`ComprobanteResuelto`), sin una segunda llamada.
 
-8 segundos es un compromiso deliberado: el servidor corta su llamada a ARCA a
-los 20, así que esperar más no aportaría; y con un cliente adelante del
-mostrador, más que eso es demasiado.
+Una venta normal se resuelve en 1 a 3 segundos: son dos llamadas a ARCA
+(`FECompUltimoAutorizado` y `FECAESolicitar`), porque el ticket de acceso está
+cacheado 12 horas. Si a los 5 segundos ARCA no contestó, ya está degradada y
+seguir esperando sólo alarga la cola del mostrador — el servidor igual sigue
+intentando por su cuenta hasta su propio tope de 20 segundos.
+
+Mientras espera, la pantalla dice **"Autorizando en ARCA…"** y el botón queda
+deshabilitado. Sin eso la caja parecía colgada, que es peor que la demora en
+sí: uno o dos segundos sin ninguna señal se leen como que el sistema se trabó.
+
+Queda anotada una optimización que no se hizo: `FECompUltimoAutorizado` se
+llama en cada venta y podría evitarse recordando el último número y
+reconsultando sólo cuando ARCA rechaza por numeración no correlativa (10016).
+Cortaría el tiempo casi a la mitad.
 
 ### Agotar la espera NO cancela nada
 
@@ -73,8 +84,13 @@ provisorio para poder vender sin red, no el número del comprobante.
 - Con ARCA funcionando, el cliente se lleva un comprobante completo y correcto.
 - Sin ARCA, todo se comporta como antes: se vende, se imprime, y el CAE llega
   después.
-- La caja puede demorar hasta 8 segundos en imprimir una venta fiscal. Es el
-  precio de emitir bien, y sólo se paga cuando ARCA está lenta.
+- La caja demora entre 1 y 3 segundos en una venta fiscal normal, y hasta 5 si
+  ARCA está lenta. Es el precio de emitir bien, y con el cartel a la vista se
+  lee como trabajo y no como una pantalla trabada.
+- Con impresora térmica esta espera podría desaparecer del todo: se dispara la
+  autorización, el cajero sigue, y el papel sale solo un momento después. Hoy
+  no se hace porque imprimir abre el diálogo de Windows, y que aparezca solo
+  unos segundos más tarde sobre otra pantalla es peor que esperar.
 - Queda una divergencia conocida: el registro **local** del POS conserva su
   número provisorio aunque el ticket salga con el de ARCA. No afecta al
   comprobante ni a los reportes (que leen del servidor), pero conviene

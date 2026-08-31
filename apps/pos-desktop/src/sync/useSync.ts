@@ -62,10 +62,14 @@ const INTERVALO_MS = 15_000;
  * Es un compromiso: con ARCA respondiendo normal, el ticket sale con CAE y QR
  * (que es como tiene que salir). Con ARCA lenta o caída, el cajero no se queda
  * mirando la pantalla con el cliente adelante — sale el ticket "pendiente" y el
- * CAE se consigue solo. El servidor corta su llamada a ARCA a los 20s, así que
- * esperar más que esto no aporta nada.
+ * CAE se consigue solo.
+ *
+ * Una venta normal se resuelve en 1 a 3 segundos (dos llamadas a ARCA; el
+ * ticket de acceso está cacheado). Si a los 5 no contestó, ya está degradada y
+ * esperar más sólo hace más larga la cola: el servidor igual sigue intentando
+ * por su cuenta hasta los 20 segundos que tiene de tope.
  */
-const ESPERA_COMPROBANTE_MS = 8_000;
+const ESPERA_COMPROBANTE_MS = 5_000;
 
 /**
  * Orquesta la cola de sync para la UI: cuenta pendientes/fallidas, sincroniza al

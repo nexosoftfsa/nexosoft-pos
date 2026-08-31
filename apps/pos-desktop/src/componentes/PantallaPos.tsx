@@ -166,6 +166,8 @@ export function PantallaPos({
   const [comprobanteServidor, setComprobanteServidor] = useState<ComprobanteResuelto | null>(
     null,
   );
+  /** Se está esperando el CAE para poder imprimir el ticket definitivo. */
+  const [autorizando, setAutorizando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formaPago, setFormaPago] = useState<FormaDePago>(FormaDePago.Efectivo);
   const [montoPago, setMontoPago] = useState<string>("");
@@ -853,7 +855,12 @@ export function PantallaPos({
           ...(clienteVenta !== undefined ? { clienteId: clienteVenta } : {}),
         });
         if (esperar) {
-          setComprobanteServidor(await sync.encolarYEsperarComprobante(operacion));
+          setAutorizando(true);
+          try {
+            setComprobanteServidor(await sync.encolarYEsperarComprobante(operacion));
+          } finally {
+            setAutorizando(false);
+          }
         } else {
           await sync.encolar(operacion);
         }
@@ -1257,8 +1264,19 @@ export function PantallaPos({
 
           {error && <div className="error">{error}</div>}
 
-          <button className="confirmar" onClick={() => void confirmar()} disabled={!puedeConfirmar}>
-            Confirmar venta
+          {/* Sin esto la pantalla se quedaba quieta uno o dos segundos y
+              parecía colgada. El cajero tiene que ver que está pasando algo, y
+              qué. */}
+          {autorizando && (
+            <div className="aviso-trabajando">Autorizando en ARCA…</div>
+          )}
+
+          <button
+            className="confirmar"
+            onClick={() => void confirmar()}
+            disabled={!puedeConfirmar || autorizando}
+          >
+            {autorizando ? "Autorizando…" : "Confirmar venta"}
           </button>
           </div>
         </section>
