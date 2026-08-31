@@ -15,6 +15,7 @@ export type {
   OperacionEnCola,
   ResultadoEnvio,
   ResumenSync,
+  ComprobanteResuelto,
 } from "./tipos";
 export type { AlmacenDeOperaciones } from "./almacen-de-operaciones";
 export type { ClienteDeSync } from "./cliente-de-sync";

@@ -27,9 +27,30 @@ export interface OperacionEnCola extends OperacionSync {
   ultimoError?: string;
 }
 
+/**
+ * Lo que el servidor resolvió del comprobante de una venta.
+ *
+ * Viaja de vuelta con el resultado del envío para que el POS pueda imprimir el
+ * ticket con el CAE, el QR y el **número que asignó ARCA**. Sin esto el POS
+ * imprimía su propio número local y un ticket que decía "pendiente de
+ * autorización", aunque ARCA hubiera autorizado la venta un segundo después.
+ */
+export interface ComprobanteResuelto {
+  readonly numeroComprobante: number | null;
+  readonly tipoComprobante: string | null;
+  readonly cae: string | null;
+  /** ISO. */
+  readonly caeFechaVto: string | null;
+  readonly estadoFiscal: string;
+}
+
 /** Resultado del envío de UNA operación, devuelto por el servidor. */
 export type ResultadoEnvio =
-  | { readonly ok: true; readonly idRemoto?: string }
+  | {
+      readonly ok: true;
+      readonly idRemoto?: string;
+      readonly comprobante?: ComprobanteResuelto;
+    }
   | { readonly ok: false; readonly error: string; readonly reintentable: boolean };
 
 /** Resumen de una corrida de sincronización. */
@@ -38,4 +59,6 @@ export interface ResumenSync {
   readonly completadas: number;
   readonly fallidas: number;
   readonly pendientes: number;
+  /** Lo que contestó el servidor por cada operación de esta corrida. */
+  readonly resultados: Readonly<Record<string, ResultadoEnvio>>;
 }

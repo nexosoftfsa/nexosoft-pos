@@ -15,6 +15,7 @@ import {
 } from "@nexosoft/domain";
 import type { DatosTicket } from "@nexosoft/hardware";
 import type { IntentoPago } from "@nexosoft/pagos";
+import type { ComprobanteResuelto } from "@nexosoft/sync";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { estaEnTauri } from "../datos/ejecutor-sql-tauri";
@@ -157,6 +158,14 @@ export function PantallaPos({
   const [recargoPorc, setRecargoPorc] = useState<number>(0);
   const [preview, setPreview] = useState<PrevisualizacionVenta | null>(null);
   const [ultimaVenta, setUltimaVenta] = useState<VentaConfirmada | null>(null);
+  /**
+   * Lo que el servidor resolvió del comprobante de la última venta: el CAE y el
+   * número que asignó ARCA. Es lo que hace que el ticket del cliente sea el
+   * comprobante de verdad y no una copia con numeración local.
+   */
+  const [comprobanteServidor, setComprobanteServidor] = useState<ComprobanteResuelto | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [formaPago, setFormaPago] = useState<FormaDePago>(FormaDePago.Efectivo);
   const [montoPago, setMontoPago] = useState<string>("");
@@ -783,6 +792,9 @@ export function PantallaPos({
       return;
     }
     const clienteVenta = clienteId === "" ? undefined : clienteId;
+    // Se limpia ANTES de confirmar: si esta venta no llega a resolverse contra
+    // el servidor, su ticket no puede salir con el CAE de la venta anterior.
+    setComprobanteServidor(null);
     try {
       const venta = await servicio.confirmarVenta(
         armarComando(carrito, condicionReceptor, pagos, recargoPorc, clienteVenta),
@@ -826,17 +838,25 @@ export function PantallaPos({
           pagosSync,
           mapearMedioPago(pagos[0]?.forma ?? FormaDePago.Efectivo),
         );
-        await sync.encolar(
-          construirOperacionVenta({
-            items: itemsSync,
-            medioPago,
-            terminalId: entorno.sync.terminalId,
-            pagos: pagosSync,
-            recargo: venta.resultado.recargo.aDecimalString(2),
-            tipoComprobante: venta.tipoComprobante,
-            ...(clienteVenta !== undefined ? { clienteId: clienteVenta } : {}),
-          }),
-        );
+        // Para un comprobante FISCAL se espera (poco) a que el servidor
+        // resuelva el CAE, así el ticket que se lleva el cliente sale con el
+        // CAE, el QR y el número que asignó ARCA. Un ticket no fiscal no toca
+        // ARCA y sale al instante: eso lo decide el comercio.
+        const esperar = venta.tipoComprobante !== TipoComprobante.TicketNoFiscal;
+        const operacion = construirOperacionVenta({
+          items: itemsSync,
+          medioPago,
+          terminalId: entorno.sync.terminalId,
+          pagos: pagosSync,
+          recargo: venta.resultado.recargo.aDecimalString(2),
+          tipoComprobante: venta.tipoComprobante,
+          ...(clienteVenta !== undefined ? { clienteId: clienteVenta } : {}),
+        });
+        if (esperar) {
+          setComprobanteServidor(await sync.encolarYEsperarComprobante(operacion));
+        } else {
+          await sync.encolar(operacion);
+        }
       } catch (e) {
         console.error("No se pudo encolar la venta para sync:", e);
       }
@@ -873,7 +893,14 @@ export function PantallaPos({
   async function imprimirTicket(venta: VentaConfirmada, pagosDeLaVenta: readonly PagoUi[] = pagos) {
     if (imprimiendo) return;
     setImprimiendo(true);
-    const datos = construirDatosTicket(venta, config, catalogo, pagosDeLaVenta, tarjetas);
+    const datos = construirDatosTicket(
+      venta,
+      config,
+      catalogo,
+      pagosDeLaVenta,
+      tarjetas,
+      comprobanteServidor,
+    );
     try {
       await impresora.imprimirTicket(datos);
       // En la app instalada la impresora es la térmica real (ESC/POS directo
@@ -1378,7 +1405,18 @@ export function PantallaPos({
               <button onClick={() => imprimirTicket(ultimaVenta)} disabled={imprimiendo}>
                 {imprimiendo ? "Imprimiendo…" : "Imprimir"}
               </button>
-              <button onClick={() => void imprimirA4(construirDatosTicket(ultimaVenta, config, catalogo, pagos, tarjetas))}>
+              <button onClick={() =>
+                  void imprimirA4(
+                    construirDatosTicket(
+                      ultimaVenta,
+                      config,
+                      catalogo,
+                      pagos,
+                      tarjetas,
+                      comprobanteServidor,
+                    ),
+                  )
+                }>
                 Imprimir A4
               </button>
               <button
@@ -1442,18 +1480,28 @@ function construirDatosTicket(
   _catalogo: readonly ProductoCatalogo[],
   pagosUi: readonly PagoUi[],
   tarjetas: readonly Tarjeta[] = [],
+  /**
+   * Lo que resolvió el servidor. **Manda sobre lo local**: el número y el CAE
+   * fiscales los asigna ARCA, y la numeración local del POS es sólo un
+   * provisorio para poder vender sin red.
+   */
+  delServidor: ComprobanteResuelto | null = null,
 ): DatosTicket {
+  const tipo = delServidor?.tipoComprobante ?? venta.tipoComprobante;
+  const cae = delServidor?.cae ?? venta.cae;
+  const vencimiento =
+    delServidor?.caeFechaVto != null ? new Date(delServidor.caeFechaVto) : venta.vencimientoCae;
   return {
     razonSocial: config.razonSocial,
     cuit: config.cuit,
     condicionIvaEmisor: etiquetaCondicionIva(config.condicionIvaEmisor),
     puntoDeVenta: config.puntoDeVenta,
     ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
-    tipoComprobante: etiquetaComprobante(venta.tipoComprobante),
-    numero: venta.numero,
+    tipoComprobante: etiquetaComprobante(tipo as TipoComprobante),
+    numero: delServidor?.numeroComprobante ?? venta.numero,
     fecha: new Date(),
     condicionIvaReceptor: etiquetaCondicionIva(venta.condicionIvaReceptor),
-    esFiscal: venta.tipoComprobante !== TipoComprobante.TicketNoFiscal,
+    esFiscal: tipo !== TipoComprobante.TicketNoFiscal,
     lineas: venta.items.map((it, i) => ({
       descripcion: it.descripcion,
       cantidad: it.cantidad,
@@ -1477,17 +1525,15 @@ function construirDatosTicket(
       return { etiqueta, monto: p.monto };
     }),
     vuelto: venta.vuelto,
-    ...(venta.cae !== undefined ? { cae: venta.cae } : {}),
-    ...(venta.vencimientoCae !== undefined ? { vencimientoCae: venta.vencimientoCae } : {}),
+    ...(cae != null ? { cae } : {}),
+    ...(vencimiento != null ? { vencimientoCae: vencimiento } : {}),
     // Sin esto NO se dibuja el QR fiscal, aunque el CAE esté: `QrFiscal` exige
     // las dos cosas, porque el código de comprobante es parte de lo que ARCA
     // codifica adentro. Faltaba sólo acá —la reimpresión desde Comprobantes sí
     // lo mandaba—, así que el ticket recién emitido salía sin QR y el mismo
     // comprobante reimpreso salía con QR.
-    ...(codigoComprobanteArcaOpcional(venta.tipoComprobante) !== null
-      ? {
-          codigoComprobanteArca: codigoComprobanteArcaOpcional(venta.tipoComprobante) as number,
-        }
+    ...(codigoComprobanteArcaOpcional(tipo) !== null
+      ? { codigoComprobanteArca: codigoComprobanteArcaOpcional(tipo) as number }
       : {}),
   };
 }

@@ -13,12 +13,23 @@ function operacion(operacionId: string, payload: Record<string, unknown>, tipo =
   return { operacionId, tipo, payload, ...(terminalId ? { terminalId } : {}) };
 }
 
+const VTO = new Date('2026-09-10T00:00:00.000Z');
+
+/** Lo que devuelve `registrar` de la venta ya autorizada por ARCA. */
+const COMPROBANTE = {
+  numeroComprobante: 7,
+  tipoComprobante: 'FacturaC',
+  cae: '75123456789012',
+  caeFechaVto: VTO,
+  estadoFiscal: 'AUTORIZADA',
+};
+
 describe('SyncService', () => {
   let ventas: { registrar: ReturnType<typeof vi.fn> };
   let service: SyncService;
 
   beforeEach(() => {
-    ventas = { registrar: vi.fn().mockResolvedValue({ id: 'v1' }) };
+    ventas = { registrar: vi.fn().mockResolvedValue({ id: 'v1', ...COMPROBANTE }) };
     service = new SyncService(ventas as never);
   });
 
@@ -27,7 +38,19 @@ describe('SyncService', () => {
       operaciones: [operacion('op-1', payloadVentaValido)],
     });
 
-    expect(res['op-1']).toEqual({ ok: true, idRemoto: 'v1' });
+    // El comprobante resuelto vuelve con el resultado: el POS lo necesita para
+    // imprimir el ticket con el CAE y el numero que asigno ARCA.
+    expect(res['op-1']).toEqual({
+      ok: true,
+      idRemoto: 'v1',
+      comprobante: {
+        numeroComprobante: 7,
+        tipoComprobante: 'FacturaC',
+        cae: '75123456789012',
+        caeFechaVto: VTO.toISOString(),
+        estadoFiscal: 'AUTORIZADA',
+      },
+    });
     expect(ventas.registrar).toHaveBeenCalledOnce();
   });
 
@@ -93,7 +116,7 @@ describe('SyncService', () => {
 
   it('procesa un lote mixto sin que una falla corte el resto', async () => {
     ventas.registrar
-      .mockResolvedValueOnce({ id: 'v1' })
+      .mockResolvedValueOnce({ id: 'v1', ...COMPROBANTE })
       .mockRejectedValueOnce(new Error('falló esta'));
 
     const res = await service.procesar(USUARIO, {

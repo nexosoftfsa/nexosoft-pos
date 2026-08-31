@@ -63,7 +63,7 @@ export class MotorDeSincronizacion {
   async sincronizar(): Promise<ResumenSync> {
     const pendientes = await this.almacen.pendientes(this.loteTam);
     if (pendientes.length === 0) {
-      return { enviadas: 0, completadas: 0, fallidas: 0, pendientes: 0 };
+      return { enviadas: 0, completadas: 0, fallidas: 0, pendientes: 0, resultados: {} };
     }
 
     for (const op of pendientes) {
@@ -112,7 +112,15 @@ export class MotorDeSincronizacion {
       }
     }
 
-    return { enviadas: pendientes.length, completadas, fallidas, pendientes: pendientesCount };
+    return {
+      enviadas: pendientes.length,
+      completadas,
+      fallidas,
+      pendientes: pendientesCount,
+      // Se devuelven para que quien encoló pueda usar lo que contestó el
+      // servidor — el ticket de la venta necesita el CAE y el número de ARCA.
+      resultados,
+    };
   }
 
   /** Operaciones que agotaron los reintentos (requieren intervención). */

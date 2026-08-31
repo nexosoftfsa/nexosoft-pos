@@ -67,7 +67,7 @@ describe("MotorDeSincronizacion", () => {
 
   it("sin pendientes devuelve un resumen vacío", async () => {
     const resumen = await motor.sincronizar();
-    expect(resumen).toEqual({ enviadas: 0, completadas: 0, fallidas: 0, pendientes: 0 });
+    expect(resumen).toEqual({ enviadas: 0, completadas: 0, fallidas: 0, pendientes: 0, resultados: {} });
     expect(cliente.enviar).not.toHaveBeenCalled();
   });
 
@@ -81,7 +81,15 @@ describe("MotorDeSincronizacion", () => {
 
     const resumen = await motor.sincronizar();
 
-    expect(resumen).toEqual({ enviadas: 2, completadas: 2, fallidas: 0, pendientes: 0 });
+    expect(resumen).toEqual({
+      enviadas: 2,
+      completadas: 2,
+      fallidas: 0,
+      pendientes: 0,
+      // Se devuelven para que quien encolo pueda imprimir el ticket con el CAE
+      // y el numero que asigno ARCA.
+      resultados: { 'op-1': { ok: true }, 'op-2': { ok: true, idRemoto: 'v-99' } },
+    });
     expect((await almacen.obtener("op-1"))?.estado).toBe("completada");
     expect(await almacen.pendientes()).toHaveLength(0);
   });

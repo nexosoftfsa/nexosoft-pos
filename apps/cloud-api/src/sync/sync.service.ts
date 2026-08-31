@@ -10,8 +10,24 @@ import { mensajeDeReferenciaRota } from './referencia-rota';
  * Resultado de aplicar UNA operación. Mismo contrato que `ResultadoEnvio` de
  * `@nexosoft/sync`: el cliente (POS) lo usa para marcar la operación en su cola.
  */
+/**
+ * Lo que quedó resuelto del comprobante, para que el POS imprima el ticket
+ * definitivo.
+ *
+ * Sin esto el POS sólo sabía que la venta se había registrado, y el ticket que
+ * le daba al cliente llevaba su numeración local y decía "pendiente de
+ * autorización" aunque ARCA la hubiera autorizado en el acto.
+ */
+export interface ComprobanteResuelto {
+  numeroComprobante: number | null;
+  tipoComprobante: string | null;
+  cae: string | null;
+  caeFechaVto: string | null;
+  estadoFiscal: string;
+}
+
 export type ResultadoIngesta =
-  | { ok: true; idRemoto: string }
+  | { ok: true; idRemoto: string; comprobante?: ComprobanteResuelto }
   | { ok: false; error: string; reintentable: boolean };
 
 interface UsuarioCtx {
@@ -78,7 +94,17 @@ export class SyncService {
 
     try {
       const venta = await this.ventas.registrar(usuario, dtoVenta);
-      return { ok: true, idRemoto: venta.id };
+      return {
+        ok: true,
+        idRemoto: venta.id,
+        comprobante: {
+          numeroComprobante: venta.numeroComprobante,
+          tipoComprobante: venta.tipoComprobante,
+          cae: venta.cae,
+          caeFechaVto: venta.caeFechaVto === null ? null : venta.caeFechaVto.toISOString(),
+          estadoFiscal: venta.estadoFiscal,
+        },
+      };
     } catch (error) {
       // Una referencia rota (catálogo/terminal desfasados) no se arregla
       // reintentando, y el texto de Prisma no le dice nada a nadie. Va primero
