@@ -1301,6 +1301,14 @@ body {
   text-align: center;
   margin-top: 6px;
 }
+/* Una badge que además se puede tocar para ver el detalle completo. */
+.badge--boton {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline dotted;
+}
+
 .qr-fiscal__svg {
   display: block;
   margin: 0 auto;

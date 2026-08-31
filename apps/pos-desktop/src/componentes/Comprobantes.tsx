@@ -79,6 +79,7 @@ export function Comprobantes({
   const [anulando, setAnulando] = useState<string | null>(null);
   const [verificando, setVerificando] = useState<string | null>(null);
   const [verificacion, setVerificacion] = useState<VerificacionArca | null>(null);
+  const [motivo, setMotivo] = useState<{ titulo: string; texto: string } | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -252,17 +253,26 @@ export function Comprobantes({
                         <span className="badge badge--ok">Emitida</span>
                       )}
                       {/* Si ARCA no autorizó, se muestra: enterarse en una
-                          inspección sale mucho más caro. */}
+                          inspección sale mucho más caro.
+
+                          Es un BOTÓN y no sólo un tooltip: el motivo es el
+                          dato que hace falta para arreglar el problema, y
+                          colgado de un `title` no se puede leer entero ni
+                          copiar. Cada vez que algo falló en un cliente, ese
+                          texto fue lo primero que hubo que pedir y lo más
+                          difícil de conseguir. */}
                       {(() => {
                         const aviso = avisoFiscal(c.estadoFiscal, c.motivoFiscal);
                         return aviso === null ? null : (
-                          <span
-                            className={`badge badge--${aviso.tono}`}
+                          <button
+                            type="button"
+                            className={`badge badge--${aviso.tono} badge--boton`}
                             style={{ marginLeft: 6 }}
-                            title={aviso.detalle}
+                            title="Ver el motivo"
+                            onClick={() => setMotivo({ titulo: aviso.etiqueta, texto: aviso.detalle })}
                           >
                             {aviso.etiqueta}
-                          </span>
+                          </button>
                         );
                       })()}
                     </td>
@@ -270,9 +280,12 @@ export function Comprobantes({
                       <button type="button" className="linkbtn" onClick={() => setReimprimir(c)}>
                         Reimprimir
                       </button>
-                      {/* Sólo tiene sentido preguntar por un comprobante que
-                          creemos emitido en ARCA. */}
-                      {c.cae !== null && (
+                      {/* También sin CAE: ahí es cuando más falta hace saber
+                          qué tiene ARCA. Preguntar por uno que quedó pendiente
+                          es información útil —"ARCA no lo tiene" confirma que
+                          no se emitió—, y era la respuesta que no había forma
+                          de conseguir. */}
+                      {esFiscal(c.tipoComprobante) && c.numeroComprobante !== null && (
                         <button
                           type="button"
                           className="linkbtn"
@@ -309,6 +322,27 @@ export function Comprobantes({
           verificacion={verificacion}
           onCerrar={() => setVerificacion(null)}
         />
+      )}
+
+      {motivo !== null && (
+        <div className="overlay" onClick={() => setMotivo(null)}>
+          <div className="sync-detalle" onClick={(e) => e.stopPropagation()}>
+            <h3>{motivo.titulo}</h3>
+            {/* Seleccionable a propósito: esto se copia y se manda. */}
+            <p className="sync-detalle-error" style={{ userSelect: "text" }}>
+              {motivo.texto}
+            </p>
+            <div className="sync-detalle-acciones">
+              <button
+                className="primario"
+                onClick={() => void navigator.clipboard.writeText(motivo.texto).catch(() => {})}
+              >
+                Copiar el motivo
+              </button>
+              <button onClick={() => setMotivo(null)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

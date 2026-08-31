@@ -155,6 +155,12 @@ export class CaePendientesService {
           data: {
             cae: cae.cae,
             caeFechaVto: cae.caeFechaVto,
+            // El número lo asigna ARCA, y hay que guardarlo: mientras la venta
+            // estuvo pendiente llevó un número provisorio del servidor, que no
+            // tiene por qué coincidir con el que ARCA terminó autorizando.
+            // Dejarlo sin actualizar dejaba el comprobante con un número y el
+            // CAE correspondiendo a otro: un comprobante mal emitido.
+            numeroComprobante: cae.numeroComprobante,
             estadoFiscal: 'AUTORIZADA',
             motivoFiscal: null,
             intentosCae: { increment: 1 },

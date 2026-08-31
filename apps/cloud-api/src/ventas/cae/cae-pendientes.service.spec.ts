@@ -82,6 +82,24 @@ describe('CaePendientesService', () => {
     expect(data.motivoFiscal).toBeNull();
   });
 
+  it('guarda el numero que asigno ARCA, no el provisorio', async () => {
+    // Mientras estuvo pendiente, la venta llevo un numero provisorio del
+    // servidor. El definitivo lo pone ARCA al autorizar, y puede ser otro:
+    // dejar el viejo deja el comprobante con un numero y el CAE
+    // correspondiendo a otro.
+    prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(1))]);
+    cae.autorizar.mockResolvedValue({
+      cae: '75123456789012',
+      caeFechaVto: new Date('2026-09-10'),
+      numeroComprobante: 7,
+      tipoComprobante: 'FacturaB',
+    });
+
+    await service.reintentar();
+
+    expect(prisma.venta.update.mock.calls[0]?.[0]?.data.numeroComprobante).toBe(7);
+  });
+
   it('manda el desglose de IVA reconstruido, no sólo el total', async () => {
     // Sin esto, una pendiente se reintentaría con IVA en cero: ARCA la
     // rechazaría, y si la aceptara sería una factura mal emitida.
