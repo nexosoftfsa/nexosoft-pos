@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { CertificadoService } from './certificado.service';
+import { DiagnosticoArcaService } from './diagnostico-arca.service';
 import { ALIAS_POR_DEFECTO } from './csr';
 
 export class GenerarCsrDto {
@@ -53,7 +54,10 @@ export class SubirCertificadoDto {
 @Roles(RolUsuario.ADMIN)
 @Controller('fiscal/certificado')
 export class CertificadoController {
-  constructor(private readonly certificados: CertificadoService) {}
+  constructor(
+    private readonly certificados: CertificadoService,
+    private readonly diagnosticos: DiagnosticoArcaService,
+  ) {}
 
   @Get()
   estado(@Query('cuit') cuit: string) {
@@ -71,5 +75,15 @@ export class CertificadoController {
   @Put()
   subir(@Body() dto: SubirCertificadoDto) {
     return this.certificados.guardarCertificado(dto.cuit, dto.certificadoPem);
+  }
+
+  /**
+   * Prueba el circuito con ARCA sin emitir nada, y dice en cuál de los tres
+   * pasos se traba: llegar a ARCA, autenticar con el certificado, o consultar
+   * el punto de venta.
+   */
+  @Get('diagnostico')
+  diagnostico() {
+    return this.diagnosticos.correr();
   }
 }

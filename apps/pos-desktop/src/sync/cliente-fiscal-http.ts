@@ -71,6 +71,21 @@ export interface ClienteCertificadoArca {
   guardarDatosFiscales(datos: DatosFiscalesDelComercio): Promise<{ completa: boolean }>;
   configuracionFiscal(): Promise<ConfiguracionFiscalServidor>;
   cambiarEntorno(entorno: EntornoArca): Promise<ConfiguracionFiscalServidor>;
+  /** Prueba el circuito con ARCA sin emitir nada. Ver `DiagnosticoArcaService`. */
+  diagnosticoArca(): Promise<DiagnosticoArca>;
+}
+
+/** Un paso del diagnóstico de ARCA, con qué revisar si falla. */
+export interface PasoDiagnostico {
+  readonly paso: string;
+  readonly ok: boolean;
+  readonly detalle: string;
+  readonly queHacer?: string;
+}
+
+export interface DiagnosticoArca {
+  readonly entorno: string | null;
+  readonly pasos: readonly PasoDiagnostico[];
 }
 
 export class ClienteCertificadoArcaHttp implements ClienteCertificadoArca {
@@ -81,6 +96,10 @@ export class ClienteCertificadoArcaHttp implements ClienteCertificadoArca {
 
   estado(cuit: string): Promise<EstadoCertificado> {
     return this.pedir("GET", `/fiscal/certificado?cuit=${encodeURIComponent(cuit)}`);
+  }
+
+  diagnosticoArca(): Promise<DiagnosticoArca> {
+    return this.pedir("GET", "/fiscal/certificado/diagnostico");
   }
 
   generarCsr(datos: {

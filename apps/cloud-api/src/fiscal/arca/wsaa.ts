@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { firmarTraCms } from './firma-cms';
 import { construirTra, leerFaultSoap, leerTicketAcceso, type TicketAcceso } from './tra';
 import { esCorteDeTiempo } from './corte-de-tiempo';
+import { detalleDeRed } from './detalle-de-red';
 
 /**
  * WSAA: el servicio de autenticación de ARCA.
@@ -106,10 +107,7 @@ export class ClienteWsaa {
           true,
         );
       }
-      throw new ErrorWsaa(
-        `No se pudo contactar a ARCA (${(e as Error).message}). Revisá la conexión a internet.`,
-        true,
-      );
+      throw new ErrorWsaa(`No se pudo contactar a ARCA: ${detalleDeRed(e)}`, true);
     }
 
     const cuerpo = await res.text();

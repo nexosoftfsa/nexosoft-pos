@@ -24,6 +24,7 @@ import {
   ErrorFiscalHttp,
   type ConfiguracionFiscalServidor,
   type CsrGenerado,
+  type DiagnosticoArca,
   type EntornoArca,
   type EstadoCertificado,
 } from "../sync/cliente-fiscal-http";
@@ -79,6 +80,7 @@ export function CertificadoArca({
   obtenerToken: () => string | null;
 }) {
   const [estado, setEstado] = useState<EstadoCertificado | null>(null);
+  const [diagnostico, setDiagnostico] = useState<DiagnosticoArca | null>(null);
   const [fiscal, setFiscal] = useState<ConfiguracionFiscalServidor | null>(null);
   const [csr, setCsr] = useState<CsrGenerado | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +132,43 @@ export function CertificadoArca({
     } finally {
       setTrabajando(false);
     }
+  }
+
+  /**
+   * Corre el diagnóstico contra ARCA. No emite ni reserva nada: sólo pregunta.
+   */
+  async function probarArca() {
+    setTrabajando(true);
+    setError(null);
+    setAviso(null);
+    setDiagnostico(null);
+    try {
+      const cliente = new ClienteCertificadoArcaHttp(servidorUrl, () => tokenRef.current());
+      setDiagnostico(await cliente.diagnosticoArca());
+    } catch (e) {
+      setError(mensaje(e));
+    } finally {
+      setTrabajando(false);
+    }
+  }
+
+  /** El resultado se copia para poder mandarlo: es lo primero que pedimos. */
+  async function copiarDiagnostico() {
+    if (diagnostico === null) return;
+    const texto = diagnostico.pasos
+      .map((p) =>
+        [
+          `${p.ok ? "OK" : "FALLA"} - ${p.paso}`,
+          p.detalle,
+          p.queHacer === undefined ? "" : `Que hacer: ${p.queHacer}`,
+        ]
+          .filter((l) => l !== "")
+          .join("\n"),
+      )
+      .join("\n\n");
+    await navigator.clipboard
+      .writeText(`Entorno: ${diagnostico.entorno ?? "sin configurar"}\n\n${texto}`)
+      .catch(() => undefined);
   }
 
   async function cambiarEntorno(entorno: EntornoArca) {
@@ -291,6 +330,45 @@ export function CertificadoArca({
             querés volver al anterior, alcanza con subir ese .crt de nuevo. Guardá los dos
             archivos.
           </div>
+          {/*
+            Probar el circuito sin emitir nada. Hace falta porque hasta ahora
+            la unica forma de saber si ARCA respondia era hacer una VENTA, y el
+            error que quedaba ("no se pudo contactar a ARCA") no distinguia
+            entre un problema de red, un certificado mal delegado y un punto de
+            venta inexistente. Un dia entero se fue en eso.
+          */}
+          <button
+            type="button"
+            className="pill-btn"
+            disabled={trabajando}
+            onClick={() => void probarArca()}
+          >
+            {trabajando ? "Probando…" : "Probar conexión con ARCA"}
+          </button>
+
+          {diagnostico !== null && (
+            <div className="diagnostico-arca">
+              {diagnostico.pasos.map((p) => (
+                <div key={p.paso} className={p.ok ? "aviso-ok" : "error"}>
+                  <b>
+                    {p.ok ? "OK" : "FALLA"} · {p.paso}
+                  </b>
+                  <div>{p.detalle}</div>
+                  {p.queHacer !== undefined && (
+                    <div className="diagnostico-arca__ayuda">{p.queHacer}</div>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                className="linkbtn"
+                onClick={() => void copiarDiagnostico()}
+              >
+                Copiar el resultado
+              </button>
+            </div>
+          )}
+
           <button
             type="button"
             className="linkbtn"

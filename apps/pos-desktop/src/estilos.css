@@ -1314,6 +1314,18 @@ body {
   text-align: center;
 }
 
+/* Resultado de "Probar conexión con ARCA": un renglón por paso. */
+.diagnostico-arca {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+.diagnostico-arca__ayuda {
+  font-size: 0.85rem;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+
 /* Una badge que además se puede tocar para ver el detalle completo. */
 .badge--boton {
   border: none;

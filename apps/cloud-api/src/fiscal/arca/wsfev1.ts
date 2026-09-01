@@ -22,6 +22,7 @@
  * en el dominio.
  */
 import { esCorteDeTiempo } from './corte-de-tiempo';
+import { detalleDeRed } from './detalle-de-red';
 import { type TicketAcceso } from './tra';
 
 export const URL_WSFEV1 = {
@@ -366,7 +367,7 @@ export class ClienteWsfev1 {
         );
       }
       throw new ErrorWsfe(
-        `No se pudo contactar a ARCA (${(e as Error).message}). Revisá la conexión.`,
+        `No se pudo contactar a ARCA: ${detalleDeRed(e)}`,
         true,
       );
     }
