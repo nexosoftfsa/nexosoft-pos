@@ -29,6 +29,9 @@
     "bundle":  {
                    "active":  true,
                    "createUpdaterArtifacts":  true,
+                   "resources":  {
+                                     "../../../scripts/instalacion/excluir-antivirus.ps1":  "excluir-antivirus.ps1"
+                                 },
                    "targets":  [
                                    "nsis"
                                ],

@@ -4,6 +4,7 @@ import { CondicionIva } from "@nexosoft/domain";
 import { prepararLogo } from "../archivos";
 import { AccesoRemoto } from "./AccesoRemoto";
 import { CertificadoArca } from "./CertificadoArca";
+import { Antivirus } from "./Antivirus";
 import { ImpresoraTickets } from "./ImpresoraTickets";
 import { Actualizaciones } from "./Actualizaciones";
 
@@ -260,6 +261,8 @@ export function PantallaConfig({
           </section>
 
           <ImpresoraTickets />
+
+          <Antivirus />
 
           <CertificadoArca
             servidorUrl={servidorUrl}
