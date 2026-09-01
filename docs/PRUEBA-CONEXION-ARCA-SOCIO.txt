@@ -1,129 +1,134 @@
 ===========================================================================
-  NEXOSOFT - POR QUE NO SE LLEGA A ARCA EN PRODUCCION
+  NEXOSOFT - ENCONTRAMOS EL PROBLEMA. A PROBAR DE NUEVO.
   Para: Sebastian
-  Tiempo: 10 minutos
+  Tiempo: 15 minutos
 ===========================================================================
 
-BUENAS NOTICIAS PRIMERO
-------------------------
-Con lo que mandaste quedo verificado que TODO lo de ARCA esta bien:
+QUE ERA
+--------
+Tu captura del diagnostico lo resolvio. El mensaje decia:
 
-  - El certificado de produccion: VALIDO.
-  - La delegacion del servicio: la propia ARCA te dijo "ya existe". O sea que
-    estaba hecha. Yo me habia equivocado, era mi sospecha principal.
-  - El punto de venta 00002, de Web Services: dado de alta.
-  - El entorno: PRODUCCION.
+    ERR_SSL_DH_KEY_TOO_SMALL ... dh key too small
 
-No hay nada mas que tramitar en ARCA. No pierdas tiempo ahi.
+Traducido: el servidor de PRODUCCION de ARCA usa una clave de cifrado vieja
+(1024 bits) y el sistema la rechazaba por politica de seguridad. La conexion
+ni siquiera se abria.
 
-El problema es otro: el servidor NO LOGRA CONECTARSE a ARCA. El mensaje
-"fetch failed" no era un rechazo de ARCA; es que la conexion ni siquiera se
-llego a abrir. Y no decia por que porque el sistema estaba descartando el
-motivo real. Eso ya esta arreglado.
+Por eso despistaba tanto:
 
-Esta prueba es corta y NO emite ninguna venta.
+  - En el navegador abria perfecto, porque Chrome usa otro tipo de cifrado y
+    esquiva el problema sin enterarse. Tus dos capturas lo muestran: las dos
+    paginas abren bien.
+  - Homologacion tampoco fallaba nunca. Por eso funciono meses.
 
+NO era el firewall, ni el DNS, ni el antivirus, ni tu certificado, ni la
+delegacion, ni el punto de venta. Todo eso estaba bien.
 
-PASO 1 - LA PRUEBA DEL NAVEGADOR (no necesita actualizar nada)
----------------------------------------------------------------
-Hacela EN LA PC DEL SERVIDOR, no en otra. Es importante: lo que queremos
-saber es si ESA maquina llega a ARCA.
-
-1.1 Abri el navegador y entra a esta direccion (PRODUCCION):
-
-        https://servicios1.afip.gov.ar/wsfev1/service.asmx
-
-    [ ] Abre una pagina (con texto tecnico, listados de metodos, lo que sea)
-    [ ] NO abre / da error
-
-    Que dice si no abre: ____________________________________
-
-1.2 Ahora entra a esta otra (HOMOLOGACION, la que si funcionaba):
-
-        https://wswhomo.afip.gov.ar/wsfev1/service.asmx
-
-    [ ] Abre
-    [ ] NO abre
-
-ESTO ES LO QUE MAS ME SIRVE. Segun como salga:
-
-  - Si HOMOLOGACION abre y PRODUCCION no: hay algo bloqueando puntualmente
-    los servidores de produccion (firewall, antivirus, DNS). Casi seguro es
-    eso.
-  - Si NINGUNA de las dos abre: la PC del servidor perdio salida a internet,
-    o la esta filtrando algo.
-  - Si LAS DOS abren: la red esta bien y el problema es del sistema. Ahi me
-    toca a mi.
-
-SACALE UNA FOTO A LAS DOS PANTALLAS.
+Ya esta arreglado: ahora el sistema pide un cifrado moderno, que el servidor
+de ARCA soporta. Lo probe contra los servidores reales de ARCA y responden
+OK en menos de un segundo.
 
 
-PASO 2 - ACTUALIZAR
---------------------
-2.1 POS > Configuracion > Actualizaciones.
-2.2 Si el servidor no dice 0.13.0 o mas, toca "Actualizar servidor".
-2.3 Si el POS ofrece la 0.1.49, instalala y volve a entrar.
+PASO 1 - ACTUALIZAR EL SERVIDOR
+--------------------------------
+1.1 POS > Configuracion > Actualizaciones.
+1.2 Toca "Actualizar servidor". Tiene que quedar en 0.13.1 o mas.
 
-    [ ] POS 0.1.49 o mas, Servidor 0.13.0 o mas.
+    [ ] Servidor 0.13.1 o mas.
 
-
-PASO 3 - PROBAR CONEXION CON ARCA (lo nuevo)
----------------------------------------------
-Ahora hay un boton para esto. NO hace ninguna venta: solo pregunta.
-
-3.1 POS > Configuracion > Facturacion electronica (ARCA).
-3.2 Toca "Probar conexion con ARCA".
-3.3 Espera unos segundos. Van a aparecer tres renglones:
-
-        1. Llegar a ARCA
-        2. Autenticar con el certificado (WSAA)
-        3. Consultar el punto de venta 2
-
-    Cada uno dice OK o FALLA, y el que falla dice que revisar.
-
-3.4 Toca "Copiar el resultado" y MANDAMELO.
-
-    [ ] Copiado y enviado.
-
-    Con eso se termina la adivinanza: me dice exactamente en cual de los
-    tres pasos se corta.
+    El POS no hace falta actualizarlo esta vez: el arreglo es del servidor.
 
 
-PASO 4 - SI LOS TRES DAN OK
-----------------------------
-Si el diagnostico da OK en los tres pasos, el circuito esta andando y podemos
-seguir con lo que quedo pendiente.
+PASO 2 - PROBAR CONEXION CON ARCA
+----------------------------------
+2.1 Configuracion > Facturacion electronica (ARCA).
+2.2 Toca "Probar conexion con ARCA".
 
+    Ahora tendrian que dar OK los TRES pasos:
+
+    [ ] 1. Llegar a ARCA
+    [ ] 2. Autenticar con el certificado (WSAA)
+    [ ] 3. Consultar el punto de venta 2
+
+    Si alguno falla, toca "Copiar el resultado" y mandamelo. PARA AHI.
+
+    Si los tres dan OK, segui: ya esta andando.
+
+
+PASO 3 - LAS DOS VENTAS QUE QUEDARON PENDIENTES
+------------------------------------------------
+Las dos ventas de $100 de la otra vez se reintentan solas cada 5 minutos.
+
+3.1 Espera 10 minutos y refresca Comprobantes.
+
+    [ ] Ya NO dicen "Sin CAE": consiguieron el CAE solas.
+
+    OJO: esas dos son de hace varios dias. ARCA no autoriza comprobantes con
+    mas de 5 dias de antiguedad, asi que es posible que queden marcadas como
+    rechazadas con un mensaje que lo explica. Si pasa eso, esta bien: es el
+    sistema avisando, no un error nuevo. Mandame el motivo igual.
+
+
+PASO 4 - LA VENTA DE $10
+-------------------------
 4.1 Hace una venta de $10 en efectivo.
 
-    Vas a ver "Autorizando en ARCA..." un par de segundos.
+    Vas a ver "Autorizando en ARCA..." un momento.
 
-    [ ] El ticket salio con CAE.
-    [ ] El ticket tiene QR.
+    Cuanto tardo: ________ segundos
 
-    Numero del TICKET: 0002-________
+    [ ] El ticket tiene CAE.
+    [ ] El ticket tiene el QR dibujado.
+
+    Numero del TICKET:      0002-________
     Numero en COMPROBANTES: ________
 
-    [ ] Los dos numeros COINCIDEN.
+    [ ] LOS DOS NUMEROS COINCIDEN.
 
-4.2 Escanea el QR y consultalo en la pagina de ARCA.
+    (La otra vez daban 31 y 103. Si vuelven a diferir, avisame.)
 
-    [ ] ARCA devolvio los datos del comprobante.  <- foto, por favor
+    MANDAME EL PDF.
 
-4.3 Anula esa venta desde Comprobantes.
 
-    [ ] La Nota de Credito salio con su propio CAE.
+PASO 5 - CONSTATAR EL QR EN ARCA (la prueba definitiva)
+--------------------------------------------------------
+5.1 Escanea el QR del ticket con el celular.
+5.2 Se abre la pagina de ARCA con los campos ya completos.
+5.3 Escribi los caracteres de la imagen y toca CONSULTAR.
 
-    Si alguna falla, toca la etiqueta y copiame el motivo.
+    [ ] ARCA DEVOLVIO LOS DATOS DEL COMPROBANTE.
+
+    SACALE UNA FOTO. Esto es lo que nunca pudimos ver.
+
+    Ahora si tiene que encontrarlo, porque es un comprobante real de
+    produccion. Si sale la lista de errores, para y avisame.
+
+
+PASO 6 - ANULAR (nunca se probo contra ARCA)
+---------------------------------------------
+6.1 En Comprobantes, en esa venta, toca "Anular".
+
+    [ ] Se creo una Nota de Credito con su propio CAE.
+
+    Numero de la NC: 0002-________
+    CAE de la NC: ______________________________
+
+    Si dice "Rechazada", toca la etiqueta amarilla y copiame el motivo.
+
+6.2 Reimprimi la NC y fijate que tenga QR.
+
+    [ ] Tiene QR. Mandame el PDF.
 
 
 ===========================================================================
   QUE MANDARME
 ===========================================================================
-  1. Las dos fotos del paso 1 (produccion y homologacion en el navegador)
-  2. El resultado copiado del paso 3.4  <- lo mas importante
-  3. Si llegaste al paso 4: el PDF del ticket y la foto de ARCA
+  1. El resultado de "Probar conexion con ARCA" (paso 2)
+  2. Cuanto tardo la venta en autorizar (paso 4.1)
+  3. El PDF del ticket, y si los dos numeros coinciden
+  4. LA FOTO DE ARCA CONSTATANDO EL QR (paso 5.3)  <- la prueba definitiva
+  5. El PDF de la nota de credito (paso 6.2)
 
-Con los puntos 1 y 2 ya puedo decirte que esta pasando. Si no llegas al
-paso 4, no importa: mandame esos dos y frena ahi.
+Si el paso 2 da OK en los tres, ya ganamos: el circuito esta andando.
+Todo lo demas es confirmarlo.
 ===========================================================================
