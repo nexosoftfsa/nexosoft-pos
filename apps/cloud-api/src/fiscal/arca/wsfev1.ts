@@ -23,6 +23,7 @@
  */
 import { esCorteDeTiempo } from './corte-de-tiempo';
 import { detalleDeRed } from './detalle-de-red';
+import { fetchArca, type FetchLike, type RespuestaHttp } from './fetch-arca';
 import { type TicketAcceso } from './tra';
 
 export const URL_WSFEV1 = {
@@ -165,7 +166,7 @@ export class ClienteWsfev1 {
       readonly entorno: keyof typeof URL_WSFEV1;
       readonly cuit: string;
       readonly url?: string;
-      readonly fetchImpl?: typeof fetch;
+      readonly fetchImpl?: FetchLike;
       readonly timeoutMs?: number;
     },
   ) {}
@@ -346,9 +347,9 @@ export class ClienteWsfev1 {
       `<soap:Body>${cuerpo}</soap:Body>` +
       '</soap:Envelope>';
 
-    const hacerFetch = this.opciones.fetchImpl ?? fetch;
+    const hacerFetch = this.opciones.fetchImpl ?? fetchArca;
     const timeoutMs = this.opciones.timeoutMs ?? TIMEOUT_WSFE_MS;
-    let res: Response;
+    let res: RespuestaHttp;
     try {
       res = await hacerFetch(this.url, {
         method: 'POST',

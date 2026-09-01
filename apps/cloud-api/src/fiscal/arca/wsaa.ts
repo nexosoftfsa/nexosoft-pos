@@ -5,6 +5,7 @@ import { firmarTraCms } from './firma-cms';
 import { construirTra, leerFaultSoap, leerTicketAcceso, type TicketAcceso } from './tra';
 import { esCorteDeTiempo } from './corte-de-tiempo';
 import { detalleDeRed } from './detalle-de-red';
+import { fetchArca, type FetchLike, type RespuestaHttp } from './fetch-arca';
 
 /**
  * WSAA: el servicio de autenticación de ARCA.
@@ -63,7 +64,7 @@ export class ClienteWsaa {
       readonly rutaCache: string;
       readonly url?: string;
       /** Inyectable para tests. */
-      readonly fetchImpl?: typeof fetch;
+      readonly fetchImpl?: FetchLike;
       readonly timeoutMs?: number;
     },
   ) {}
@@ -89,10 +90,10 @@ export class ClienteWsaa {
     const tra = construirTra({ servicio });
     const cms = firmarTraCms(tra, this.opciones.certificadoPem, this.opciones.clavePrivadaPem);
     const url = this.opciones.url ?? URL_WSAA[this.opciones.entorno];
-    const hacerFetch = this.opciones.fetchImpl ?? fetch;
+    const hacerFetch = this.opciones.fetchImpl ?? fetchArca;
 
     const timeoutMs = this.opciones.timeoutMs ?? TIMEOUT_WSAA_MS;
-    let res: Response;
+    let res: RespuestaHttp;
     try {
       res = await hacerFetch(url, {
         method: 'POST',

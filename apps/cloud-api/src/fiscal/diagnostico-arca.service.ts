@@ -4,6 +4,7 @@ import { codigoComprobanteArcaOpcional } from '@nexosoft/domain';
 import { ClienteWsaa, rutaCacheTicket, URL_WSAA } from './arca/wsaa';
 import { ClienteWsfev1, URL_WSFEV1 } from './arca/wsfev1';
 import { detalleDeRed } from './arca/detalle-de-red';
+import { fetchArca } from './arca/fetch-arca';
 import { CertificadoService } from './certificado.service';
 import { ConfiguracionFiscalService } from './configuracion-fiscal.service';
 
@@ -137,7 +138,10 @@ export class DiagnosticoArcaService {
   private async llegarAArca(entorno: 'homologacion' | 'produccion'): Promise<PasoDiagnostico> {
     const url = URL_WSFEV1[entorno];
     try {
-      const res = await fetch(`${url}?WSDL`, {
+      // Con el MISMO cliente que usa la facturación: si probáramos con `fetch`
+      // a secas, el diagnóstico diría que no se llega aunque el sistema sí
+      // pueda (o al revés), que es peor que no tener diagnóstico.
+      const res = await fetchArca(`${url}?WSDL`, {
         method: 'GET',
         signal: AbortSignal.timeout(15_000),
       });

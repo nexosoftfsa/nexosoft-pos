@@ -78,3 +78,4 @@ Consecuencias y Alternativas consideradas.
 | 0059 | [La impresora de tickets se elige por terminal, y las virtuales se rechazan](0059-impresora-de-tickets-elegible-y-sin-virtuales.md) | Aceptada |
 | 0060 | [Emisión contra ARCA: lo que sólo falla con un certificado real](0060-emision-contra-arca-endurecida.md) | Aceptada |
 | 0061 | [El ticket del cliente espera el CAE (con un tope)](0061-el-ticket-espera-el-cae.md) | Aceptada |
+| 0062 | [Las llamadas a ARCA piden ECDHE, y no usan `fetch`](0062-cifrado-ecdhe-para-arca.md) | Aceptada |
