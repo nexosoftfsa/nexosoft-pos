@@ -1,0 +1,129 @@
+===========================================================================
+  NEXOSOFT - POR QUE NO SE LLEGA A ARCA EN PRODUCCION
+  Para: Sebastian
+  Tiempo: 10 minutos
+===========================================================================
+
+BUENAS NOTICIAS PRIMERO
+------------------------
+Con lo que mandaste quedo verificado que TODO lo de ARCA esta bien:
+
+  - El certificado de produccion: VALIDO.
+  - La delegacion del servicio: la propia ARCA te dijo "ya existe". O sea que
+    estaba hecha. Yo me habia equivocado, era mi sospecha principal.
+  - El punto de venta 00002, de Web Services: dado de alta.
+  - El entorno: PRODUCCION.
+
+No hay nada mas que tramitar en ARCA. No pierdas tiempo ahi.
+
+El problema es otro: el servidor NO LOGRA CONECTARSE a ARCA. El mensaje
+"fetch failed" no era un rechazo de ARCA; es que la conexion ni siquiera se
+llego a abrir. Y no decia por que porque el sistema estaba descartando el
+motivo real. Eso ya esta arreglado.
+
+Esta prueba es corta y NO emite ninguna venta.
+
+
+PASO 1 - LA PRUEBA DEL NAVEGADOR (no necesita actualizar nada)
+---------------------------------------------------------------
+Hacela EN LA PC DEL SERVIDOR, no en otra. Es importante: lo que queremos
+saber es si ESA maquina llega a ARCA.
+
+1.1 Abri el navegador y entra a esta direccion (PRODUCCION):
+
+        https://servicios1.afip.gov.ar/wsfev1/service.asmx
+
+    [ ] Abre una pagina (con texto tecnico, listados de metodos, lo que sea)
+    [ ] NO abre / da error
+
+    Que dice si no abre: ____________________________________
+
+1.2 Ahora entra a esta otra (HOMOLOGACION, la que si funcionaba):
+
+        https://wswhomo.afip.gov.ar/wsfev1/service.asmx
+
+    [ ] Abre
+    [ ] NO abre
+
+ESTO ES LO QUE MAS ME SIRVE. Segun como salga:
+
+  - Si HOMOLOGACION abre y PRODUCCION no: hay algo bloqueando puntualmente
+    los servidores de produccion (firewall, antivirus, DNS). Casi seguro es
+    eso.
+  - Si NINGUNA de las dos abre: la PC del servidor perdio salida a internet,
+    o la esta filtrando algo.
+  - Si LAS DOS abren: la red esta bien y el problema es del sistema. Ahi me
+    toca a mi.
+
+SACALE UNA FOTO A LAS DOS PANTALLAS.
+
+
+PASO 2 - ACTUALIZAR
+--------------------
+2.1 POS > Configuracion > Actualizaciones.
+2.2 Si el servidor no dice 0.13.0 o mas, toca "Actualizar servidor".
+2.3 Si el POS ofrece la 0.1.49, instalala y volve a entrar.
+
+    [ ] POS 0.1.49 o mas, Servidor 0.13.0 o mas.
+
+
+PASO 3 - PROBAR CONEXION CON ARCA (lo nuevo)
+---------------------------------------------
+Ahora hay un boton para esto. NO hace ninguna venta: solo pregunta.
+
+3.1 POS > Configuracion > Facturacion electronica (ARCA).
+3.2 Toca "Probar conexion con ARCA".
+3.3 Espera unos segundos. Van a aparecer tres renglones:
+
+        1. Llegar a ARCA
+        2. Autenticar con el certificado (WSAA)
+        3. Consultar el punto de venta 2
+
+    Cada uno dice OK o FALLA, y el que falla dice que revisar.
+
+3.4 Toca "Copiar el resultado" y MANDAMELO.
+
+    [ ] Copiado y enviado.
+
+    Con eso se termina la adivinanza: me dice exactamente en cual de los
+    tres pasos se corta.
+
+
+PASO 4 - SI LOS TRES DAN OK
+----------------------------
+Si el diagnostico da OK en los tres pasos, el circuito esta andando y podemos
+seguir con lo que quedo pendiente.
+
+4.1 Hace una venta de $10 en efectivo.
+
+    Vas a ver "Autorizando en ARCA..." un par de segundos.
+
+    [ ] El ticket salio con CAE.
+    [ ] El ticket tiene QR.
+
+    Numero del TICKET: 0002-________
+    Numero en COMPROBANTES: ________
+
+    [ ] Los dos numeros COINCIDEN.
+
+4.2 Escanea el QR y consultalo en la pagina de ARCA.
+
+    [ ] ARCA devolvio los datos del comprobante.  <- foto, por favor
+
+4.3 Anula esa venta desde Comprobantes.
+
+    [ ] La Nota de Credito salio con su propio CAE.
+
+    Si alguna falla, toca la etiqueta y copiame el motivo.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. Las dos fotos del paso 1 (produccion y homologacion en el navegador)
+  2. El resultado copiado del paso 3.4  <- lo mas importante
+  3. Si llegaste al paso 4: el PDF del ticket y la foto de ARCA
+
+Con los puntos 1 y 2 ya puedo decirte que esta pasando. Si no llegas al
+paso 4, no importa: mandame esos dos y frena ahi.
+===========================================================================
