@@ -1,0 +1,151 @@
+===========================================================================
+  NEXOSOFT - UNA FACTURA NUEVA, Y DESPUES ANULAR
+  Para: Sebastian
+  Tiempo: 20 minutos
+===========================================================================
+
+DONDE ESTAMOS
+--------------
+Ayer salio la primera factura de produccion con CAE y con QR. Eso ya esta.
+
+Faltan dos cosas:
+
+  1. Ver si ARCA contesta EN EL MOMENTO de la venta (ayer el CAE llego
+     despues, y queremos saber por que).
+  2. Anular una factura. Es lo unico del circuito que nunca se probo contra
+     ARCA de verdad.
+
+Versiones de esta prueba:  POS 0.1.50  -  Servidor 0.13.1
+Si algo sale mal, el punto seguro anterior es POS 0.1.49 + Servidor 0.13.0.
+(No bajes el servidor a 0.12.4: ahi vuelve el problema de conexion con ARCA.)
+
+
+PASO 1 - ACTUALIZAR EL POS
+---------------------------
+1.1 POS > Configuracion > Actualizaciones.
+1.2 Instala la 0.1.50 si te la ofrece.
+
+    [ ] POS 0.1.50. Servidor 0.13.1 (ese ya lo actualizaste ayer).
+
+
+PASO 2 - QUE EL ANTIVIRUS NO SE LO VUELVA A COMER
+--------------------------------------------------
+2.1 Configuracion > tarjeta "Antivirus".
+2.2 Toca "Proteger del antivirus". Acepta el permiso de administrador.
+
+    [ ] Dijo que quedo listo.
+
+    Que dice: ____________________________________________
+
+    Esto le avisa a Windows Defender que las carpetas de NexoSoft son de
+    confianza, y recupera lo que ya se haya llevado. Solo toca esas dos
+    carpetas; el resto de la PC sigue protegido igual.
+
+    Si te avisa que tenes OTRO antivirus (no Defender), mandame el nombre:
+    esos hay que configurarlos a mano y te paso los pasos.
+
+
+PASO 3 - PROBAR CONEXION CON ARCA
+----------------------------------
+3.1 Configuracion > Facturacion electronica (ARCA).
+3.2 Toca "Probar conexion con ARCA".
+
+    Los TRES pasos tienen que dar OK ahora:
+
+    [ ] 1. Llegar a ARCA
+    [ ] 2. Autenticar con el certificado (WSAA)
+    [ ] 3. Consultar el punto de venta 2
+
+    Si alguno falla, toca "Copiar el resultado", mandamelo y PARA ACA.
+
+
+PASO 4 - LA FACTURA (esto es lo que quiero medir)
+--------------------------------------------------
+Aca esta la pregunta del dia. Fijate bien y cronometra.
+
+4.1 Hace una venta de $10 en efectivo.
+4.2 Apenas confirmas, mira la pantalla: tiene que aparecer el cartel
+    "Autorizando en ARCA...".
+
+    Cuanto tardo desde que confirmaste hasta que salio el ticket:
+    ________ segundos
+
+4.3 Mira el ticket.
+
+    [ ] EL TICKET YA TRAE EL CAE Y EL QR.
+    [ ] El ticket dice "Pendiente de autorizacion de ARCA".
+
+    ESTO ES LO IMPORTANTE, y cualquiera de las dos respuestas sirve:
+
+      - Si el ticket YA TRAE el CAE: la conexion estaba rota y quedo
+        arreglada. ARCA contesta en el momento.
+
+      - Si sale "Pendiente" y el CAE aparece recien minutos despues: yo me
+        equivoque y ARCA efectivamente esta tardando. Tambien es un
+        resultado, y cambia lo que hay que hacer despues.
+
+    Numero del TICKET: 0002-________
+    CAE: ______________________________
+
+    MANDAME EL PDF.
+
+4.4 Anda a Comprobantes y busca esa venta.
+
+    Numero que dice COMPROBANTES: ________
+
+    [ ] ES EL MISMO NUMERO que el del ticket.
+
+
+PASO 5 - CONSTATAR EL QR EN ARCA
+---------------------------------
+5.1 Escanea el QR del ticket con el celular.
+5.2 Se abre la pagina de ARCA con los campos completos.
+5.3 Escribi los caracteres de la imagen y toca CONSULTAR.
+
+    [ ] ARCA devolvio los datos del comprobante.
+
+    SACALE UNA FOTO.
+
+
+PASO 6 - ANULAR (nunca se probo contra ARCA)
+---------------------------------------------
+Recien aca. Si algo fallo antes, no sigas.
+
+6.1 En Comprobantes, en la fila de esa venta, toca "Anular".
+6.2 Confirma.
+
+    [ ] Se creo una Nota de Credito.
+    [ ] La Nota de Credito tiene su propio CAE.
+
+    Numero de la NC: 0002-________
+    CAE de la NC: ______________________________
+
+    Si dice "Rechazada", toca la etiqueta amarilla, toca "Copiar el motivo"
+    y mandamelo COMPLETO. Ese texto es todo lo que necesito.
+    ______________________________________________________________
+
+6.3 Reimprimi la Nota de Credito.
+
+    [ ] Tiene su propio QR.
+
+    MANDAME EL PDF.
+
+6.4 Escanea el QR de la Nota de Credito y constatalo en ARCA, igual que en
+    el paso 5.
+
+    [ ] ARCA la encontro.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. Cuanto tardo la venta y SI EL TICKET YA TRAIA EL CAE (paso 4.2 y 4.3)
+     <- esto es lo que mas me sirve
+  2. El PDF del ticket, y si los dos numeros coinciden (paso 4.4)
+  3. La foto de ARCA constatando el QR de la factura (paso 5.3)
+  4. El PDF de la Nota de Credito y su CAE (paso 6.2 y 6.3)
+  5. La foto de ARCA constatando el QR de la Nota de Credito (paso 6.4)
+
+Si la anulacion se rechaza, mandame el motivo textual y frena ahi. Es la
+parte que nunca corrio, asi que si algo va a fallar, va a fallar ahi.
+===========================================================================
