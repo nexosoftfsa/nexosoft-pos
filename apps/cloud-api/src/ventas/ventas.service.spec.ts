@@ -202,6 +202,54 @@ describe('VentasService', () => {
     });
   });
 
+  /**
+   * Una venta offline llega horas o días después. Antes se fechaba al llegar,
+   * y eso la metía en el turno de caja equivocado y le ponía a ARCA una fecha
+   * distinta a la del ticket que ya tenía el cliente.
+   */
+  describe('fecha de la venta (offline)', () => {
+    function haceHoras(n: number): Date {
+      return new Date(Date.now() - n * 60 * 60 * 1000);
+    }
+
+    it('registra la venta con la fecha en que ocurrió, no con la de llegada', async () => {
+      const vendida = haceHoras(4);
+      await service.registrar(USUARIO, { ...DTO, fecha: vendida.toISOString() });
+
+      expect(tx.venta.create.mock.calls[0]![0].data.creadaEn.getTime()).toBe(vendida.getTime());
+    });
+
+    it('le manda a ARCA esa misma fecha, que es la que salió impresa', async () => {
+      const vendida = haceHoras(4);
+      await service.registrar(USUARIO, { ...DTO, fecha: vendida.toISOString() });
+
+      expect(cae.autorizar.mock.calls[0]![0].fecha.getTime()).toBe(vendida.getTime());
+    });
+
+    it('sin fecha (POS viejo) se registra con la del servidor', async () => {
+      const antes = Date.now();
+      await service.registrar(USUARIO, DTO);
+
+      const creadaEn = tx.venta.create.mock.calls[0]![0].data.creadaEn.getTime();
+      expect(creadaEn).toBeGreaterThanOrEqual(antes);
+      expect(creadaEn).toBeLessThanOrEqual(Date.now());
+    });
+
+    it('una venta más vieja que la ventana de ARCA queda PENDIENTE sin molestar a ARCA', async () => {
+      const vieja = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+      const result = await service.registrar(USUARIO, { ...DTO, fecha: vieja.toISOString() });
+
+      // Mandarla sería un rechazo seguro: ARCA sólo acepta ±5 días.
+      expect(cae.autorizar).not.toHaveBeenCalled();
+      expect(result).toBeDefined();
+      const data = tx.venta.create.mock.calls[0]![0].data;
+      expect(data.estadoFiscal).toBe('PENDIENTE');
+      expect(data.motivoFiscal).toContain('5 días');
+      // Y se guarda con su fecha real igual: la caja y los reportes la necesitan.
+      expect(data.creadaEn.getTime()).toBe(vieja.getTime());
+    });
+  });
+
   describe('venta con tipoComprobante=TicketNoFiscal (Fase 10.1 — sin alta en ARCA)', () => {
     it('NO pide CAE y persiste cae en null, pero SÍ numera el ticket (Fase 12.J)', async () => {
       await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });

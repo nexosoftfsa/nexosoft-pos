@@ -852,8 +852,18 @@ export function PantallaPos({
           pagos: pagosSync,
           recargo: venta.resultado.recargo.aDecimalString(2),
           tipoComprobante: venta.tipoComprobante,
+          // La misma fecha que ya se imprimió en el ticket, no la de ahora.
+          fecha: venta.fecha,
           ...(clienteVenta !== undefined ? { clienteId: clienteVenta } : {}),
         });
+        // Deja anotado con qué operación viaja esta venta, para poder volcarle
+        // después el número de ARCA y el CAE (`volcar-comprobantes.ts`). Si
+        // falla no se toca la venta: ya está confirmada y encolada.
+        try {
+          await entorno.sync.ventasLocales?.vincularOperacion(venta.id, operacion.operacionId);
+        } catch (e) {
+          console.error("No se pudo vincular la venta con su operación de sync:", e);
+        }
         if (esperar) {
           setAutorizando(true);
           try {

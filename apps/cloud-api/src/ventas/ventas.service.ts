@@ -21,6 +21,8 @@ import {
   type ServicioCae,
 } from './cae/servicio-cae';
 import { comprobanteAsociadoDe } from './cae/comprobante-asociado';
+import { fueraDeVentanaArca, motivoVentanaVencida } from './cae/ventana-de-fecha';
+import { fechaDeVenta } from './fecha-de-venta';
 import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
@@ -124,6 +126,9 @@ export class VentasService {
       sucursalId,
       desgloseNc,
       receptorNc,
+      // La nota de crédito se emite AHORA, no en la fecha de la venta que
+      // anula: es un comprobante nuevo, con su propia fecha.
+      new Date(),
       asociados,
     );
     const cae = fiscal.cae;
@@ -217,18 +222,32 @@ export class VentasService {
     sucursalId: string,
     desglose: DesgloseIva,
     receptor: ReceptorArca,
+    /**
+     * Fecha del comprobante. Es la de la VENTA, no la de ahora: una venta
+     * offline se autoriza cuando vuelve la conexión, y el `CbteFch` tiene que
+     * ser el mismo que ya salió impreso en el ticket del cliente.
+     */
+    fecha: Date,
     /** Qué comprobante corrige, en una Nota de Crédito. ARCA lo exige. */
     comprobantesAsociados?: readonly ComprobanteAsociadoSolicitud[],
   ): Promise<{ cae: ResultadoCae | null; estadoFiscal: EstadoFiscal; motivo: string | null }> {
     if (!esComprobanteFiscal(tipoComprobante)) {
       return { cae: null, estadoFiscal: 'NO_APLICA', motivo: null };
     }
+    // Una venta que estuvo offline más de la ventana de ARCA ya no se puede
+    // autorizar con su fecha real, y mandarla es un rechazo seguro. Se registra
+    // como pendiente con el motivo explicado, igual que hace el reintento.
+    if (fueraDeVentanaArca(fecha, new Date())) {
+      const motivo = motivoVentanaVencida(fecha, new Date());
+      this.logger.warn(`Venta fuera de la ventana de ARCA: ${motivo}`);
+      return { cae: null, estadoFiscal: 'PENDIENTE', motivo };
+    }
     try {
       const cae = await this.cae.autorizar({
         tipoComprobante,
         total: total.toFixed(2),
         sucursalId,
-        fecha: new Date(),
+        fecha,
         neto: desglose.neto.aDecimalString(2),
         iva: desglose.iva.aDecimalString(2),
         exento: desglose.exento.aDecimalString(2),
@@ -294,6 +313,10 @@ export class VentasService {
     const recargoGlobal = new Decimal(dto.recargo ?? '0');
     const total = subtotal.sub(descuentoGlobal).add(recargoGlobal);
     const tipoComprobante = dto.tipoComprobante ?? 'FacturaB';
+    // Cuándo ocurrió la venta, no cuándo llegó. Una venta offline puede entrar
+    // horas después: con la hora del servidor caía en el turno de caja
+    // equivocado y con un `CbteFch` distinto al del ticket (`fecha-de-venta.ts`).
+    const fechaVenta = fechaDeVenta(dto.fecha, new Date());
 
     // Combos: resolvemos qué ítems son combos para descontar el stock de sus
     // componentes en vez del combo (ADR-0033).
@@ -333,6 +356,7 @@ export class VentasService {
       usuario.sucursalId,
       desglose,
       receptor,
+      fechaVenta,
     );
     const cae = fiscal.cae;
 
@@ -347,6 +371,7 @@ export class VentasService {
           data: {
             operacionId: dto.operacionId,
             estado: 'COMPLETADA',
+            creadaEn: fechaVenta,
             subtotal,
             descuento: descuentoGlobal,
             total,

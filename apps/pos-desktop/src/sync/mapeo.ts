@@ -70,13 +70,23 @@ export function construirOperacionVenta(args: {
   readonly clienteId?: string;
   /** Tipo de comprobante resuelto localmente (Fase 10.1: puede ser "TicketNoFiscal"). */
   readonly tipoComprobante?: string;
+  /**
+   * Cuándo ocurrió la venta. Es la fecha que ya salió impresa en el ticket, y
+   * tiene que ser la misma con la que la venta queda registrada: sin conexión
+   * la venta puede llegar al servidor horas o días después, y el servidor la
+   * fechaba al recibirla. Eso la metía en el turno de caja equivocado y le
+   * ponía al comprobante de ARCA una fecha distinta a la del papel.
+   */
+  readonly fecha?: Date;
 }): OperacionSync {
+  const fecha = (args.fecha ?? new Date()).toISOString();
   return {
     operacionId: crypto.randomUUID(),
     tipo: "venta",
     terminalId: args.terminalId,
-    creadaEn: new Date().toISOString(),
+    creadaEn: fecha,
     payload: {
+      fecha,
       medioPago: args.medioPago,
       items: args.items.map((i) => ({
         productoId: i.productoId,

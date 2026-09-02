@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsNumberString,
   IsInt,
+  IsISO8601,
   IsArray,
   ArrayMinSize,
   ValidateNested,
@@ -112,4 +113,18 @@ export class CrearVentaDto {
   @IsString()
   @IsOptional()
   clienteId?: string;
+
+  /**
+   * Cuándo ocurrió la venta, en ISO 8601. La manda el POS porque una venta
+   * offline puede llegar horas o días después: sin esto se registraba con la
+   * fecha de la sincronización, y eso mandaba la venta al turno de caja
+   * equivocado, al día equivocado en los reportes y con un `CbteFch` que no
+   * coincidía con el ticket del cliente. Ver `fecha-de-venta.ts`.
+   *
+   * Opcional por retrocompatibilidad: un POS viejo no la manda y la venta se
+   * registra con la hora del servidor, como antes.
+   */
+  @IsISO8601()
+  @IsOptional()
+  fecha?: string;
 }

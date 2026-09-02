@@ -44,6 +44,33 @@ describe("construirOperacionVenta", () => {
     expect(payload.items[0]?.cantidad).toBe("3"); // cantidad como string
   });
 
+  it("manda la fecha de la venta, que es la que salió impresa en el ticket", () => {
+    const vendida = new Date("2026-09-02T14:00:00.000Z");
+    const op = construirOperacionVenta({
+      terminalId: "caja-1",
+      medioPago: "EFECTIVO",
+      items: [{ productoId: "p1", cantidad: 1, precioUnitario: "10.00" }],
+      fecha: vendida,
+    });
+
+    // En el payload, porque es la fecha DE LA VENTA (el servidor la usa como
+    // `creadaEn` y como `CbteFch`), y en el sobre por consistencia.
+    expect((op.payload as { fecha: string }).fecha).toBe(vendida.toISOString());
+    expect(op.creadaEn).toBe(vendida.toISOString());
+  });
+
+  it("sin fecha explícita usa la de ahora", () => {
+    const antes = Date.now();
+    const op = construirOperacionVenta({
+      terminalId: "caja-1",
+      medioPago: "EFECTIVO",
+      items: [{ productoId: "p1", cantidad: 1, precioUnitario: "10.00" }],
+    });
+    const enviada = new Date((op.payload as { fecha: string }).fecha).getTime();
+    expect(enviada).toBeGreaterThanOrEqual(antes);
+    expect(enviada).toBeLessThanOrEqual(Date.now());
+  });
+
   it("incluye tarjetaConfigId/cuotas/recargo por pago cuando viene una tarjeta configurada (Fase 12.E)", () => {
     const op = construirOperacionVenta({
       terminalId: "t",
