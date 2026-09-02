@@ -34,7 +34,7 @@
           "args": [
             "-NoProfile",
             "-Command",
-            "$pos=Join-Path $env:LOCALAPPDATA 'NexoSoft POS'; $c=@((Join-Path $pos 'excluir-antivirus.ps1'),(Join-Path $pos 'resources\\excluir-antivirus.ps1'),'C:\\NexoSoft-Servidor\\scripts\\excluir-antivirus.ps1'); $s=$c | Where-Object { Test-Path $_ } | Select-Object -First 1; if (-not $s) { exit 3 }; $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$s,'-CarpetaPos',$pos); $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
+            "$pos=Join-Path $env:LOCALAPPDATA 'NexoSoft POS'; $c=@((Join-Path $pos 'excluir-antivirus.ps1'),(Join-Path $pos 'resources\\excluir-antivirus.ps1'),'C:\\NexoSoft-Servidor\\scripts\\excluir-antivirus.ps1'); $s=$c | Where-Object { Test-Path $_ } | Select-Object -First 1; if (-not $s) { exit 3 }; $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',('\"'+$s+'\"'),'-CarpetaPos',('\"'+$pos+'\"')); $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode"
           ]
         },
         {

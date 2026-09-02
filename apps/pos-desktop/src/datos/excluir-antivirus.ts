@@ -23,7 +23,13 @@ export const ARGS_EXCLUIR_ANTIVIRUS = [
   // Se busca en los tres lugares posibles en vez de apostar a uno: Tauri puede
   // dejar el recurso junto al .exe o en `resources\`, y en la PC del servidor
   // el script también viaja con el paquete del servidor.
-  "$pos=Join-Path $env:LOCALAPPDATA 'NexoSoft POS'; $c=@((Join-Path $pos 'excluir-antivirus.ps1'),(Join-Path $pos 'resources\\excluir-antivirus.ps1'),'C:\\NexoSoft-Servidor\\scripts\\excluir-antivirus.ps1'); $s=$c | Where-Object { Test-Path $_ } | Select-Object -First 1; if (-not $s) { exit 3 }; $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$s,'-CarpetaPos',$pos); $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
+  //
+  // Las rutas van ENTRECOMILLADAS a mano. `Start-Process -ArgumentList` con un
+  // array pega los argumentos con espacios y no entrecomilla nada, y nuestra
+  // carpeta se llama "NexoSoft POS": sin las comillas, PowerShell recibía
+  // `-File C:\...\NexoSoft` y salía con -196608 ("el archivo de -File no
+  // existe"), aunque el `Test-Path` de acá arriba hubiera dado verdadero.
+  "$pos=Join-Path $env:LOCALAPPDATA 'NexoSoft POS'; $c=@((Join-Path $pos 'excluir-antivirus.ps1'),(Join-Path $pos 'resources\\excluir-antivirus.ps1'),'C:\\NexoSoft-Servidor\\scripts\\excluir-antivirus.ps1'); $s=$c | Where-Object { Test-Path $_ } | Select-Object -First 1; if (-not $s) { exit 3 }; $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',('\"'+$s+'\"'),'-CarpetaPos',('\"'+$pos+'\"')); $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
 ];
 
 const LOG = "C:\\ProgramData\\NexoSoft\\logs\\antivirus.log";
