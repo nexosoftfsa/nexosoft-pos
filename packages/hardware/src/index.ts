@@ -7,7 +7,12 @@ export type {
   EstadoImpresora,
   ComprobanteAsociadoTicket,
 } from "./impresora.js";
-export { identificacionComprobanteAsociado } from "./impresora.js";
+export {
+  identificacionComprobanteAsociado,
+  numeroEsProvisional,
+  numeroFiscalFormateado,
+  referenciaInterna,
+} from "./impresora.js";
 export type { LectorDeBarras, CallbackEscaneo } from "./lector.js";
 export type { Balanza, EstadoBalanza } from "./balanza.js";
 export { ErrorBalanza } from "./balanza.js";

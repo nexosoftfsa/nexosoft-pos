@@ -124,6 +124,52 @@ describe("construirEscPos", () => {
     expect(t).toContain("TOTAL");
   });
 
+  /**
+   * Pasó en producción: una venta sin internet imprimió "Factura C
+   * 0002-00000033" y el comprobante registrado fue el 0002-00000004.
+   */
+  describe("comprobante fiscal sin CAE todavía", () => {
+    /** Fiscal, número provisional, sin CAE: la venta que se hizo sin internet. */
+    const sinCae = () =>
+      ticket({ tipoComprobante: "Factura C", numero: 33, esFiscal: true });
+
+    /** El ticket envuelve a 32 columnas: para buscar una frase hay que unir. */
+    const frases = (t: string) => t.replace(/\s+/g, " ");
+
+    it("no imprime un número fiscal que después va a cambiar", () => {
+      const t = texto(construirEscPos(sinCae()));
+      expect(t).not.toContain("0001-00000033");
+      expect(frases(t)).toContain("Referencia interna 00000033");
+    });
+
+    it("dice que el número y el CAE los asigna ARCA", () => {
+      const t = frases(texto(construirEscPos(sinCae())));
+      expect(t).toContain("Pendiente de autorizacion de ARCA");
+      expect(t).toContain("los asigna ARCA al autorizar");
+    });
+
+    it("con CAE sí imprime el número fiscal", () => {
+      const t = texto(
+        construirEscPos(
+          ticket({
+            tipoComprobante: "Factura C",
+            numero: 33,
+            esFiscal: true,
+            cae: "12345678901234",
+          }),
+        ),
+      );
+      expect(t).toContain("0001-00000033");
+      expect(t).not.toContain("Referencia interna");
+    });
+
+    it("un ticket no fiscal conserva su número: no espera ningún CAE", () => {
+      const t = texto(construirEscPos(ticket({ numero: 33, esFiscal: false })));
+      expect(t).toContain("0001-00000033");
+      expect(t).not.toContain("Referencia interna");
+    });
+  });
+
   it("una nota de crédito imprime el comprobante que corrige", () => {
     const t = texto(
       construirEscPos(

@@ -7,7 +7,12 @@
  * `estilos.css`, mismo patrón que `.hoja-a4`).
  */
 import type { Cantidad } from "@nexosoft/domain";
-import { identificacionComprobanteAsociado } from "@nexosoft/hardware";
+import {
+  identificacionComprobanteAsociado,
+  numeroEsProvisional,
+  numeroFiscalFormateado,
+  referenciaInterna,
+} from "@nexosoft/hardware";
 import type { DatosImpresion } from "./qr-fiscal-datos";
 import { pesos } from "../formato";
 import { QrFiscal } from "./QrFiscal";
@@ -18,7 +23,7 @@ function cantidadFormateada(c: Cantidad): string {
 
 export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
   const esFiscal = datos.esFiscal ?? true;
-  const numeroFormateado = `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
+  const provisional = numeroEsProvisional(datos);
 
   return (
     <div className="hoja-ticket">
@@ -33,7 +38,9 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
       <div className="ticket-print-sep" />
 
       <div className="ticket-print-centro ticket-print-tipo">{datos.tipoComprobante}</div>
-      <div className="ticket-print-centro">N° {numeroFormateado}</div>
+      <div className="ticket-print-centro">
+        {provisional ? referenciaInterna(datos) : `N° ${numeroFiscalFormateado(datos)}`}
+      </div>
       <div className="ticket-print-centro">{datos.fecha.toLocaleString("es-AR")}</div>
       {datos.comprobanteAsociado !== undefined && (
         <div className="ticket-print-centro">
@@ -102,6 +109,11 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
             : "Pendiente de autorización de ARCA"
           : "Documento interno, sin validez fiscal"}
       </div>
+      {provisional && (
+        <div className="ticket-print-centro ticket-print-aviso">
+          El número de comprobante y el CAE los asigna ARCA al autorizar.
+        </div>
+      )}
 
       {esFiscal && <QrFiscal qr={datos.qr} tamanio={110} />}
     </div>

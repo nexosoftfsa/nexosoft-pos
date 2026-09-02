@@ -51,6 +51,39 @@ export function identificacionComprobanteAsociado(a: ComprobanteAsociadoTicket):
   return `${a.tipo} ${String(a.puntoDeVenta).padStart(4, "0")}-${String(a.numero).padStart(8, "0")}`;
 }
 
+/**
+ * ¿El número que lleva este comprobante ya es el que asignó ARCA?
+ *
+ * Un comprobante fiscal **sin CAE todavía no tiene número fiscal**. El que
+ * lleva es un correlativo provisional —local si la venta fue sin conexión, del
+ * servidor si ARCA no contestó— y **cambia** cuando ARCA lo autoriza.
+ *
+ * Pasó de verdad en producción: una venta sin internet imprimió "Factura C
+ * 0002-00000033" y el comprobante que quedó registrado era el 0002-00000004.
+ * El cliente se fue con un papel que no coincide con nada.
+ *
+ * Sin conexión no hay forma de saber el número: lo asigna ARCA. Lo que sí se
+ * puede es no inventarlo.
+ */
+export function numeroEsProvisional(datos: DatosTicket): boolean {
+  const esFiscal = datos.esFiscal ?? true;
+  return esFiscal && datos.cae === undefined;
+}
+
+/**
+ * Cómo se identifica un comprobante todavía sin número fiscal. El cajero
+ * necesita poder encontrarlo después, así que el correlativo interno se
+ * imprime — pero con nombre propio, para que nadie lo confunda con el fiscal.
+ */
+export function referenciaInterna(datos: DatosTicket): string {
+  return `Referencia interna ${String(datos.numero).padStart(8, "0")}`;
+}
+
+/** "0002-00000003": la identificación fiscal, punto de venta y número. */
+export function numeroFiscalFormateado(datos: DatosTicket): string {
+  return `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
+}
+
 export interface DatosTicket {
   // Cabecera del comercio
   readonly razonSocial: string;

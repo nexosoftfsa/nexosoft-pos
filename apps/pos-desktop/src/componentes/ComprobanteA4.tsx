@@ -6,7 +6,12 @@
  * `estilos.css`).
  */
 import type { Cantidad } from "@nexosoft/domain";
-import { identificacionComprobanteAsociado } from "@nexosoft/hardware";
+import {
+  identificacionComprobanteAsociado,
+  numeroEsProvisional,
+  numeroFiscalFormateado,
+  referenciaInterna,
+} from "@nexosoft/hardware";
 import { pesos } from "../formato";
 import type { DatosImpresion } from "./qr-fiscal-datos";
 import { QrFiscal } from "./QrFiscal";
@@ -18,7 +23,7 @@ function cantidadFormateada(c: Cantidad): string {
 
 export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
   const esFiscal = datos.esFiscal ?? true;
-  const numeroFormateado = `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
+  const provisional = numeroEsProvisional(datos);
 
   return (
     <div className="hoja-a4">
@@ -34,7 +39,7 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
         </div>
         <div className="a4-comprobante">
           <div className="a4-tipo">{datos.tipoComprobante}</div>
-          <div>N° {numeroFormateado}</div>
+          <div>{provisional ? referenciaInterna(datos) : `N° ${numeroFiscalFormateado(datos)}`}</div>
           <div>{datos.fecha.toLocaleDateString("es-AR")}</div>
           {esFiscal && datos.condicionIvaReceptor !== "" && (
             <div>Receptor: {datos.condicionIvaReceptor}</div>
@@ -116,6 +121,8 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
                 {datos.vencimientoCae &&
                   ` — Vto. ${datos.vencimientoCae.toLocaleDateString("es-AR")}`}
               </>
+            ) : provisional ? (
+              "Pendiente de autorización de ARCA. El número de comprobante y el CAE los asigna ARCA al autorizar."
             ) : (
               "Pendiente de autorización de ARCA."
             )

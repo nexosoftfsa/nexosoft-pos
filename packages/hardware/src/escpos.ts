@@ -10,7 +10,13 @@
  * se abría un diálogo. Acá el papel avanza sólo lo que se imprimió y el corte
  * es un comando.
  */
-import { identificacionComprobanteAsociado, type DatosTicket } from "./impresora.js";
+import {
+  identificacionComprobanteAsociado,
+  numeroEsProvisional,
+  numeroFiscalFormateado,
+  referenciaInterna,
+  type DatosTicket,
+} from "./impresora.js";
 
 /** Caracteres por línea en fuente A (12x24) sobre papel de 58mm. */
 export const COLUMNAS_58MM = 32;
@@ -280,8 +286,10 @@ export function construirEscPos(
 
   // --- Comprobante ---
   b.comando(NEGRITA_ON).linea(datos.tipoComprobante).comando(NEGRITA_OFF);
-  const numero = `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
-  b.linea(`N ${numero}`);
+  // Sin CAE el número todavía no es el de ARCA y va a cambiar: se imprime la
+  // referencia interna, no un número fiscal que después no coincide.
+  const provisional = numeroEsProvisional(datos);
+  b.linea(provisional ? referenciaInterna(datos) : `N ${numeroFiscalFormateado(datos)}`);
   b.linea(fecha(datos.fecha));
   // Una nota de crédito tiene que decir qué comprobante corrige. Va acá, junto
   // a la identificación de la nota y antes de los ítems, que es donde se lo
@@ -331,6 +339,10 @@ export function construirEscPos(
     b.separador();
     b.linea(`CAE ${datos.cae}`);
     if (datos.vencimientoCae) b.linea(`Vto. ${fecha(datos.vencimientoCae)}`);
+  } else if (provisional) {
+    b.separador();
+    b.linea("Pendiente de autorizacion de ARCA");
+    b.linea("El numero de comprobante y el CAE los asigna ARCA al autorizar.");
   }
   b.comando(ALINEAR_CENTRO);
 
