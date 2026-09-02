@@ -263,6 +263,78 @@ describe("Adaptador SQLite — ServicioDeVenta persiste de verdad", () => {
     expect(String(filas[0]?.cae)).toMatch(/^\d{14}$/);
   });
 
+  /**
+   * Sin conexión, Comprobantes lee de acá: es la única copia que tiene la
+   * terminal de lo que vendió.
+   */
+  describe("ver las ventas guardadas en la terminal", () => {
+    async function vender() {
+      return ctx.servicio.confirmarVenta({
+        items: [{ articuloId: "art", cantidad: Cantidad.de("1") }],
+        condicionReceptor: CondicionIva.ConsumidorFinal,
+        pagos: [efectivo("1210")],
+      });
+    }
+
+    it("devuelve la venta con sus ítems y sus pagos", async () => {
+      const venta = await vender();
+      const [guardada] = await ctx.repos.ventas.ultimas(10);
+
+      expect(guardada?.id).toBe(venta.id);
+      expect(guardada?.numero).toBe(venta.numero);
+      expect(guardada?.items).toHaveLength(1);
+      expect(guardada?.items[0]?.descripcion).toBeTruthy();
+      expect(guardada?.pagos).toHaveLength(1);
+      // Todavía sin autorizar: no hay número fiscal ni CAE.
+      expect(guardada?.numeroFiscal).toBeNull();
+      expect(guardada?.cae).toBeNull();
+    });
+
+    it("las más nuevas primero, y respeta el límite", async () => {
+      await vender();
+      await vender();
+      await vender();
+      expect(await ctx.repos.ventas.ultimas(2)).toHaveLength(2);
+    });
+
+    it("cuando el servidor la resuelve, la copia local se entera", async () => {
+      const venta = await vender();
+      await ctx.repos.ventas.vincularOperacion(venta.id, "op-1");
+      await ctx.repos.ventas.aplicarResueltoPorElServidor("op-1", {
+        numeroFiscal: 4,
+        tipoComprobante: "FacturaC",
+        cae: "86351023067383",
+        vencimientoCae: new Date("2026-09-12"),
+        estadoFiscal: "AUTORIZADA",
+      });
+
+      const [guardada] = await ctx.repos.ventas.ultimas(10);
+      expect(guardada?.numeroFiscal).toBe(4);
+      expect(guardada?.cae).toBe("86351023067383");
+      expect(guardada?.estadoCae).toBe("AUTORIZADA");
+      // El correlativo local NO se pisa: es la referencia interna, y además
+      // rompería el UNIQUE contra otra venta que ya tenga ese número.
+      expect(guardada?.numero).toBe(venta.numero);
+    });
+
+    it("una venta que sigue pendiente no inventa número fiscal", async () => {
+      const venta = await vender();
+      await ctx.repos.ventas.vincularOperacion(venta.id, "op-2");
+      await ctx.repos.ventas.aplicarResueltoPorElServidor("op-2", {
+        numeroFiscal: null,
+        tipoComprobante: "FacturaB",
+        cae: null,
+        vencimientoCae: null,
+        estadoFiscal: "PENDIENTE",
+      });
+
+      const [guardada] = await ctx.repos.ventas.ultimas(10);
+      expect(guardada?.numeroFiscal).toBeNull();
+      expect(guardada?.cae).toBeNull();
+      expect(guardada?.estadoCae).toBe("PENDIENTE_CAE");
+    });
+  });
+
   it("la numeración correlativa se deriva de la base", async () => {
     const v1 = await ctx.servicio.confirmarVenta({
       items: [{ articuloId: "art", cantidad: Cantidad.de("1") }],

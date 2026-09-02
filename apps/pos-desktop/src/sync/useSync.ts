@@ -8,13 +8,23 @@ import type {
   OperacionSync,
 } from "@nexosoft/sync";
 
+import type { RepositorioVentas } from "@nexosoft/app";
+
 import { esperarConTope } from "./esperar-con-tope";
+import { volcarComprobantes } from "./volcar-comprobantes";
 
 /** Lo que el POS inyecta para la sincronización. */
 export interface SyncPos {
   readonly motor: MotorDeSincronizacion;
   readonly almacen: AlmacenDeOperaciones;
   readonly terminalId: string;
+  /**
+   * Ventas guardadas en esta terminal. Cuando el servidor resuelve una venta
+   * —le da el número de ARCA y el CAE— eso se vuelca sobre la copia local, así
+   * el comprobante se puede ver y reimprimir bien aunque después no haya red.
+   * Opcional: en la demo del navegador no hay base local.
+   */
+  readonly ventasLocales?: RepositorioVentas;
 }
 
 export interface EstadoSync {
@@ -77,7 +87,7 @@ const ESPERA_COMPROBANTE_MS = 5_000;
  * intento inmediato). La lógica pesada vive en `MotorDeSincronizacion`.
  */
 export function useSync(sync: SyncPos): EstadoSync {
-  const { motor, almacen } = sync;
+  const { motor, almacen, ventasLocales } = sync;
   const [pendientes, setPendientes] = useState(0);
   const [fallidas, setFallidas] = useState(0);
   const [detalleFallidas, setDetalleFallidas] = useState<readonly OperacionEnCola[]>([]);
@@ -93,19 +103,36 @@ export function useSync(sync: SyncPos): EstadoSync {
     setDetalleFallidas(rechazadas);
   }, [almacen]);
 
+  /**
+   * Corre la sincronización y le vuelca a la base local lo que el servidor
+   * resolvió. Que falle el volcado no puede tumbar la corrida: la venta ya está
+   * en el servidor, que es lo que importa.
+   */
+  const sincronizarYVolcar = useCallback(async () => {
+    const resumen = await motor.sincronizar();
+    if (ventasLocales !== undefined) {
+      try {
+        await volcarComprobantes(ventasLocales, resumen.resultados);
+      } catch (e) {
+        console.error("No se pudo actualizar la copia local de los comprobantes:", e);
+      }
+    }
+    return resumen;
+  }, [motor, ventasLocales]);
+
   const sincronizarAhora = useCallback(async () => {
     if (!navigator.onLine) return;
     setSincronizando(true);
     setError(null);
     try {
-      await motor.sincronizar();
+      await sincronizarYVolcar();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSincronizando(false);
       await refrescar();
     }
-  }, [motor, refrescar]);
+  }, [sincronizarYVolcar, refrescar]);
 
   const encolar = useCallback(
     async (op: OperacionSync) => {
@@ -129,8 +156,7 @@ export function useSync(sync: SyncPos): EstadoSync {
 
       // La sincronización NO se cancela si se agota la espera: sigue su curso y
       // el CAE se consigue igual. Sólo se deja de esperar.
-      const corrida = motor
-        .sincronizar()
+      const corrida = sincronizarYVolcar()
         .then((r) => r.resultados[op.operacionId] ?? null)
         .catch(() => null);
 
@@ -139,7 +165,7 @@ export function useSync(sync: SyncPos): EstadoSync {
 
       return aTiempo !== null && aTiempo.ok ? (aTiempo.comprobante ?? null) : null;
     },
-    [motor, refrescar],
+    [motor, refrescar, sincronizarYVolcar],
   );
 
   const descartarFallidas = useCallback(async () => {

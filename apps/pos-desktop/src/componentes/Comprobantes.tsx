@@ -8,6 +8,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Money } from "@nexosoft/domain";
 import type { ConfiguracionComercio } from "@nexosoft/app";
 
+import type { RepositorioVentas } from "@nexosoft/app";
+
 import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
 import {
@@ -21,6 +23,7 @@ import { ComprobanteA4 } from "./ComprobanteA4";
 import { ComprobanteTicket } from "./ComprobanteTicket";
 import {
   avisoFiscal,
+  comprobanteDeVentaLocal,
   datosTicketDeComprobante,
   esAnulable,
   esFiscal,
@@ -63,12 +66,22 @@ function esDeHoy(iso: string): boolean {
   );
 }
 
+/** Cuántas ventas locales se muestran cuando no hay servidor. */
+const TOPE_LOCALES = 200;
+
 export function Comprobantes({
   cliente,
   config,
+  ventasLocales,
 }: {
   cliente: ClienteVentas;
   config: ConfiguracionComercio;
+  /**
+   * Ventas guardadas en esta terminal. Es el respaldo cuando el servidor no
+   * contesta: sin esto la pantalla quedaba vacía sin conexión y el cajero no
+   * podía ni reimprimir el ticket que acababa de emitir.
+   */
+  ventasLocales?: RepositorioVentas;
 }) {
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -80,18 +93,36 @@ export function Comprobantes({
   const [verificando, setVerificando] = useState<string | null>(null);
   const [verificacion, setVerificacion] = useState<VerificacionArca | null>(null);
   const [motivo, setMotivo] = useState<{ titulo: string; texto: string } | null>(null);
+  /** La lista salió de la terminal porque el servidor no contestó. */
+  const [sinServidor, setSinServidor] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setError(null);
     try {
       setComprobantes(await cliente.historial());
+      setSinServidor(false);
     } catch (e) {
+      // Sin servidor se muestra lo que tiene la terminal. No reemplaza al
+      // servidor —puede faltarle lo que vendieron otras cajas, y el CAE de lo
+      // que todavía no subió— pero es mucho mejor que una pantalla vacía.
+      if (ventasLocales !== undefined) {
+        try {
+          setComprobantes(
+            (await ventasLocales.ultimas(TOPE_LOCALES)).map(comprobanteDeVentaLocal),
+          );
+          setSinServidor(true);
+          setError(null);
+          return;
+        } catch (localError) {
+          console.error("Tampoco se pudo leer la base local:", localError);
+        }
+      }
       setError(mensajeError(e));
     } finally {
       setCargando(false);
     }
-  }, [cliente]);
+  }, [cliente, ventasLocales]);
 
   useEffect(() => {
     void cargar();
@@ -205,6 +236,13 @@ export function Comprobantes({
 
       {error !== null && <div className="error">{error}</div>}
       {aviso !== null && <div className="aviso-ok">{aviso}</div>}
+      {sinServidor && (
+        <div className="aviso">
+          Sin conexión con el servidor: esto es lo que tiene guardado esta terminal. Podés ver y
+          reimprimir, pero puede faltar lo que vendieron otras cajas, y el número de ARCA y el CAE
+          de lo que todavía no se subió. Anular y verificar en ARCA necesitan conexión.
+        </div>
+      )}
 
       <div className="card">
         <div className="tablewrap">
@@ -285,7 +323,9 @@ export function Comprobantes({
                           es información útil —"ARCA no lo tiene" confirma que
                           no se emitió—, y era la respuesta que no había forma
                           de conseguir. */}
-                      {esFiscal(c.tipoComprobante) && c.numeroComprobante !== null && (
+                      {/* Sin servidor, las dos acciones que hablan con él se
+                          esconden en vez de fallar al tocarlas. */}
+                      {!sinServidor && esFiscal(c.tipoComprobante) && c.numeroComprobante !== null && (
                         <button
                           type="button"
                           className="linkbtn"
@@ -295,7 +335,7 @@ export function Comprobantes({
                           {verificando === c.id ? "Consultando…" : "Verificar en ARCA"}
                         </button>
                       )}
-                      {esAnulable(c) && (
+                      {!sinServidor && esAnulable(c) && (
                         <button
                           type="button"
                           className="linkbtn linkbtn--danger"

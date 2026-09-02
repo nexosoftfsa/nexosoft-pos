@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { CondicionIva } from "@nexosoft/domain";
-import type { ConfiguracionComercio } from "@nexosoft/app";
+import type { ConfiguracionComercio, VentaLocal } from "@nexosoft/app";
 
 import type { Comprobante } from "../sync/cliente-ventas";
 import {
   avisoFiscal,
+  comprobanteDeVentaLocal,
   datosTicketDeComprobante,
   esAnulable,
   esFiscal,
@@ -162,6 +163,68 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
   it("sin desglose de IVA persistido (limitación conocida del backend): subtotalesIva vacío", () => {
     const datos = datosTicketDeComprobante(comprobante(), CONFIG);
     expect(datos.subtotalesIva).toEqual([]);
+  });
+});
+
+/**
+ * Sin conexión, Comprobantes muestra las ventas de la terminal. El caso que
+ * importa es la que todavía no subió: no tiene número de ARCA ni CAE, y no se
+ * puede fingir ninguno de los dos.
+ */
+describe("comprobanteDeVentaLocal", () => {
+  function ventaLocal(extra: Partial<VentaLocal> = {}): VentaLocal {
+    return {
+      id: "v-local",
+      fecha: new Date("2026-09-02T14:00:00.000Z"),
+      puntoDeVenta: 2,
+      numero: 33,
+      numeroFiscal: null,
+      tipoComprobante: "FacturaC",
+      estadoCae: "PENDIENTE_CAE",
+      cae: null,
+      vencimientoCae: null,
+      totalCentavos: 10_000,
+      descuentoCentavos: 0,
+      items: [
+        {
+          descripcion: "Servicio de consultoría",
+          cantidad: "1.000",
+          precioUnitarioCentavos: 10_000,
+          importeCentavos: 10_000,
+        },
+      ],
+      pagos: [{ forma: "efectivo", montoCentavos: 10_000 }],
+      ...extra,
+    };
+  }
+
+  it("traduce ítems, pagos y totales", () => {
+    const c = comprobanteDeVentaLocal(ventaLocal());
+    expect(c.total).toBe("100.00");
+    expect(c.items[0]?.producto?.nombre).toBe("Servicio de consultoría");
+    expect(c.items[0]?.subtotal).toBe("100.00");
+    expect(c.pagos?.[0]?.medioPago).toBe("EFECTIVO");
+    expect(c.medioPago).toBe("EFECTIVO");
+  });
+
+  it("sin autorizar: sin CAE y con el correlativo local, que el ticket imprime como referencia interna", () => {
+    const c = comprobanteDeVentaLocal(ventaLocal());
+    expect(c.cae).toBeNull();
+    expect(c.numeroComprobante).toBe(33);
+    expect(c.estadoFiscal).toBe("PENDIENTE");
+
+    // Y el ticket, al no haber CAE, no lo muestra como número fiscal.
+    const datos = datosTicketDeComprobante(c, { ...CONFIG, puntoDeVenta: 2 });
+    expect(datos.cae).toBeUndefined();
+  });
+
+  it("ya autorizada: usa el número de ARCA, no el local", () => {
+    const c = comprobanteDeVentaLocal(
+      ventaLocal({ numeroFiscal: 4, cae: "86351023067383", estadoCae: "AUTORIZADA" }),
+    );
+    expect(c.numeroComprobante).toBe(4);
+    expect(c.cae).toBe("86351023067383");
+    expect(c.estadoFiscal).toBe("AUTORIZADA");
   });
 });
 

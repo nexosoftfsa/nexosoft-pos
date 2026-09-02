@@ -426,7 +426,13 @@ export function Shell({
           ) : activo?.id === "medios-pago" && clienteMediosPago ? (
             <MediosDePago cliente={clienteMediosPago} />
           ) : activo?.id === "comprobantes" && clienteVentas ? (
-            <Comprobantes cliente={clienteVentas} config={entorno.config} />
+            <Comprobantes
+              cliente={clienteVentas}
+              config={entorno.config}
+              {...(entorno.sync.ventasLocales !== undefined
+                ? { ventasLocales: entorno.sync.ventasLocales }
+                : {})}
+            />
           ) : activo?.id === "reportes" && clienteReportes ? (
             <ReportesPos cliente={clienteReportes} />
           ) : activo?.id === "presupuestos" && clientePresupuestos ? (

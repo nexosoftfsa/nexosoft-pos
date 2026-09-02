@@ -20,6 +20,8 @@ import type {
   RepositorioMovimientos,
   RepositorioPrecios,
   RepositorioVentas,
+  ResueltoPorElServidor,
+  VentaLocal,
 } from "../puertos/repositorios.js";
 import type { VentaConfirmada } from "../ventas/venta.js";
 
@@ -98,6 +100,52 @@ export class RepositorioVentasMemoria implements RepositorioVentas {
     const siguiente = (this.numeradores.get(clave) ?? 0) + 1;
     this.numeradores.set(clave, siguiente);
     return siguiente;
+  }
+
+  /** `ventaId → operacionId`, el enlace con la cola de sync. */
+  readonly operaciones = new Map<string, string>();
+  /** Lo que el servidor resolvió, por `operacionId`. */
+  readonly resueltos = new Map<string, ResueltoPorElServidor>();
+
+  async vincularOperacion(ventaId: string, operacionId: string): Promise<void> {
+    this.operaciones.set(ventaId, operacionId);
+  }
+
+  async aplicarResueltoPorElServidor(
+    operacionId: string,
+    resuelto: ResueltoPorElServidor,
+  ): Promise<void> {
+    this.resueltos.set(operacionId, resuelto);
+  }
+
+  async ultimas(limite: number): Promise<readonly VentaLocal[]> {
+    return [...this.ventas]
+      .sort((a, b) => b.fecha.getTime() - a.fecha.getTime())
+      .slice(0, limite)
+      .map((v) => {
+        const operacionId = this.operaciones.get(v.id);
+        const r = operacionId === undefined ? undefined : this.resueltos.get(operacionId);
+        return {
+          id: v.id,
+          fecha: v.fecha,
+          puntoDeVenta: v.puntoDeVenta,
+          numero: v.numero,
+          numeroFiscal: r?.numeroFiscal ?? null,
+          tipoComprobante: r?.tipoComprobante ?? v.tipoComprobante,
+          estadoCae: v.estadoCae,
+          cae: r?.cae ?? v.cae ?? null,
+          vencimientoCae: r?.vencimientoCae ?? v.vencimientoCae ?? null,
+          totalCentavos: v.resultado.total.aCentavos(),
+          descuentoCentavos: 0,
+          items: v.items.map((it, i) => ({
+            descripcion: it.descripcion,
+            cantidad: it.cantidad.aDecimalString(3),
+            precioUnitarioCentavos: it.precioUnitario.aCentavos(),
+            importeCentavos: v.resultado.lineas[i]?.importe.aCentavos() ?? 0,
+          })),
+          pagos: v.pagos.map((p) => ({ forma: p.forma, montoCentavos: p.monto.aCentavos() })),
+        };
+      });
   }
 }
 

@@ -240,7 +240,7 @@ export function crearEntornoPos(): EntornoPos {
   // de sucursal), sin tocar la UI.
   const almacen = new AlmacenEnMemoria();
   const motor = new MotorDeSincronizacion(almacen, new ClienteSyncSimulado({ demoraMs: 800 }));
-  const sync: SyncPos = { motor, almacen, terminalId: "caja-1" };
+  const sync: SyncPos = { motor, almacen, terminalId: "caja-1", ventasLocales: repos.ventas };
 
   return {
     servicio: new ServicioDeVenta(repos, config),

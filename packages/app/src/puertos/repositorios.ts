@@ -50,12 +50,67 @@ export interface RepositorioMovimientos {
   agregar(movimiento: MovimientoDeStock): Promise<void>;
 }
 
+/**
+ * Lo que el servidor resolvió de una venta que se subió: el número que asignó
+ * ARCA y el CAE. Lo escribe la terminal sobre su copia local para que un
+ * comprobante se pueda ver y reimprimir bien aunque después no haya red.
+ */
+export interface ResueltoPorElServidor {
+  /** Número que asignó ARCA. `null` si todavía no lo autorizó. */
+  readonly numeroFiscal: number | null;
+  readonly tipoComprobante: string | null;
+  readonly cae: string | null;
+  readonly vencimientoCae: Date | null;
+  /** `AUTORIZADA`, `PENDIENTE`, `RECHAZADA` o `NO_APLICA`. */
+  readonly estadoFiscal: string;
+}
+
+/** Una venta guardada en la terminal, para listarla sin conexión. */
+export interface VentaLocal {
+  readonly id: string;
+  readonly fecha: Date;
+  readonly puntoDeVenta: number;
+  /** Correlativo local de la terminal: la referencia interna, no el fiscal. */
+  readonly numero: number;
+  /** El que asignó ARCA. `null` mientras no esté autorizada. */
+  readonly numeroFiscal: number | null;
+  readonly tipoComprobante: string;
+  readonly estadoCae: string;
+  readonly cae: string | null;
+  readonly vencimientoCae: Date | null;
+  readonly totalCentavos: number;
+  readonly descuentoCentavos: number;
+  readonly items: readonly VentaLocalItem[];
+  readonly pagos: readonly VentaLocalPago[];
+}
+
+export interface VentaLocalItem {
+  readonly descripcion: string;
+  readonly cantidad: string;
+  readonly precioUnitarioCentavos: number;
+  readonly importeCentavos: number;
+}
+
+export interface VentaLocalPago {
+  readonly forma: string;
+  readonly montoCentavos: number;
+}
+
 export interface RepositorioVentas {
   guardar(venta: VentaConfirmada): Promise<void>;
   /** Persiste el resultado de la autorización (estado de CAE, CAE y vencimiento). */
   actualizarCae(venta: VentaConfirmada): Promise<void>;
   /** Próximo número correlativo para un punto de venta y tipo de comprobante. */
   siguienteNumero(puntoDeVenta: number, tipo: TipoComprobante): Promise<number>;
+  /** Deja anotado con qué operación de la cola viaja esta venta. */
+  vincularOperacion(ventaId: string, operacionId: string): Promise<void>;
+  /** Vuelca sobre la venta local lo que resolvió el servidor. */
+  aplicarResueltoPorElServidor(
+    operacionId: string,
+    resuelto: ResueltoPorElServidor,
+  ): Promise<void>;
+  /** Las últimas ventas de esta terminal, para verlas sin conexión. */
+  ultimas(limite: number): Promise<readonly VentaLocal[]>;
 }
 
 /** Conjunto de repositorios que necesita la capa de aplicación. */

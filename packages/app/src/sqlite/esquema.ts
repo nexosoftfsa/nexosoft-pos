@@ -151,6 +151,14 @@ async function agregarColumnasNuevas(ejecutor: EjecutorSql): Promise<void> {
     `ALTER TABLE comercio_config ADD COLUMN logo_base64 TEXT`,
     `ALTER TABLE item_venta ADD COLUMN costo_neto_cent INTEGER`,
     `ALTER TABLE articulo ADD COLUMN mostrar_en_grilla_rapida INTEGER NOT NULL DEFAULT 0 CHECK (mostrar_en_grilla_rapida IN (0,1))`,
+    // Enlace con la cola de sync, para poder volcarle a la venta local lo que
+    // el servidor resolvió (CAE y número de ARCA) cuando vuelve la conexión.
+    `ALTER TABLE venta ADD COLUMN operacion_id TEXT`,
+    // El número que asignó ARCA. Va APARTE de `numero`, que es el correlativo
+    // local: son dos series distintas sobre la misma tabla, y `numero` tiene un
+    // UNIQUE por (punto_de_venta, tipo, numero) que se rompería al pisarlo con
+    // el de ARCA. `numero` queda como referencia interna de la terminal.
+    `ALTER TABLE venta ADD COLUMN numero_fiscal INTEGER`,
   ];
   for (const sentencia of alteraciones) {
     try {

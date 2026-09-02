@@ -292,6 +292,7 @@ export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}):
     motor: new MotorDeSincronizacion(almacen, cliente),
     almacen,
     terminalId: opciones.terminalId ?? TERMINAL_DEFECTO,
+    ventasLocales: repos.ventas,
   };
 
   return {
