@@ -22,6 +22,9 @@ const ticket = (extra: Partial<DatosTicket> = {}): DatosTicket => ({
   fecha: new Date(2026, 7, 22, 16, 26),
   condicionIvaReceptor: "Consumidor Final",
   esFiscal: false,
+  // El caso normal: el servidor ya confirmó el número, así que el ticket lo
+  // muestra. Los tests del número provisorio lo pisan a propósito.
+  numeroConfirmado: true,
   lineas: [
     {
       descripcion: "COCA COLA 1L",
@@ -131,7 +134,12 @@ describe("construirEscPos", () => {
   describe("comprobante fiscal sin CAE todavía", () => {
     /** Fiscal, número provisional, sin CAE: la venta que se hizo sin internet. */
     const sinCae = () =>
-      ticket({ tipoComprobante: "Factura C", numero: 33, esFiscal: true });
+      ticket({
+        tipoComprobante: "Factura C",
+        numero: 33,
+        esFiscal: true,
+        numeroConfirmado: false,
+      });
 
     /** El ticket envuelve a 32 columnas: para buscar una frase hay que unir. */
     const frases = (t: string) => t.replace(/\s+/g, " ");
@@ -163,10 +171,35 @@ describe("construirEscPos", () => {
       expect(t).not.toContain("Referencia interna");
     });
 
-    it("un ticket no fiscal conserva su número: no espera ningún CAE", () => {
-      const t = texto(construirEscPos(ticket({ numero: 33, esFiscal: false })));
+    it("un ticket interno confirmado por el servidor muestra su número", () => {
+      const t = texto(
+        construirEscPos(ticket({ numero: 33, esFiscal: false, numeroConfirmado: true })),
+      );
       expect(t).toContain("0001-00000033");
       expect(t).not.toContain("Referencia interna");
+    });
+
+    /**
+     * El ticket interno lo numera el servidor, que lleva una serie para toda la
+     * sucursal. El correlativo de la terminal es otro, y con más de una caja
+     * divergen: hasta que el servidor confirme, es una referencia.
+     */
+    it("un ticket interno sin confirmar tampoco afirma su número", () => {
+      const t = frases(
+        texto(
+          construirEscPos(ticket({ numero: 33, esFiscal: false, numeroConfirmado: false })),
+        ),
+      );
+      expect(t).toContain("Referencia interna 00000033");
+      expect(t).toContain("el definitivo se asigna al subir la venta al servidor");
+      // Y no habla de ARCA: un ticket interno no espera ninguna autorización.
+      expect(t).not.toContain("Pendiente de autorizacion de ARCA");
+    });
+
+    it("un comprobante fiscal sin CAE sí habla de ARCA", () => {
+      const t = frases(texto(construirEscPos(sinCae())));
+      expect(t).toContain("Pendiente de autorizacion de ARCA");
+      expect(t).toContain("los asigna ARCA al autorizar");
     });
   });
 

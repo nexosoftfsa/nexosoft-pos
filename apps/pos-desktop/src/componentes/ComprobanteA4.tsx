@@ -8,6 +8,7 @@
 import type { Cantidad } from "@nexosoft/domain";
 import {
   identificacionComprobanteAsociado,
+  leyendaNumeroProvisional,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
@@ -122,12 +123,15 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
                   ` — Vto. ${datos.vencimientoCae.toLocaleDateString("es-AR")}`}
               </>
             ) : provisional ? (
-              "Pendiente de autorización de ARCA. El número de comprobante y el CAE los asigna ARCA al autorizar."
+              `Pendiente de autorización de ARCA. ${leyendaNumeroProvisional(datos)}`
             ) : (
               "Pendiente de autorización de ARCA."
             )
           ) : (
-            "Documento interno, sin validez fiscal."
+            <>
+              Documento interno, sin validez fiscal.
+              {provisional && ` ${leyendaNumeroProvisional(datos)}`}
+            </>
           )}
         </div>
       </footer>

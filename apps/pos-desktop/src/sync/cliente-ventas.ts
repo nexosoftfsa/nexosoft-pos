@@ -47,6 +47,13 @@ export interface Comprobante {
   /** Desglose de pagos (presente en ventas con pago combinado). */
   readonly pagos?: PagoComprobante[];
   /**
+   * Si `numeroComprobante` es el definitivo. Lo que viene del servidor SIEMPRE
+   * lo es —es su propio registro—, así que este campo llega ausente y se asume
+   * `true`. Lo completa `comprobanteDeVentaLocal` cuando la fila sale de la
+   * copia de la terminal, que puede tener todavía el correlativo local.
+   */
+  readonly numeroConfirmado?: boolean;
+  /**
    * Cómo salió la autorización de ARCA. Una venta puede quedar sin CAE si ARCA
    * no respondía: el comercio tiene que poder VERLO, no enterarse en la
    * inspección.

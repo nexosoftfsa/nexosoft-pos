@@ -65,6 +65,19 @@ export interface PagoUi {
   readonly recargoAplicado?: Money;
 }
 
+/**
+ * Cuánto espera un TICKET INTERNO al servidor antes de imprimir.
+ *
+ * No toca ARCA: sólo pide el número de la serie que lleva el servidor de la
+ * LAN, que contesta en milisegundos. El tope existe para que un servidor lento
+ * o recién arrancado no frene la caja — si vence, el ticket sale con la
+ * referencia interna y el número definitivo queda para la reimpresión.
+ *
+ * Un comprobante fiscal usa el tope de `useSync` (5s), que es otra cosa: ahí se
+ * está esperando a ARCA.
+ */
+const ESPERA_TICKET_INTERNO_MS = 1_500;
+
 const RECEPTORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
   { valor: CondicionIva.ConsumidorFinal, etiqueta: "Consumidor Final" },
   { valor: CondicionIva.ResponsableInscripto, etiqueta: "Responsable Inscripto" },
@@ -840,11 +853,21 @@ export function PantallaPos({
           pagosSync,
           mapearMedioPago(pagos[0]?.forma ?? FormaDePago.Efectivo),
         );
-        // Para un comprobante FISCAL se espera (poco) a que el servidor
-        // resuelva el CAE, así el ticket que se lleva el cliente sale con el
-        // CAE, el QR y el número que asignó ARCA. Un ticket no fiscal no toca
-        // ARCA y sale al instante: eso lo decide el comercio.
-        const esperar = venta.tipoComprobante !== TipoComprobante.TicketNoFiscal;
+        // Siempre se espera al servidor para poder imprimir el número bueno,
+        // pero no lo mismo:
+        //
+        //  - FISCAL: hay que esperar a ARCA (dos llamadas remotas), y de ahí
+        //    salen el CAE, el QR y el número. Tope de 5s (ADR-0061).
+        //  - TICKET INTERNO: no toca ARCA. Sólo hace falta que el servidor de
+        //    la LAN devuelva el número de su serie, que tarda milisegundos. Se
+        //    espera poco para no frenar la caja, y sin red no se espera nada
+        //    (`encolarYEsperarComprobante` corta solo si está offline).
+        //
+        // Antes el ticket interno no esperaba nada y salía con el correlativo
+        // LOCAL de la terminal, que no es el que después guarda el servidor:
+        // con más de una caja, el papel y Comprobantes decían números distintos.
+        const esFiscalLaVenta = venta.tipoComprobante !== TipoComprobante.TicketNoFiscal;
+        const esperaMs = esFiscalLaVenta ? undefined : ESPERA_TICKET_INTERNO_MS;
         const operacion = construirOperacionVenta({
           items: itemsSync,
           medioPago,
@@ -864,15 +887,13 @@ export function PantallaPos({
         } catch (e) {
           console.error("No se pudo vincular la venta con su operación de sync:", e);
         }
-        if (esperar) {
-          setAutorizando(true);
-          try {
-            setComprobanteServidor(await sync.encolarYEsperarComprobante(operacion));
-          } finally {
-            setAutorizando(false);
-          }
-        } else {
-          await sync.encolar(operacion);
+        // El cartel "Autorizando en ARCA…" sólo tiene sentido en el fiscal: en
+        // el interno la espera es de milisegundos y no hay nada que autorizar.
+        if (esFiscalLaVenta) setAutorizando(true);
+        try {
+          setComprobanteServidor(await sync.encolarYEsperarComprobante(operacion, esperaMs));
+        } finally {
+          if (esFiscalLaVenta) setAutorizando(false);
         }
       } catch (e) {
         console.error("No se pudo encolar la venta para sync:", e);
@@ -1527,6 +1548,9 @@ function construirDatosTicket(
     ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
     tipoComprobante: etiquetaComprobante(tipo as TipoComprobante),
     numero: delServidor?.numeroComprobante ?? venta.numero,
+    // Si el número salió del servidor es el definitivo; si es el correlativo
+    // local, todavía puede cambiar y el ticket lo dice.
+    numeroConfirmado: delServidor?.numeroComprobante != null,
     fecha: new Date(),
     condicionIvaReceptor: etiquetaCondicionIva(venta.condicionIvaReceptor),
     esFiscal: tipo !== TipoComprobante.TicketNoFiscal,

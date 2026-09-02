@@ -12,6 +12,7 @@
  */
 import {
   identificacionComprobanteAsociado,
+  leyendaNumeroProvisional,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
@@ -341,8 +342,8 @@ export function construirEscPos(
     if (datos.vencimientoCae) b.linea(`Vto. ${fecha(datos.vencimientoCae)}`);
   } else if (provisional) {
     b.separador();
-    b.linea("Pendiente de autorizacion de ARCA");
-    b.linea("El numero de comprobante y el CAE los asigna ARCA al autorizar.");
+    if (datos.esFiscal !== false) b.linea("Pendiente de autorizacion de ARCA");
+    b.linea(leyendaNumeroProvisional(datos));
   }
   b.comando(ALINEAR_CENTRO);
 

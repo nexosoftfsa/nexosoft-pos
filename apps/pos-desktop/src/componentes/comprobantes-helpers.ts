@@ -116,6 +116,8 @@ export function datosTicketDeComprobante(
     ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
     tipoComprobante: etiquetaTipoComprobante(c.tipoComprobante),
     numero: c.numeroComprobante ?? 0,
+    // Lo que viene del servidor es su propio registro: ese número es el bueno.
+    numeroConfirmado: c.numeroConfirmado ?? true,
     fecha: new Date(c.creadaEn),
     condicionIvaReceptor: "",
     esFiscal: esFiscal(c.tipoComprobante),
@@ -184,6 +186,7 @@ export function comprobanteDeVentaLocal(v: VentaLocal): Comprobante {
     cae: v.cae,
     caeFechaVto: v.vencimientoCae?.toISOString() ?? null,
     numeroComprobante: v.numeroFiscal ?? v.numero,
+    numeroConfirmado: v.numeroFiscal !== null,
     tipoComprobante: v.tipoComprobante,
     creadaEn: v.fecha.toISOString(),
     comprobanteAsociadoId: null,

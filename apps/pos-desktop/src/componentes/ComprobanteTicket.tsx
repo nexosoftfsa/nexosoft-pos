@@ -9,6 +9,7 @@
 import type { Cantidad } from "@nexosoft/domain";
 import {
   identificacionComprobanteAsociado,
+  leyendaNumeroProvisional,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
@@ -111,7 +112,7 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
       </div>
       {provisional && (
         <div className="ticket-print-centro ticket-print-aviso">
-          El número de comprobante y el CAE los asigna ARCA al autorizar.
+          {leyendaNumeroProvisional(datos)}
         </div>
       )}
 

@@ -52,22 +52,36 @@ export function identificacionComprobanteAsociado(a: ComprobanteAsociadoTicket):
 }
 
 /**
- * ¿El número que lleva este comprobante ya es el que asignó ARCA?
+ * ¿El número que lleva este comprobante todavía puede cambiar?
  *
- * Un comprobante fiscal **sin CAE todavía no tiene número fiscal**. El que
- * lleva es un correlativo provisional —local si la venta fue sin conexión, del
- * servidor si ARCA no contestó— y **cambia** cuando ARCA lo autoriza.
+ * La regla es una sola: **el número es definitivo cuando lo confirmó quien lo
+ * asigna.** Quién es depende del comprobante:
+ *
+ *  - Un comprobante **fiscal** lo numera ARCA, y la prueba de que lo hizo es el
+ *    CAE. Sin CAE, el número que lleva es un provisorio —local si la venta fue
+ *    sin conexión, del servidor si ARCA no contestó— y cambia al autorizarse.
+ *  - Un **ticket interno** lo numera el servidor de sucursal, que lleva una sola
+ *    serie para todas las cajas. La terminal numera con su propio correlativo
+ *    para poder imprimir sin red, y esos dos números divergen apenas hay más de
+ *    una caja.
  *
  * Pasó de verdad en producción: una venta sin internet imprimió "Factura C
  * 0002-00000033" y el comprobante que quedó registrado era el 0002-00000004.
  * El cliente se fue con un papel que no coincide con nada.
  *
- * Sin conexión no hay forma de saber el número: lo asigna ARCA. Lo que sí se
- * puede es no inventarlo.
+ * Sin conexión no hay forma de saber el número definitivo. Lo que sí se puede
+ * es no inventarlo.
  */
 export function numeroEsProvisional(datos: DatosTicket): boolean {
-  const esFiscal = datos.esFiscal ?? true;
-  return esFiscal && datos.cae === undefined;
+  if (datos.numeroConfirmado === true) return false;
+  return (datos.esFiscal ?? true) ? datos.cae === undefined : true;
+}
+
+/** Por qué el número todavía no es el definitivo, según quién lo asigna. */
+export function leyendaNumeroProvisional(datos: DatosTicket): string {
+  return (datos.esFiscal ?? true)
+    ? "El número de comprobante y el CAE los asigna ARCA al autorizar."
+    : "Número provisorio: el definitivo se asigna al subir la venta al servidor.";
 }
 
 /**
@@ -105,6 +119,13 @@ export interface DatosTicket {
   readonly esFiscal?: boolean;
   /** Presente sólo en Notas de Crédito/Débito: qué comprobante corrigen. */
   readonly comprobanteAsociado?: ComprobanteAsociadoTicket;
+  /**
+   * `true` cuando `numero` es el definitivo porque lo confirmó quien lo asigna
+   * (ARCA para un comprobante fiscal, el servidor para un ticket interno). Sin
+   * esto no hay forma de distinguir el número bueno del provisorio de la
+   * terminal, y se termina imprimiendo un número que después cambia.
+   */
+  readonly numeroConfirmado?: boolean;
 
   // Cuerpo
   readonly lineas: readonly LineaTicket[];

@@ -9,6 +9,7 @@ export type {
 } from "./impresora.js";
 export {
   identificacionComprobanteAsociado,
+  leyendaNumeroProvisional,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
