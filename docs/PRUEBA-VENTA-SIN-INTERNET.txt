@@ -24,17 +24,29 @@ podias ver.
   3. Comprobantes quedaba vacio sin internet. Ahora muestra lo que tiene la
      terminal, y podes reimprimir.
 
-Versiones de esta prueba:  POS 0.1.52  -  Servidor 0.13.3
-Si algo sale mal, el punto seguro anterior es POS 0.1.51 + Servidor 0.13.2.
+Y se sumaron dos cosas mas (POS 0.1.53 / Servidor 0.14.0):
+
+  4. El ticket INTERNO (el que no va a ARCA) tenia el mismo problema del
+     numero, por otro motivo: lo numeraba la terminal y el servidor le ponia
+     otro. Ahora espera al servidor un instante y muestra el bueno.
+
+  5. Si cerras la caja mientras estas sin internet, el POS te avisa antes de
+     que el arqueo va a dar un sobrante que no es real, y el turno queda
+     explicando por que.
+
+Versiones de esta prueba:  POS 0.1.53  -  Servidor 0.14.0
+Si algo sale mal, el punto seguro anterior es POS 0.1.52 + Servidor 0.13.3.
+(El servidor 0.14.0 toca la base de datos, pero solo AGREGA una columna: se
+puede volver atras sin perder nada.)
 
 
 PASO 1 - ACTUALIZAR LOS DOS
 ----------------------------
-1.1 POS > Configuracion > Actualizaciones > "Actualizar servidor" -> 0.13.3
-1.2 En la misma pantalla, instala el POS 0.1.52.
+1.1 POS > Configuracion > Actualizaciones > "Actualizar servidor" -> 0.14.0
+1.2 En la misma pantalla, instala el POS 0.1.53.
 
-    [ ] Servidor 0.13.3
-    [ ] POS 0.1.52
+    [ ] Servidor 0.14.0
+    [ ] POS 0.1.53
 
 
 PASO 2 - ABRIR LA CAJA Y ANOTAR LA HORA
@@ -127,6 +139,42 @@ PASO 6 - LA CAJA
     [ ] El saldo teorico incluye los $100.
 
 
+PASO 7 - SI TENES GANAS: CERRAR LA CAJA SIN INTERNET
+-----------------------------------------------------
+Esto es opcional y es lo ultimo que agregamos. Hacelo en un turno NUEVO, para
+no ensuciar el del paso 6.
+
+7.1 Abri un turno nuevo.
+7.2 Desconecta internet.
+7.3 Hace una venta de $50 en efectivo.
+7.4 Sin reconectar, anda a cerrar la caja (arqueo).
+
+    [ ] ANTES de pedirte el monto, aparece un aviso que dice que hay 1 venta
+        que todavia no subio, y que el arqueo va a dar un sobrante que no es
+        real.
+
+    SACALE UNA FOTO A ESE AVISO.
+
+7.5 Cerra igual, contando la plata de verdad (fondo + $50).
+
+    Lo que muestre la Diferencia: ________
+
+    Va a dar un sobrante de $50. Esta bien que de eso: el sistema todavia no
+    sabe de esa venta.
+
+7.6 Volve a conectar internet, espera un minuto, y volve a abrir ese turno
+    desde el historial de Caja.
+
+    [ ] Ahora aparece un cartel que explica que al cerrar faltaba 1 venta, y
+        dice que la diferencia REAL es $0.
+    [ ] La diferencia original (+$50) sigue estando, no se borro.
+
+    SACALE UNA FOTO.
+
+    Las dos cosas tienen que estar: la que se firmo no se toca nunca (es el
+    arqueo del cajero) y al lado se explica por que no coincide.
+
+
 ===========================================================================
   QUE MANDARME
 ===========================================================================
@@ -136,9 +184,5 @@ PASO 6 - LA CAJA
      me sirve
   4. El PDF de la reimpresion ya con CAE (paso 5.4)
   5. Cuanto dio "Ventas en efectivo" en la caja (paso 6.1)
-
-Una cosa que YA SE que falta, no hace falta que la pruebes: si cerras la caja
-MIENTRAS estas sin internet, el saldo teorico va a salir incompleto, porque el
-resumen lo calcula el servidor y la venta todavia no llego. Lo tengo anotado y
-lo vemos despues.
+  6. Si hiciste el paso 7: las dos fotos (7.4 y 7.6)
 ===========================================================================
