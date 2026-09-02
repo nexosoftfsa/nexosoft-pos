@@ -124,6 +124,23 @@ describe("construirEscPos", () => {
     expect(t).toContain("TOTAL");
   });
 
+  it("una nota de crédito imprime el comprobante que corrige", () => {
+    const t = texto(
+      construirEscPos(
+        ticket({
+          tipoComprobante: "Nota de Credito C",
+          comprobanteAsociado: { tipo: "Factura C", puntoDeVenta: 2, numero: 3 },
+        }),
+      ),
+    );
+    expect(t).toContain("Comprobante asociado");
+    expect(t).toContain("Factura C 0002-00000003");
+  });
+
+  it("una factura no imprime esa leyenda", () => {
+    expect(texto(construirEscPos(ticket()))).not.toContain("Comprobante asociado");
+  });
+
   it("ninguna línea supera el ancho del papel", () => {
     const t = texto(
       construirEscPos(

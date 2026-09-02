@@ -10,7 +10,7 @@
  * se abría un diálogo. Acá el papel avanza sólo lo que se imprimió y el corte
  * es un comando.
  */
-import type { DatosTicket } from "./impresora.js";
+import { identificacionComprobanteAsociado, type DatosTicket } from "./impresora.js";
 
 /** Caracteres por línea en fuente A (12x24) sobre papel de 58mm. */
 export const COLUMNAS_58MM = 32;
@@ -283,6 +283,13 @@ export function construirEscPos(
   const numero = `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
   b.linea(`N ${numero}`);
   b.linea(fecha(datos.fecha));
+  // Una nota de crédito tiene que decir qué comprobante corrige. Va acá, junto
+  // a la identificación de la nota y antes de los ítems, que es donde se lo
+  // busca.
+  if (datos.comprobanteAsociado !== undefined) {
+    b.linea("Comprobante asociado");
+    b.linea(identificacionComprobanteAsociado(datos.comprobanteAsociado));
+  }
   if (datos.esFiscal === false) {
     b.comando(NEGRITA_ON).linea("NO VALIDO COMO FACTURA").comando(NEGRITA_OFF);
   }

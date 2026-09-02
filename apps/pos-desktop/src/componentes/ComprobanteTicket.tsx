@@ -7,6 +7,7 @@
  * `estilos.css`, mismo patrón que `.hoja-a4`).
  */
 import type { Cantidad } from "@nexosoft/domain";
+import { identificacionComprobanteAsociado } from "@nexosoft/hardware";
 import type { DatosImpresion } from "./qr-fiscal-datos";
 import { pesos } from "../formato";
 import { QrFiscal } from "./QrFiscal";
@@ -34,6 +35,13 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
       <div className="ticket-print-centro ticket-print-tipo">{datos.tipoComprobante}</div>
       <div className="ticket-print-centro">N° {numeroFormateado}</div>
       <div className="ticket-print-centro">{datos.fecha.toLocaleString("es-AR")}</div>
+      {datos.comprobanteAsociado !== undefined && (
+        <div className="ticket-print-centro">
+          Comprobante asociado
+          <br />
+          {identificacionComprobanteAsociado(datos.comprobanteAsociado)}
+        </div>
+      )}
       {!esFiscal && (
         <div className="ticket-print-centro ticket-print-aviso">
           NO VÁLIDO COMO FACTURA

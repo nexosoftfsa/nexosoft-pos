@@ -6,6 +6,7 @@
  * `estilos.css`).
  */
 import type { Cantidad } from "@nexosoft/domain";
+import { identificacionComprobanteAsociado } from "@nexosoft/hardware";
 import { pesos } from "../formato";
 import type { DatosImpresion } from "./qr-fiscal-datos";
 import { QrFiscal } from "./QrFiscal";
@@ -37,6 +38,11 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
           <div>{datos.fecha.toLocaleDateString("es-AR")}</div>
           {esFiscal && datos.condicionIvaReceptor !== "" && (
             <div>Receptor: {datos.condicionIvaReceptor}</div>
+          )}
+          {datos.comprobanteAsociado !== undefined && (
+            <div>
+              Comprobante asociado: {identificacionComprobanteAsociado(datos.comprobanteAsociado)}
+            </div>
           )}
         </div>
       </header>

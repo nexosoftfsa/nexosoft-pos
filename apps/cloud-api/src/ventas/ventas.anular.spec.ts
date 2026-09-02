@@ -122,6 +122,17 @@ describe('VentasService.anular', () => {
     );
   });
 
+  it('devuelve el comprobante asociado resuelto, para poder imprimirlo', async () => {
+    await service.anular('s1', 'v1');
+
+    // Sin esto el POS tiene el id del original pero no su tipo ni su número, y
+    // la Nota de Crédito sale sin decir qué comprobante corrige.
+    const include = prisma.venta.findFirst.mock.calls.at(-1)?.[0].include;
+    expect(include.comprobanteAsociado).toEqual({
+      select: { tipoComprobante: true, numeroComprobante: true },
+    });
+  });
+
   it('emite la NC con comprobante asociado, restaura stock y marca ANULADA', async () => {
     await service.anular('s1', 'v1');
 

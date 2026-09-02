@@ -31,6 +31,26 @@ export interface SubtotalIva {
   readonly iva: Money;
 }
 
+/**
+ * El comprobante que corrige una Nota de Crédito o de Débito.
+ *
+ * ARCA ya lo recibe en el `CbtesAsoc` de la solicitud de CAE —sin eso rechaza
+ * la nota—, pero el papel que se lleva el cliente también tiene que decirlo:
+ * una nota que no identifica el comprobante que corrige no cumple con el
+ * régimen de comprobantes, y el contador no puede conciliarla contra nada.
+ */
+export interface ComprobanteAsociadoTicket {
+  /** Texto que se imprime, ej. "Factura C". */
+  readonly tipo: string;
+  readonly puntoDeVenta: number;
+  readonly numero: number;
+}
+
+/** "Factura C 0002-00000003". Formato único para el ticket, el A4 y la térmica. */
+export function identificacionComprobanteAsociado(a: ComprobanteAsociadoTicket): string {
+  return `${a.tipo} ${String(a.puntoDeVenta).padStart(4, "0")}-${String(a.numero).padStart(8, "0")}`;
+}
+
 export interface DatosTicket {
   // Cabecera del comercio
   readonly razonSocial: string;
@@ -50,6 +70,8 @@ export interface DatosTicket {
   readonly condicionIvaReceptor: string;
   /** `false` = comercio sin alta en ARCA (Fase 10.1): no imprimir como si fuera fiscal. Default `true`. */
   readonly esFiscal?: boolean;
+  /** Presente sólo en Notas de Crédito/Débito: qué comprobante corrigen. */
+  readonly comprobanteAsociado?: ComprobanteAsociadoTicket;
 
   // Cuerpo
   readonly lineas: readonly LineaTicket[];

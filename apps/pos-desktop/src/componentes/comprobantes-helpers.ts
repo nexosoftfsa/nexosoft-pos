@@ -5,7 +5,7 @@
 import { Cantidad, etiquetaCondicionIva, Money } from "@nexosoft/domain";
 import type { TipoComprobante } from "@nexosoft/domain";
 import { codigoComprobanteArca } from "@nexosoft/fiscal";
-import type { DatosTicket } from "@nexosoft/hardware";
+import type { ComprobanteAsociadoTicket, DatosTicket } from "@nexosoft/hardware";
 import type { ConfiguracionComercio } from "@nexosoft/app";
 import type { Comprobante } from "../sync/cliente-ventas";
 
@@ -106,6 +106,7 @@ export function datosTicketDeComprobante(
   c: Comprobante,
   config: ConfiguracionComercio,
 ): DatosTicket {
+  const asociado = comprobanteAsociadoDe(c, config.puntoDeVenta);
   return {
     razonSocial: config.razonSocial,
     cuit: config.cuit,
@@ -117,6 +118,7 @@ export function datosTicketDeComprobante(
     fecha: new Date(c.creadaEn),
     condicionIvaReceptor: "",
     esFiscal: esFiscal(c.tipoComprobante),
+    ...(asociado !== null ? { comprobanteAsociado: asociado } : {}),
     lineas: c.items.map((it) => ({
       descripcion: it.producto?.nombre ?? it.producto?.codigo ?? "Ítem",
       cantidad: Cantidad.de(it.cantidad),
@@ -136,6 +138,32 @@ export function datosTicketDeComprobante(
     ...(codigoArcaDe(c.tipoComprobante) !== null
       ? { codigoComprobanteArca: codigoArcaDe(c.tipoComprobante) as number }
       : {}),
+  };
+}
+
+/**
+ * Qué comprobante corrige una Nota de Crédito/Débito, para imprimirlo.
+ *
+ * `null` si no corrige a ninguno (una factura) o si el servidor no lo resolvió
+ * — puede pasar con comprobantes viejos, anteriores a que se empezara a
+ * devolver la relación. Preferimos no imprimir la línea antes que imprimirla
+ * incompleta.
+ *
+ * El punto de venta sale de la configuración: el original y su nota se emiten
+ * siempre desde la misma terminal, y la venta no guarda un punto de venta
+ * propio.
+ */
+function comprobanteAsociadoDe(
+  c: Comprobante,
+  puntoDeVenta: number,
+): ComprobanteAsociadoTicket | null {
+  const a = c.comprobanteAsociado;
+  if (a === undefined || a === null) return null;
+  if (a.tipoComprobante === null || a.numeroComprobante === null) return null;
+  return {
+    tipo: etiquetaTipoComprobante(a.tipoComprobante),
+    puntoDeVenta,
+    numero: a.numeroComprobante,
   };
 }
 

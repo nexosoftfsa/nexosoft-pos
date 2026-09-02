@@ -62,6 +62,10 @@ export class VentasService {
       include: {
         items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } },
         pagos: true,
+        // Una Nota de Crédito tiene que decir en el papel qué comprobante
+        // corrige, no sólo en el `CbtesAsoc` que va a ARCA. Con el id solo no
+        // alcanza: hace falta el tipo y el número para poder imprimirlo.
+        comprobanteAsociado: { select: { tipoComprobante: true, numeroComprobante: true } },
       },
     });
   }
@@ -72,6 +76,10 @@ export class VentasService {
       include: {
         items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } },
         pagos: true,
+        // Una Nota de Crédito tiene que decir en el papel qué comprobante
+        // corrige, no sólo en el `CbtesAsoc` que va a ARCA. Con el id solo no
+        // alcanza: hace falta el tipo y el número para poder imprimirlo.
+        comprobanteAsociado: { select: { tipoComprobante: true, numeroComprobante: true } },
       },
     });
     if (!venta) throw new NotFoundException(`Comprobante ${id} no encontrado`);
@@ -503,7 +511,9 @@ export class VentasService {
   }
 
   private async registrarEnLibro(
-    venta: Awaited<ReturnType<VentasService['historial']>>[number],
+    // Sin `comprobanteAsociado`: el libro no lo usa, y pedirlo obligaría a
+    // traer la relación en el `create` de la venta, que nunca la tiene.
+    venta: Omit<Awaited<ReturnType<VentasService['historial']>>[number], 'comprobanteAsociado'>,
     usuarioEmail: string,
   ): Promise<void> {
     try {

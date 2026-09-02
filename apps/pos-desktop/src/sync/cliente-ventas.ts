@@ -34,6 +34,15 @@ export interface Comprobante {
   readonly tipoComprobante: string | null;
   readonly creadaEn: string;
   readonly comprobanteAsociadoId: string | null;
+  /**
+   * Tipo y número del comprobante que corrige, resuelto por el servidor. Con el
+   * id solo no se puede imprimir "Comprobante asociado: Factura C 0002-…", que
+   * es lo que la Nota de Crédito tiene que decir en el papel.
+   */
+  readonly comprobanteAsociado?: {
+    readonly tipoComprobante: string | null;
+    readonly numeroComprobante: number | null;
+  } | null;
   readonly items: ItemComprobante[];
   /** Desglose de pagos (presente en ventas con pago combinado). */
   readonly pagos?: PagoComprobante[];

@@ -125,6 +125,32 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
     expect(datos.cae).toBe("1");
   });
 
+  it("una nota de crédito dice qué comprobante corrige", () => {
+    const nc = comprobante({
+      tipoComprobante: "NotaCreditoB",
+      numeroComprobante: 1,
+      comprobanteAsociadoId: "v-original",
+      comprobanteAsociado: { tipoComprobante: "FacturaB", numeroComprobante: 3 },
+    });
+    expect(datosTicketDeComprobante(nc, CONFIG).comprobanteAsociado).toEqual({
+      tipo: "Factura B",
+      puntoDeVenta: 1,
+      numero: 3,
+    });
+  });
+
+  it("una factura común no lleva comprobante asociado", () => {
+    expect(datosTicketDeComprobante(comprobante(), CONFIG).comprobanteAsociado).toBeUndefined();
+  });
+
+  it("si el servidor no resolvió el asociado, no se imprime a medias", () => {
+    const viejo = comprobante({
+      tipoComprobante: "NotaCreditoB",
+      comprobanteAsociadoId: "v-original",
+    });
+    expect(datosTicketDeComprobante(viejo, CONFIG).comprobanteAsociado).toBeUndefined();
+  });
+
   it("un TicketNoFiscal queda marcado esFiscal:false y sin CAE", () => {
     const c = comprobante({ tipoComprobante: "TicketNoFiscal", cae: null, caeFechaVto: null, numeroComprobante: null });
     const datos = datosTicketDeComprobante(c, CONFIG);
