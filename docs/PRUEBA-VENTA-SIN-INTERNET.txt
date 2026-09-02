@@ -1,0 +1,144 @@
+===========================================================================
+  NEXOSOFT - VENDER SIN INTERNET, OTRA VEZ
+  Para: Sebastian
+  Tiempo: 25 minutos
+===========================================================================
+
+DONDE ESTAMOS
+--------------
+La prueba sin internet que hiciste sirvio muchisimo. Tenias razon: no tenia
+que salir con esa numeracion. Encontre tres cosas, dos de ellas que vos no
+podias ver.
+
+  1. El ticket mostraba "N 0002-00000033" como si fuera el numero fiscal, y
+     el comprobante que quedo despues fue el 0002-00000004. Sin internet NO
+     hay forma de saber el numero: lo asigna ARCA. Ahora el ticket dice
+     "Referencia interna 00000033" y aclara que el numero y el CAE los pone
+     ARCA al autorizar.
+
+  2. La venta se guardaba con la hora en que LLEGABA al servidor, no con la
+     hora en que se hizo. Por eso no sumaba a la caja. Tambien mandaba mal la
+     fecha a ARCA y ponia la venta en el dia equivocado en los reportes.
+     Arreglado: ahora viaja la hora real de la venta.
+
+  3. Comprobantes quedaba vacio sin internet. Ahora muestra lo que tiene la
+     terminal, y podes reimprimir.
+
+Versiones de esta prueba:  POS 0.1.52  -  Servidor 0.13.3
+Si algo sale mal, el punto seguro anterior es POS 0.1.51 + Servidor 0.13.2.
+
+
+PASO 1 - ACTUALIZAR LOS DOS
+----------------------------
+1.1 POS > Configuracion > Actualizaciones > "Actualizar servidor" -> 0.13.3
+1.2 En la misma pantalla, instala el POS 0.1.52.
+
+    [ ] Servidor 0.13.3
+    [ ] POS 0.1.52
+
+
+PASO 2 - ABRIR LA CAJA Y ANOTAR LA HORA
+----------------------------------------
+2.1 Anda a Caja y abri un turno con el fondo que quieras.
+
+    Hora de apertura: ________
+    Fondo: $ ________
+
+    Esto importa: la prueba es que la venta de abajo termine DENTRO de este
+    turno aunque se suba mucho despues.
+
+
+PASO 3 - DESCONECTAR Y VENDER
+------------------------------
+3.1 Desconecta internet (sacale el cable o apaga el WiFi).
+3.2 Espera unos segundos a que el POS se de cuenta.
+3.3 Hace una venta de $100 EN EFECTIVO.
+
+    Hora de la venta: ________
+
+3.4 Mira el ticket.
+
+    [ ] Dice "Factura C" arriba.
+    [ ] Donde antes decia "N 0002-000000XX" ahora dice
+        "Referencia interna 000000XX".
+    [ ] Abajo dice "Pendiente de autorizacion de ARCA".
+    [ ] Y agrega que el numero y el CAE los asigna ARCA al autorizar.
+
+    Referencia interna que salio: ________
+
+    MANDAME EL PDF.
+
+    Lo importante: el ticket YA NO afirma un numero fiscal que despues va a
+    cambiar. Sin internet ese numero no se puede saber, asi que preferimos no
+    inventarlo.
+
+
+PASO 4 - MIRAR COMPROBANTES, TODAVIA SIN INTERNET
+--------------------------------------------------
+4.1 Sin reconectar, anda a Comprobantes.
+
+    [ ] Aparece la venta que acabas de hacer.
+    [ ] Arriba hay un cartel que avisa que no hay conexion con el servidor.
+    [ ] En la fila NO estan los botones "Anular" ni "Verificar en ARCA"
+        (necesitan servidor).
+    [ ] "Reimprimir" si esta, y funciona.
+
+    SACALE UNA FOTO A LA PANTALLA.
+
+    Antes esta pantalla quedaba vacia sin internet.
+
+
+PASO 5 - VOLVER A CONECTAR
+---------------------------
+5.1 Volve a conectar internet.
+5.2 Espera hasta un minuto, o toca el indicador de sincronizacion.
+5.3 Volve a entrar a Comprobantes.
+
+    [ ] La venta ahora tiene CAE y numero fiscal.
+
+    Numero fiscal que le toco: 0002-________
+    CAE: ______________________________
+
+    [ ] La FECHA Y HORA que muestra es la del paso 3.3, no la de ahora.
+
+    <- ESTO ES LO MAS IMPORTANTE DE TODA LA PRUEBA. Si dice la hora de ahora,
+       el arreglo no funciono y quiero saberlo.
+
+5.4 Reimprimi la venta.
+
+    [ ] Ahora si trae el numero fiscal, el CAE y el QR.
+
+    MANDAME EL PDF.
+
+
+PASO 6 - LA CAJA
+-----------------
+6.1 Anda a Caja, al turno que abriste en el paso 2.
+
+    [ ] Los $100 de la venta estan sumados en "Ventas en efectivo".
+
+    Ventas en efectivo que muestra: $ ________
+
+    Antes esa venta no aparecia, porque quedaba fechada en el momento en que
+    se subia y caia fuera del turno.
+
+6.2 Cerra el turno con el arqueo.
+
+    [ ] El saldo teorico incluye los $100.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. El PDF del ticket de la venta sin internet (paso 3.4)
+  2. La foto de Comprobantes sin conexion (paso 4.1)
+  3. Numero fiscal, CAE, y SI LA FECHA QUEDO BIEN (paso 5.3) <- lo que mas
+     me sirve
+  4. El PDF de la reimpresion ya con CAE (paso 5.4)
+  5. Cuanto dio "Ventas en efectivo" en la caja (paso 6.1)
+
+Una cosa que YA SE que falta, no hace falta que la pruebes: si cerras la caja
+MIENTRAS estas sin internet, el saldo teorico va a salir incompleto, porque el
+resumen lo calcula el servidor y la venta todavia no llego. Lo tengo anotado y
+lo vemos despues.
+===========================================================================
