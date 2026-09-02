@@ -44,7 +44,20 @@ function hora(iso: string): string {
     : d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
 }
 
-export function CajaPanel({ cliente, terminalId }: { cliente: ClienteCaja; terminalId: string }) {
+export function CajaPanel({
+  cliente,
+  terminalId,
+  ventasSinSincronizar = 0,
+}: {
+  cliente: ClienteCaja;
+  terminalId: string;
+  /**
+   * Cuántas ventas tiene la terminal sin subir. Se avisa antes del arqueo: el
+   * saldo teórico sale de las ventas que están en el servidor, así que con
+   * pendientes queda corto y el cierre da un sobrante que no es real.
+   */
+  ventasSinSincronizar?: number;
+}) {
   const [turno, setTurno] = useState<TurnoCaja | null>(null);
   const [cierre, setCierre] = useState<TurnoCaja | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -132,6 +145,7 @@ export function CajaPanel({ cliente, terminalId }: { cliente: ClienteCaja; termi
             <ModalArqueo
               cliente={cliente}
               turno={turno}
+              ventasSinSincronizar={ventasSinSincronizar}
               onCerrar={() => setModal(null)}
               onCerrado={(t) => {
                 setModal(null);
@@ -405,11 +419,20 @@ function ModalArqueo({
   turno,
   onCerrar,
   onCerrado,
+  ventasSinSincronizar = 0,
 }: {
   cliente: ClienteCaja;
   turno: TurnoCaja;
   onCerrar: () => void;
   onCerrado: (t: TurnoCaja) => void;
+  /**
+   * Ventas que la terminal todavía no subió. El saldo teórico sale de las
+   * ventas que están EN EL SERVIDOR, así que mientras haya pendientes el
+   * teórico está corto por ese monto y el arqueo va a dar un sobrante que no
+   * es real. No se bloquea el cierre —a veces hay que cerrar igual— pero el
+   * cajero tiene que verlo antes de firmar.
+   */
+  ventasSinSincronizar?: number;
 }) {
   const [contado, setContado] = useState("");
   const [observaciones, setObservaciones] = useState("");
@@ -434,6 +457,7 @@ function ModalArqueo({
           turno.id,
           normalizarImporte(contado),
           observaciones.trim() === "" ? undefined : observaciones.trim(),
+          ventasSinSincronizar,
         ),
       );
     } catch (e) {
@@ -453,6 +477,15 @@ function ModalArqueo({
           </button>
         </div>
         <div className="modal__body">
+          {ventasSinSincronizar > 0 && (
+            <div className="aviso">
+              Hay {ventasSinSincronizar}{" "}
+              {ventasSinSincronizar === 1 ? "venta que todavía no subió" : "ventas que todavía no subieron"}{" "}
+              al servidor. Esa plata está en el cajón pero <b>no</b> está sumada en el saldo teórico,
+              así que el arqueo va a dar un sobrante que no es real. Si podés, esperá a que vuelva la
+              conexión y cerrá después. Si tenés que cerrar igual, queda registrado por qué.
+            </div>
+          )}
           <div className="kv">
             <span>Saldo teórico</span>
             <b>{money(turno.resumen.saldoTeorico)}</b>
@@ -539,6 +572,21 @@ function ResumenCierre({ turno, onCerrar }: { turno: TurnoCaja; onCerrar: () => 
           {r.diferencia !== null && dif?.signo !== "exacto" ? ` · ${money(r.diferencia)}` : ""}
         </b>
       </div>
+      {/* El arqueo se firmó contra un teórico incompleto: al cerrar faltaban
+          ventas por subir. La diferencia de arriba NO se toca —es lo que se
+          firmó— y acá se explica y se muestra la cuenta con todo ya cargado. */}
+      {r.arqueoIncompleto === true && (
+        <div className="aviso" style={{ marginTop: 12 }}>
+          Al cerrar quedaban {r.ventasSinSincronizarAlCerrar}{" "}
+          {r.ventasSinSincronizarAlCerrar === 1 ? "venta sin subir" : "ventas sin subir"} al
+          servidor, así que el saldo teórico de ese momento estaba corto. Ya subieron: con todo
+          cargado, la diferencia real es{" "}
+          <b>
+            {r.diferenciaRecalculada != null ? money(r.diferenciaRecalculada) : "—"}
+          </b>
+          . No fue un error del arqueo.
+        </div>
+      )}
       <button
         type="button"
         className="pill-btn pill-btn--primary"

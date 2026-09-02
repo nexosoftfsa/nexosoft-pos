@@ -459,6 +459,10 @@ model TurnoCaja {
   cerradoEn     DateTime?
   montoContado  Decimal?        @db.Decimal(12, 2)   // arqueo (conteo físico) al cerrar
   diferencia    Decimal?        @db.Decimal(12, 2)   // contado - teórico (+ sobrante / - faltante)
+  /// Ventas que la terminal todavía no había subido al cerrar el turno. Si es
+  /// > 0, la `diferencia` guardada se calculó contra un teórico incompleto: el
+  /// efectivo de esas ventas estaba en el cajón pero no en el servidor.
+  ventasSinSincronizarAlCerrar Int?
   observaciones String?
 
   sucursalId    String

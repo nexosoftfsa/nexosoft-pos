@@ -26,7 +26,20 @@ export interface ResumenCaja {
   readonly egresos: string;
   readonly saldoTeorico: string;
   readonly montoContado: string | null;
+  /** La diferencia tal como se firmó al cerrar. No se reescribe nunca. */
   readonly diferencia: string | null;
+  /**
+   * La misma cuenta con lo que hay ahora en el servidor. Difiere de
+   * `diferencia` cuando el turno se cerró con ventas todavía sin subir.
+   */
+  readonly diferenciaRecalculada?: string | null;
+  readonly ventasSinSincronizarAlCerrar?: number;
+  /**
+   * El arqueo se firmó contra un saldo teórico incompleto: al cerrar faltaban
+   * ventas por subir, así que el efectivo estaba en el cajón pero no en el
+   * servidor. No es un error del cajero.
+   */
+  readonly arqueoIncompleto?: boolean;
 }
 
 export interface TurnoCaja {
@@ -64,7 +77,18 @@ export interface ClienteCaja {
     monto: string,
     concepto?: string,
   ): Promise<TurnoCaja>;
-  cerrarTurno(turnoId: string, montoContado: string, observaciones?: string): Promise<TurnoCaja>;
+  /**
+   * @param ventasSinSincronizar Cuántas ventas tiene la terminal sin subir en
+   *   este momento. El servidor no puede saberlo, y sin ese dato un turno
+   *   cerrado durante un corte queda con una diferencia que después no cierra
+   *   con su propio saldo teórico.
+   */
+  cerrarTurno(
+    turnoId: string,
+    montoContado: string,
+    observaciones?: string,
+    ventasSinSincronizar?: number,
+  ): Promise<TurnoCaja>;
   /** Historial de turnos (más reciente primero). Ver `TurnoCajaResumen`. */
   listarTurnos(opciones?: { limite?: number; terminalId?: string }): Promise<TurnoCajaResumen[]>;
   /** Detalle completo de un turno (pasado o actual), con movimientos y resumen. */
@@ -111,10 +135,16 @@ export class ClienteCajaHttp implements ClienteCaja {
     });
   }
 
-  cerrarTurno(turnoId: string, montoContado: string, observaciones?: string): Promise<TurnoCaja> {
+  cerrarTurno(
+    turnoId: string,
+    montoContado: string,
+    observaciones?: string,
+    ventasSinSincronizar?: number,
+  ): Promise<TurnoCaja> {
     return this.pedir<TurnoCaja>("POST", `/caja/turnos/${turnoId}/cerrar`, {
       montoContado,
       ...(observaciones !== undefined ? { observaciones } : {}),
+      ...(ventasSinSincronizar !== undefined ? { ventasSinSincronizar } : {}),
     });
   }
 

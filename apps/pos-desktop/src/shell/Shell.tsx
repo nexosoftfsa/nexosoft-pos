@@ -418,7 +418,11 @@ export function Shell({
           ) : activo?.id === "stock" && clienteStock ? (
             <StockAbm cliente={clienteStock} />
           ) : activo?.id === "caja" && clienteCaja && terminalId ? (
-            <CajaPanel cliente={clienteCaja} terminalId={terminalId} />
+            <CajaPanel
+              cliente={clienteCaja}
+              terminalId={terminalId}
+              ventasSinSincronizar={sync.pendientes}
+            />
           ) : activo?.id === "ctacte" && clienteCtaCte ? (
             <CuentasCorrientes cliente={clienteCtaCte} />
           ) : activo?.id === "proveedores" && clienteProveedores ? (

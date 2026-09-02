@@ -113,6 +113,97 @@ describe('CajaService', () => {
       expect(dataUpdate.estado).toBe('CERRADO');
       expect(new Decimal(dataUpdate.diferencia).toString()).toBe('-50');
     });
+
+    /**
+     * El caso del corte de internet: el efectivo de las ventas que todavía no
+     * subieron está en el cajón pero no en el servidor, así que el teórico
+     * queda corto y el arqueo da un sobrante que no existe.
+     */
+    describe('cerrado con ventas sin sincronizar', () => {
+      /** El turno ya cerrado, con el arqueo hecho contra un teórico incompleto. */
+      function turnoCerradoIncompleto() {
+        return turnoAbierto({
+          estado: 'CERRADO',
+          cerradoEn: new Date(),
+          // Al cerrar sólo estaban las de 500: teórico 1500, contado 1800.
+          montoContado: new Decimal('1800'),
+          diferencia: new Decimal('300'),
+          ventasSinSincronizarAlCerrar: 2,
+        });
+      }
+
+      it('guarda cuántas ventas faltaban al cerrar', async () => {
+        mockTurno.findFirst.mockResolvedValue(turnoAbierto());
+        mockTurno.findUniqueOrThrow.mockResolvedValue(turnoAbierto());
+        mockVenta.findMany.mockResolvedValue([]);
+        mockMovimiento.findMany.mockResolvedValue([]);
+        mockTurno.update.mockResolvedValue({});
+
+        await service.cerrarTurno(SUCURSAL, 'turno1', {
+          montoContado: '1300',
+          ventasSinSincronizar: 2,
+        });
+
+        expect(mockTurno.update.mock.calls[0]![0].data.ventasSinSincronizarAlCerrar).toBe(2);
+      });
+
+      it('no toca la diferencia firmada, y muestra al lado la real', async () => {
+        mockTurno.findUniqueOrThrow.mockResolvedValue(turnoCerradoIncompleto());
+        mockTurno.findFirst.mockResolvedValue(turnoCerradoIncompleto());
+        // Ya subieron: ahora el servidor tiene las tres (500 + 300).
+        mockVenta.findMany.mockResolvedValue([
+          { total: new Decimal('500') },
+          { total: new Decimal('300') },
+        ]);
+        mockMovimiento.findMany.mockResolvedValue([]);
+
+        const { resumen } = await service.obtenerTurno(SUCURSAL, 'turno1');
+
+        // Teórico ahora: 1000 + 800 = 1800. Contado 1800 -> diferencia real 0.
+        expect(resumen.saldoTeorico).toBe('1800.00');
+        expect(resumen.diferencia).toBe('300.00'); // la firmada, intacta
+        expect(resumen.diferenciaRecalculada).toBe('0.00');
+        expect(resumen.arqueoIncompleto).toBe(true);
+      });
+
+      it('un turno cerrado sin pendientes no se marca como incompleto', async () => {
+        const cerrado = turnoAbierto({
+          estado: 'CERRADO',
+          cerradoEn: new Date(),
+          montoContado: new Decimal('1800'),
+          diferencia: new Decimal('0'),
+          ventasSinSincronizarAlCerrar: 0,
+        });
+        mockTurno.findUniqueOrThrow.mockResolvedValue(cerrado);
+        mockTurno.findFirst.mockResolvedValue(cerrado);
+        mockVenta.findMany.mockResolvedValue([{ total: new Decimal('800') }]);
+        mockMovimiento.findMany.mockResolvedValue([]);
+
+        const { resumen } = await service.obtenerTurno(SUCURSAL, 'turno1');
+
+        expect(resumen.arqueoIncompleto).toBe(false);
+        expect(resumen.diferenciaRecalculada).toBe('0.00');
+      });
+
+      it('un turno viejo, anterior a este cambio, tampoco se marca', async () => {
+        // `ventasSinSincronizarAlCerrar` es null en todo lo cerrado antes.
+        const viejo = turnoAbierto({
+          estado: 'CERRADO',
+          cerradoEn: new Date(),
+          montoContado: new Decimal('1800'),
+          diferencia: new Decimal('300'),
+        });
+        mockTurno.findUniqueOrThrow.mockResolvedValue(viejo);
+        mockTurno.findFirst.mockResolvedValue(viejo);
+        mockVenta.findMany.mockResolvedValue([{ total: new Decimal('800') }]);
+        mockMovimiento.findMany.mockResolvedValue([]);
+
+        const { resumen } = await service.obtenerTurno(SUCURSAL, 'turno1');
+
+        expect(resumen.arqueoIncompleto).toBe(false);
+        expect(resumen.ventasSinSincronizarAlCerrar).toBe(0);
+      });
+    });
   });
 
   describe('listarTurnos', () => {

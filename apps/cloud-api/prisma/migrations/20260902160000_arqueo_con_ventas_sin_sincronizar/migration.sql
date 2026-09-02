@@ -1,0 +1,22 @@
+-- Cuantas ventas tenia la terminal sin subir al cerrar el turno.
+--
+-- El saldo teorico del turno se deriva de las ventas EFECTIVO que estan EN EL
+-- SERVIDOR (ADR-0026). Una venta hecha sin internet todavia no llego, asi que
+-- durante un corte el teorico queda corto: el efectivo esta en el cajon pero no
+-- en la base. Si el cajero cierra ahi, la diferencia guardada sale como un
+-- sobrante que no existe.
+--
+-- Al sincronizar, el teorico se recalcula solo y pasa a estar bien -- pero
+-- "montoContado" y "diferencia" se guardaron al cerrar y no se tocan mas, asi
+-- que el turno queda mostrando tres numeros que no cierran entre si.
+--
+-- Esta columna es el dato que faltaba para poder explicarlo: si es > 0, la
+-- diferencia guardada se calculo contra un teorico incompleto. NO se pisa la
+-- diferencia original -- es un registro de auditoria de caja y tiene que quedar
+-- como se firmo; el resumen muestra al lado la recalculada.
+--
+-- Aditiva y nullable: no bloquea, no reescribe filas, y una version anterior del
+-- servidor corriendo contra esta base sigue funcionando.
+
+-- AlterTable
+ALTER TABLE "turnos_caja" ADD COLUMN "ventasSinSincronizarAlCerrar" INTEGER;

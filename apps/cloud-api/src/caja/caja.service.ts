@@ -116,6 +116,10 @@ export class CajaService {
         cerradoEn: new Date(),
         montoContado: contado,
         diferencia,
+        // Se guarda tal como se calculó, aunque el teórico estuviera
+        // incompleto: es el arqueo que el cajero firmó y no se reescribe.
+        // Cuántas ventas faltaban queda al lado para poder explicarlo.
+        ventasSinSincronizarAlCerrar: dto.ventasSinSincronizar ?? null,
         observaciones: dto.observaciones ?? null,
       },
     });
@@ -155,6 +159,7 @@ export class CajaService {
     cerradoEn: Date | null;
     montoContado: Decimal | null;
     diferencia: Decimal | null;
+    ventasSinSincronizarAlCerrar?: number | null;
   }) {
     const hasta = turno.cerradoEn ?? new Date();
 
@@ -186,6 +191,15 @@ export class CajaService {
       .plus(ingresos)
       .minus(egresos);
 
+    // `ventasEfectivo` y `saldoTeorico` se recalculan en cada lectura, así que
+    // una venta que llegó tarde ya está contada acá. `montoContado` y
+    // `diferencia`, en cambio, son la foto del cierre. Cuando el turno se cerró
+    // con ventas sin subir, esa foto quedó vieja y hay que decirlo en vez de
+    // mostrar tres números que no cierran entre sí.
+    const contado = turno.montoContado === null ? null : new Decimal(turno.montoContado);
+    const diferenciaHoy = contado === null ? null : contado.minus(saldoTeorico);
+    const sinSincronizar = turno.ventasSinSincronizarAlCerrar ?? 0;
+
     return {
       fondoApertura: new Decimal(turno.fondoApertura).toFixed(2),
       ventasEfectivo: ventasEfectivo.toFixed(2),
@@ -193,8 +207,21 @@ export class CajaService {
       ingresos: ingresos.toFixed(2),
       egresos: egresos.toFixed(2),
       saldoTeorico: saldoTeorico.toFixed(2),
-      montoContado: turno.montoContado ? new Decimal(turno.montoContado).toFixed(2) : null,
-      diferencia: turno.diferencia ? new Decimal(turno.diferencia).toFixed(2) : null,
+      montoContado: contado === null ? null : contado.toFixed(2),
+      /** La diferencia tal como se firmó al cerrar. No se reescribe nunca. */
+      diferencia: turno.diferencia === null ? null : new Decimal(turno.diferencia).toFixed(2),
+      /** La misma cuenta con lo que hay ahora en el servidor. */
+      diferenciaRecalculada: diferenciaHoy === null ? null : diferenciaHoy.toFixed(2),
+      ventasSinSincronizarAlCerrar: sinSincronizar,
+      /**
+       * El arqueo se firmó contra un saldo teórico incompleto. No es un error
+       * del cajero: le faltaban ventas al servidor, no plata al cajón.
+       */
+      arqueoIncompleto:
+        sinSincronizar > 0 &&
+        turno.diferencia !== null &&
+        diferenciaHoy !== null &&
+        !new Decimal(turno.diferencia).equals(diferenciaHoy),
     };
   }
 }
