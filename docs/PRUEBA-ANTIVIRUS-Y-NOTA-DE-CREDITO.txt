@@ -1,0 +1,89 @@
+===========================================================================
+  NEXOSOFT - DOS COSAS CORTAS
+  Para: Sebastian
+  Tiempo: 10 minutos
+===========================================================================
+
+DONDE ESTAMOS
+--------------
+La prueba de ayer salio bien entera: factura con CAE y QR en el momento,
+nota de credito con su propio CAE, y las dos constatadas en ARCA. El
+circuito fiscal esta cerrado.
+
+Quedaron dos cosas de esa prueba:
+
+  1. El boton "Proteger del antivirus" te dio error -196608. Ya se que era:
+     la carpeta del POS se llama "NexoSoft POS", con un espacio en el medio,
+     y el comando se cortaba justo ahi. Arreglado.
+
+  2. La nota de credito no decia que anulaba a la Factura C 0002-00000003.
+     ARCA si lo sabia, pero el papel no lo decia. Arreglado.
+
+Versiones de esta prueba:  POS 0.1.51  -  Servidor 0.13.2
+Si algo sale mal, el punto seguro anterior es POS 0.1.50 + Servidor 0.13.1.
+
+
+PASO 1 - ACTUALIZAR LOS DOS
+----------------------------
+1.1 POS > Configuracion > Actualizaciones > "Actualizar servidor".
+    Tiene que quedar en 0.13.2.
+1.2 En la misma pantalla, instala el POS 0.1.51.
+
+    [ ] Servidor 0.13.2
+    [ ] POS 0.1.51
+
+
+PASO 2 - EL BOTON DEL ANTIVIRUS
+--------------------------------
+2.1 Configuracion > tarjeta "Antivirus".
+2.2 Toca "Proteger del antivirus". Acepta el permiso de administrador.
+
+    [ ] Ahora dice que quedo listo.
+
+    Que dice: ____________________________________________
+
+    Si vuelve a dar error, mandame el numero del codigo y ademas el archivo
+    C:\ProgramData\NexoSoft\logs\antivirus.log
+    (ese archivo ahora si deberia existir; antes no llegaba a crearse).
+
+
+PASO 3 - LA NOTA DE CREDITO DE AYER
+------------------------------------
+No hace falta emitir nada nuevo. Alcanza con reimprimir la que ya tenes.
+
+3.1 Anda a Comprobantes y toca "Todos".
+3.2 Busca la Nota de Credito C N 00000001 (la de ayer).
+3.3 Toca "Reimprimir".
+
+    Arriba, debajo de la fecha, tiene que decir:
+
+        Comprobante asociado
+        Factura C 0002-00000003
+
+    [ ] Aparece la leyenda con ese numero.
+
+    MANDAME EL PDF.
+
+    (Anda a salir en la nota vieja tambien: el dato siempre estuvo guardado,
+    lo que faltaba era mostrarlo.)
+
+
+PASO 4 - QUE UNA FACTURA NO LA TENGA
+-------------------------------------
+4.1 Reimprimi la Factura C 0002-00000003.
+
+    [ ] NO dice "Comprobante asociado" en ningun lado.
+
+    Una factura no corrige nada, asi que no le corresponde esa linea. Si te
+    aparece ahi, avisame.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. Que dijo el boton del antivirus (paso 2)
+  2. El PDF de la nota de credito reimpresa (paso 3)
+  3. Si la factura salio limpia, con un "ok" alcanza (paso 4)
+
+Con esto cerramos el modulo fiscal.
+===========================================================================

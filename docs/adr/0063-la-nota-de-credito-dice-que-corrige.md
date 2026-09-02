@@ -42,17 +42,16 @@ devolvía `comprobanteAsociadoId` (un UUID) pero no el tipo ni el número.
    Con el id solo no se puede imprimir nada.
 4. El punto de venta sale de la configuración de la terminal: el original y su
    nota se emiten siempre desde el mismo, y la venta no guarda uno propio.
-5. Si el servidor no resolvió el asociado —comprobantes viejos, anteriores a
-   este cambio— **no se imprime la línea**. Mejor sin la leyenda que con una
-   leyenda incompleta.
+5. Si el servidor no resuelve el asociado, **no se imprime la línea**. Mejor sin
+   la leyenda que con una leyenda incompleta.
 
 ## Consecuencias
 
-- Las notas de crédito nuevas salen con `Comprobante asociado / Factura C
+- Las notas de crédito salen con `Comprobante asociado / Factura C
   0002-00000003` en el ticket, el A4 y la térmica.
-- Las notas emitidas antes de este cambio se reimprimen sin la leyenda. No se
-  reconstruye hacia atrás: el dato está en la base (`comprobanteAsociadoId`),
-  así que se puede agregar después si hace falta.
+- **También las emitidas antes de este cambio**, al reimprimirlas: el vínculo ya
+  se guardaba (`comprobanteAsociadoId`) desde que existe la anulación; lo único
+  que faltaba era devolverlo resuelto. No hay que migrar nada.
 - `registrarEnLibro` pasó a tipar su parámetro con `Omit<…,
   'comprobanteAsociado'>`: el libro de ventas no usa la relación, y exigirla
   obligaría a traerla en el `create` de la venta, que nunca la tiene.
