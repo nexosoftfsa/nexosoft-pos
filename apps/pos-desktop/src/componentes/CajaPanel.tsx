@@ -64,13 +64,20 @@ export function CajaPanel({
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState<null | TipoMovimientoCaja | "arqueo">(null);
   const [vista, setVista] = useState<"actual" | "historial">("actual");
+  /** `false` cuando el servidor no contestó: no sabemos si hay turno abierto. */
+  const [sePudoConsultar, setSePudoConsultar] = useState(true);
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setError(null);
+    setSePudoConsultar(true);
     try {
       setTurno(await cliente.turnoActual(terminalId));
     } catch (e) {
+      // Sin servidor NO se sabe si hay turno abierto, y no es lo mismo que
+      // saber que no hay. Mostrar "Caja cerrada" ahí es afirmar algo falso, e
+      // invita a abrir un segundo turno sobre uno que ya está abierto.
+      setSePudoConsultar(false);
       setError(mensaje(e));
     } finally {
       setCargando(false);
@@ -116,7 +123,26 @@ export function CajaPanel({
         <>
           {error !== null && <div className="error">{error}</div>}
 
-          {cierre !== null ? (
+          {!sePudoConsultar ? (
+            <div className="card card__pad caja-abrir">
+              <div className="section-title" style={{ marginTop: 0 }}>
+                No se pudo consultar la caja
+              </div>
+              <p className="muted">
+                Sin servidor no se puede saber si hay un turno abierto en esta terminal, así que
+                no se muestra nada: si hay uno abierto sigue estando, y abrir otro encima sería
+                un problema. Podés seguir vendiendo; la caja se ve cuando vuelva la conexión.
+              </p>
+              <button
+                type="button"
+                className="pill-btn pill-btn--primary"
+                style={{ marginTop: 12 }}
+                onClick={() => void cargar()}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : cierre !== null ? (
             <ResumenCierre turno={cierre} onCerrar={() => setCierre(null)} />
           ) : turno === null ? (
             <AbrirCaja cliente={cliente} terminalId={terminalId} onAbierto={(t) => setTurno(t)} />
