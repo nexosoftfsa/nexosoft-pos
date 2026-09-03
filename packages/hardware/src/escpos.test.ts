@@ -203,6 +203,18 @@ describe("construirEscPos", () => {
     });
   });
 
+  /**
+   * Lo reportó Sebastián: en una PC configurada en 12 horas el ticket decía
+   * "07:46" sin AM ni PM, y una venta de la mañana salía igual que una de la
+   * tarde.
+   */
+  it("la hora va en 24 horas, sin ambigüedad de AM/PM", () => {
+    const tarde = texto(construirEscPos(ticket({ fecha: new Date(2026, 8, 2, 19, 46) })));
+    expect(tarde).toContain("02/09/2026 19:46");
+    const manana = texto(construirEscPos(ticket({ fecha: new Date(2026, 8, 2, 7, 46) })));
+    expect(manana).toContain("02/09/2026 07:46");
+  });
+
   it("una nota de crédito imprime el comprobante que corrige", () => {
     const t = texto(
       construirEscPos(

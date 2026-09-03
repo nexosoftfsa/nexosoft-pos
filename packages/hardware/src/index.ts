@@ -8,6 +8,7 @@ export type {
   ComprobanteAsociadoTicket,
 } from "./impresora.js";
 export {
+  fechaHoraTicket,
   identificacionComprobanteAsociado,
   leyendaNumeroProvisional,
   numeroEsProvisional,

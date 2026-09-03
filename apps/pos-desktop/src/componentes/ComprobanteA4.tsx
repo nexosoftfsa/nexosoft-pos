@@ -7,6 +7,7 @@
  */
 import type { Cantidad } from "@nexosoft/domain";
 import {
+  fechaHoraTicket,
   identificacionComprobanteAsociado,
   leyendaNumeroProvisional,
   numeroEsProvisional,
@@ -41,7 +42,7 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
         <div className="a4-comprobante">
           <div className="a4-tipo">{datos.tipoComprobante}</div>
           <div>{provisional ? referenciaInterna(datos) : `N° ${numeroFiscalFormateado(datos)}`}</div>
-          <div>{datos.fecha.toLocaleDateString("es-AR")}</div>
+          <div>{fechaHoraTicket(datos.fecha)}</div>
           {esFiscal && datos.condicionIvaReceptor !== "" && (
             <div>Receptor: {datos.condicionIvaReceptor}</div>
           )}

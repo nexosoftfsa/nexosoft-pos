@@ -1551,7 +1551,10 @@ function construirDatosTicket(
     // Si el número salió del servidor es el definitivo; si es el correlativo
     // local, todavía puede cambiar y el ticket lo dice.
     numeroConfirmado: delServidor?.numeroComprobante != null,
-    fecha: new Date(),
+    // La hora de la VENTA, no la de la impresión. Salían distintas —el ticket
+    // decía 07:46:37 y el comprobante 07:46:35, los segundos que tardó en
+    // imprimir— y en el borde de un día serían fechas distintas.
+    fecha: venta.fecha,
     condicionIvaReceptor: etiquetaCondicionIva(venta.condicionIvaReceptor),
     esFiscal: tipo !== TipoComprobante.TicketNoFiscal,
     lineas: venta.items.map((it, i) => ({

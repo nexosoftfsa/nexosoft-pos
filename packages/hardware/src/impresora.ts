@@ -98,6 +98,20 @@ export function numeroFiscalFormateado(datos: DatosTicket): string {
   return `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
 }
 
+/**
+ * "02/09/2026 19:46" — fecha y hora del comprobante, **en 24 horas**.
+ *
+ * A propósito no se usa `toLocaleString`: en una PC configurada en 12 horas
+ * imprimía "07:46" a secas, sin AM ni PM, y en un ticket eso es ambiguo — una
+ * venta de la mañana y una de la tarde salen iguales. Lo reportó Sebastián
+ * probando en campo. El formato es el mismo que ya usaba la térmica, así que
+ * ahora los tres coinciden.
+ */
+export function fechaHoraTicket(f: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(f.getDate())}/${p(f.getMonth() + 1)}/${f.getFullYear()} ${p(f.getHours())}:${p(f.getMinutes())}`;
+}
+
 export interface DatosTicket {
   // Cabecera del comercio
   readonly razonSocial: string;

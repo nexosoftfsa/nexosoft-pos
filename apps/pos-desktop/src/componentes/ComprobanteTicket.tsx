@@ -8,6 +8,7 @@
  */
 import type { Cantidad } from "@nexosoft/domain";
 import {
+  fechaHoraTicket,
   identificacionComprobanteAsociado,
   leyendaNumeroProvisional,
   numeroEsProvisional,
@@ -42,7 +43,7 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
       <div className="ticket-print-centro">
         {provisional ? referenciaInterna(datos) : `N° ${numeroFiscalFormateado(datos)}`}
       </div>
-      <div className="ticket-print-centro">{datos.fecha.toLocaleString("es-AR")}</div>
+      <div className="ticket-print-centro">{fechaHoraTicket(datos.fecha)}</div>
       {datos.comprobanteAsociado !== undefined && (
         <div className="ticket-print-centro">
           Comprobante asociado
