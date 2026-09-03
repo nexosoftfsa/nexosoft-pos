@@ -1,0 +1,162 @@
+===========================================================================
+  NEXOSOFT - LA TERCERA
+  Para: Sebastian
+  Tiempo: 20 minutos
+===========================================================================
+
+LO QUE SALIO BIEN ANOCHE
+-------------------------
+El paso 4 era el que zanjaba todo y paso limpio: sin internet, la venta
+aparecio en Comprobantes al instante y la caja ya contaba los $100. Eso hace
+dos dias no podia pasar.
+
+El paso 5 tambien: sin servidor se vieron las ventas guardadas, con el cartel,
+y sin los botones que necesitan servidor. Era la primera vez que ese respaldo
+se usaba de verdad.
+
+LAS TRES QUE ENCONTRASTE
+-------------------------
+1. El ticket decia "Factura C N 0002-00000102" y ARCA despues le puso el 7.
+   Tenias razon en marcarlo. Cuando el servidor esta pero ARCA no, el servidor
+   igual guarda la venta y le pone un numero suyo para poder registrarla; ese
+   numero no es el fiscal. Ahora un comprobante fiscal no muestra numero hasta
+   que ARCA lo autoriza, venga el numero de donde venga.
+
+2. La caja te decia "CAJA CERRADA" con el turno abierto. No poder preguntar no
+   es lo mismo que saber que no hay turno, y encima te invitaba a abrir otro
+   arriba del que tenias. Ahora dice que no pudo consultar.
+
+3. Lo de "1 con error" despues del corte. La venta se habia quedado sin
+   reintentos en poco mas de un minuto, y tuviste que apretar "Reintentar" a
+   mano por una caida que se arreglo sola. Ahora un corte de red no gasta los
+   reintentos.
+
+Y sumamos algo que faltaba: la pildora de arriba ahora avisa cuando hay
+comprobantes esperando el CAE. Anoche te decia "Sincronizado" mientras habia
+uno esperando a ARCA, y no tenias como saberlo.
+
+Sobre tu dato del CAE que tardo 5/10 minutos: es normal, es el ciclo con el que
+el servidor reintenta. Bien anotado igual.
+
+Versiones de esta prueba:  POS 0.1.55  -  Servidor 0.14.1
+Si algo sale mal, el punto seguro anterior es POS 0.1.54 + Servidor 0.14.0.
+
+
+PASO 1 - ACTUALIZAR LOS DOS
+----------------------------
+1.1 POS > Configuracion > Actualizaciones > "Actualizar servidor" -> 0.14.1
+1.2 En la misma pantalla, instala el POS 0.1.55.
+
+    [ ] Servidor 0.14.1
+    [ ] POS 0.1.55
+
+    (El servidor esta vez NO toca la base de datos.)
+
+
+PASO 2 - ABRIR LA CAJA
+-----------------------
+2.1 Caja > abrir turno, con el fondo que quieras.
+
+    Hora de apertura: ________
+
+
+PASO 3 - SIN INTERNET, CON EL SERVIDOR PRENDIDO
+------------------------------------------------
+3.1 Desconecta internet. El servidor NO se toca.
+3.2 Hace una venta de $100 en efectivo.
+
+    Hora: ________
+
+3.3 Mira el ticket. ESTO ES LO QUE FALLO ANOCHE.
+
+    [ ] Dice "Referencia interna 000000XX".
+    [ ] NO dice "N 0002-00000XXX".
+
+    Referencia interna que salio: ________
+
+    MANDAME EL PDF.
+
+3.4 Mira el indicador de arriba a la derecha.
+
+    Que dice: ____________________
+
+    Lo esperado ahora es "1 comprobante sin CAE", en violeta. Anoche decia
+    "Sincronizado" y no habia forma de saber que ARCA no habia contestado.
+    Si le pasas el mouse por encima tiene que explicar que se arregla solo.
+
+3.5 Anda a Comprobantes y a Caja.
+
+    [ ] La venta aparece en Comprobantes (como anoche).
+    [ ] Los $100 estan en la caja (como anoche).
+
+
+PASO 4 - AHORA SIN SERVIDOR
+----------------------------
+4.1 Configuracion > Servidor de sucursal.
+    Cambia el puerto a 3999, igual que anoche, y Guarda.
+
+    (Anotalo por las dudas: ____________________________________ )
+
+4.2 Anda a Caja.
+
+    [ ] YA NO dice "CAJA CERRADA".
+    [ ] Dice que no se pudo consultar la caja, y tiene un boton "Reintentar".
+
+    SACALE UNA FOTO.
+
+4.3 Hace una venta de $100 en efectivo.
+
+    [ ] El ticket sale con referencia interna.
+
+4.4 Espera 3 MINUTOS mirando el indicador de arriba. Esto es lo que anoche
+    terminaba en "1 con error".
+
+    [ ] Sigue diciendo "Sin conexion".
+    [ ] NO aparece ningun "con error" ni ningun punto rojo.
+
+    Que dice a los 3 minutos: ____________________
+
+    SACALE UNA FOTO.
+
+    Antes de este arreglo, al minuto y medio la venta ya se marcaba con error y
+    habia que reintentarla a mano.
+
+
+PASO 5 - VOLVER
+----------------
+5.1 Devolve la direccion del servidor (puerto 3000) y conecta internet.
+5.2 Espera un minuto.
+
+    [ ] La venta del paso 4.3 sube SOLA, sin que aprietes "Reintentar".
+    [ ] El indicador pasa a "Sincronizado" o a "N comprobantes sin CAE".
+
+    Que dice: ____________________
+
+5.3 Espera a que lleguen los CAE (puede tardar hasta 10 minutos).
+
+    [ ] Las dos ventas tienen numero fiscal, CAE y QR.
+    [ ] La fecha y hora siguen siendo las de cuando vendiste.
+
+    Numeros que les toco: 0002-________  y  0002-________
+
+    MANDAME EL PDF de una reimpresa.
+
+5.4 Cerra la caja normalmente.
+
+    [ ] Se pudo cerrar y la diferencia es la que corresponde a lo que contaste.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. El PDF del ticket del paso 3.3, que NO tiene que traer numero fiscal
+     <- lo que fallo anoche
+  2. Que decia el indicador en el paso 3.4
+  3. La foto de la caja sin servidor, paso 4.2
+  4. La foto del indicador a los 3 minutos, paso 4.4
+  5. Que paso al volver, paso 5.2
+  6. El PDF de una venta ya con CAE, paso 5.3
+
+Igual que siempre: si algo no coincide con lo que dice aca, anotalo aunque
+parezca menor. Las tres cosas de anoche salieron de detalles asi.
+===========================================================================
