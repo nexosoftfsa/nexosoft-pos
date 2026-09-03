@@ -47,6 +47,12 @@ const ticket = (extra: Partial<DatosTicket> = {}): DatosTicket => ({
  * pero la letra del comando (`E` de ESC E, `a` de ESC a) quedaría como si
  * fuera texto, y las líneas parecerían más largas de lo que son.
  */
+/**
+ * El ticket envuelve a 32 columnas, así que una frase puede quedar partida en
+ * dos renglones. Para buscarla hay que colapsar los saltos.
+ */
+const frases = (t: string): string => t.replace(/\s+/g, " ");
+
 function texto(bytes: Uint8Array): string {
   /** Largo total de la secuencia que arranca en `i`, o 0 si es texto. */
   function largoComando(i: number): number {
@@ -141,9 +147,6 @@ describe("construirEscPos", () => {
         numeroConfirmado: false,
       });
 
-    /** El ticket envuelve a 32 columnas: para buscar una frase hay que unir. */
-    const frases = (t: string) => t.replace(/\s+/g, " ");
-
     it("no imprime un número fiscal que después va a cambiar", () => {
       const t = texto(construirEscPos(sinCae()));
       expect(t).not.toContain("0001-00000033");
@@ -236,6 +239,112 @@ describe("construirEscPos", () => {
     expect(tarde).toContain("02/09/2026 19:46");
     const manana = texto(construirEscPos(ticket({ fecha: new Date(2026, 8, 2, 7, 46) })));
     expect(manana).toContain("02/09/2026 07:46");
+  });
+
+  /**
+   * Fase A / ADR-0069. Un ticket A tiene que decir en el papel:
+   *  - la letra grande (en el A4; en térmica no aplica),
+   *  - los datos del receptor,
+   *  - el neto y el IVA discriminados,
+   *  - la leyenda "ORIGINAL" (o "DUPLICADO" si es reimpresión).
+   *
+   * Sin esto un contador no puede armar el asiento y ARCA la puede rechazar
+   * por incompleta.
+   */
+  describe("Factura A", () => {
+    const facturaA = () =>
+      ticket({
+        tipoComprobante: "Factura A",
+        esFiscal: true,
+        numero: 5,
+        cae: "12345678901234",
+        leyenda: "ORIGINAL",
+        receptor: {
+          razonSocial: "Distribuidora Sur SRL",
+          documento: "30712345670",
+          domicilio: "Av. Corrientes 1234",
+        },
+        condicionIvaReceptor: "Responsable Inscripto",
+        subtotalesIva: [
+          { etiqueta: "IVA 21%", base: Money.desde("826.45"), iva: Money.desde("173.55") },
+        ],
+      });
+
+    it("imprime la leyenda ORIGINAL/DUPLICADO", () => {
+      expect(texto(construirEscPos(facturaA()))).toContain("ORIGINAL");
+      const dup = texto(
+        construirEscPos({ ...facturaA(), leyenda: "DUPLICADO" }),
+      );
+      expect(dup).toContain("DUPLICADO");
+      expect(dup).not.toContain("ORIGINAL");
+    });
+
+    it("muestra los datos del receptor arriba de los ítems", () => {
+      const t = frases(texto(construirEscPos(facturaA())));
+      expect(t).toContain("Distribuidora Sur SRL");
+      expect(t).toContain("CUIT/DNI: 30712345670");
+      expect(t).toContain("Av. Corrientes 1234");
+      expect(t).toContain("IVA: Responsable Inscripto");
+    });
+
+    it("discrimina el subtotal neto y cada IVA por alícuota", () => {
+      const t = frases(texto(construirEscPos(facturaA())));
+      expect(t).toContain("Subtotal neto");
+      expect(t).toContain("IVA 21%");
+    });
+  });
+
+  it("una Factura C nunca lleva datos del receptor, aunque llegue el bloque", () => {
+    const t = texto(
+      construirEscPos(
+        ticket({
+          tipoComprobante: "Factura C",
+          esFiscal: true,
+          numero: 5,
+          cae: "12345678901234",
+          receptor: {
+            razonSocial: "Cliente que no corresponde",
+            documento: "20111111111",
+          },
+        }),
+      ),
+    );
+    expect(t).not.toContain("Cliente que no corresponde");
+  });
+
+  it("una Factura B sin cliente identificado no imprime el bloque del receptor", () => {
+    const t = texto(
+      construirEscPos(
+        ticket({
+          tipoComprobante: "Factura B",
+          esFiscal: true,
+          numero: 5,
+          cae: "12345678901234",
+        }),
+      ),
+    );
+    expect(t).not.toContain("CUIT/DNI");
+  });
+
+  it("una Factura B CON cliente identificado sí lo imprime", () => {
+    const t = frases(
+      texto(
+        construirEscPos(
+          ticket({
+            tipoComprobante: "Factura B",
+            esFiscal: true,
+            numero: 5,
+            cae: "12345678901234",
+            receptor: { razonSocial: "Pérez Juan", documento: "20111111111" },
+            condicionIvaReceptor: "Monotributo",
+          }),
+        ),
+      ),
+    );
+    // Sin tilde: la térmica translitera a ASCII imprimible porque las páginas
+    // de código de DOS varían por modelo (ver `aAsciiImprimible`).
+    expect(t).toContain("Perez Juan");
+    expect(t).toContain("CUIT/DNI: 20111111111");
   });
 
   it("una nota de crédito imprime el comprobante que corrige", () => {

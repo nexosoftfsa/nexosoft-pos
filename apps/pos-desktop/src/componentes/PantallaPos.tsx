@@ -91,10 +91,21 @@ const FORMAS: ReadonlyArray<{ valor: FormaDePago; etiqueta: string; electronico?
   { valor: FormaDePago.CuentaCorriente, etiqueta: "Cuenta corriente" },
 ];
 
-/** Cliente elegible para vender en cuenta corriente (fiado). */
+/**
+ * Cliente elegible para vender en cuenta corriente (fiado) y para identificar
+ * al receptor en una Factura A o B.
+ *
+ * Los tres campos extra (`documento`, `condicionIva`, `direccion`) hacen falta
+ * para armar el bloque del receptor en el ticket A/B: una A sin CUIT del
+ * receptor no cumple como factura, y en B con cliente identificado el papel se
+ * imprime con los datos.
+ */
 export interface ClienteVenta {
   readonly id: string;
   readonly nombre: string;
+  readonly documento?: string | null;
+  readonly condicionIva?: string;
+  readonly direccion?: string | null;
 }
 
 function mensajeError(e: unknown): string {
@@ -931,6 +942,7 @@ export function PantallaPos({
   async function imprimirTicket(venta: VentaConfirmada, pagosDeLaVenta: readonly PagoUi[] = pagos) {
     if (imprimiendo) return;
     setImprimiendo(true);
+    const receptor = clienteId === "" ? undefined : clientes.find((c) => c.id === clienteId);
     const datos = construirDatosTicket(
       venta,
       config,
@@ -938,6 +950,7 @@ export function PantallaPos({
       pagosDeLaVenta,
       tarjetas,
       comprobanteServidor,
+      receptor,
     );
     try {
       await impresora.imprimirTicket(datos);
@@ -1463,6 +1476,7 @@ export function PantallaPos({
                       pagos,
                       tarjetas,
                       comprobanteServidor,
+                      clienteId === "" ? undefined : clientes.find((c) => c.id === clienteId),
                     ),
                   )
                 }>
@@ -1535,11 +1549,28 @@ function construirDatosTicket(
    * provisorio para poder vender sin red.
    */
   delServidor: ComprobanteResuelto | null = null,
+  /** Cliente identificado en la venta, para armar el bloque del receptor en A/B. */
+  clienteReceptor?: ClienteVenta,
 ): DatosTicket {
   const tipo = delServidor?.tipoComprobante ?? venta.tipoComprobante;
   const cae = delServidor?.cae ?? venta.cae;
   const vencimiento =
     delServidor?.caeFechaVto != null ? new Date(delServidor.caeFechaVto) : venta.vencimientoCae;
+  // El receptor va sólo cuando hay cliente identificado con documento. Sin
+  // documento no se puede armar (ARCA lo exige en A), y sin nombre tampoco.
+  const receptor =
+    clienteReceptor !== undefined &&
+    clienteReceptor.documento !== undefined &&
+    clienteReceptor.documento !== null &&
+    clienteReceptor.documento.trim() !== ""
+      ? {
+          razonSocial: clienteReceptor.nombre,
+          documento: clienteReceptor.documento,
+          ...(clienteReceptor.direccion !== undefined && clienteReceptor.direccion !== null
+            ? { domicilio: clienteReceptor.direccion }
+            : {}),
+        }
+      : undefined;
   return {
     razonSocial: config.razonSocial,
     cuit: config.cuit,
@@ -1582,6 +1613,10 @@ function construirDatosTicket(
     vuelto: venta.vuelto,
     ...(cae != null ? { cae } : {}),
     ...(vencimiento != null ? { vencimientoCae: vencimiento } : {}),
+    ...(receptor !== undefined ? { receptor } : {}),
+    // La venta recién emitida siempre es ORIGINAL. La reimpresión desde
+    // Comprobantes pone "DUPLICADO" (ver Comprobantes.tsx).
+    ...(tipo !== TipoComprobante.TicketNoFiscal ? { leyenda: "ORIGINAL" as const } : {}),
     // Sin esto NO se dibuja el QR fiscal, aunque el CAE esté: `QrFiscal` exige
     // las dos cosas, porque el código de comprobante es parte de lo que ARCA
     // codifica adentro. Faltaba sólo acá —la reimpresión desde Comprobantes sí

@@ -126,6 +126,63 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
     expect(datos.cae).toBe("1");
   });
 
+  /**
+   * Fase A. Al reimprimir una A/B con cliente identificado el ticket tiene que
+   * traer los datos del receptor y la leyenda DUPLICADO.
+   */
+  describe("con cliente identificado (Factura A/B)", () => {
+    function conCliente(overrides: Partial<Comprobante> = {}): Comprobante {
+      return comprobante({
+        tipoComprobante: "FacturaA",
+        cliente: {
+          nombre: "Distribuidora Sur SRL",
+          documento: "30712345670",
+          condicionIva: "RESPONSABLE_INSCRIPTO",
+          direccion: "Av. Corrientes 1234",
+        },
+        ...overrides,
+      });
+    }
+
+    it("arma el bloque del receptor", () => {
+      const d = datosTicketDeComprobante(conCliente(), CONFIG);
+      expect(d.receptor).toEqual({
+        razonSocial: "Distribuidora Sur SRL",
+        documento: "30712345670",
+        domicilio: "Av. Corrientes 1234",
+      });
+      expect(d.condicionIvaReceptor).toBe("Responsable Inscripto");
+    });
+
+    it("un cliente SIN documento no arma receptor: no se puede identificar", () => {
+      const d = datosTicketDeComprobante(
+        conCliente({
+          cliente: {
+            nombre: "Sin CUIT",
+            documento: null,
+            condicionIva: "CONSUMIDOR_FINAL",
+            direccion: null,
+          },
+        }),
+        CONFIG,
+      );
+      expect(d.receptor).toBeUndefined();
+    });
+
+    it("reimprimir siempre marca DUPLICADO", () => {
+      expect(datosTicketDeComprobante(conCliente(), CONFIG).leyenda).toBe("DUPLICADO");
+    });
+
+    it("un TicketNoFiscal reimpreso no lleva leyenda: no es fiscal", () => {
+      expect(
+        datosTicketDeComprobante(
+          conCliente({ tipoComprobante: "TicketNoFiscal", cae: null }),
+          CONFIG,
+        ).leyenda,
+      ).toBeUndefined();
+    });
+  });
+
   it("una nota de crédito dice qué comprobante corrige", () => {
     const nc = comprobante({
       tipoComprobante: "NotaCreditoB",

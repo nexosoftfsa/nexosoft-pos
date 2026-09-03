@@ -10,7 +10,9 @@ export type {
 export {
   fechaHoraTicket,
   identificacionComprobanteAsociado,
+  letraFiscal,
   leyendaNumeroProvisional,
+  llevaDatosDelReceptor,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,

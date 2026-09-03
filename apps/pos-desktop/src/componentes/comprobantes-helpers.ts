@@ -108,6 +108,11 @@ export function datosTicketDeComprobante(
   config: ConfiguracionComercio,
 ): DatosTicket {
   const asociado = comprobanteAsociadoDe(c, config.puntoDeVenta);
+  const receptor = receptorDe(c);
+  const condicionReceptor =
+    c.cliente !== undefined && c.cliente !== null
+      ? etiquetaCondicionCliente(c.cliente.condicionIva)
+      : "";
   return {
     razonSocial: config.razonSocial,
     cuit: config.cuit,
@@ -119,9 +124,13 @@ export function datosTicketDeComprobante(
     // Lo que viene del servidor es su propio registro: ese número es el bueno.
     numeroConfirmado: c.numeroConfirmado ?? true,
     fecha: new Date(c.creadaEn),
-    condicionIvaReceptor: "",
+    condicionIvaReceptor: condicionReceptor,
     esFiscal: esFiscal(c.tipoComprobante),
+    // Reimprimir SIEMPRE marca "DUPLICADO" cuando el comprobante es fiscal: el
+    // original ya se emitió en el momento de la venta (ver PantallaPos).
+    ...(esFiscal(c.tipoComprobante) ? { leyenda: "DUPLICADO" as const } : {}),
     ...(asociado !== null ? { comprobanteAsociado: asociado } : {}),
+    ...(receptor !== null ? { receptor } : {}),
     lineas: c.items.map((it) => ({
       descripcion: it.producto?.nombre ?? it.producto?.codigo ?? "Ítem",
       cantidad: Cantidad.de(it.cantidad),
@@ -201,6 +210,48 @@ export function comprobanteDeVentaLocal(v: VentaLocal): Comprobante {
     estadoFiscal: estadoFiscalDe(v.estadoCae),
     motivoFiscal: null,
   };
+}
+
+/**
+ * Datos del receptor para reimprimir en A/B, si la venta se emitió con cliente
+ * identificado y con documento. La impresión decide después si los pinta según
+ * la letra del comprobante (`llevaDatosDelReceptor`).
+ */
+function receptorDe(c: Comprobante): {
+  razonSocial: string;
+  documento: string;
+  domicilio?: string;
+} | null {
+  const cli = c.cliente;
+  if (cli === undefined || cli === null) return null;
+  if (cli.documento === null || cli.documento.trim() === "") return null;
+  return {
+    razonSocial: cli.nombre,
+    documento: cli.documento,
+    ...(cli.direccion !== null && cli.direccion.trim() !== ""
+      ? { domicilio: cli.direccion }
+      : {}),
+  };
+}
+
+/**
+ * `condicionIva` del cliente (string del backend) → etiqueta legible.
+ *
+ * No usamos `etiquetaCondicionIva` del dominio porque el backend guarda
+ * `RESPONSABLE_INSCRIPTO` y el enum del dominio es camelCase — un mapa aparte
+ * es lo más simple.
+ */
+function etiquetaCondicionCliente(condicion: string): string {
+  switch (condicion) {
+    case "RESPONSABLE_INSCRIPTO":
+      return "Responsable Inscripto";
+    case "MONOTRIBUTO":
+      return "Monotributo";
+    case "EXENTO":
+      return "Exento";
+    default:
+      return "Consumidor Final";
+  }
 }
 
 /**

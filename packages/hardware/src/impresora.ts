@@ -108,6 +108,40 @@ export function numeroFiscalFormateado(datos: DatosTicket): string {
 }
 
 /**
+ * La letra fiscal del comprobante ("A", "B", "C" o "X") — se lee de la última
+ * palabra de `tipoComprobante`: "Factura A", "Nota de Crédito B", "Ticket".
+ *
+ * `packages/hardware` no depende de `@nexosoft/domain` a propósito (ADR-0018:
+ * los adaptadores son planos), así que la letra se deriva del mismo texto que
+ * se imprime. La app compone `tipoComprobante` con `etiquetaComprobante` del
+ * dominio y siempre termina con la letra o con "Ticket": si eso cambia hay que
+ * actualizar acá.
+ */
+export function letraFiscal(datos: DatosTicket): "A" | "B" | "C" | "X" {
+  const ultima = datos.tipoComprobante.trim().slice(-1).toUpperCase();
+  return ultima === "A" || ultima === "B" || ultima === "C" ? ultima : "X";
+}
+
+/**
+ * ¿Este comprobante lleva los datos del receptor identificado en el papel?
+ *
+ * La letra manda:
+ *  - **A siempre**: ARCA le exige CUIT del receptor, y sin nombre y CUIT en el
+ *    papel el comprobante no cumple como tal.
+ *  - **B/NC B sólo si hay receptor identificado**: el papel lo suele pedir el
+ *    cliente para su registro, pero no es obligatorio en el ticket al
+ *    consumidor final del mostrador.
+ *  - **C nunca**: es venta al consumidor final y saturar el ticket con datos
+ *    no cambia nada fiscal.
+ */
+export function llevaDatosDelReceptor(datos: DatosTicket): boolean {
+  const l = letraFiscal(datos);
+  if (l === "A") return true;
+  if (l === "B" && datos.receptor !== undefined) return true;
+  return false;
+}
+
+/**
  * "02/09/2026 19:46" — fecha y hora del comprobante, **en 24 horas**.
  *
  * A propósito no se usa `toLocaleString`: en una PC configurada en 12 horas
@@ -138,10 +172,32 @@ export interface DatosTicket {
   readonly numero: number;
   readonly fecha: Date;
   readonly condicionIvaReceptor: string;
+  /**
+   * Datos del receptor identificado. Ausente en una venta a consumidor final
+   * sin identificar (el caso común del mostrador con Factura B o C). Presente
+   * y con TODO cargado en una Factura A: ARCA le exige nombre y CUIT, y sin
+   * eso lo que sale no cumple como comprobante.
+   */
+  readonly receptor?: {
+    readonly razonSocial: string;
+    /** CUIT o DNI. Se imprime tal cual viene (ya normalizado). */
+    readonly documento: string;
+    readonly domicilio?: string;
+  };
   /** `false` = comercio sin alta en ARCA (Fase 10.1): no imprimir como si fuera fiscal. Default `true`. */
   readonly esFiscal?: boolean;
   /** Presente sólo en Notas de Crédito/Débito: qué comprobante corrigen. */
   readonly comprobanteAsociado?: ComprobanteAsociadoTicket;
+  /**
+   * `"ORIGINAL"` la primera vez que el comprobante se imprime en el momento de
+   * la venta; `"DUPLICADO"` cualquier reimpresión posterior (desde Comprobantes,
+   * o desde el A4). Ausente cuando el comprobante no es fiscal.
+   *
+   * Es una exigencia formal de la Factura A/B: un mismo comprobante no puede
+   * andar dando vueltas con múltiples "originales" que parezcan cada uno el
+   * bueno.
+   */
+  readonly leyenda?: "ORIGINAL" | "DUPLICADO";
   /**
    * `true` cuando `numero` es el definitivo porque lo confirmó quien lo asigna
    * (ARCA para un comprobante fiscal, el servidor para un ticket interno). Sin

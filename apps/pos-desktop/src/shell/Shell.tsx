@@ -207,13 +207,31 @@ export function Shell({
   }, [clienteCaja, terminalId, activoId]);
 
   // Clientes para vender en cuenta corriente (fiado) desde la pantalla de ventas.
-  const [clientesVenta, setClientesVenta] = useState<{ id: string; nombre: string }[]>([]);
+  // Se pasan los datos fiscales completos —documento, condición IVA, domicilio—
+  // porque los necesita PantallaPos al armar el bloque del receptor en una
+  // Factura A o B. Antes se descartaban al mapear y sólo se guardaban id +
+  // nombre; sin esos datos una A no se puede identificar en el papel.
+  const [clientesVenta, setClientesVenta] = useState<
+    { id: string; nombre: string; documento: string | null; condicionIva: string; direccion: string | null }[]
+  >([]);
   useEffect(() => {
     if (!clienteCtaCte) return;
     let vivo = true;
     clienteCtaCte
       .listar(false)
-      .then((cs) => vivo && setClientesVenta(cs.map((c) => ({ id: c.id, nombre: c.nombre }))))
+      .then(
+        (cs) =>
+          vivo &&
+          setClientesVenta(
+            cs.map((c) => ({
+              id: c.id,
+              nombre: c.nombre,
+              documento: c.documento,
+              condicionIva: c.condicionIva,
+              direccion: c.direccion,
+            })),
+          ),
+      )
       .catch(() => {});
     return () => {
       vivo = false;

@@ -12,7 +12,9 @@
  */
 import {
   identificacionComprobanteAsociado,
+  letraFiscal,
   leyendaNumeroProvisional,
+  llevaDatosDelReceptor,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
@@ -292,6 +294,11 @@ export function construirEscPos(
   const provisional = numeroEsProvisional(datos);
   b.linea(provisional ? referenciaInterna(datos) : `N ${numeroFiscalFormateado(datos)}`);
   b.linea(fecha(datos.fecha));
+  // ORIGINAL / DUPLICADO. La primera impresion sale como original y toda
+  // reimpresion posterior como duplicado. Es una exigencia formal de la A/B.
+  if (datos.leyenda !== undefined) {
+    b.comando(NEGRITA_ON).linea(datos.leyenda).comando(NEGRITA_OFF);
+  }
   // Una nota de crédito tiene que decir qué comprobante corrige. Va acá, junto
   // a la identificación de la nota y antes de los ítems, que es donde se lo
   // busca.
@@ -301,6 +308,21 @@ export function construirEscPos(
   }
   if (datos.esFiscal === false) {
     b.comando(NEGRITA_ON).linea("NO VALIDO COMO FACTURA").comando(NEGRITA_OFF);
+  }
+
+  // --- Receptor (A siempre; B si el cliente esta identificado) ---
+  // Un ticket a consumidor final sin identificar no lleva esto; una Factura A
+  // lo LLEVA siempre porque ARCA le exige CUIT y el papel tiene que decirlo.
+  if (llevaDatosDelReceptor(datos) && datos.receptor !== undefined) {
+    b.comando(ALINEAR_IZQ);
+    b.separador();
+    b.linea(datos.receptor.razonSocial);
+    b.linea(`CUIT/DNI: ${datos.receptor.documento}`);
+    if (datos.receptor.domicilio !== undefined && datos.receptor.domicilio.trim() !== "") {
+      b.linea(datos.receptor.domicilio);
+    }
+    b.linea(`IVA: ${datos.condicionIvaReceptor}`);
+    b.comando(ALINEAR_CENTRO);
   }
 
   // --- Ítems ---
@@ -317,8 +339,25 @@ export function construirEscPos(
   if (datos.descuento.esPositivo()) {
     b.lineaCruda(filaIzquierdaDerecha("Descuento", `-${pesos(datos.descuento)}`, columnas));
   }
-  for (const s of datos.subtotalesIva) {
-    b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(s.iva), columnas));
+  // Discriminacion de IVA: solo en la letra A el papel muestra neto e IVA por
+  // separado (el B y el C lo llevan incluido en cada linea). En A conviene ver
+  // los dos: primero el subtotal neto, despues cada IVA por alicuota, y el
+  // total al final. Sin esto un contador no puede armar el asiento.
+  if (letraFiscal(datos) === "A" && datos.subtotalesIva.length > 0) {
+    // Suma con acumulador del primer neto (no usamos Money.cero(): el paquete
+    // hardware no depende del dominio, y este truco arranca la reduccion sin
+    // inventar la instancia).
+    const [primero, ...resto] = datos.subtotalesIva;
+    const netoTotal = resto.reduce((a, s) => a.sumar(s.base), primero!.base);
+    b.lineaCruda(filaIzquierdaDerecha("Subtotal neto", pesos(netoTotal), columnas));
+    for (const s of datos.subtotalesIva) {
+      b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(s.iva), columnas));
+    }
+  } else {
+    // Comportamiento historico para B y C: mostrar cada IVA por alicuota.
+    for (const s of datos.subtotalesIva) {
+      b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(s.iva), columnas));
+    }
   }
   b.comando(NEGRITA_ON).comando(DOBLE_ALTO);
   // A alto doble entran las mismas columnas (solo cambia la altura).

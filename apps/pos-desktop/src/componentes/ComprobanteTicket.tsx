@@ -10,7 +10,9 @@ import type { Cantidad } from "@nexosoft/domain";
 import {
   fechaHoraTicket,
   identificacionComprobanteAsociado,
+  letraFiscal,
   leyendaNumeroProvisional,
+  llevaDatosDelReceptor,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
@@ -26,6 +28,8 @@ function cantidadFormateada(c: Cantidad): string {
 export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
   const esFiscal = datos.esFiscal ?? true;
   const provisional = numeroEsProvisional(datos);
+  const conReceptor = llevaDatosDelReceptor(datos);
+  const discriminaIva = letraFiscal(datos) === "A" && datos.subtotalesIva.length > 0;
 
   return (
     <div className="hoja-ticket">
@@ -44,6 +48,9 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
         {provisional ? referenciaInterna(datos) : `N° ${numeroFiscalFormateado(datos)}`}
       </div>
       <div className="ticket-print-centro">{fechaHoraTicket(datos.fecha)}</div>
+      {datos.leyenda !== undefined && (
+        <div className="ticket-print-centro ticket-print-leyenda">{datos.leyenda}</div>
+      )}
       {datos.comprobanteAsociado !== undefined && (
         <div className="ticket-print-centro">
           Comprobante asociado
@@ -55,6 +62,21 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
         <div className="ticket-print-centro ticket-print-aviso">
           NO VÁLIDO COMO FACTURA
         </div>
+      )}
+
+      {/* Receptor. Sólo A (siempre) o B con cliente identificado, nunca en C
+          — ver `llevaDatosDelReceptor`. Va antes de los ítems para que aparezca
+          arriba del papel, como en el estilo tradicional del A. */}
+      {conReceptor && datos.receptor !== undefined && (
+        <>
+          <div className="ticket-print-sep" />
+          <div>{datos.receptor.razonSocial}</div>
+          <div>CUIT/DNI: {datos.receptor.documento}</div>
+          {datos.receptor.domicilio !== undefined && datos.receptor.domicilio.trim() !== "" && (
+            <div>{datos.receptor.domicilio}</div>
+          )}
+          <div>IVA: {datos.condicionIvaReceptor}</div>
+        </>
       )}
 
       <div className="ticket-print-sep" />
@@ -79,6 +101,18 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
           <span>-{pesos(datos.descuento)}</span>
         </div>
       )}
+      {/* En Factura A el papel muestra neto e IVA por separado; el B y el C lo
+          llevan incluido en cada línea. Sin esto un contador no puede armar el
+          asiento de una A. */}
+      {discriminaIva &&
+        datos.subtotalesIva.map((s, i) => (
+          <div className="ticket-print-fila" key={`iva-${i}`}>
+            <span>
+              {s.etiqueta} (neto {pesos(s.base)})
+            </span>
+            <span>{pesos(s.iva)}</span>
+          </div>
+        ))}
       <div className="ticket-print-fila ticket-print-total">
         <span>TOTAL</span>
         <span>{pesos(datos.total)}</span>

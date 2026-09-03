@@ -1100,6 +1100,36 @@ body {
   font-size: 13pt;
   font-weight: 700;
 }
+/*
+  La letra fiscal en grande (A / B) es la forma tradicional de identificar la
+  factura de un vistazo, y a la vez ordena visualmente el sector derecho de la
+  cabecera. La C no la lleva.
+*/
+.a4-letra {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 38pt;
+  font-weight: 700;
+  line-height: 1;
+  border: 2pt solid currentColor;
+  padding: 4pt 14pt;
+  margin-bottom: 6pt;
+  display: inline-block;
+}
+.a4-leyenda {
+  margin-top: 4pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.a4-receptor {
+  margin-top: 8pt;
+  padding: 8pt 10pt;
+  border: 1pt solid #ccc;
+  border-radius: 2pt;
+}
+.a4-receptor .a4-razon-social {
+  font-size: 11pt;
+  font-weight: 700;
+}
 .a4-aviso-no-fiscal {
   border: 1px solid #b91c1c;
   color: #b91c1c;
@@ -1180,6 +1210,10 @@ body {
 }
 .ticket-print-tipo {
   font-weight: 700;
+}
+.ticket-print-leyenda {
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 .ticket-print-aviso {
   font-weight: 700;

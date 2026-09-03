@@ -68,6 +68,12 @@ export class VentasService {
         // corrige, no sólo en el `CbtesAsoc` que va a ARCA. Con el id solo no
         // alcanza: hace falta el tipo y el número para poder imprimirlo.
         comprobanteAsociado: { select: { tipoComprobante: true, numeroComprobante: true } },
+        // Datos del receptor para reimprimir una Factura A/B: ARCA exige nombre
+        // y CUIT en el papel de la A, y en la B con cliente identificado el
+        // ticket los muestra también.
+        cliente: {
+          select: { nombre: true, documento: true, condicionIva: true, direccion: true },
+        },
       },
     });
   }
@@ -112,6 +118,12 @@ export class VentasService {
         // corrige, no sólo en el `CbtesAsoc` que va a ARCA. Con el id solo no
         // alcanza: hace falta el tipo y el número para poder imprimirlo.
         comprobanteAsociado: { select: { tipoComprobante: true, numeroComprobante: true } },
+        // Datos del receptor para reimprimir una Factura A/B: ARCA exige nombre
+        // y CUIT en el papel de la A, y en la B con cliente identificado el
+        // ticket los muestra también.
+        cliente: {
+          select: { nombre: true, documento: true, condicionIva: true, direccion: true },
+        },
       },
     });
     if (!venta) throw new NotFoundException(`Comprobante ${id} no encontrado`);
@@ -566,9 +578,13 @@ export class VentasService {
   }
 
   private async registrarEnLibro(
-    // Sin `comprobanteAsociado`: el libro no lo usa, y pedirlo obligaría a
-    // traer la relación en el `create` de la venta, que nunca la tiene.
-    venta: Omit<Awaited<ReturnType<VentasService['historial']>>[number], 'comprobanteAsociado'>,
+    // Sin `comprobanteAsociado` ni `cliente`: el libro no los usa, y pedirlos
+    // obligaría a traer las relaciones en el `create` de la venta, que no las
+    // tiene.
+    venta: Omit<
+      Awaited<ReturnType<VentasService['historial']>>[number],
+      'comprobanteAsociado' | 'cliente'
+    >,
     usuarioEmail: string,
   ): Promise<void> {
     try {

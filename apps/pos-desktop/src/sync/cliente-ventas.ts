@@ -43,6 +43,17 @@ export interface Comprobante {
     readonly tipoComprobante: string | null;
     readonly numeroComprobante: number | null;
   } | null;
+  /**
+   * Cliente identificado en la venta. Presente sólo si la venta se emitió con
+   * cliente elegido; sin esto no se puede reimprimir una Factura A con el
+   * bloque del receptor.
+   */
+  readonly cliente?: {
+    readonly nombre: string;
+    readonly documento: string | null;
+    readonly condicionIva: string;
+    readonly direccion: string | null;
+  } | null;
   readonly items: ItemComprobante[];
   /** Desglose de pagos (presente en ventas con pago combinado). */
   readonly pagos?: PagoComprobante[];
