@@ -156,6 +156,29 @@ describe("construirEscPos", () => {
       expect(t).toContain("los asigna ARCA al autorizar");
     });
 
+    /**
+     * El caso que aparecio en campo: sin internet pero con el servidor de la
+     * LAN accesible. El servidor registra la venta y le pone un numero propio
+     * para poder guardarla, pero ARCA todavia no la vio. Ese numero NO es el
+     * fiscal: en la prueba salio 102 y ARCA despues le puso el 7.
+     */
+    it("un número del servidor sin CAE tampoco es fiscal", () => {
+      const t = frases(
+        texto(
+          construirEscPos(
+            ticket({
+              tipoComprobante: "Factura C",
+              numero: 102,
+              esFiscal: true,
+              numeroConfirmado: true,
+            }),
+          ),
+        ),
+      );
+      expect(t).not.toContain("0001-00000102");
+      expect(t).toContain("Referencia interna 00000102");
+    });
+
     it("con CAE sí imprime el número fiscal", () => {
       const t = texto(
         construirEscPos(

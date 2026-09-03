@@ -73,8 +73,17 @@ export function identificacionComprobanteAsociado(a: ComprobanteAsociadoTicket):
  * es no inventarlo.
  */
 export function numeroEsProvisional(datos: DatosTicket): boolean {
-  if (datos.numeroConfirmado === true) return false;
-  return (datos.esFiscal ?? true) ? datos.cae === undefined : true;
+  // OJO con el orden. Antes `numeroConfirmado` cortaba primero, y eso pisaba la
+  // regla del CAE: con el servidor accesible pero ARCA caída, el servidor
+  // devuelve un número propio (`siguienteNumeroNoFiscal`) para poder registrar
+  // la venta, y el ticket lo imprimía como si fuera fiscal. Salió
+  // "Factura C 0002-00000102" y ARCA después le puso el 7.
+  //
+  // Para un comprobante fiscal, la ÚNICA prueba es el CAE. `numeroConfirmado`
+  // sólo decide en los internos, que no esperan ningún CAE.
+  return (datos.esFiscal ?? true)
+    ? datos.cae === undefined
+    : datos.numeroConfirmado !== true;
 }
 
 /** Por qué el número todavía no es el definitivo, según quién lo asigna. */
