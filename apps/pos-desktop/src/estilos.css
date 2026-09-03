@@ -935,8 +935,19 @@ body {
 .sync-error .sync-dot {
   background: var(--peligro);
 }
+/*
+  Comprobantes subidos que esperan el CAE de ARCA. Va en otro color que
+  "sin subir" a propósito: son dos problemas distintos y el cajero no tiene que
+  hacer lo mismo con cada uno. Éste se resuelve solo; el otro puede no.
+*/
+.sync-sin-cae .sync-dot {
+  background: #a855f7;
+}
 .sync-offline {
   opacity: 0.75;
+}
+.sync-offline .sync-dot {
+  background: #94a3b8;
 }
 .sync-boton {
   margin-left: 4px;

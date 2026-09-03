@@ -8,6 +8,7 @@ import {
   ErrorVentas,
   type Comprobante,
   type ClienteVentas,
+  type EsperandoCae,
   type ResultadoAnulacion,
   type VerificacionArca,
 } from "./cliente-ventas";
@@ -119,6 +120,21 @@ export class ClienteVentasSimulado implements ClienteVentas {
       estado: "NO_SE_PUDO",
       mensaje: "No se pudo consultar a ARCA: esta es la versión de desarrollo, sin certificado.",
       diferencias: [],
+    };
+  }
+
+  /**
+   * En el navegador no hay ARCA, así que se cuentan los comprobantes que el
+   * demo dejó en PENDIENTE. Sirve para ver el indicador con datos.
+   */
+  async esperandoCae(): Promise<EsperandoCae> {
+    const pendientes = this.comprobantes
+      .filter((c) => c.estadoFiscal === "PENDIENTE")
+      .sort((a, b) => a.creadaEn.localeCompare(b.creadaEn));
+    return {
+      cantidad: pendientes.length,
+      masAntigua: pendientes[0]?.creadaEn ?? null,
+      vencidas: 0,
     };
   }
 

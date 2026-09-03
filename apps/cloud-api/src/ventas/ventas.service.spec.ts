@@ -250,6 +250,61 @@ describe('VentasService', () => {
     });
   });
 
+  /**
+   * Lo mira el indicador del POS: desde que sincronizar dejó de depender de
+   * internet, la píldora diría "Sincronizado" con ARCA caída (ADR-0066).
+   */
+  describe('esperandoCae', () => {
+    function haceDias(n: number): Date {
+      const f = new Date();
+      f.setDate(f.getDate() - n);
+      return f;
+    }
+
+    it('sin pendientes devuelve cero y sin fecha', async () => {
+      prisma.venta.findMany.mockResolvedValue([]);
+      expect(await service.esperandoCae('s1')).toEqual({
+        cantidad: 0,
+        masAntigua: null,
+        vencidas: 0,
+      });
+    });
+
+    it('cuenta las pendientes y devuelve la más vieja', async () => {
+      const vieja = haceDias(2);
+      prisma.venta.findMany.mockResolvedValue([
+        { creadaEn: vieja },
+        { creadaEn: haceDias(1) },
+      ]);
+
+      const r = await service.esperandoCae('s1');
+      expect(r.cantidad).toBe(2);
+      expect(r.masAntigua).toBe(vieja.toISOString());
+      expect(r.vencidas).toBe(0);
+    });
+
+    it('separa las que ARCA ya no autoriza por fecha', async () => {
+      prisma.venta.findMany.mockResolvedValue([
+        { creadaEn: haceDias(20) },
+        { creadaEn: haceDias(9) },
+        { creadaEn: haceDias(1) },
+      ]);
+
+      const r = await service.esperandoCae('s1');
+      expect(r.cantidad).toBe(3);
+      expect(r.vencidas).toBe(2);
+    });
+
+    it('sólo mira las de esta sucursal y las PENDIENTE', async () => {
+      prisma.venta.findMany.mockResolvedValue([]);
+      await service.esperandoCae('s1');
+      expect(prisma.venta.findMany.mock.calls[0]![0].where).toEqual({
+        sucursalId: 's1',
+        estadoFiscal: 'PENDIENTE',
+      });
+    });
+  });
+
   describe('venta con tipoComprobante=TicketNoFiscal (Fase 10.1 — sin alta en ARCA)', () => {
     it('NO pide CAE y persiste cae en null, pero SÍ numera el ticket (Fase 12.J)', async () => {
       await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });

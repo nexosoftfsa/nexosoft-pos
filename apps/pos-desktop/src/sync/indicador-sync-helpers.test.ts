@@ -2,7 +2,88 @@ import { describe, expect, it } from "vitest";
 
 import type { OperacionEnCola } from "@nexosoft/sync";
 
-import { confirmacionDescartar, rangoDeFechas } from "./indicador-sync-helpers";
+import {
+  confirmacionDescartar,
+  estadoDeLaPildora,
+  rangoDeFechas,
+} from "./indicador-sync-helpers";
+
+const TRANQUILO = { online: true, sincronizando: false, pendientes: 0, fallidas: 0 };
+
+describe("estadoDeLaPildora", () => {
+  it("sin nada que hacer dice que está todo bien", () => {
+    expect(estadoDeLaPildora(TRANQUILO).tono).toBe("ok");
+  });
+
+  /**
+   * El hueco que abrió ADR-0066: al dejar de confundir "sin internet" con "sin
+   * servidor", la píldora pasó a decir "Sincronizado" con ARCA caída, mientras
+   * los comprobantes se apilaban sin CAE.
+   */
+  it("con todo subido pero sin CAE, no dice que está todo bien", () => {
+    const p = estadoDeLaPildora({
+      ...TRANQUILO,
+      esperandoCae: { cantidad: 3, masAntigua: null, vencidas: 0 },
+    });
+    expect(p.tono).toBe("sin-cae");
+    expect(p.texto).toBe("3 comprobantes sin CAE");
+    expect(p.detalle).toContain("no hay que hacer nada");
+  });
+
+  it("uno solo va en singular", () => {
+    expect(
+      estadoDeLaPildora({
+        ...TRANQUILO,
+        esperandoCae: { cantidad: 1, masAntigua: null, vencidas: 0 },
+      }).texto,
+    ).toBe("1 comprobante sin CAE");
+  });
+
+  it("los que ARCA ya no autoriza por fecha son error, no espera", () => {
+    const p = estadoDeLaPildora({
+      ...TRANQUILO,
+      esperandoCae: { cantidad: 4, masAntigua: null, vencidas: 2 },
+    });
+    expect(p.tono).toBe("error");
+    expect(p.texto).toContain("fuera de plazo");
+    expect(p.detalle).toContain("contador");
+  });
+
+  it("una venta que no pudo subir manda sobre todo lo demás", () => {
+    const p = estadoDeLaPildora({
+      ...TRANQUILO,
+      fallidas: 2,
+      esperandoCae: { cantidad: 5, masAntigua: null, vencidas: 1 },
+    });
+    expect(p.tono).toBe("error");
+    expect(p.texto).toBe("2 ventas con error");
+  });
+
+  it("sin servidor gana sobre los pendientes de CAE: primero hay que volver", () => {
+    const p = estadoDeLaPildora({
+      ...TRANQUILO,
+      online: false,
+      esperandoCae: { cantidad: 3, masAntigua: null, vencidas: 0 },
+    });
+    expect(p.tono).toBe("offline");
+    expect(p.detalle).toContain("Se puede seguir vendiendo");
+  });
+
+  it("las ventas sin subir se avisan antes que las que esperan CAE", () => {
+    const p = estadoDeLaPildora({
+      ...TRANQUILO,
+      pendientes: 1,
+      esperandoCae: { cantidad: 9, masAntigua: null, vencidas: 0 },
+    });
+    expect(p.tono).toBe("pendiente");
+    expect(p.texto).toBe("1 venta sin subir");
+  });
+
+  it("sin dato de CAE (servidor viejo) no inventa nada", () => {
+    expect(estadoDeLaPildora({ ...TRANQUILO, esperandoCae: null }).tono).toBe("ok");
+    expect(estadoDeLaPildora(TRANQUILO).tono).toBe("ok");
+  });
+});
 
 function op(creadaEn: string): OperacionEnCola {
   return {

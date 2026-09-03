@@ -32,6 +32,16 @@ export class VentasController {
     );
   }
 
+  /**
+   * VA ANTES DE `:id`. Nest resuelve las rutas en orden de declaración, así que
+   * puesta después, `esperando-cae` entraría por `:id` y buscaría un
+   * comprobante con ese id.
+   */
+  @Get('esperando-cae')
+  esperandoCae(@Request() req: { user: UsuarioJwt }) {
+    return this.ventasService.esperandoCae(req.user.sucursalId);
+  }
+
   @Get(':id')
   obtener(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
     return this.ventasService.obtener(req.user.sucursalId, id);

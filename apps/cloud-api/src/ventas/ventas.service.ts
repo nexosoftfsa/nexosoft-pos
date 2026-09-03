@@ -72,6 +72,36 @@ export class VentasService {
     });
   }
 
+  /**
+   * Cuántos comprobantes están esperando el CAE, para que el POS lo pueda
+   * mostrar.
+   *
+   * Hace falta porque el indicador de la terminal habla de la SINCRONIZACIÓN
+   * con el servidor, y desde que eso dejó de depender de internet (ADR-0066)
+   * dice "Sincronizado" aunque ARCA esté inalcanzable: las ventas suben bien y
+   * se acumulan sin CAE, sin que nadie lo vea. Son dos caminos distintos y el
+   * cajero necesita ver los dos.
+   *
+   * `vencidas` son las que ARCA ya no va a autorizar por fecha
+   * (`ventana-de-fecha.ts`): ésas no se arreglan esperando, hay que
+   * regularizarlas con el contador.
+   */
+  async esperandoCae(sucursalId: string) {
+    // Se traen las fechas y se cuenta acá: una pendiente es una excepción, y si
+    // alguna vez hubiera miles, ese número ES la alarma.
+    const pendientes = await this.prisma.venta.findMany({
+      where: { sucursalId, estadoFiscal: 'PENDIENTE' },
+      select: { creadaEn: true },
+      orderBy: { creadaEn: 'asc' },
+    });
+    const ahora = new Date();
+    return {
+      cantidad: pendientes.length,
+      masAntigua: pendientes[0]?.creadaEn.toISOString() ?? null,
+      vencidas: pendientes.filter((v) => fueraDeVentanaArca(v.creadaEn, ahora)).length,
+    };
+  }
+
   async obtener(sucursalId: string, id: string) {
     const venta = await this.prisma.venta.findFirst({
       where: { id, sucursalId },

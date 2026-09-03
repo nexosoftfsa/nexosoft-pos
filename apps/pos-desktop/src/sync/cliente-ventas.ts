@@ -66,6 +66,22 @@ export interface Comprobante {
 /** Estado de la autorización fiscal de un comprobante. */
 export type EstadoFiscal = "NO_APLICA" | "PENDIENTE" | "AUTORIZADA" | "RECHAZADA";
 
+/**
+ * Comprobantes que ya están en el servidor pero todavía esperan el CAE.
+ *
+ * Es un camino distinto al de la cola de sincronización: una venta puede haber
+ * subido perfecto y quedarse sin CAE porque ARCA no contesta. Desde que
+ * sincronizar dejó de depender de internet (ADR-0066), el indicador diría
+ * "Sincronizado" mientras esto se acumula sin que nadie lo vea.
+ */
+export interface EsperandoCae {
+  readonly cantidad: number;
+  /** ISO de la más vieja, o `null` si no hay ninguna. */
+  readonly masAntigua: string | null;
+  /** Las que ARCA ya no autoriza por fecha: hay que regularizarlas a mano. */
+  readonly vencidas: number;
+}
+
 export interface ResultadoAnulacion {
   readonly anulada: Comprobante;
   readonly notaCredito: Comprobante;
@@ -88,6 +104,8 @@ export interface ClienteVentas {
   anular(id: string): Promise<ResultadoAnulacion>;
   /** Le pregunta a ARCA qué tiene registrado. Sólo lectura: no emite nada. */
   verificarEnArca(id: string): Promise<VerificacionArca>;
+  /** Cuántos comprobantes subidos siguen esperando el CAE. */
+  esperandoCae(): Promise<EsperandoCae>;
 }
 
 export class ErrorVentas extends Error {
@@ -116,6 +134,10 @@ export class ClienteVentasHttp implements ClienteVentas {
 
   verificarEnArca(id: string): Promise<VerificacionArca> {
     return this.pedir<VerificacionArca>("GET", `/ventas/${id}/verificar-arca`);
+  }
+
+  esperandoCae(): Promise<EsperandoCae> {
+    return this.pedir<EsperandoCae>("GET", "/ventas/esperando-cae");
   }
 
   private async pedir<T>(metodo: string, ruta: string): Promise<T> {

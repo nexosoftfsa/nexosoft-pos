@@ -1,10 +1,21 @@
 import { useState } from "react";
 
-import { confirmacionDescartar } from "./indicador-sync-helpers";
+import type { EsperandoCae } from "./cliente-ventas";
+import { confirmacionDescartar, estadoDeLaPildora } from "./indicador-sync-helpers";
 import type { EstadoSync } from "./useSync";
 
 /** Píldora de estado de sincronización para la barra superior. */
-export function IndicadorSync({ estado }: { estado: EstadoSync }) {
+export function IndicadorSync({
+  estado,
+  esperandoCae,
+}: {
+  estado: EstadoSync;
+  /**
+   * Comprobantes subidos que todavía esperan el CAE. Es otro camino distinto al
+   * de la cola: sin esto la píldora dice "Sincronizado" con ARCA caída.
+   */
+  esperandoCae?: EsperandoCae | null;
+}) {
   const {
     online,
     sincronizando,
@@ -34,27 +45,20 @@ export function IndicadorSync({ estado }: { estado: EstadoSync }) {
     }
   }
 
-  let clase = "sync-ok";
-  let texto = "Sincronizado";
-  if (!online) {
-    clase = "sync-offline";
-    texto = "Sin conexión";
-  } else if (sincronizando) {
-    clase = "sync-trabajando";
-    texto = "Sincronizando…";
-  } else if (fallidas > 0) {
-    clase = "sync-error";
-    texto = `${fallidas} con error`;
-  } else if (pendientes > 0) {
-    clase = "sync-pendiente";
-    texto = `${pendientes} pendiente${pendientes > 1 ? "s" : ""}`;
-  }
+  const pildora = estadoDeLaPildora({
+    online,
+    sincronizando,
+    pendientes,
+    fallidas,
+    ...(esperandoCae !== undefined ? { esperandoCae } : {}),
+  });
+  const texto = pildora.texto;
 
   const mostrarBoton = online && !sincronizando && (pendientes > 0 || fallidas > 0);
 
   return (
     <>
-      <div className={`sync ${clase}`} title="Estado de sincronización con el servidor">
+      <div className={`sync sync-${pildora.tono}`} title={pildora.detalle}>
         <span className="sync-dot" aria-hidden />
         {fallidas > 0 ? (
           // Con ventas rechazadas el texto se vuelve un botón: el contador solo

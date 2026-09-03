@@ -28,6 +28,7 @@ import type { ClienteRemitos } from "../sync/cliente-remitos";
 import type { ClienteProveedores } from "../sync/cliente-proveedores";
 import type { ClienteMediosPago } from "../sync/cliente-medios-pago";
 import { IndicadorSync } from "../sync/IndicadorSync";
+import { useEsperandoCae } from "../sync/useEsperandoCae";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
 import { BannerSuscripcion, PantallaSuscripcionBloqueada } from "../componentes/AvisoSuscripcion";
@@ -148,6 +149,9 @@ export function Shell({
   onAbrirConfig?: () => void;
 }) {
   const sync = useSync(entorno.sync);
+  // Los comprobantes que esperan el CAE son un problema aparte del de la cola:
+  // pueden estar todos subidos y ARCA no contestar. Ver `IndicadorSync`.
+  const esperandoCae = useEsperandoCae(clienteVentas ?? null);
   const estadoActualizacion = useSyncExternalStore(
     suscribirseActualizacion,
     leerEstadoActualizacion,
@@ -367,7 +371,7 @@ export function Shell({
             <span className="chip chip--muted" title="Comercio">
               {entorno.config.razonSocial}
             </span>
-            <IndicadorSync estado={sync} />
+            <IndicadorSync estado={sync} esperandoCae={esperandoCae} />
             {terminalNombre !== undefined && (
               <span className="chip chip--muted" title="Terminal">
                 {terminalNombre}
