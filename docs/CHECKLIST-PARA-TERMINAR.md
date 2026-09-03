@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Fecha: 2026-09-02 · Publicado: POS **0.1.53** · Servidor **0.14.0**
+Fecha: 2026-09-02 · Publicado: POS **0.1.54** · Servidor **0.14.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -21,12 +21,20 @@ semana.
 Son las que cierran el trabajo de estos días. Sin esto no sabemos si lo que
 publicamos anda.
 
-- [ ] **Prueba sin internet, completa.** `docs/PRUEBA-VENTA-SIN-INTERNET.txt`,
-      pasos 1 a 7, con POS 0.1.53 y Servidor 0.14.0.
-      **Lo que más importa: el paso 5.3** — que al reconectar la venta conserve
-      la hora en que se hizo y no la de sincronización. Si eso falla, el arreglo
-      de la fecha no sirvió y se cae también la caja.
+- [ ] **Reprobar sin internet, ahora con POS 0.1.54.**
+      `docs/PRUEBA-VENTA-SIN-INTERNET.txt`.
+      La corrida del 2/9 salió bien en casi todo —la venta conservó la hora, el
+      ticket no inventó número, la caja sumó— pero destapó que el POS **dejaba
+      de sincronizar por falta de internet aunque el servidor estuviera al
+      lado** (ADR-0066). Lo que hay que ver ahora es lo que antes no podía
+      pasar: que sin internet la venta aparezca en Comprobantes y en la caja
+      **en el momento**, sin esperar a que vuelva la conexión.
       *Bloquea: entregar el sistema a cualquier comercio con internet inestable.*
+
+- [ ] **Cerrar la caja con ventas realmente sin subir.** El paso 7 del 2/9 no
+      llegó a probarlo: la venta ya había subido antes de desconectar, así que
+      la cola estaba vacía y el aviso no tenía por qué aparecer. Hay que vender
+      **durante** el corte y recién ahí cerrar (ADR-0065).
 
 - [ ] **Bloqueo por falta de pago.** `docs/PRUEBA-SUSCRIPCION-SOCIO.txt`.
       **Nunca se probó.** Lo que hay que ver es que durante el bloqueo sigan
@@ -34,10 +42,10 @@ publicamos anda.
       tiene que poder cerrar el día y sacar sus números, aunque no pueda vender.
       *Bloquea: cobrar la suscripción. Es nuestro modelo de negocio.*
 
-- [ ] **Actualizar los dos y que el actualizador no se trabe.** El servidor
-      0.14.0 lleva migración de base (una columna nueva, aditiva). Es la primera
-      actualización con migración desde que existe el actualizador automático.
-      *Bloquea: cualquier actualización futura que toque la base.*
+- [x] ~~**Actualizar los dos, con migración de base.**~~ El servidor 0.14.0
+      agrega una columna al turno de caja: la primera actualización con
+      migración desde que existe el actualizador automático. **Salió bien el
+      2/9**, Seba actualizó sin tocar nada.
 
 ---
 
