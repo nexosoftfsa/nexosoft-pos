@@ -11,6 +11,7 @@ import type {
 import type { RepositorioVentas } from "@nexosoft/app";
 
 import { esperarConTope } from "./esperar-con-tope";
+import { llegoAlServidor } from "./llego-al-servidor";
 import { volcarComprobantes } from "./volcar-comprobantes";
 
 /** Lo que el POS inyecta para la sincronización. */
@@ -38,6 +39,10 @@ export interface EstadoSync {
    */
   readonly detalleFallidas: readonly OperacionEnCola[];
   readonly sincronizando: boolean;
+  /**
+   * Si la terminal llega a SU SERVIDOR de sucursal (no si hay internet: el
+   * servidor está en la LAN y sobrevive a un corte). Ver `useSync`.
+   */
   readonly online: boolean;
   readonly error: string | null;
   readonly encolar: (op: OperacionSync) => Promise<void>;
@@ -92,7 +97,18 @@ export function useSync(sync: SyncPos): EstadoSync {
   const [fallidas, setFallidas] = useState(0);
   const [detalleFallidas, setDetalleFallidas] = useState<readonly OperacionEnCola[]>([]);
   const [sincronizando, setSincronizando] = useState(false);
-  const [online, setOnline] = useState(() => navigator.onLine);
+  /**
+   * `true` mientras la terminal logre hablar con SU SERVIDOR. Arranca en `true`
+   * y sólo se cae cuando un intento real de subir no llega.
+   *
+   * **No es `navigator.onLine`**, y confundirlos costó caro: el servidor de
+   * sucursal está en la LAN (muchas veces en la misma PC), así que un corte de
+   * internet lo deja perfectamente accesible. Mientras el POS miró
+   * `navigator.onLine`, un corte de internet lo hacía dejar de sincronizar
+   * contra un servidor que estaba ahí: la venta no aparecía en Comprobantes ni
+   * sumaba a la caja hasta que volviera internet, sin ninguna razón.
+   */
+  const [online, setOnline] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refrescar = useCallback(async () => {
@@ -110,6 +126,13 @@ export function useSync(sync: SyncPos): EstadoSync {
    */
   const sincronizarYVolcar = useCallback(async () => {
     const resumen = await motor.sincronizar();
+    // Si el lote se resolvió —aunque el servidor haya rechazado alguna— es que
+    // LLEGAMOS. Un fallo de transporte deja todas reintentables sin resolver
+    // ninguna, y ésa es la única señal honesta de que no hay servidor. Con la
+    // cola vacía no se aprende nada, así que no se toca el estado.
+    if (resumen.enviadas > 0) {
+      setOnline(llegoAlServidor(resumen));
+    }
     if (ventasLocales !== undefined) {
       try {
         await volcarComprobantes(ventasLocales, resumen.resultados);
@@ -120,13 +143,20 @@ export function useSync(sync: SyncPos): EstadoSync {
     return resumen;
   }, [motor, ventasLocales]);
 
+  /**
+   * Se intenta SIEMPRE, sin preguntarle a `navigator.onLine`: el servidor está
+   * en la LAN y puede estar perfectamente vivo con internet caído. Si de verdad
+   * no está, el intento falla solo —rápido si la PC contesta "no hay nadie",
+   * y contra el tope de espera si no contesta nada— y la operación queda en la
+   * cola para el próximo intento.
+   */
   const sincronizarAhora = useCallback(async () => {
-    if (!navigator.onLine) return;
     setSincronizando(true);
     setError(null);
     try {
       await sincronizarYVolcar();
     } catch (e) {
+      setOnline(false);
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSincronizando(false);
@@ -152,8 +182,12 @@ export function useSync(sync: SyncPos): EstadoSync {
     async (op: OperacionSync, esperaMs = ESPERA_COMPROBANTE_MS) => {
       await motor.encolar(op);
       await refrescar();
-      if (!navigator.onLine) return null;
 
+      // Se intenta siempre. Antes acá se preguntaba `navigator.onLine` y se
+      // salía sin intentar: con internet caído y el servidor de la LAN vivo,
+      // la venta se quedaba en la cola aunque tenía a dónde ir. El tope de
+      // espera es justamente lo que protege de un servidor que no contesta.
+      //
       // La sincronización NO se cancela si se agota la espera: sigue su curso y
       // el CAE se consigue igual. Sólo se deja de esperar.
       const corrida = sincronizarYVolcar()
@@ -174,18 +208,16 @@ export function useSync(sync: SyncPos): EstadoSync {
     return n;
   }, [almacen, refrescar]);
 
+  /**
+   * Que vuelva internet es un buen momento para reintentar, nada más. **No
+   * cambia el estado**: quien dice si llegamos al servidor es el intento, no el
+   * navegador. Tampoco se escucha "offline": perder internet no implica perder
+   * el servidor de sucursal.
+   */
   useEffect(() => {
-    const alConectar = () => {
-      setOnline(true);
-      void sincronizarAhora();
-    };
-    const alDesconectar = () => setOnline(false);
-    window.addEventListener("online", alConectar);
-    window.addEventListener("offline", alDesconectar);
-    return () => {
-      window.removeEventListener("online", alConectar);
-      window.removeEventListener("offline", alDesconectar);
-    };
+    const alVolverInternet = () => void sincronizarAhora();
+    window.addEventListener("online", alVolverInternet);
+    return () => window.removeEventListener("online", alVolverInternet);
   }, [sincronizarAhora]);
 
   useEffect(() => {
