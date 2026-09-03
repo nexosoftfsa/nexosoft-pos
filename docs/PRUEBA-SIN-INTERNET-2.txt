@@ -1,0 +1,198 @@
+===========================================================================
+  NEXOSOFT - SIN INTERNET, LA REVANCHA
+  Para: Sebastian
+  Tiempo: 20 minutos
+===========================================================================
+
+LO QUE ENCONTRASTE
+-------------------
+Tu prueba de ayer sirvio muchisimo, y el detalle que la resolvio fue uno que
+parecia menor: anotaste "NO HAY CARTEL" de sin conexion.
+
+Eso fue la pista. Si no hubo cartel de error, es que la pantalla NO fallo: el
+servidor contesto perfecto. Y contesto porque el servidor esta en tu misma PC.
+
+El problema real era otro, y era mio: el POS preguntaba "hay internet?" para
+decidir si mandarle las ventas al servidor. La pregunta correcta era "llego a
+mi servidor?", que es otra cosa: el servidor esta en la red del local, muchas
+veces en la misma maquina, y cortar internet no lo toca.
+
+O sea que sin internet el POS dejaba de subir ventas a un servidor que estaba
+ahi, listo, esperando. Por eso no aparecia en Comprobantes ni en la caja hasta
+que volviera la conexion. Era exactamente lo que escribiste en tu observacion 2.
+
+Tambien arregle las dos observaciones que mandaste:
+  - La hora ahora va en 24 horas (19:46, no 07:46 sin AM/PM).
+  - El ticket ahora dice la hora de LA VENTA, no la de imprimir. Antes salian
+    con 2 segundos de diferencia.
+
+Versiones de esta prueba:  POS 0.1.54  -  Servidor 0.14.0 (el mismo de ayer)
+Si algo sale mal, el punto seguro anterior es POS 0.1.53.
+
+
+PASO 1 - ACTUALIZAR SOLO EL POS
+--------------------------------
+El servidor NO se toca, queda en 0.14.0.
+
+1.1 POS > Configuracion > Actualizaciones. Instala la 0.1.54.
+
+    [ ] POS 0.1.54
+
+
+PASO 2 - ABRIR LA CAJA
+-----------------------
+2.1 Caja > abrir turno. Pone el fondo que quieras (puede ser 0).
+
+    Hora de apertura: ________
+    Fondo: $ ________
+
+
+PASO 3 - DESCONECTAR Y VENDER
+------------------------------
+3.1 Desconecta internet (WiFi o cable).
+3.2 Hace una venta de $100 EN EFECTIVO.
+
+    Hora de la venta: ________
+
+3.3 Mira el ticket.
+
+    [ ] Dice "Referencia interna 000000XX" (no un numero fiscal).
+    [ ] La hora esta en 24 HORAS. Si vendes a la tarde tiene que decir algo
+        como 19:46, NO 07:46.
+
+    MANDAME EL PDF.
+
+
+PASO 4 - ACA ESTA TODO. NO RECONECTES.
+---------------------------------------
+Este es el paso que ayer fallo. Segui SIN internet.
+
+4.1 Anda a Comprobantes.
+
+    [ ] LA VENTA QUE ACABAS DE HACER APARECE EN LA LISTA.
+
+    <- ESTO ES LO QUE VINIMOS A PROBAR. Ayer no aparecia. Si sigue sin
+       aparecer, avisame y frena aca.
+
+    Numero que muestra: ________
+
+    SACALE UNA FOTO A LA PANTALLA.
+
+4.2 Toca "Reimprimir" en esa venta.
+
+    [ ] Reimprime bien.
+    [ ] La hora que dice es LA MISMA que la del ticket del paso 3.3
+        (antes salian con un par de segundos de diferencia).
+
+4.3 Anda a Caja.
+
+    [ ] Los $100 ya estan sumados en "Ventas en efectivo", SIN internet.
+
+    Ventas en efectivo: $ ________
+
+    SACALE UNA FOTO.
+
+4.4 Mira el indicador de arriba a la derecha.
+
+    Que dice: ____________________
+
+    OJO, ESTO CAMBIO: ese cartel ahora habla del SERVIDOR, no de internet.
+    Sin internet pero con el servidor andando, lo esperado es que diga
+    "Sincronizado". No es un error. Va a decir "Sin conexion" solo cuando
+    haya ventas que no logre subir.
+
+
+PASO 5 - AHORA SIN SERVIDOR (que es otra cosa)
+-----------------------------------------------
+Ayer el paso 7 no llego a probar el cierre con ventas sin subir: la venta ya
+habia subido antes de que desconectaras, asi que no habia nada pendiente.
+
+Y ahora que el POS le habla al servidor aunque no haya internet, para que
+queden ventas sin subir hace falta que el SERVIDOR no este.
+
+No hace falta apagar nada. Lo mas facil y sin riesgo es apuntarle a una
+direccion que no existe, y despues devolverla:
+
+5.1 Configuracion > Servidor de sucursal.
+
+    ANOTA LA DIRECCION QUE TIENE AHORA, tal cual, letra por letra:
+    ____________________________________________
+
+    (Deberia ser algo como  http://localhost:3000/api/v1 )
+
+5.2 Cambiale SOLO EL NUMERO del puerto por 3999. O sea que quede
+    http://localhost:3999/api/v1  y Guarda.
+
+    Ahi no hay ningun servidor, asi que el POS se va a quedar sin a donde ir.
+    Se deshace en el paso 5.7 poniendo de nuevo lo que anotaste arriba.
+
+5.3 Hace una venta de $50 en efectivo.
+
+    [ ] El ticket sale igual, con referencia interna.
+
+5.4 Anda a Comprobantes.
+
+    [ ] AHORA SI aparece arriba el cartel de que no hay conexion con el
+        servidor.
+    [ ] Igual se ven las ventas (las que tiene guardadas esta terminal).
+    [ ] En las filas NO estan "Anular" ni "Verificar en ARCA".
+
+    SACALE UNA FOTO.
+
+    Esto es lo contrario del paso 4: alla el servidor estaba y por eso no habia
+    cartel. Aca no esta, y por eso si.
+
+5.5 Mira el indicador de arriba a la derecha.
+
+    Que dice: ____________________
+    (Aca si tiene que decir "Sin conexion".)
+
+5.6 Anda a Caja > "Arqueo y cierre" e intenta cerrar.
+
+    Esto lo pongo sabiendo que probablemente NO te deje, y quiero confirmarlo:
+    cerrar la caja le habla al servidor, asi que sin servidor no deberia poder.
+
+    Que paso:
+    [ ] No me dejo cerrar, y me dijo por que (con un mensaje que se entiende).
+    [ ] No me dejo cerrar, pero el mensaje es feo o no se entiende.
+        Copialo tal cual: ______________________________________________
+    [ ] Me dejo cerrar igual  <- si pasa esto avisame, es un problema.
+
+    SACALE UNA FOTO.
+
+5.7 DEVOLVE LA DIRECCION DEL SERVIDOR a la que anotaste en 5.1, y volve a
+    conectar internet. Espera un minuto.
+
+    [ ] El indicador de arriba vuelve a "Sincronizado".
+    [ ] La venta de $50 aparece en Comprobantes, con su CAE.
+
+5.8 Ahora si, cerra la caja normalmente, contando la plata de verdad
+    (fondo + $100 + $50).
+
+    [ ] La diferencia da $0 (o lo que corresponda a lo que contaste).
+
+
+PASO 6 - QUE LLEGUE EL CAE
+---------------------------
+6.1 Con todo conectado, anda a Comprobantes.
+
+    [ ] Las dos ventas ahora tienen numero fiscal, CAE y QR.
+    [ ] La FECHA Y HORA siguen siendo las de cuando vendiste, no las de ahora.
+
+    MANDAME EL PDF de una de las dos reimpresa.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. La foto de Comprobantes CON la venta, sin internet (paso 4.1)
+     <- lo mas importante de todo
+  2. La foto de la caja con los $100 sin internet (paso 4.3)
+  3. Que decia el indicador de arriba a la derecha (paso 4.4)
+  4. La foto de Comprobantes con el cartel, ya sin servidor (paso 5.4)
+  5. Que paso al intentar cerrar la caja sin servidor (paso 5.6)
+  6. Un PDF de ticket, para ver la hora en 24 horas (paso 3.3 o 6.1)
+
+Como siempre: si algo no coincide con lo que dice aca, anotalo aunque parezca
+una pavada. Lo de ayer lo resolvio que hayas escrito "no hay cartel".
+===========================================================================
