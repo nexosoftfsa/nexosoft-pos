@@ -147,6 +147,40 @@ describe("MotorDeSincronizacion", () => {
     expect(o?.ultimoError).toContain("ECONNREFUSED");
   });
 
+  /**
+   * Pasó en campo: con el servidor inalcanzable un par de minutos, la venta
+   * agotó los reintentos (uno cada 15s) y quedó "con error", obligando al
+   * cajero a apretar "Reintentar" por una caída de red que se resolvió sola.
+   */
+  it("un corte de red no agota los reintentos, por largo que sea", async () => {
+    await motor.encolar(op("op-1"));
+    cliente.enviar.mockRejectedValue(new TypeError("Failed to fetch"));
+
+    // El tope de este motor es 2; con diez cortes seguidos deberia haber
+    // fallado hace rato si el transporte contara.
+    for (let i = 0; i < 10; i++) await motor.sincronizar();
+
+    const o = await almacen.obtener("op-1");
+    expect(o?.estado).toBe("pendiente");
+    // Los intentos se siguen contando, para poder verlos en la pantalla.
+    expect(o?.intentos).toBe(10);
+  });
+
+  it("apenas el servidor contesta, el tope vuelve a correr", async () => {
+    await motor.encolar(op("op-1"));
+    cliente.enviar.mockRejectedValue(new TypeError("Failed to fetch"));
+    await motor.sincronizar();
+    expect((await almacen.obtener("op-1"))?.estado).toBe("pendiente");
+
+    // Ahora si contesta, y rechaza de forma definitiva.
+    cliente.enviar.mockResolvedValue({
+      "op-1": { ok: false, error: "producto inexistente", reintentable: false },
+    } satisfies Record<string, ResultadoEnvio>);
+    await motor.sincronizar();
+
+    expect((await almacen.obtener("op-1"))?.estado).toBe("fallida");
+  });
+
   it("trata como reintentable una operación sin resultado del servidor", async () => {
     await motor.encolar(op("op-1"));
     cliente.enviar.mockResolvedValue({}); // el servidor no respondió por op-1

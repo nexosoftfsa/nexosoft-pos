@@ -80,7 +80,7 @@ export class MotorDeSincronizacion {
       resultados = {};
       const msg = mensajeDeTransporte(error);
       for (const op of pendientes) {
-        resultados[op.operacionId] = { ok: false, error: msg, reintentable: true };
+        resultados[op.operacionId] = { ok: false, error: msg, reintentable: true, transporte: true };
       }
     }
 
@@ -102,7 +102,17 @@ export class MotorDeSincronizacion {
       }
 
       const intentos = op.intentos + 1;
-      const agotado = !r.reintentable || intentos >= this.maxIntentos;
+      // Un corte de red NO gasta el presupuesto de reintentos. El tope existe
+      // para dejar de insistir con algo que el servidor rechaza; si nunca
+      // llegamos a hablar con él, no hay nada de qué desistir.
+      //
+      // Pasó en la prueba de campo: con el servidor inalcanzable un par de
+      // minutos, la venta agotó los 5 intentos (uno cada 15s) y quedó marcada
+      // "con error", obligando al cajero a apretar "Reintentar" a mano por una
+      // caída de red que se había resuelto sola. Los intentos se siguen
+      // contando para poder verlos, pero no marcan la operación como fallida.
+      const noLlegamos = r.transporte === true;
+      const agotado = !noLlegamos && (!r.reintentable || intentos >= this.maxIntentos);
       if (agotado) {
         await this.almacen.marcar(op.operacionId, "fallida", { intentos, ultimoError: r.error });
         fallidas += 1;

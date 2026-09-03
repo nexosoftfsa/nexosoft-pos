@@ -51,7 +51,20 @@ export type ResultadoEnvio =
       readonly idRemoto?: string;
       readonly comprobante?: ComprobanteResuelto;
     }
-  | { readonly ok: false; readonly error: string; readonly reintentable: boolean };
+  | {
+      readonly ok: false;
+      readonly error: string;
+      readonly reintentable: boolean;
+      /**
+       * `true` cuando el pedido **no llegó al servidor** (apagado, sin red, URL
+       * mal). Lo pone el motor, nunca el servidor — si contestó, llegó.
+       *
+       * Se distingue del rechazo porque no gasta reintentos: el tope existe
+       * para dejar de insistir con algo que el servidor rechaza, y si nunca
+       * hablamos con él no hay nada de qué desistir.
+       */
+      readonly transporte?: boolean;
+    };
 
 /** Resumen de una corrida de sincronización. */
 export interface ResumenSync {
