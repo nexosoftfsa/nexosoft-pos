@@ -5,6 +5,7 @@ import type { ConfiguracionComercio, VentaLocal } from "@nexosoft/app";
 
 import type { Comprobante } from "../sync/cliente-ventas";
 import {
+  admiteNotaDebito,
   avisoFiscal,
   comprobanteDeVentaLocal,
   datosTicketDeComprobante,
@@ -87,6 +88,25 @@ describe("esNotaCredito", () => {
   });
 });
 
+describe("admiteNotaDebito", () => {
+  it("una factura fiscal vigente sí", () => {
+    expect(admiteNotaDebito(comprobante({ tipoComprobante: "FacturaA" }))).toBe(true);
+  });
+
+  it("un ticket no fiscal no: no es un comprobante ante ARCA", () => {
+    expect(admiteNotaDebito(comprobante({ tipoComprobante: "TicketNoFiscal" }))).toBe(false);
+  });
+
+  it("otra nota no: no se apilan", () => {
+    expect(admiteNotaDebito(comprobante({ tipoComprobante: "NotaCreditoB" }))).toBe(false);
+    expect(admiteNotaDebito(comprobante({ tipoComprobante: "NotaDebitoB" }))).toBe(false);
+  });
+
+  it("una anulada no: la operación se dio de baja", () => {
+    expect(admiteNotaDebito(comprobante({ estado: "ANULADA" }))).toBe(false);
+  });
+});
+
 describe("esAnulable", () => {
   it("una factura completada es anulable", () => {
     expect(esAnulable(comprobante())).toBe(true);
@@ -96,6 +116,9 @@ describe("esAnulable", () => {
   });
   it("una nota de crédito no es anulable", () => {
     expect(esAnulable(comprobante({ tipoComprobante: "NotaCreditoB" }))).toBe(false);
+  });
+  it("una nota de débito tampoco: se corrige con una NC sobre la factura", () => {
+    expect(esAnulable(comprobante({ tipoComprobante: "NotaDebitoB" }))).toBe(false);
   });
 });
 
@@ -181,6 +204,44 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
         ).leyenda,
       ).toBeUndefined();
     });
+  });
+
+  /**
+   * Una ND no vende productos —`ItemVenta` exige `productoId`— así que llega
+   * sin ítems. Sin este caso el comprobante se imprimiría con el cuerpo vacío:
+   * total abajo y nada arriba explicándolo.
+   */
+  it("una nota de débito arma su única línea con el concepto", () => {
+    const nd = comprobante({
+      tipoComprobante: "NotaDebitoA",
+      items: [],
+      conceptoLibre: "Intereses por pago fuera de término",
+      total: "121",
+    });
+    const d = datosTicketDeComprobante(nd, CONFIG);
+
+    expect(d.lineas).toHaveLength(1);
+    expect(d.lineas[0]?.descripcion).toBe("Intereses por pago fuera de término");
+    expect(d.lineas[0]?.importe.aDecimalString(2)).toBe("121.00");
+    expect(d.lineas[0]?.cantidad.aDecimalString(0)).toBe("1");
+  });
+
+  it("una venta normal sigue armando las líneas desde sus ítems", () => {
+    const c = comprobante({
+      items: [
+        {
+          id: "i1",
+          cantidad: "2",
+          precioUnitario: "100",
+          subtotal: "200",
+          producto: { id: "p1", nombre: "Gaseosa", codigo: "G1" },
+        },
+      ],
+      conceptoLibre: null,
+    });
+    const d = datosTicketDeComprobante(c, CONFIG);
+    expect(d.lineas).toHaveLength(1);
+    expect(d.lineas[0]?.descripcion).toBe("Gaseosa");
   });
 
   it("una nota de crédito dice qué comprobante corrige", () => {

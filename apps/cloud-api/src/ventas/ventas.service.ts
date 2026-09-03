@@ -6,11 +6,21 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'node:crypto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { EstadoFiscal, MedioPago, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MotorDeRespaldo } from '../respaldo/motor-de-respaldo';
-import { codigoComprobanteArcaOpcional, type DesgloseIva } from '@nexosoft/domain';
+import {
+  ALICUOTAS_IVA,
+  codigoComprobanteArcaOpcional,
+  desglosarIvaIncluido,
+  desgloseSinDiscriminar,
+  letraDe,
+  Money,
+  type DesgloseIva,
+  type TipoComprobante,
+} from '@nexosoft/domain';
 import type { ReceptorArca } from './cae/receptor-arca';
 import {
   ErrorCaeNoDisponible,
@@ -26,6 +36,7 @@ import { fechaDeVenta } from './fecha-de-venta';
 import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
+import type { EmitirNotaDebitoDto } from './dto/emitir-nota-debito.dto';
 import { expandirStockDeVenta, type ComponenteCombo } from './combo';
 import { asignarFefo, type LoteConSaldo } from '../stock/fefo';
 
@@ -140,8 +151,10 @@ export class VentasService {
     if (original.estado === 'ANULADA') {
       throw new BadRequestException('El comprobante ya está anulado');
     }
-    if (original.tipoComprobante?.startsWith('NotaCredito')) {
-      throw new BadRequestException('No se puede anular una Nota de Crédito');
+    // Ninguna nota se anula. Anular una NC sería emitir una NC de una NC, y
+    // anular una ND es exactamente lo que hace una NC sobre la factura.
+    if (original.tipoComprobante?.startsWith('Nota')) {
+      throw new BadRequestException('No se puede anular una nota de crédito ni de débito');
     }
 
     const tipoNc = notaCreditoDe(original.tipoComprobante);
@@ -241,6 +254,127 @@ export class VentasService {
     );
 
     return { anulada: await this.obtener(sucursalId, id), notaCredito };
+  }
+
+  /**
+   * Emite una **Nota de Débito** sobre un comprobante ya emitido.
+   *
+   * Es la contracara de `anular`, y las diferencias importan:
+   *
+   *  - **No anula nada.** El comprobante original sigue vigente y sin tocar;
+   *    la nota se suma aparte.
+   *  - **Monto propio.** No sale por el total del original: sale por lo que se
+   *    está debitando (intereses, un flete, un ajuste de precio).
+   *  - **No mueve stock.** No hay mercadería yendo ni viniendo; es plata.
+   *  - **Suma a la cuenta corriente** si el original era fiado, porque el
+   *    cliente ahora debe más.
+   *
+   * Lo que sí comparte con la NC: hereda la letra del original, viaja con
+   * `CbtesAsoc` —ARCA la rechaza sin eso— y si ARCA no responde se registra
+   * igual y el CAE se consigue después.
+   */
+  async emitirNotaDebito(sucursalId: string, id: string, dto: EmitirNotaDebitoDto) {
+    const original = await this.obtener(sucursalId, id);
+    if (!esComprobanteFiscal(original.tipoComprobante ?? 'TicketNoFiscal')) {
+      throw new BadRequestException(
+        'Un ticket no fiscal no admite Nota de Débito: no es un comprobante ante ARCA.',
+      );
+    }
+    if (original.tipoComprobante?.startsWith('Nota')) {
+      throw new BadRequestException('No se puede emitir una Nota de Débito sobre otra nota.');
+    }
+    // Debitarle algo a un comprobante anulado no tiene sentido: lo que se
+    // estaría cobrando pertenece a una operación que se dio de baja.
+    if (original.estado === 'ANULADA') {
+      throw new BadRequestException(
+        'No se puede emitir una Nota de Débito sobre un comprobante anulado.',
+      );
+    }
+    const monto = new Decimal(dto.monto);
+    if (monto.lte(0)) {
+      throw new BadRequestException('El monto de la Nota de Débito debe ser mayor a cero.');
+    }
+
+    const tipoNd = notaDebitoDe(original.tipoComprobante);
+    // El desglose se calcula sobre el monto de la NOTA, no sobre el del
+    // original: son importes distintos. Sin ítems reales que consultar, se usa
+    // la alícuota general — un débito por intereses o gastos va al 21%.
+    const desgloseNd = desgloseDeMontoUnico(monto, tipoNd);
+    const receptorNd = await this.desgloses.receptorDe(original.clienteId ?? null);
+    const asociados = comprobanteAsociadoDe(original);
+    const fiscal = await this.pedirCae(
+      tipoNd,
+      monto,
+      sucursalId,
+      desgloseNd,
+      receptorNd,
+      new Date(),
+      asociados,
+    );
+    const cae = fiscal.cae;
+
+    const notaDebito = await this.conNumeroUnico(() =>
+      this.prisma.$transaction(async (tx) => {
+        const tipoFinal = cae?.tipoComprobante ?? tipoNd;
+        const numeroComprobante =
+          cae?.numeroComprobante ??
+          (await this.siguienteNumeroNoFiscal(tx, sucursalId, tipoFinal));
+        const nd = await tx.venta.create({
+          data: {
+            // A diferencia de la NC —una por venta— se pueden emitir VARIAS
+            // notas de débito sobre el mismo comprobante (los intereses de un
+            // mes, después los del siguiente), así que el sufijo tiene que ser
+            // único. Se usa un UUID y no `Date.now()`: dos notas emitidas
+            // dentro del mismo milisegundo chocaban contra el unique de
+            // `operacionId`, y el test lo agarró.
+            //
+            // Acá el `operacionId` no da idempotencia como en la venta: la ND
+            // entra por HTTP directo, no por la cola de sync, así que no hay
+            // reintento automático que deduplicar. Lo que evita la nota doble
+            // es el botón deshabilitado mientras se emite.
+            operacionId: `${original.operacionId}-ND-${randomUUID()}`,
+            estado: 'COMPLETADA',
+            subtotal: monto,
+            descuento: new Decimal(0),
+            total: monto,
+            medioPago: original.medioPago,
+            cae: cae?.cae ?? null,
+            caeFechaVto: cae?.caeFechaVto ?? null,
+            estadoFiscal: fiscal.estadoFiscal,
+            motivoFiscal: fiscal.motivo,
+            numeroComprobante,
+            tipoComprobante: tipoFinal,
+            sucursalId,
+            usuarioId: original.usuarioId,
+            terminalId: original.terminalId,
+            clienteId: original.clienteId ?? null,
+            comprobanteAsociadoId: original.id,
+            // Sin `productoId`: no hay mercadería. La línea existe para que el
+            // comprobante tenga qué mostrar y para que el desglose cierre.
+            conceptoLibre: dto.concepto,
+          },
+          include: { items: true },
+        });
+
+        // Fiado: si el original fue a cuenta corriente, el débito también. El
+        // cliente ahora debe más.
+        if (original.medioPago === 'CUENTA_CORRIENTE' && original.clienteId) {
+          await tx.movimientoCuentaCorriente.create({
+            data: {
+              tipo: 'CARGO',
+              monto,
+              concepto: `Nota de Débito: ${dto.concepto}`,
+              clienteId: original.clienteId,
+              sucursalId,
+            },
+          });
+        }
+
+        return nd;
+      }),
+    );
+
+    return { original: await this.obtener(sucursalId, id), notaDebito };
   }
 
   /**
@@ -675,6 +809,37 @@ export function notaCreditoDe(tipoComprobante: string | null): string {
     return tipoComprobante.replace('Factura', 'NotaCredito');
   }
   return 'NotaCreditoB';
+}
+
+/**
+ * Tipo de Nota de Débito que corresponde a un comprobante (hereda la letra).
+ *
+ * A diferencia de `notaCreditoDe`, acá no hay caso `TicketNoFiscal`: un ticket
+ * interno no admite Nota de Débito y el llamador lo rechaza antes.
+ */
+export function notaDebitoDe(tipoComprobante: string | null): string {
+  if (tipoComprobante?.startsWith('Factura')) {
+    return tipoComprobante.replace('Factura', 'NotaDebito');
+  }
+  return 'NotaDebitoB';
+}
+
+/**
+ * Desglose de IVA de un importe suelto, sin ítems de los que sacar la alícuota.
+ *
+ * Lo necesita la Nota de Débito: se emite por intereses, un flete o un ajuste,
+ * no por productos. Un débito de ese tipo va a la **alícuota general (21%)**,
+ * que es el criterio habitual; si algún día hace falta elegirla, el concepto
+ * tendría que venir con su tasa desde la UI.
+ *
+ * En un comprobante C no se discrimina, igual que en la venta.
+ */
+export function desgloseDeMontoUnico(monto: Decimal, tipoComprobante: string): DesgloseIva {
+  const total = Money.desde(monto.toFixed(2));
+  if (letraDe(tipoComprobante as TipoComprobante) === 'C') {
+    return desgloseSinDiscriminar(total);
+  }
+  return desglosarIvaIncluido([{ importe: total, alicuota: ALICUOTAS_IVA.VEINTIUNO }]);
 }
 
 /** ¿El tipo de comprobante requiere CAE de ARCA? (Fase 10.1: TicketNoFiscal no.) */

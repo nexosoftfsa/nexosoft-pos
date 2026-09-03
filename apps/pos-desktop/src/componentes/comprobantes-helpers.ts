@@ -51,6 +51,22 @@ export function esNotaCredito(tipo: string | null): boolean {
   return tipo?.startsWith("NotaCredito") ?? false;
 }
 
+/** Cualquier nota, de crédito o de débito. Ninguna admite otra nota encima. */
+export function esNota(tipo: string | null): boolean {
+  return tipo?.startsWith("Nota") ?? false;
+}
+
+/**
+ * ¿Se le puede emitir una Nota de Débito?
+ *
+ * Sólo a una factura **fiscal**, vigente y que no sea a su vez una nota.
+ * Debitarle algo a un comprobante anulado no tiene sentido: lo que se estaría
+ * cobrando pertenece a una operación que se dio de baja.
+ */
+export function admiteNotaDebito(c: Comprobante): boolean {
+  return esFiscal(c.tipoComprobante) && !esNota(c.tipoComprobante) && c.estado !== "ANULADA";
+}
+
 /**
  * Cómo mostrar el estado de la autorización fiscal.
  *
@@ -92,9 +108,15 @@ export function esFiscal(tipo: string | null): boolean {
   return tipo !== "TicketNoFiscal";
 }
 
-/** Un comprobante es anulable si no está anulado y no es una Nota de Crédito. */
+/**
+ * Un comprobante es anulable si no está anulado y no es una nota.
+ *
+ * Vale para las dos: anular una Nota de Crédito sería emitir una NC de una NC,
+ * y anular una de Débito es exactamente lo que hace una NC — que se emite sobre
+ * la factura, no sobre la nota.
+ */
 export function esAnulable(c: Comprobante): boolean {
-  return c.estado !== "ANULADA" && !esNotaCredito(c.tipoComprobante);
+  return c.estado !== "ANULADA" && !esNota(c.tipoComprobante);
 }
 
 /**
@@ -131,12 +153,7 @@ export function datosTicketDeComprobante(
     ...(esFiscal(c.tipoComprobante) ? { leyenda: "DUPLICADO" as const } : {}),
     ...(asociado !== null ? { comprobanteAsociado: asociado } : {}),
     ...(receptor !== null ? { receptor } : {}),
-    lineas: c.items.map((it) => ({
-      descripcion: it.producto?.nombre ?? it.producto?.codigo ?? "Ítem",
-      cantidad: Cantidad.de(it.cantidad),
-      precioUnitario: Money.desde(it.precioUnitario),
-      importe: Money.desde(it.subtotal),
-    })),
+    lineas: lineasDe(c),
     subtotalesIva: [],
     descuento: Money.desde(c.descuento),
     total: Money.desde(c.total),
@@ -210,6 +227,33 @@ export function comprobanteDeVentaLocal(v: VentaLocal): Comprobante {
     estadoFiscal: estadoFiscalDe(v.estadoCae),
     motivoFiscal: null,
   };
+}
+
+/**
+ * Las líneas que se imprimen de un comprobante.
+ *
+ * Una Nota de Débito no vende productos —`ItemVenta` exige un `productoId`
+ * real— así que llega sin ítems y con un `conceptoLibre`. Sin este caso, una ND
+ * se imprimiría con el cuerpo vacío: total abajo y nada arriba explicándolo.
+ */
+function lineasDe(c: Comprobante): DatosTicket["lineas"] {
+  if (c.items.length === 0 && c.conceptoLibre != null && c.conceptoLibre !== "") {
+    const total = Money.desde(c.total);
+    return [
+      {
+        descripcion: c.conceptoLibre,
+        cantidad: Cantidad.de("1"),
+        precioUnitario: total,
+        importe: total,
+      },
+    ];
+  }
+  return c.items.map((it) => ({
+    descripcion: it.producto?.nombre ?? it.producto?.codigo ?? "Ítem",
+    cantidad: Cantidad.de(it.cantidad),
+    precioUnitario: Money.desde(it.precioUnitario),
+    importe: Money.desde(it.subtotal),
+  }));
 }
 
 /**

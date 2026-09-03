@@ -10,6 +10,7 @@ import {
   type ClienteVentas,
   type EsperandoCae,
   type ResultadoAnulacion,
+  type ResultadoNotaDebito,
   type VerificacionArca,
 } from "./cliente-ventas";
 
@@ -158,5 +159,41 @@ export class ClienteVentasSimulado implements ClienteVentas {
     const anulada: Comprobante = { ...original, estado: "ANULADA" };
     this.comprobantes = [nc, ...this.comprobantes.map((c) => (c.id === id ? anulada : c))];
     return { anulada, notaCredito: nc };
+  }
+
+  async emitirNotaDebito(
+    id: string,
+    monto: string,
+    concepto: string,
+  ): Promise<ResultadoNotaDebito> {
+    const original = this.comprobantes.find((c) => c.id === id);
+    if (!original) throw new ErrorVentas(`Comprobante ${id} no encontrado`, 404);
+    if (original.tipoComprobante === "TicketNoFiscal") {
+      throw new ErrorVentas("Un ticket no fiscal no admite Nota de Débito", 400);
+    }
+    if (original.tipoComprobante?.startsWith("Nota")) {
+      throw new ErrorVentas("No se puede emitir una Nota de Débito sobre otra nota", 400);
+    }
+    if (!(Number(monto) > 0)) {
+      throw new ErrorVentas("El monto de la Nota de Débito debe ser mayor a cero", 400);
+    }
+
+    // El original NO se anula: la nota se suma aparte, con su propio monto.
+    const nd: Comprobante = {
+      ...original,
+      id: `nd-${++this.secuencia}`,
+      tipoComprobante: (original.tipoComprobante ?? "FacturaB").replace("Factura", "NotaDebito"),
+      numeroComprobante: ++this.secuencia,
+      cae: caeSimulado(),
+      creadaEn: new Date().toISOString(),
+      comprobanteAsociadoId: original.id,
+      subtotal: monto,
+      total: monto,
+      descuento: "0",
+      items: [],
+      conceptoLibre: concepto,
+    };
+    this.comprobantes = [nd, ...this.comprobantes];
+    return { original, notaDebito: nd };
   }
 }

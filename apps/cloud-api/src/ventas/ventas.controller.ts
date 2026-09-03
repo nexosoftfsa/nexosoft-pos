@@ -2,6 +2,7 @@ import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/
 import { VentasService } from './ventas.service';
 import { VerificacionArcaService } from './cae/verificacion-arca.service';
 import { CrearVentaDto } from './dto/crear-venta.dto';
+import { EmitirNotaDebitoDto } from './dto/emitir-nota-debito.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 interface UsuarioJwt {
@@ -50,6 +51,19 @@ export class VentasController {
   @Post(':id/anular')
   anular(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
     return this.ventasService.anular(req.user.sucursalId, id);
+  }
+
+  /**
+   * Emite una Nota de Débito sobre este comprobante. **No lo anula**: el
+   * original sigue vigente y la nota se suma aparte, por su propio monto.
+   */
+  @Post(':id/nota-debito')
+  notaDebito(
+    @Request() req: { user: UsuarioJwt },
+    @Param('id') id: string,
+    @Body() dto: EmitirNotaDebitoDto,
+  ) {
+    return this.ventasService.emitirNotaDebito(req.user.sucursalId, id, dto);
   }
 
   /**

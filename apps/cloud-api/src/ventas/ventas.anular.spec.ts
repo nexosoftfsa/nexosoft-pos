@@ -1,7 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
-import { esComprobanteFiscal, notaCreditoDe, resumenMedioPago, VentasService } from './ventas.service';
+import {
+  desgloseDeMontoUnico,
+  esComprobanteFiscal,
+  notaCreditoDe,
+  notaDebitoDe,
+  resumenMedioPago,
+  VentasService,
+} from './ventas.service';
 import { LibroDeVentasEnMemoria } from './libro/libro-de-ventas-en-memoria';
 import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
 
@@ -55,6 +62,33 @@ describe('notaCreditoDe', () => {
   });
   it('un TicketNoFiscal (Fase 10.1) refleja el mismo tipo, no una NC', () => {
     expect(notaCreditoDe('TicketNoFiscal')).toBe('TicketNoFiscal');
+  });
+});
+
+describe('notaDebitoDe', () => {
+  it('hereda la letra de la factura', () => {
+    expect(notaDebitoDe('FacturaA')).toBe('NotaDebitoA');
+    expect(notaDebitoDe('FacturaB')).toBe('NotaDebitoB');
+    expect(notaDebitoDe('FacturaC')).toBe('NotaDebitoC');
+  });
+  it('cae a NotaDebitoB si no reconoce el tipo', () => {
+    expect(notaDebitoDe(null)).toBe('NotaDebitoB');
+  });
+});
+
+describe('desgloseDeMontoUnico', () => {
+  it('un comprobante C no discrimina IVA', () => {
+    const d = desgloseDeMontoUnico(new Decimal('1000'), 'NotaDebitoC');
+    expect(d.iva.aDecimalString(2)).toBe('0.00');
+    expect(d.neto.aDecimalString(2)).toBe('1000.00');
+  });
+
+  it('en A y B el monto va al 21% y las cuentas cierran', () => {
+    const d = desgloseDeMontoUnico(new Decimal('1210'), 'NotaDebitoA');
+    expect(d.neto.aDecimalString(2)).toBe('1000.00');
+    expect(d.iva.aDecimalString(2)).toBe('210.00');
+    // Lo que ARCA valida: neto + IVA + exento tiene que dar el total.
+    expect(d.neto.sumar(d.iva).sumar(d.exento).aDecimalString(2)).toBe('1210.00');
   });
 });
 

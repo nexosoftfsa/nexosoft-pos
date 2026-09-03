@@ -54,6 +54,12 @@ export interface Comprobante {
     readonly condicionIva: string;
     readonly direccion: string | null;
   } | null;
+  /**
+   * Descripción de la única línea de una Nota de Débito ("Intereses por mora").
+   * Una ND no vende productos, así que no tiene `items`: la impresión arma la
+   * línea con este texto y el total.
+   */
+  readonly conceptoLibre?: string | null;
   readonly items: ItemComprobante[];
   /** Desglose de pagos (presente en ventas con pago combinado). */
   readonly pagos?: PagoComprobante[];
@@ -93,6 +99,12 @@ export interface EsperandoCae {
   readonly vencidas: number;
 }
 
+export interface ResultadoNotaDebito {
+  /** El comprobante original, que NO se anula: sigue vigente. */
+  readonly original: Comprobante;
+  readonly notaDebito: Comprobante;
+}
+
 export interface ResultadoAnulacion {
   readonly anulada: Comprobante;
   readonly notaCredito: Comprobante;
@@ -117,6 +129,11 @@ export interface ClienteVentas {
   verificarEnArca(id: string): Promise<VerificacionArca>;
   /** Cuántos comprobantes subidos siguen esperando el CAE. */
   esperandoCae(): Promise<EsperandoCae>;
+  /**
+   * Emite una Nota de Débito sobre un comprobante. **No lo anula**: el original
+   * sigue vigente y la nota se suma aparte, por su propio monto y concepto.
+   */
+  emitirNotaDebito(id: string, monto: string, concepto: string): Promise<ResultadoNotaDebito>;
 }
 
 export class ErrorVentas extends Error {
@@ -151,13 +168,24 @@ export class ClienteVentasHttp implements ClienteVentas {
     return this.pedir<EsperandoCae>("GET", "/ventas/esperando-cae");
   }
 
-  private async pedir<T>(metodo: string, ruta: string): Promise<T> {
+  emitirNotaDebito(id: string, monto: string, concepto: string): Promise<ResultadoNotaDebito> {
+    return this.pedir<ResultadoNotaDebito>("POST", `/ventas/${id}/nota-debito`, {
+      monto,
+      concepto,
+    });
+  }
+
+  private async pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
     const token = this.obtenerToken();
     let res: Response;
     try {
       res = await fetch(`${this.baseUrl}${ruta}`, {
         method: metodo,
-        headers: token !== null ? { Authorization: `Bearer ${token}` } : {},
+        headers: {
+          ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
+          ...(cuerpo !== undefined ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(cuerpo !== undefined ? { body: JSON.stringify(cuerpo) } : {}),
       });
     } catch (e) {
       throw new ErrorVentas(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);

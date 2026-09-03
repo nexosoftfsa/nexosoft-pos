@@ -392,6 +392,11 @@ model Venta {
   comprobanteAsociado   Venta?  @relation("Anulacion", fields: [comprobanteAsociadoId], references: [id])
   notasEmitidas         Venta[] @relation("Anulacion")
 
+  /// Descripción de la única línea de una Nota de Débito ("Intereses por mora").
+  /// Una ND no vende productos —`ItemVenta` exige `productoId`— así que el
+  /// concepto va acá y la impresión arma la línea con este texto y el total.
+  conceptoLibre String?
+
   items           ItemVenta[]
   movimientosStock MovimientoStock[]
   pagos           Pago[]

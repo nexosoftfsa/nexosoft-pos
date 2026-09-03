@@ -22,6 +22,7 @@ import { pesos } from "../formato";
 import { ComprobanteA4 } from "./ComprobanteA4";
 import { ComprobanteTicket } from "./ComprobanteTicket";
 import {
+  admiteNotaDebito,
   avisoFiscal,
   comprobanteDeVentaLocal,
   datosTicketDeComprobante,
@@ -95,6 +96,8 @@ export function Comprobantes({
   const [motivo, setMotivo] = useState<{ titulo: string; texto: string } | null>(null);
   /** La lista salió de la terminal porque el servidor no contestó. */
   const [sinServidor, setSinServidor] = useState(false);
+  /** Comprobante al que se le va a emitir una Nota de Débito, o `null`. */
+  const [notaDebito, setNotaDebito] = useState<Comprobante | null>(null);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -335,6 +338,16 @@ export function Comprobantes({
                           {verificando === c.id ? "Consultando…" : "Verificar en ARCA"}
                         </button>
                       )}
+                      {!sinServidor && admiteNotaDebito(c) && (
+                        <button
+                          type="button"
+                          className="linkbtn"
+                          onClick={() => setNotaDebito(c)}
+                          title="Cobrar algo adicional sobre este comprobante (no lo anula)"
+                        >
+                          Nota de Débito
+                        </button>
+                      )}
                       {!sinServidor && esAnulable(c) && (
                         <button
                           type="button"
@@ -355,6 +368,21 @@ export function Comprobantes({
 
       {reimprimir !== null && (
         <ModalReimpresion comprobante={reimprimir} config={config} onCerrar={() => setReimprimir(null)} />
+      )}
+
+      {notaDebito !== null && (
+        <ModalNotaDebito
+          cliente={cliente}
+          comprobante={notaDebito}
+          onCerrar={() => setNotaDebito(null)}
+          onEmitida={(nd) => {
+            setNotaDebito(null);
+            setAviso(
+              `Se emitió la ${etiquetaTipoComprobante(nd.tipoComprobante)} ${numeroComprobante(nd.numeroComprobante)}.`,
+            );
+            void cargar();
+          }}
+        />
       )}
 
       {verificacion !== null && (
@@ -439,6 +467,114 @@ function ResultadoVerificacion({
         <div className="sync-detalle-acciones">
           <button className="primario" onClick={onCerrar}>
             Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Emitir una Nota de Débito sobre un comprobante.
+ *
+ * Se pide monto y concepto porque una ND, a diferencia de la anulación, no sale
+ * por el total del original: se emite por lo que se está cobrando de más
+ * (intereses, un flete, un ajuste). El concepto se imprime como única línea del
+ * comprobante, así que tiene que ser algo que el cliente entienda.
+ */
+function ModalNotaDebito({
+  cliente,
+  comprobante,
+  onCerrar,
+  onEmitida,
+}: {
+  cliente: ClienteVentas;
+  comprobante: Comprobante;
+  onCerrar: () => void;
+  onEmitida: (nd: Comprobante) => void;
+}) {
+  const [monto, setMonto] = useState("");
+  const [concepto, setConcepto] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [emitiendo, setEmitiendo] = useState(false);
+
+  const montoValido = Number(monto.replace(",", ".")) > 0;
+  const conceptoValido = concepto.trim().length >= 3;
+
+  async function emitir() {
+    if (!montoValido) {
+      setError("Poné un monto mayor a cero.");
+      return;
+    }
+    if (!conceptoValido) {
+      setError("Escribí el concepto: es lo que va a leer el cliente en el comprobante.");
+      return;
+    }
+    setEmitiendo(true);
+    setError(null);
+    try {
+      const r = await cliente.emitirNotaDebito(
+        comprobante.id,
+        monto.replace(",", "."),
+        concepto.trim(),
+      );
+      onEmitida(r.notaDebito);
+    } catch (e) {
+      setError(mensajeError(e));
+      setEmitiendo(false);
+    }
+  }
+
+  return (
+    <div className="modal modal--show" onClick={onCerrar}>
+      <div className="modal__box" onClick={(e) => e.stopPropagation()}>
+        <div className="modal__head">
+          <h3>Nota de Débito</h3>
+          <button type="button" className="modal__x" onClick={onCerrar} aria-label="Cerrar">
+            ×
+          </button>
+        </div>
+        <div className="modal__body">
+          <p className="muted">
+            Sobre {etiquetaTipoComprobante(comprobante.tipoComprobante)}{" "}
+            {numeroComprobante(comprobante.numeroComprobante)} de {money(comprobante.total)}. El
+            comprobante original <strong>no se anula</strong>: la nota se suma aparte.
+          </p>
+          <div className="field">
+            <label htmlFor="nd-monto">Monto a debitar</label>
+            <input
+              id="nd-monto"
+              className="input"
+              inputMode="decimal"
+              placeholder="0,00"
+              value={monto}
+              onChange={(e) => setMonto(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="nd-concepto">Concepto</label>
+            <input
+              id="nd-concepto"
+              className="input"
+              placeholder="Ej.: intereses por pago fuera de término"
+              value={concepto}
+              onChange={(e) => setConcepto(e.target.value)}
+            />
+            <div className="config-ayuda">Se imprime en el comprobante, tal cual lo escribas.</div>
+          </div>
+          {error !== null && <div className="error">{error}</div>}
+        </div>
+        <div className="modal__foot">
+          <button type="button" className="pill-btn" onClick={onCerrar} disabled={emitiendo}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void emitir()}
+            disabled={emitiendo}
+          >
+            {emitiendo ? "Emitiendo…" : "Emitir Nota de Débito"}
           </button>
         </div>
       </div>
