@@ -1,0 +1,224 @@
+===========================================================================
+  NEXOSOFT - FACTURA A, FACTURA B Y NOTAS DE DEBITO
+  Para: Sebastian
+  Tiempo: 40 minutos
+===========================================================================
+
+DE QUE VA ESTA
+---------------
+Hasta ahora el POS emitio SOLO Factura C, porque es lo unico que puede emitir
+un Monotributo. Las letras A y B estaban programadas de punta a punta pero
+nunca se emitio ninguna, y al mirarlas de cerca faltaba todo lo del PAPEL: los
+datos del receptor, el IVA discriminado, la letra grande, el ORIGINAL.
+
+Tambien se agregaron las Notas de Debito, que no existian como boton.
+
+DOS COSAS QUE TENES QUE SABER ANTES DE EMPEZAR
+-----------------------------------------------
+1. HAY QUE PASAR EL POS A HOMOLOGACION.
+
+   Tu CUIT figura como Monotributo en el padron de ARCA, asi que en PRODUCCION
+   ARCA NO te va a autorizar una Factura A ni una B: te las va a rechazar, y
+   con razon. En homologacion si.
+
+   O sea que esta prueba entera va en homologacion. Es a proposito.
+
+2. HAY QUE PONER EL EMISOR EN "RESPONSABLE INSCRIPTO".
+
+   Es lo que hace que el POS arme una A o una B en vez de una C. Mientras este
+   asi, no vas a poder emitir C. Como tu PC es banco de pruebas y no vendes de
+   verdad, no rompe nada; al final te digo como volver.
+
+Versiones de esta prueba:  POS 0.1.56  -  Servidor 0.15.0
+Punto seguro anterior: POS 0.1.55 + Servidor 0.14.1.
+(El servidor toca la base pero solo AGREGA una columna: se puede volver atras.)
+
+
+PASO 1 - ACTUALIZAR Y CONFIGURAR
+---------------------------------
+1.1 Actualiza servidor a 0.15.0 y POS a 0.1.56.
+
+    [ ] Servidor 0.15.0
+    [ ] POS 0.1.56
+
+1.2 Configuracion > Facturacion electronica (ARCA).
+    Pasa el entorno a HOMOLOGACION.
+
+    [ ] Dice homologacion.
+
+1.3 Configuracion > Facturacion > Condicion frente al IVA.
+    Cambiala a "Responsable Inscripto" y Guarda.
+
+    [ ] Guardado.
+
+1.4 Volve a la pantalla de ventas y mira arriba, donde dice el tipo de
+    comprobante.
+
+    Que dice ahora: ____________________
+    (Deberia decir "Factura B", porque el receptor por defecto es Consumidor
+    Final.)
+
+
+PASO 2 - CREAR UN CLIENTE RESPONSABLE INSCRIPTO
+------------------------------------------------
+Para que salga una Factura A hace falta un cliente con CUIT y condicion
+Responsable Inscripto. Sin eso el POS arma una B.
+
+2.1 Anda a Cuentas Corrientes (o Clientes) > Nuevo cliente.
+
+2.2 Carga:
+    Nombre / Razon social:  Distribuidora Sur SRL
+    CUIT / DNI:             30712345671
+    Condicion IVA:          Responsable Inscripto
+    Direccion:              Av. Corrientes 1234
+
+    (El CUIT es inventado pero le verifique el digito verificador, asi que el
+    sistema lo va a tomar como CUIT y no como "consumidor final". Copialo tal
+    cual: si le cambias un numero deja de ser valido y la Factura A no sale.)
+
+    [ ] Cliente creado.
+
+
+PASO 3 - LA FACTURA A
+----------------------
+3.1 En la pantalla de ventas, elegi ese cliente en el selector "Cliente".
+3.2 Cambia el receptor a "Responsable Inscripto".
+
+    [ ] Arriba ahora dice "Factura A".
+
+    <- Si sigue diciendo B, avisame y para aca.
+
+3.3 Vende algo por $1210 (o lo que quieras) y confirma.
+
+3.4 Mira el ticket. Esto es lo nuevo, mira con calma:
+
+    [ ] Arriba de los items aparecen los datos del cliente:
+        razon social, CUIT, direccion y condicion IVA.
+    [ ] Abajo, antes del TOTAL, dice "Subtotal neto" y despues "IVA 21%"
+        por separado.
+    [ ] Debajo de la fecha dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+3.5 Sacale tambien el A4 (boton "Imprimir A4").
+
+    [ ] Arriba a la derecha hay una letra A grande, en un recuadro.
+    [ ] Tiene un bloque "Receptor" con los datos.
+    [ ] Dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+
+PASO 4 - EL DUPLICADO
+----------------------
+4.1 Anda a Comprobantes y toca "Reimprimir" en esa Factura A.
+
+    [ ] Ahora dice DUPLICADO donde antes decia ORIGINAL.
+    [ ] El resto es igual (receptor, IVA discriminado).
+
+    MANDAME EL PDF.
+
+    La idea es que no anden dando vueltas dos papeles que parezcan cada uno el
+    original.
+
+
+PASO 5 - LA FACTURA B
+----------------------
+5.1 Volve a ventas. NO elijas cliente (deja "Consumidor final") y deja el
+    receptor en "Consumidor Final".
+
+    [ ] Arriba dice "Factura B".
+
+5.2 Vende $1000 y confirma.
+
+    [ ] El ticket NO tiene datos de receptor (es venta al mostrador).
+    [ ] NO discrimina IVA.
+    [ ] Si dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+5.3 Ahora hace otra venta, tambien Factura B, pero ESTA VEZ elegi el cliente
+    Distribuidora Sur SRL (dejando el receptor en Consumidor Final, o
+    Monotributo si preferis, cualquiera menos Responsable Inscripto).
+
+    [ ] Arriba dice "Factura B" (no A, porque el receptor no es RI).
+    [ ] El ticket SI trae los datos del cliente.
+    [ ] Sigue sin discriminar IVA (eso es solo de la A).
+
+    MANDAME EL PDF.
+
+    O sea: en B los datos del cliente son opcionales, salen si elegiste
+    cliente. Es asi a proposito: por la RG 5700/2025 identificar al comprador
+    recien es obligatorio arriba de $10.000.000.
+
+
+PASO 6 - NOTA DE DEBITO
+------------------------
+Esto es completamente nuevo. Una Nota de Debito COBRA algo adicional sobre una
+factura ya emitida (intereses, un flete, un ajuste) y NO anula el original.
+
+6.1 Anda a Comprobantes. Busca la Factura A del paso 3.
+
+    [ ] Al lado de "Anular" hay un boton nuevo "Nota de Debito".
+
+6.2 Tocalo. Se abre un cuadro que dice sobre que comprobante es y aclara que
+    el original NO se anula.
+
+6.3 Carga:
+    Monto:    121
+    Concepto: Intereses por pago fuera de termino
+
+6.4 Emitila.
+
+    [ ] Se emitio y aparece el aviso arriba.
+    [ ] En la lista aparece una "Nota de Debito A" nueva.
+    [ ] La Factura A original SIGUE figurando como Emitida, NO anulada.
+
+    <- Esto ultimo es lo importante. Si te anulo la factura, avisame.
+
+    Numero de la ND: 0002-________
+    CAE de la ND: ______________________________
+
+6.5 Reimprimi la Nota de Debito.
+
+    [ ] Tiene una sola linea que dice "Intereses por pago fuera de termino"
+        por $121.
+    [ ] Dice "Comprobante asociado" con el numero de la Factura A.
+    [ ] Trae su propio CAE y QR.
+
+    MANDAME EL PDF.
+
+6.6 Proba emitir una SEGUNDA Nota de Debito sobre la MISMA factura, por $50,
+    concepto "Gastos administrativos".
+
+    [ ] Deja emitirla (se pueden varias sobre la misma factura).
+
+6.7 Ahora proba tocar "Nota de Debito" sobre una Nota de Credito o sobre una
+    factura anulada.
+
+    [ ] El boton NO aparece en esos casos.
+
+
+PASO 7 - VOLVER A COMO ESTABA (opcional)
+-----------------------------------------
+Si queres dejar la PC como estaba para seguir probando Factura C:
+
+7.1 Configuracion > Condicion frente al IVA > Monotributo.
+7.2 Configuracion > ARCA > entorno PRODUCCION.
+
+Si vas a seguir probando A y B, dejalo como esta.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. PDF del ticket de la Factura A (paso 3.4) <- el mas importante
+  2. PDF del A4 de la Factura A, para ver la letra grande (paso 3.5)
+  3. PDF de la reimpresion, que tiene que decir DUPLICADO (paso 4.1)
+  4. PDF de las dos Facturas B, con y sin cliente (pasos 5.2 y 5.3)
+  5. PDF de la Nota de Debito (paso 6.5) y si la factura original quedo
+     intacta (paso 6.4)
+
+Lo de siempre: si algo no coincide con lo que dice aca, anotalo aunque parezca
+menor. Nunca emitimos una A ni una B, asi que es muy posible que aparezca algo.
+===========================================================================
