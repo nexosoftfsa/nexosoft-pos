@@ -19,14 +19,23 @@
 #   cloudflared tunnel login
 #
 # Uso:
-#   .\scripts\release\generar-codigo-cliente.ps1 -ComercioId lagus -Nombre "Lagus Minimarket" -ConAccesoRemoto
-#   .\scripts\release\generar-codigo-cliente.ps1 -ComercioId kiosco -Nombre "Kiosco 24hs"
+#   .\scripts\release\generar-codigo-cliente.ps1 -ComercioId lagus -Nombre "Lagus Minimarket" -Plan PLUS -ConAccesoRemoto
+#   .\scripts\release\generar-codigo-cliente.ps1 -ComercioId kiosco -Nombre "Kiosco 24hs" -Plan BASICA -Precio 50
 
 param(
     # Identificador del comercio: minusculas, sin espacios. Es tambien el
     # subdominio si se pide acceso remoto.
     [Parameter(Mandatory = $true)][string]$ComercioId,
     [Parameter(Mandatory = $true)][string]$Nombre,
+    # Plan contratado (ADR-0067). Es OBLIGATORIO a proposito: si tuviera un
+    # valor por defecto, un alta apurada dejaria al comercio en un plan que
+    # nadie eligio, y nos enterariamos el dia que reclame una funcion que
+    # pago. Mismo criterio que hizo juntar la suscripcion y el tunel acá.
+    [Parameter(Mandatory = $true)][ValidateSet("BASICA", "PLUS", "PREMIUM")][string]$Plan,
+    # Lo acordado por mes. Se registra en el panel, no se cobra solo.
+    # Importe en texto decimal, nunca con coma: 50, 85, 62000.50
+    [ValidatePattern('^\d{1,9}(\.\d{1,2})?$')][string]$Precio,
+    [ValidateSet("USD", "ARS")][string]$Moneda = "USD",
     # Fecha del proximo pago (YYYY-MM-DD). Por defecto, un mes desde hoy.
     [string]$VencePagoEl,
     # Crea ademas el tunel para ver el panel de reportes desde afuera.
@@ -68,7 +77,9 @@ $token = (Get-Content $archivoToken -Raw).Trim()
 # --- 1. Alta en el panel de clientes ---------------------------------------
 
 Titulo "Alta en el panel de clientes"
-$cuerpo = @{ comercioId = $comercio; nombre = $Nombre; vencePagoEl = $VencePagoEl } | ConvertTo-Json -Compress
+$alta = @{ comercioId = $comercio; nombre = $Nombre; vencePagoEl = $VencePagoEl; plan = $Plan }
+if ($Precio) { $alta.precioMensual = @{ moneda = $Moneda; importe = $Precio } }
+$cuerpo = $alta | ConvertTo-Json -Compress
 try {
     $cliente = Invoke-RestMethod -Uri ($UrlPanel + "/api/clientes") -Method Post `
         -Headers @{ Authorization = ("Bearer " + $token) } -ContentType "application/json" `
@@ -77,7 +88,14 @@ try {
     Write-Error ("No se pudo dar de alta el comercio en el panel: " + $_.Exception.Message)
     exit 1
 }
-Ok ($cliente.nombre + " - estado " + $cliente.estado + ", proximo pago " + $cliente.vencePagoEl)
+$linea = $cliente.nombre + " - plan " + $cliente.plan + ", estado " + $cliente.estado +
+    ", proximo pago " + $cliente.vencePagoEl
+if ($cliente.precioMensual) {
+    $linea += ", " + $cliente.precioMensual.moneda + " " + $cliente.precioMensual.importe + " por mes"
+} else {
+    $linea += ", sin precio cargado"
+}
+Ok $linea
 
 # --- 2. Tunel de acceso remoto (opcional) ----------------------------------
 

@@ -146,7 +146,9 @@ async function apiPanel(pedido: Request, env: Env, ruta: string): Promise<Respon
       historial: existente?.historial ?? [],
     };
     await guardarCliente(env.CLIENTES, cliente);
-    return json(cliente);
+    // Con el estado efectivo, igual que las otras dos rutas: quien da de alta
+    // desde un script quiere ver en qué quedó, no tener que deducirlo.
+    return json({ ...cliente, estado: estadoEfectivo(cliente, hoy) });
   }
 
   const cambioEstado = /^\/api\/clientes\/([^/]+)\/estado$/.exec(ruta);
