@@ -1,5 +1,11 @@
 /**
- * Worker de licencias y panel de clientes (Fase 17.B.2, ADR-0056).
+ * Worker de licencias y panel de clientes (Fase 17.B.2, ADR-0056 y ADR-0067).
+ *
+ * El estado de cada comercio **se deriva de su fecha de pago** y se calcula al
+ * emitir la licencia; el panel sólo fija excepciones (`estadoManual`). Por eso
+ * acá no hay ninguna tarea programada: no puede haber un cron que no corrió,
+ * ni un estado guardado que quedó viejo. El bloqueo, en cambio, nunca es
+ * automático — sale de que alguien apriete el botón.
  *
  * Un solo Worker con dos caras, según el hostname:
  *
@@ -14,11 +20,15 @@
 import { firmarLicencia } from "./firmar";
 import {
   esEstadoValido,
+  esPlanValido,
+  esPrecioValido,
+  estadoEfectivo,
   guardarCliente,
   leerCliente,
   licenciaDe,
   listarClientes,
   permitirBloqueo,
+  registrarPago,
   soloFecha,
   type Cliente,
 } from "./clientes";
@@ -92,20 +102,43 @@ async function emitirLicencia(pedido: Request, env: Env): Promise<Response> {
 async function apiPanel(pedido: Request, env: Env, ruta: string): Promise<Response> {
   if (!autorizado(pedido, env)) return json({ error: "No autorizado" }, 401);
 
+  const hoy = soloFecha(new Date());
+
   if (ruta === "/api/clientes" && pedido.method === "GET") {
-    return json(await listarClientes(env.CLIENTES));
+    const clientes = await listarClientes(env.CLIENTES);
+    // El panel muestra el estado **efectivo** (lo fijado a mano, o lo que dice
+    // el calendario) y además si ese comercio va en automático.
+    return json(
+      clientes.map((c) => ({
+        ...c,
+        estado: estadoEfectivo(c, hoy),
+        automatico: c.estadoManual === null || c.estadoManual === undefined,
+      })),
+    );
   }
 
   if (ruta === "/api/clientes" && pedido.method === "POST") {
     const cuerpo = (await pedido.json()) as Partial<Cliente>;
     const comercioId = (cuerpo.comercioId ?? "").trim();
     if (comercioId === "") return json({ error: "Falta comercioId" }, 400);
+    if (cuerpo.plan !== undefined && !esPlanValido(cuerpo.plan)) {
+      return json({ error: "Plan inválido" }, 400);
+    }
+    if (cuerpo.precioMensual != null && !esPrecioValido(cuerpo.precioMensual)) {
+      return json({ error: "Precio inválido: se espera { moneda: \"USD\", importe: \"50\" }" }, 400);
+    }
     const existente = await leerCliente(env.CLIENTES, comercioId);
     const cliente: Cliente = {
       comercioId,
       nombre: cuerpo.nombre ?? existente?.nombre ?? comercioId,
-      estado: esEstadoValido(cuerpo.estado) ? cuerpo.estado : (existente?.estado ?? "ACTIVA"),
-      vencePagoEl: cuerpo.vencePagoEl ?? existente?.vencePagoEl ?? soloFecha(new Date()),
+      // El alta nunca fija estado: nace en automático y escala por fecha.
+      estadoManual: existente?.estadoManual ?? null,
+      // Un alta sin plan nace en BASICA — es una decisión explícita del alta,
+      // distinta de la regla de `normalizar`, donde un registro VIEJO sin plan
+      // queda en PREMIUM para no quitarle módulos a quien ya los tenía.
+      plan: cuerpo.plan ?? existente?.plan ?? "BASICA",
+      vencePagoEl: cuerpo.vencePagoEl ?? existente?.vencePagoEl ?? hoy,
+      precioMensual: cuerpo.precioMensual ?? existente?.precioMensual ?? null,
       mensaje: cuerpo.mensaje ?? existente?.mensaje ?? null,
       creadoEn: existente?.creadoEn ?? new Date().toISOString(),
       ultimoContacto: existente?.ultimoContacto ?? null,
@@ -120,14 +153,16 @@ async function apiPanel(pedido: Request, env: Env, ruta: string): Promise<Respon
   if (cambioEstado !== null && pedido.method === "POST") {
     const comercioId = decodeURIComponent(cambioEstado[1] ?? "");
     const cuerpo = (await pedido.json()) as { estado?: unknown; mensaje?: unknown };
-    if (!esEstadoValido(cuerpo.estado)) return json({ error: "Estado inválido" }, 400);
+    // `null` es válido y significa "volvé a automático".
+    const nuevo = cuerpo.estado === null ? null : cuerpo.estado;
+    if (nuevo !== null && !esEstadoValido(nuevo)) return json({ error: "Estado inválido" }, 400);
 
     const cliente = await leerCliente(env.CLIENTES, comercioId);
     if (cliente === null) return json({ error: "No existe ese comercio" }, 404);
 
     // Válvula de seguridad: bloquear tiene tope diario, desbloquear no.
-    if (cuerpo.estado === "BLOQUEADA" && cliente.estado !== "BLOQUEADA") {
-      const permitido = await permitirBloqueo(env.CLIENTES, soloFecha(new Date()));
+    if (nuevo === "BLOQUEADA" && estadoEfectivo(cliente, hoy) !== "BLOQUEADA") {
+      const permitido = await permitirBloqueo(env.CLIENTES, hoy);
       if (!permitido) {
         return json(
           {
@@ -139,14 +174,32 @@ async function apiPanel(pedido: Request, env: Env, ruta: string): Promise<Respon
       }
     }
 
-    cliente.estado = cuerpo.estado;
+    cliente.estadoManual = nuevo;
     if (typeof cuerpo.mensaje === "string") cliente.mensaje = cuerpo.mensaje.trim() || null;
-    cliente.historial = [
-      ...(cliente.historial ?? []),
-      { fecha: new Date().toISOString(), estado: cuerpo.estado },
-    ].slice(-50);
+    const anotacion =
+      nuevo === null
+        ? { fecha: new Date().toISOString(), estado: null, nota: "automático" }
+        : { fecha: new Date().toISOString(), estado: nuevo };
+    cliente.historial = [...(cliente.historial ?? []), anotacion].slice(-50);
     await guardarCliente(env.CLIENTES, cliente);
-    return json(cliente);
+    return json({ ...cliente, estado: estadoEfectivo(cliente, hoy) });
+  }
+
+  // "El cliente pagó": corre la fecha un mes y levanta cualquier estado manual,
+  // bloqueo incluido. Desbloquear es siempre inmediato (ADR-0056 §1).
+  const pago = /^\/api\/clientes\/([^/]+)\/pago$/.exec(ruta);
+  if (pago !== null && pedido.method === "POST") {
+    const comercioId = decodeURIComponent(pago[1] ?? "");
+    const cliente = await leerCliente(env.CLIENTES, comercioId);
+    if (cliente === null) return json({ error: "No existe ese comercio" }, 404);
+
+    const pagado = registrarPago(cliente, hoy);
+    pagado.historial = [
+      ...(cliente.historial ?? []),
+      { fecha: new Date().toISOString(), estado: null, nota: `pago hasta ${pagado.vencePagoEl}` },
+    ].slice(-50);
+    await guardarCliente(env.CLIENTES, pagado);
+    return json({ ...pagado, estado: estadoEfectivo(pagado, hoy) });
   }
 
   return json({ error: "No encontrado" }, 404);

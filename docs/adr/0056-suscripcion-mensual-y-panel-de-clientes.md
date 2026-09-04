@@ -224,3 +224,41 @@ más costaría mucho y se rompería igual.
 3. **17.B.3 — alta automática.** Que dar de alta un comercio desde el panel
    cree también el túnel y el subdominio de ADR-0055 vía API de Cloudflare,
    y genere el código de activación.
+
+## Revisión 2026-09-03: el escalado no era automático
+
+Las consecuencias de arriba dicen que los tres escalones son "automáticos: el
+sistema avisa solo y escala solo, sin que nadie tenga que acordarse de llamar".
+**No lo eran.** El estado se guardaba en KV como un campo fijo y la licencia lo
+copiaba tal cual; el recordatorio y la advertencia salían únicamente de que
+alguien moviera el desplegable del panel. Con un comercio se sostiene, con diez
+no: es exactamente el trabajo manual que la ADR decía haber eliminado.
+
+Lo que cambió:
+
+1. **El estado se deriva de `vencePagoEl`**, y se calcula al emitir la
+   licencia: recordatorio desde 7 días antes, advertencia al vencer. No hay
+   estado guardado que pueda quedar viejo.
+2. **No hay tarea programada.** Se evaluó un cron diario en el Worker que
+   reescribiera los registros y se descartó: un cron puede no correr, puede
+   correr dos veces y agrega un estado intermedio que puede desincronizarse.
+   Derivar el estado al emitir es más simple y no puede quedar desfasado.
+3. **`estadoManual` es la excepción, no la regla.** El panel fija un estado a
+   mano cuando hace falta (perdonarle unos días a un cliente, o bloquearlo) y
+   ese valor gana sobre el calendario hasta que se lo devuelve a automático.
+   **`BLOQUEADA` sólo se alcanza así**: el escalado automático nunca bloquea.
+   Bloquear deja gente sin poder trabajar; es una decisión que se aprieta, no
+   un efecto secundario de que se cumpla una fecha. Un bug de fechas que
+   pudiera bloquear apagaría cajas solo, y el tope diario no protege de eso
+   porque el tope existe para frenar a una persona.
+4. **Botón "Pagó"**: corre el vencimiento un mes conservando el día acordado y
+   devuelve el comercio a automático, bloqueo incluido. Antes, registrar un
+   pago obligaba a rehacer el alta con el mismo id — el panel no tenía forma de
+   mover la fecha.
+5. **Precio por comercio** en el registro KV (`moneda` + `importe` como texto
+   decimal, nunca `number`). El cobro sigue siendo manual: el panel registra lo
+   acordado, no lo ejecuta.
+
+Queda pendiente de la ADR original el **segundo factor (TOTP) para las acciones
+peligrosas** del §1: hoy el panel se protege con el token, la confirmación y el
+tope diario de bloqueos, pero no con TOTP.
