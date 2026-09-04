@@ -1,5 +1,5 @@
 import type { EjecutorSql } from "@nexosoft/app";
-import { EstadoSuscripcion, type EstadoLicencia } from "@nexosoft/licencias";
+import { EstadoSuscripcion, Plan, planDeLicencia, type EstadoLicencia } from "@nexosoft/licencias";
 import { guardarAjuste, leerAjuste } from "./ajustes-sqlite";
 
 /**
@@ -17,6 +17,8 @@ const CLAVE_ESTADO = "suscripcion_estado";
 /** Estado permisivo: es lo que se usa mientras no se sepa nada. */
 export const SUSCRIPCION_ACTIVA: EstadoLicencia = {
   estado: EstadoSuscripcion.Activa,
+  // Mientras no sepamos el plan, están todos los módulos (ADR-0067 §2).
+  plan: Plan.Premium,
   puedeVender: true,
   aviso: null,
   sinValidar: false,
@@ -36,6 +38,10 @@ export function parsearEstadoGuardado(texto: string | null): EstadoLicencia {
     }
     return {
       estado: crudo.estado as EstadoSuscripcion,
+      // El plan también se guarda: el POS gatea el menú por plan y tiene que
+      // poder hacerlo sin el servidor. Un plan corrupto cae en Premium, por la
+      // misma razón que un estado corrupto deja vender.
+      plan: planDeLicencia(crudo.plan),
       // Sólo BLOQUEADA impide vender; cualquier otra cosa deja operar.
       puedeVender: crudo.estado !== EstadoSuscripcion.Bloqueada,
       aviso: typeof crudo.aviso === "string" ? crudo.aviso : null,

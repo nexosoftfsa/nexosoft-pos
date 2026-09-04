@@ -1,4 +1,5 @@
 import { EstadoSuscripcion, type EstadoLicencia, type Licencia } from "./licencia";
+import { Plan, planDeLicencia } from "./plan";
 
 /**
  * Resuelve el estado efectivo de la suscripción a partir de la última
@@ -21,6 +22,8 @@ export function evaluarLicencia(
   if (licencia === null) {
     return {
       estado: EstadoSuscripcion.Activa,
+      // Sin licencia todavía no sabemos el plan; se deja todo habilitado.
+      plan: Plan.Premium,
       puedeVender: true,
       aviso: null,
       sinValidar: true,
@@ -28,10 +31,12 @@ export function evaluarLicencia(
   }
 
   const vencido = new Date(licencia.validaHasta).getTime() < ahora.getTime();
+  const plan = planDeLicencia(licencia.plan);
 
   if (licencia.estado === EstadoSuscripcion.Bloqueada) {
     return {
       estado: EstadoSuscripcion.Bloqueada,
+      plan,
       puedeVender: false,
       aviso:
         licencia.mensaje ??
@@ -44,6 +49,7 @@ export function evaluarLicencia(
     // Token viejo y no renovable: se avisa, no se bloquea.
     return {
       estado: EstadoSuscripcion.Advertencia,
+      plan,
       puedeVender: true,
       aviso: `No se pudo validar la suscripción desde el ${soloFecha(licencia.validaHasta)}. Revisá la conexión a internet o comunicate con NexoSoft.`,
       sinValidar: true,
@@ -54,6 +60,7 @@ export function evaluarLicencia(
     case EstadoSuscripcion.Activa:
       return {
         estado: EstadoSuscripcion.Activa,
+        plan,
         puedeVender: true,
         aviso: null,
         sinValidar: false,
@@ -61,6 +68,7 @@ export function evaluarLicencia(
     case EstadoSuscripcion.Recordatorio:
       return {
         estado: EstadoSuscripcion.Recordatorio,
+        plan,
         puedeVender: true,
         aviso: licencia.mensaje ?? `Tu próximo pago vence el ${formatear(licencia.vencePagoEl)}.`,
         sinValidar: false,
@@ -68,6 +76,7 @@ export function evaluarLicencia(
     case EstadoSuscripcion.Advertencia:
       return {
         estado: EstadoSuscripcion.Advertencia,
+        plan,
         puedeVender: true,
         aviso:
           licencia.mensaje ??

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { evaluarLicencia } from "./evaluar-licencia";
 import { EstadoSuscripcion, type Licencia } from "./licencia";
+import { Plan } from "./plan";
 
 const AHORA = new Date("2026-08-23T12:00:00Z");
 
@@ -18,8 +19,9 @@ function licencia(parcial: Partial<Licencia> = {}): Licencia {
 describe("evaluarLicencia", () => {
   describe("al día", () => {
     it("no dice nada y deja vender", () => {
-      expect(evaluarLicencia(licencia(), AHORA)).toEqual({
+      expect(evaluarLicencia(licencia({ plan: Plan.Plus }), AHORA)).toEqual({
         estado: EstadoSuscripcion.Activa,
+        plan: Plan.Plus,
         puedeVender: true,
         aviso: null,
         sinValidar: false,
@@ -96,6 +98,38 @@ describe("evaluarLicencia", () => {
         AHORA,
       );
       expect(r.aviso).toBe("Hablá con Rodrigo al 3704-...");
+    });
+  });
+
+  describe("el plan (ADR-0067 §2)", () => {
+    it("lo pasa tal cual cuando la licencia lo trae", () => {
+      expect(evaluarLicencia(licencia({ plan: Plan.Basica }), AHORA).plan).toBe(Plan.Basica);
+    });
+
+    it("una licencia vieja, sin plan, queda en Premium y no pierde módulos", () => {
+      expect(evaluarLicencia(licencia(), AHORA).plan).toBe(Plan.Premium);
+    });
+
+    it("sin ninguna licencia todavía, también es Premium", () => {
+      expect(evaluarLicencia(null, AHORA).plan).toBe(Plan.Premium);
+    });
+
+    it("el plan sobrevive al bloqueo: se deja de vender, no se baja de plan", () => {
+      const r = evaluarLicencia(
+        licencia({ estado: EstadoSuscripcion.Bloqueada, plan: Plan.Plus }),
+        AHORA,
+      );
+      expect(r.puedeVender).toBe(false);
+      expect(r.plan).toBe(Plan.Plus);
+    });
+
+    it("con el token vencido conserva el plan que tenía", () => {
+      const r = evaluarLicencia(
+        licencia({ plan: Plan.Plus, validaHasta: "2026-08-01T00:00:00Z" }),
+        AHORA,
+      );
+      expect(r.sinValidar).toBe(true);
+      expect(r.plan).toBe(Plan.Plus);
     });
   });
 

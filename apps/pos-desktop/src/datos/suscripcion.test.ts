@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EstadoSuscripcion, type EstadoLicencia } from "@nexosoft/licencias";
+import { EstadoSuscripcion, Plan, type EstadoLicencia } from "@nexosoft/licencias";
 
 import { parsearEstadoGuardado, SUSCRIPCION_ACTIVA, tonoDe } from "./suscripcion";
 
@@ -43,6 +43,30 @@ describe("parsearEstadoGuardado", () => {
     });
   });
 
+  describe("el plan sobrevive al reinicio y al corte (ADR-0067)", () => {
+    it("recuerda el plan guardado, para gatear el menú sin servidor", () => {
+      const r = parsearEstadoGuardado(
+        guardado({ estado: EstadoSuscripcion.Activa, plan: Plan.Basica }),
+      );
+      expect(r.plan).toBe(Plan.Basica);
+    });
+
+    it("un plan corrupto cae en Premium, no en Básica", () => {
+      const r = parsearEstadoGuardado(
+        guardado({ estado: EstadoSuscripcion.Activa, plan: "REGALADO" as never }),
+      );
+      expect(r.plan).toBe(Plan.Premium);
+    });
+
+    it("un bloqueo no baja de plan: se deja de vender, nada más", () => {
+      const r = parsearEstadoGuardado(
+        guardado({ estado: EstadoSuscripcion.Bloqueada, plan: Plan.Plus }),
+      );
+      expect(r.puedeVender).toBe(false);
+      expect(r.plan).toBe(Plan.Plus);
+    });
+  });
+
   it("no confía en el puedeVender guardado: lo deriva del estado", () => {
     // Si alguien edita el SQLite para desbloquearse, el estado sigue mandando.
     const manipulado = guardado({ estado: EstadoSuscripcion.Bloqueada, puedeVender: true });
@@ -70,10 +94,10 @@ describe("tonoDe", () => {
   it("bloqueo es bloqueo", () => {
     expect(
       tonoDe({
+        ...SUSCRIPCION_ACTIVA,
         estado: EstadoSuscripcion.Bloqueada,
         puedeVender: false,
         aviso: "x",
-        sinValidar: false,
       }),
     ).toBe("bloqueo");
   });

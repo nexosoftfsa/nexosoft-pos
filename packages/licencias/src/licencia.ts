@@ -1,10 +1,11 @@
 /**
- * Contrato de la licencia de suscripción (ADR-0056).
+ * Contrato de la licencia de suscripción (ADR-0056, ADR-0067).
  *
  * Este archivo es **puro**: tipos y nada más. La firma se verifica en
  * `cloud-api` con `node:crypto`; acá no puede haber criptografía porque el
  * paquete también lo consume el POS, que corre en un navegador.
  */
+import type { Plan } from "./plan";
 
 /** Estado de la suscripción de un comercio. */
 export enum EstadoSuscripcion {
@@ -26,6 +27,12 @@ export interface Licencia {
   /** Identificador que le asignamos al comercio en el alta (ej. `"lagus"`). */
   readonly comercioId: string;
   readonly estado: EstadoSuscripcion;
+  /**
+   * Plan contratado (ADR-0067). **Opcional a propósito**: las licencias
+   * emitidas antes de ADR-0067 no lo traen, y lo que no viene se interpreta
+   * como Premium (ver `planDeLicencia`).
+   */
+  readonly plan?: Plan | null;
   /** Fecha de pago de la suscripción, ISO `YYYY-MM-DD`. Para mostrar. */
   readonly vencePagoEl: string;
   /** Vencimiento del TOKEN (no de la suscripción), ISO completo. */
@@ -54,6 +61,12 @@ export const PERMITIDO_BLOQUEADA = {
 /** Estado efectivo que ve el resto del sistema, ya resuelto el offline. */
 export interface EstadoLicencia {
   readonly estado: EstadoSuscripcion;
+  /**
+   * Plan ya resuelto: nunca es `null`. Una licencia sin plan (o que no se
+   * pudo obtener) cae en Premium, para no apagarle módulos a un comercio por
+   * una demora nuestra (ADR-0067 §2).
+   */
+  readonly plan: Plan;
   /** `false` sólo cuando el estado es `BLOQUEADA`. */
   readonly puedeVender: boolean;
   /** Mensaje ya armado para mostrarle al comercio, o `null` si no hay nada que decir. */

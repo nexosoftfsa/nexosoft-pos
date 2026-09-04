@@ -15,6 +15,19 @@ export {
 } from "./licencia";
 export { evaluarLicencia } from "./evaluar-licencia";
 export {
+  ETIQUETA_PLAN,
+  ORDEN_PLANES,
+  PLAN_MINIMO,
+  Plan,
+  alcanzaPlan,
+  esModuloId,
+  esPlan,
+  moduloDisponible,
+  planDeLicencia,
+  planQueLoHabilita,
+  type ModuloId,
+} from "./plan";
+export {
   MockProveedorLicencias,
   licenciaActiva,
   type ProveedorLicencias,
