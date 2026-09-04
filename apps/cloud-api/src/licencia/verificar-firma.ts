@@ -1,6 +1,6 @@
 import { createPublicKey, verify } from 'node:crypto';
 import { z } from 'zod';
-import { EstadoSuscripcion, type Licencia } from '@nexosoft/licencias';
+import { EstadoSuscripcion, Plan, type Licencia } from '@nexosoft/licencias';
 
 /**
  * Verificación de la licencia firmada (Fase 17.B, ADR-0056).
@@ -25,6 +25,14 @@ import { EstadoSuscripcion, type Licencia } from '@nexosoft/licencias';
 const LICENCIA_SCHEMA = z.object({
   comercioId: z.string().min(1),
   estado: z.nativeEnum(EstadoSuscripcion),
+  /**
+   * Plan contratado (ADR-0067). Opcional porque las licencias emitidas antes
+   * de ADR-0067 no lo traen, y `.catch()` para que un plan que no conozcamos
+   * —uno nuevo, emitido por un Worker más nuevo que este servidor— no invalide
+   * una licencia por lo demás válida: se ignora y el comercio queda en Premium
+   * (ver `planDeLicencia`), que es el lado seguro.
+   */
+  plan: z.nativeEnum(Plan).nullish().catch(undefined),
   vencePagoEl: z.string().min(8),
   validaHasta: z.string().min(8),
   mensaje: z.string().nullable().optional(),
@@ -74,8 +82,8 @@ export function verificarToken(token: string, clavePublicaBase64: string): Licen
     const datos: unknown = JSON.parse(payload.toString('utf8'));
     const r = LICENCIA_SCHEMA.safeParse(datos);
     if (!r.success) return null;
-    const { mensaje, ...resto } = r.data;
-    return { ...resto, mensaje: mensaje ?? null };
+    const { mensaje, plan, ...resto } = r.data;
+    return { ...resto, mensaje: mensaje ?? null, plan: plan ?? null };
   } catch {
     return null;
   }

@@ -1,6 +1,6 @@
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { describe, it, expect, beforeAll } from 'vitest';
-import { EstadoSuscripcion, type Licencia } from '@nexosoft/licencias';
+import { EstadoSuscripcion, Plan, type Licencia } from '@nexosoft/licencias';
 import { verificarToken } from './verificar-firma';
 
 /**
@@ -30,6 +30,7 @@ beforeAll(() => {
 const LICENCIA: Licencia = {
   comercioId: 'lagus',
   estado: EstadoSuscripcion.Activa,
+  plan: Plan.Plus,
   vencePagoEl: '2026-09-10',
   validaHasta: '2026-08-30T00:00:00Z',
   emitidaEn: '2026-08-23T00:00:00Z',
@@ -51,6 +52,40 @@ describe('verificarToken', () => {
   it('normaliza el mensaje ausente a null', () => {
     const { mensaje: _, ...sinMensaje } = LICENCIA;
     expect(verificarToken(firmar(sinMensaje), clavePublicaBase64)?.mensaje).toBeNull();
+  });
+
+  describe('el plan (ADR-0067)', () => {
+    it('viaja firmado, así el comercio no puede ascenderse solo', () => {
+      expect(verificarToken(firmar(LICENCIA), clavePublicaBase64)?.plan).toBe(Plan.Plus);
+    });
+
+    it('una licencia vieja, emitida antes de que existieran los planes, sigue siendo válida', () => {
+      const { plan: _, ...vieja } = LICENCIA;
+      const r = verificarToken(firmar(vieja), clavePublicaBase64);
+      expect(r).not.toBeNull();
+      // Sin plan explícito: `planDeLicencia` lo va a resolver como Premium.
+      expect(r?.plan).toBeNull();
+    });
+
+    it('un plan que este servidor no conoce no invalida la licencia entera', () => {
+      // Un Worker más nuevo que el servidor podría emitir un plan que acá
+      // todavía no existe. Rechazar el token dejaría al comercio sin licencia
+      // por una diferencia de versión nuestra.
+      const r = verificarToken(firmar({ ...LICENCIA, plan: 'ENTERPRISE' }), clavePublicaBase64);
+      expect(r).not.toBeNull();
+      expect(r?.plan).toBeNull();
+    });
+
+    it('el plan no se puede cambiar sin la clave privada', () => {
+      const token = firmar(LICENCIA);
+      const [, firma] = token.split('.');
+      const ascendida = Buffer.from(
+        JSON.stringify({ ...LICENCIA, plan: Plan.Premium }),
+        'utf8',
+      ).toString('base64url');
+
+      expect(verificarToken(`${ascendida}.${firma}`, clavePublicaBase64)).toBeNull();
+    });
   });
 
   describe('lo que tiene que rechazar', () => {

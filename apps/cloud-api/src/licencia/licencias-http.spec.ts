@@ -1,6 +1,6 @@
 import { generateKeyPairSync, sign, type KeyObject } from 'node:crypto';
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
-import { EstadoSuscripcion, type Licencia } from '@nexosoft/licencias';
+import { EstadoSuscripcion, Plan, type Licencia } from '@nexosoft/licencias';
 import { LicenciasHttp } from './licencias-http';
 
 let clavePublicaBase64: string;
@@ -20,6 +20,7 @@ function firmar(licencia: unknown): string {
 const LICENCIA: Licencia = {
   comercioId: 'lagus',
   estado: EstadoSuscripcion.Activa,
+  plan: Plan.Plus,
   vencePagoEl: '2026-09-10',
   validaHasta: '2026-08-30T00:00:00Z',
   emitidaEn: '2026-08-23T00:00:00Z',
