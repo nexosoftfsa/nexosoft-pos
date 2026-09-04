@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Fecha: 2026-09-02 · Publicado: POS **0.1.54** · Servidor **0.14.0**
+Fecha: 2026-09-03 · Publicado: POS **0.1.56** · Servidor **0.14.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -40,7 +40,10 @@ publicamos anda.
       **Nunca se probó.** Lo que hay que ver es que durante el bloqueo sigan
       andando **cerrar la caja, Reportes y Comprobantes**: un comercio bloqueado
       tiene que poder cerrar el día y sacar sus números, aunque no pueda vender.
+      Con lo del 3/9 hay algo más para mirar en la misma corrida: que **cambiar
+      el plan** desde el panel llegue al POS y aparezcan los candados.
       *Bloquea: cobrar la suscripción. Es nuestro modelo de negocio.*
+      *Antes hay que desplegar el Worker y publicar POS y servidor nuevos.*
 
 - [x] ~~**Actualizar los dos, con migración de base.**~~ El servidor 0.14.0
       agrega una columna al turno de caja: la primera actualización con
@@ -107,6 +110,20 @@ Implementado y con tests, nunca visto sobre el fierro. **No entra en la semana.*
 
 - [ ] **Licencias: la parte legal.** Lo técnico está hecho. Falta el contrato y
       decidir el límite por sucursal.
+
+- [ ] **Planes Básica / Plus / Premium — desplegar** (ADR-0067, hecho el 3/9).
+      El código está: el plan viaja firmado, el `cloud-api` lo impone y el POS
+      muestra los módulos que no entran con candado. Falta lo que no podemos
+      hacer desde acá: `wrangler deploy` del Worker de licencias, publicar POS
+      y servidor nuevos, y recién ahí actualizar
+      `docs/PRUEBA-SUSCRIPCION-SOCIO.txt` con los números de versión reales.
+      *Ojo con el orden: hasta que no esté el servidor nuevo, un comercio con
+      plan Básica sigue viendo todo — que es el lado seguro, pero no se puede
+      cobrar por plan hasta que esté desplegado.*
+
+- [ ] **Los precios de los planes.** Quedaron anotados en ADR-0067 como USD
+      50/75/100 al 3/9. El código no los conoce: viven en el panel, por
+      comercio, y se cambian sin desplegar nada.
 
 - [ ] **Multisucursal.** Postergado a propósito, el rumbo ya está elegido y
       Dropbox descartado. Se retoma después de cerrar esto.
