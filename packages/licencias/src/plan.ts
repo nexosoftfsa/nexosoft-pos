@@ -112,9 +112,15 @@ export function alcanzaPlan(plan: Plan, minimo: Plan): boolean {
   return ORDEN_PLANES.indexOf(plan) >= ORDEN_PLANES.indexOf(minimo);
 }
 
-/** `true` si el comercio, con su plan, tiene habilitado ese módulo. */
+/**
+ * `true` si el comercio, con su plan, tiene habilitado ese módulo.
+ *
+ * Normaliza el plan antes de comparar: un valor que no se entiende cae en
+ * Premium y habilita todo, en vez de caer fuera del orden y bloquearlo todo.
+ * Que un dato roto apague el sistema entero es exactamente lo que no queremos.
+ */
 export function moduloDisponible(modulo: ModuloId, plan: Plan): boolean {
-  return alcanzaPlan(plan, PLAN_MINIMO[modulo]);
+  return alcanzaPlan(planDeLicencia(plan), PLAN_MINIMO[modulo]);
 }
 
 /**

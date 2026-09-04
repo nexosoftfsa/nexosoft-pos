@@ -3,13 +3,16 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
+import { PLAN_MINIMO, Plan } from "@nexosoft/licencias";
 
 import {
   buscarModulo,
   MODULOS,
+  moduloEnPlan,
   moduloInicial,
   modulosVisibles,
   normalizarRol,
+  planDelModulo,
 } from "./modulos";
 
 /**
@@ -101,5 +104,53 @@ describe("buscarModulo", () => {
 
   it("devuelve undefined si no existe", () => {
     expect(buscarModulo("inexistente")).toBeUndefined();
+  });
+});
+
+describe("planes en el menú (ADR-0067)", () => {
+  const modulo = (id: string) => MODULOS.find((m) => m.id === id)!;
+
+  it("todo módulo del menú tiene un plan asignado", () => {
+    for (const m of MODULOS) {
+      expect(PLAN_MINIMO[m.id], `el módulo "${m.id}" no está en la tabla de planes`).toBeDefined();
+    }
+  });
+
+  it("el menú NO filtra por plan: los módulos bloqueados se siguen viendo", () => {
+    // Decisión de ADR-0067 §4: esconderlos sería más prolijo y vendería menos.
+    // El gateo se muestra con candado, no ocultando.
+    const ids = modulosVisibles("ADMIN").map((m) => m.id);
+    expect(ids).toContain("reportes");
+    expect(ids).toContain("ia");
+  });
+
+  it("con Básica se puede entrar a vender, facturar y mover stock", () => {
+    for (const id of ["pos", "caja", "comprobantes", "catalogo", "stock", "config"]) {
+      expect(moduloEnPlan(modulo(id), Plan.Basica), id).toBe(true);
+    }
+  });
+
+  it("con Básica quedan con candado la gestión y el asistente", () => {
+    for (const id of ["ctacte", "presupuestos", "remitos", "reportes", "ia"]) {
+      expect(moduloEnPlan(modulo(id), Plan.Basica), id).toBe(false);
+    }
+  });
+
+  it("con Plus se abre la gestión pero el asistente sigue con candado", () => {
+    expect(moduloEnPlan(modulo("reportes"), Plan.Plus)).toBe(true);
+    expect(moduloEnPlan(modulo("ia"), Plan.Plus)).toBe(false);
+  });
+
+  it("con Premium no queda nada con candado", () => {
+    for (const m of MODULOS) expect(moduloEnPlan(m, Plan.Premium), m.id).toBe(true);
+  });
+
+  it("el candado dice a qué plan hay que subir", () => {
+    expect(planDelModulo(modulo("reportes"))).toBe(Plan.Plus);
+    expect(planDelModulo(modulo("ia"))).toBe(Plan.Premium);
+  });
+
+  it("Configuración nunca se bloquea: hace falta para poder ampliar el plan", () => {
+    expect(moduloEnPlan(modulo("config"), Plan.Basica)).toBe(true);
   });
 });

@@ -31,7 +31,7 @@ const ESCRITURAS_PERMITIDAS: ReadonlyArray<{ metodo: string; patron: RegExp }> =
 ];
 
 /** Deja la ruta comparable: sin prefijo, sin query y sin barra final. */
-function normalizar(ruta: string): string {
+export function normalizar(ruta: string): string {
   const sinQuery = ruta.split('?')[0] ?? '';
   const sinPrefijo = sinQuery.startsWith(PREFIJO) ? sinQuery.slice(PREFIJO.length) : sinQuery;
   const limpia = sinPrefijo.replace(/\/+$/, '');

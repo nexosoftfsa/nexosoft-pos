@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { HttpException } from '@nestjs/common';
-import { EstadoSuscripcion, type EstadoLicencia } from '@nexosoft/licencias';
+import { EstadoSuscripcion, Plan, type EstadoLicencia } from '@nexosoft/licencias';
 import { LicenciaGuard } from './licencia.guard';
 
 function contexto(metodo: string, url: string) {
@@ -16,6 +16,7 @@ function guardCon(estado: EstadoLicencia) {
 
 const ACTIVA: EstadoLicencia = {
   estado: EstadoSuscripcion.Activa,
+  plan: Plan.Premium,
   puedeVender: true,
   aviso: null,
   sinValidar: false,
@@ -23,6 +24,7 @@ const ACTIVA: EstadoLicencia = {
 
 const BLOQUEADA: EstadoLicencia = {
   estado: EstadoSuscripcion.Bloqueada,
+  plan: Plan.Premium,
   puedeVender: false,
   aviso: 'Pagá la suscripción para seguir usando el sistema.',
   sinValidar: false,
@@ -30,6 +32,7 @@ const BLOQUEADA: EstadoLicencia = {
 
 const ADVERTENCIA: EstadoLicencia = {
   estado: EstadoSuscripcion.Advertencia,
+  plan: Plan.Premium,
   puedeVender: true,
   aviso: 'El pago venció.',
   sinValidar: false,
@@ -81,6 +84,47 @@ describe('LicenciaGuard', () => {
       expect(() =>
         guardCon(BLOQUEADA).canActivate(contexto('POST', '/api/v1/caja/turnos/abrir')),
       ).toThrow(HttpException);
+    });
+  });
+
+  describe('el plan (ADR-0067 §3)', () => {
+    const basica: EstadoLicencia = { ...ACTIVA, plan: Plan.Basica };
+
+    it('deja hacer lo que el plan incluye', () => {
+      expect(guardCon(basica).canActivate(contexto('POST', '/api/v1/ventas'))).toBe(true);
+      expect(guardCon(basica).canActivate(contexto('POST', '/api/v1/stock/ajustes'))).toBe(true);
+    });
+
+    it('corta con 402 lo que no incluye, y dice en qué plan está', () => {
+      try {
+        guardCon(basica).canActivate(contexto('POST', '/api/v1/presupuestos'));
+        expect.unreachable('tenía que lanzar');
+      } catch (e) {
+        const err = e as HttpException;
+        expect(err.getStatus()).toBe(402);
+        const cuerpo = JSON.stringify(err.getResponse());
+        expect(cuerpo).toContain('FueraDelPlan');
+        expect(cuerpo).toContain('Básica');
+        expect(cuerpo).toContain('Plus');
+      }
+    });
+
+    it('deja ver y exportar lo de un módulo que ya no está en el plan', () => {
+      expect(guardCon(basica).canActivate(contexto('GET', '/api/v1/presupuestos'))).toBe(true);
+    });
+
+    it('un comercio bloqueado se entera del bloqueo, no del plan', () => {
+      // Los dos motivos aplican; gana el que explica mejor por qué no vende.
+      try {
+        guardCon({ ...BLOQUEADA, plan: Plan.Basica }).canActivate(
+          contexto('POST', '/api/v1/ventas'),
+        );
+        expect.unreachable('tenía que lanzar');
+      } catch (e) {
+        expect(JSON.stringify((e as HttpException).getResponse())).toContain(
+          'SuscripcionBloqueada',
+        );
+      }
     });
   });
 });

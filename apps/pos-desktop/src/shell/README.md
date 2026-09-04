@@ -11,8 +11,8 @@ en `docs/roadmap-fase-7-gestion.md`.
 | Archivo | Qué hace |
 | ------- | -------- |
 | `Shell.tsx` | Layout: sidebar (marca + nav + usuario) + topbar (título/migaja + estado) + contenido. Orquesta la cola de sync (`useSync`) y la baja a Ventas. Maneja el módulo activo y el cajón responsive. |
-| `modulos.tsx` | Registro declarativo de módulos (id, título, sección, ícono, roles, badge) y reglas de visibilidad por rol. **Lógica pura, testeada.** |
-| `modulos.test.ts` | Tests del gateo por rol y del módulo inicial. |
+| `modulos.tsx` | Registro declarativo de módulos (id, título, sección, ícono, roles, badge) y reglas de visibilidad por rol y por plan. **Lógica pura, testeada.** |
+| `modulos.test.ts` | Tests del gateo por rol, por plan y del módulo inicial. |
 | `iconos.tsx` | Íconos SVG del menú, portados de la maqueta. |
 | `Placeholder.tsx` | Pantalla "Próximamente" para los módulos aún no implementados. |
 | `shell.css` | Estilos del shell (paleta navy/teal de la maqueta). Se carga **después** de `estilos.css` y reasigna los acentos del POS para que todo armonice. |
@@ -33,6 +33,27 @@ con su `RolesGuard`).
 Un rol desconocido o ausente cae al **menor privilegio** (CAJERO). El rol se lee
 del claim `rol` del JWT (`SesionManager.rol`). En el navegador de desarrollo no
 hay login: el shell se monta como **ADMIN** para poder ver todo.
+
+## Módulos y planes (ADR-0067)
+
+Además del rol, cada módulo tiene un **plan mínimo**. La tabla no vive acá: sale
+de `PLAN_MINIMO` en `@nexosoft/licencias`, que es la misma que impone el
+`cloud-api`. El `id` de `DefinicionModulo` es un `ModuloId` de ese paquete, así
+que **un módulo nuevo no compila** hasta que alguien decida en qué plan entra.
+
+El gateo por plan funciona al revés que el gateo por rol: **no esconde nada**.
+Un módulo fuera del plan se sigue viendo en el menú, atenuado y con un candado
+que dice a qué plan pertenece, y al entrar muestra `componentes/FueraDePlan.tsx`
+— qué hace ese módulo y en qué plan está. Si Básica escondiera Reportes, el
+comercio no se enteraría de que existe y no lo compraría nunca.
+
+Como con el rol, esto es **presentación**: quien decide es el guard del
+`cloud-api` (`licencia/operaciones-por-plan.ts`). Ahí también está la regla que
+hace que bajar de plan sea seguro — sólo se bloquean las escrituras, así que lo
+ya cargado se sigue viendo y exportando.
+
+Sin suscripción configurada (modo demo, instalación que no controlamos) el plan
+es **Premium**: no gateamos lo que no administramos.
 
 ## Cómo se agrega un módulo real (sub-fases siguientes)
 

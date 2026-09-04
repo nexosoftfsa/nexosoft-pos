@@ -7,8 +7,16 @@
  *
  * El gateo por rol es UX: el backend igual impone permisos en sus endpoints
  * (RolesGuard). Decisión del usuario (2026-06-28): gatear el menú por rol.
+ *
+ * El gateo por **plan** (ADR-0067) es distinto: no esconde nada. Un módulo que
+ * no entra en el plan se sigue viendo, con candado — si Básica escondiera
+ * Reportes, el comercio nunca se enteraría de que existe y nunca lo compraría.
+ * Qué módulo entra en qué plan sale de `@nexosoft/licencias`, que es la tabla
+ * que también impone el backend.
  */
 import type { ReactNode } from "react";
+
+import { PLAN_MINIMO, moduloDisponible, type ModuloId, type Plan } from "@nexosoft/licencias";
 
 import {
   IconoCaja,
@@ -42,7 +50,11 @@ export const SECCIONES: readonly Seccion[] = [
 ];
 
 export interface DefinicionModulo {
-  readonly id: string;
+  /**
+   * El id es un `ModuloId` de `@nexosoft/licencias` a propósito: así un módulo
+   * nuevo **no compila** hasta que alguien decida en qué plan entra.
+   */
+  readonly id: ModuloId;
   readonly titulo: string;
   /** Migaja de pan que se muestra bajo el título en la barra superior. */
   readonly crumb: string;
@@ -115,4 +127,14 @@ export function moduloInicial(rol: string | undefined): string {
 /** Busca un módulo por id. */
 export function buscarModulo(id: string): DefinicionModulo | undefined {
   return MODULOS.find((m) => m.id === id);
+}
+
+/** El plan mínimo que habilita ese módulo (ADR-0067 §7). */
+export function planDelModulo(modulo: DefinicionModulo): Plan {
+  return PLAN_MINIMO[modulo.id];
+}
+
+/** `true` si el comercio, con su plan, puede entrar a ese módulo. */
+export function moduloEnPlan(modulo: DefinicionModulo, plan: Plan): boolean {
+  return moduloDisponible(modulo.id, plan);
 }

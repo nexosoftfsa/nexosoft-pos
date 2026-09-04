@@ -76,6 +76,13 @@ describe("la tabla de planes (ADR-0067 §7)", () => {
     expect(moduloDisponible("usuarios", Plan.Basica)).toBe(true);
   });
 
+  it("un plan roto habilita todo, no bloquea todo", () => {
+    // Si un valor inesperado cayera fuera del orden de planes, el comercio se
+    // quedaría sin ningún módulo. Falla para el lado de dejar trabajar.
+    expect(moduloDisponible("reportes", undefined as never)).toBe(true);
+    expect(moduloDisponible("ia", "GRATIS" as never)).toBe(true);
+  });
+
   it("el candado dice qué plan hay que contratar", () => {
     expect(planQueLoHabilita("reportes")).toBe(Plan.Plus);
     expect(planQueLoHabilita("ia")).toBe(Plan.Premium);

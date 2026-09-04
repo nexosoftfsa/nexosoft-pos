@@ -15,7 +15,7 @@ import {
   leerEstadoActualizacion,
   suscribirseActualizacion,
 } from "../datos/actualizaciones";
-import type { EstadoLicencia } from "@nexosoft/licencias";
+import { ETIQUETA_PLAN, Plan, type EstadoLicencia } from "@nexosoft/licencias";
 import type { EntornoPos } from "../datos/bootstrap";
 import type { ClienteCatalogoAdmin } from "../sync/cliente-catalogo-admin";
 import type { ClienteStock } from "../sync/cliente-stock";
@@ -32,6 +32,7 @@ import { useEsperandoCae } from "../sync/useEsperandoCae";
 import { useSync } from "../sync/useSync";
 import { PantallaPos } from "../componentes/PantallaPos";
 import { BannerSuscripcion, PantallaSuscripcionBloqueada } from "../componentes/AvisoSuscripcion";
+import { PantallaFueraDePlan } from "../componentes/FueraDePlan";
 import { PantallaCajaCerrada } from "../componentes/AvisoCajaCerrada";
 import { puedeVenderConCaja, type EstadoCaja } from "../componentes/caja-helpers";
 import { CatalogoAbm } from "../componentes/CatalogoAbm";
@@ -57,9 +58,11 @@ import { Placeholder } from "./Placeholder";
 import {
   buscarModulo,
   ETIQUETA_ROL,
+  moduloEnPlan,
   moduloInicial,
   modulosVisibles,
   normalizarRol,
+  planDelModulo,
   SECCIONES,
   type DefinicionModulo,
 } from "./modulos";
@@ -240,6 +243,11 @@ export function Shell({
 
   const activo = visibles.find((m) => m.id === activoId) ?? visibles[0];
 
+  // Plan contratado (ADR-0067). Sin suscripción configurada están todos los
+  // módulos: una instalación que no controlamos no se gatea.
+  const plan = suscripcion?.plan ?? Plan.Premium;
+  const activoEnPlan = activo === undefined || moduloEnPlan(activo, plan);
+
   function navegar(id: string) {
     setNavAbierto(false);
     const m = buscarModulo(id);
@@ -325,6 +333,8 @@ export function Shell({
                     key={m.id}
                     modulo={m}
                     activo={m.id === activo?.id}
+                    enPlan={moduloEnPlan(m, plan)}
+                    planNecesario={planDelModulo(m)}
                     onClick={() => navegar(m.id)}
                   />
                 ))}
@@ -399,7 +409,16 @@ export function Shell({
         </header>
 
         <div className="shell-content">
-          {activo?.id === "inicio" ? (
+          {/* Fuera del plan: se muestra la oferta, no un error. Va antes que
+              todo lo demás para que ningún módulo se cargue a medias. */}
+          {activo !== undefined && !activoEnPlan ? (
+            <PantallaFueraDePlan
+              titulo={activo.titulo}
+              descripcion={activo.crumb}
+              planNecesario={planDelModulo(activo)}
+              planActual={plan}
+            />
+          ) : activo?.id === "inicio" ? (
             <Inicio
               nombreComercio={entorno.config.razonSocial}
               rolPuedeGestion={puedeGestion}
@@ -497,10 +516,15 @@ export function Shell({
 function ItemNav({
   modulo,
   activo,
+  enPlan,
+  planNecesario,
   onClick,
 }: {
   modulo: DefinicionModulo;
   activo: boolean;
+  /** `false` cuando el módulo no entra en el plan: se ve, con candado. */
+  enPlan: boolean;
+  planNecesario: Plan;
   onClick: () => void;
 }) {
   return (
@@ -508,10 +532,21 @@ function ItemNav({
       type="button"
       className={`nav-item${activo ? " nav-item--active" : ""}`}
       onClick={onClick}
+      // No se deshabilita: el módulo tiene que poder abrirse para contar qué
+      // hace y en qué plan está (ADR-0067 §4).
+      style={enPlan ? undefined : { opacity: 0.55 }}
+      title={enPlan ? undefined : `Disponible en el plan ${ETIQUETA_PLAN[planNecesario]}`}
     >
       {modulo.icono()}
       <span className="nav-item__label">{modulo.titulo}</span>
-      {modulo.badge !== undefined && <span className="badge badge--info">{modulo.badge}</span>}
+      {!enPlan && (
+        <span className="badge" aria-label={`Disponible en ${ETIQUETA_PLAN[planNecesario]}`}>
+          🔒 {ETIQUETA_PLAN[planNecesario]}
+        </span>
+      )}
+      {enPlan && modulo.badge !== undefined && (
+        <span className="badge badge--info">{modulo.badge}</span>
+      )}
     </button>
   );
 }
