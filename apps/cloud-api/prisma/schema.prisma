@@ -397,6 +397,18 @@ model Venta {
   /// concepto va acá y la impresión arma la línea con este texto y el total.
   conceptoLibre String?
 
+  /// Desglose de IVA **tal como se declaró a ARCA**, congelado al emitir.
+  ///
+  /// No se recalcula al reimprimir: si el producto cambia de alícuota después,
+  /// recalcular daría algo distinto de lo declarado, y el duplicado de una
+  /// Factura A tiene que coincidir con el original. Nullable porque las ventas
+  /// anteriores a este campo no lo tienen.
+  impNeto        Decimal? @db.Decimal(12, 2)
+  impIva         Decimal? @db.Decimal(12, 2)
+  impOpEx        Decimal? @db.Decimal(12, 2)
+  /// Renglones del array `Iva` de WSFEv1: `[{ codigoArca, base, importe }]`.
+  ivaPorAlicuota Json?
+
   items           ItemVenta[]
   movimientosStock MovimientoStock[]
   pagos           Pago[]

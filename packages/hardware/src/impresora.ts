@@ -142,6 +142,24 @@ export function llevaDatosDelReceptor(datos: DatosTicket): boolean {
 }
 
 /**
+ * El subtotal neto de un comprobante que discrimina IVA: la suma de las bases.
+ *
+ * Sólo tiene sentido en la letra A. Devuelve `null` cuando no hay desglose, que
+ * es el caso de B, C y de los comprobantes viejos que se emitieron antes de que
+ * el servidor guardara el detalle.
+ *
+ * Vive acá y no en cada renderer porque ya nos pasó: lo puse en la impresión
+ * térmica y me olvidé del ticket HTML, y el mismo comprobante salía distinto
+ * según por dónde se imprimiera.
+ */
+export function subtotalNeto(datos: DatosTicket): Money | null {
+  if (letraFiscal(datos) !== "A") return null;
+  const [primero, ...resto] = datos.subtotalesIva;
+  if (primero === undefined) return null;
+  return resto.reduce((a, s) => a.sumar(s.base), primero.base);
+}
+
+/**
  * "02/09/2026 19:46" — fecha y hora del comprobante, **en 24 horas**.
  *
  * A propósito no se usa `toLocaleString`: en una PC configurada en 12 horas

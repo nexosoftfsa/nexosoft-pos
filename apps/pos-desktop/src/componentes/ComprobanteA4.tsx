@@ -15,6 +15,7 @@ import {
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
+  subtotalNeto,
 } from "@nexosoft/hardware";
 import { pesos } from "../formato";
 import type { DatosImpresion } from "./qr-fiscal-datos";
@@ -30,6 +31,7 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
   const provisional = numeroEsProvisional(datos);
   const letra = letraFiscal(datos);
   const conReceptor = llevaDatosDelReceptor(datos);
+  const neto = subtotalNeto(datos);
 
   return (
     <div className="hoja-a4">
@@ -112,10 +114,20 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
       </table>
 
       <div className="a4-totales">
-        {esFiscal &&
+        {/* Sólo la Factura A discrimina. La misma regla que la térmica y el
+            ticket, en un solo lugar (`subtotalNeto`). */}
+        {neto !== null && (
+          <div className="a4-fila-total">
+            <span>Subtotal neto</span>
+            <span>{pesos(neto)}</span>
+          </div>
+        )}
+        {neto !== null &&
           datos.subtotalesIva.map((s, i) => (
             <div className="a4-fila-total" key={i}>
-              <span>{s.etiqueta} (neto {pesos(s.base)})</span>
+              <span>
+                {s.etiqueta} (neto {pesos(s.base)})
+              </span>
               <span>{pesos(s.iva)}</span>
             </div>
           ))}

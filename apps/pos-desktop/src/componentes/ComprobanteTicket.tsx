@@ -10,12 +10,12 @@ import type { Cantidad } from "@nexosoft/domain";
 import {
   fechaHoraTicket,
   identificacionComprobanteAsociado,
-  letraFiscal,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
+  subtotalNeto,
 } from "@nexosoft/hardware";
 import type { DatosImpresion } from "./qr-fiscal-datos";
 import { pesos } from "../formato";
@@ -29,7 +29,8 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
   const esFiscal = datos.esFiscal ?? true;
   const provisional = numeroEsProvisional(datos);
   const conReceptor = llevaDatosDelReceptor(datos);
-  const discriminaIva = letraFiscal(datos) === "A" && datos.subtotalesIva.length > 0;
+  // `null` salvo en Factura A con desglose: la misma regla que usa la térmica.
+  const neto = subtotalNeto(datos);
 
   return (
     <div className="hoja-ticket">
@@ -104,12 +105,16 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
       {/* En Factura A el papel muestra neto e IVA por separado; el B y el C lo
           llevan incluido en cada línea. Sin esto un contador no puede armar el
           asiento de una A. */}
-      {discriminaIva &&
+      {neto !== null && (
+        <div className="ticket-print-fila">
+          <span>Subtotal neto</span>
+          <span>{pesos(neto)}</span>
+        </div>
+      )}
+      {neto !== null &&
         datos.subtotalesIva.map((s, i) => (
           <div className="ticket-print-fila" key={`iva-${i}`}>
-            <span>
-              {s.etiqueta} (neto {pesos(s.base)})
-            </span>
+            <span>{s.etiqueta}</span>
             <span>{pesos(s.iva)}</span>
           </div>
         ))}

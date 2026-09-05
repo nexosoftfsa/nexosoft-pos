@@ -16,6 +16,7 @@ export {
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
+  subtotalNeto,
 } from "./impresora.js";
 export type { LectorDeBarras, CallbackEscaneo } from "./lector.js";
 export type { Balanza, EstadoBalanza } from "./balanza.js";

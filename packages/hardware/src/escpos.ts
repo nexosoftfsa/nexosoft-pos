@@ -18,6 +18,7 @@ import {
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
+  subtotalNeto,
   type DatosTicket,
 } from "./impresora.js";
 
@@ -343,21 +344,12 @@ export function construirEscPos(
   // separado (el B y el C lo llevan incluido en cada linea). En A conviene ver
   // los dos: primero el subtotal neto, despues cada IVA por alicuota, y el
   // total al final. Sin esto un contador no puede armar el asiento.
-  if (letraFiscal(datos) === "A" && datos.subtotalesIva.length > 0) {
-    // Suma con acumulador del primer neto (no usamos Money.cero(): el paquete
-    // hardware no depende del dominio, y este truco arranca la reduccion sin
-    // inventar la instancia).
-    const [primero, ...resto] = datos.subtotalesIva;
-    const netoTotal = resto.reduce((a, s) => a.sumar(s.base), primero!.base);
-    b.lineaCruda(filaIzquierdaDerecha("Subtotal neto", pesos(netoTotal), columnas));
-    for (const s of datos.subtotalesIva) {
-      b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(s.iva), columnas));
-    }
-  } else {
-    // Comportamiento historico para B y C: mostrar cada IVA por alicuota.
-    for (const s of datos.subtotalesIva) {
-      b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(s.iva), columnas));
-    }
+  const neto = subtotalNeto(datos);
+  if (neto !== null) {
+    b.lineaCruda(filaIzquierdaDerecha("Subtotal neto", pesos(neto), columnas));
+  }
+  for (const s of datos.subtotalesIva) {
+    b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(s.iva), columnas));
   }
   b.comando(NEGRITA_ON).comando(DOBLE_ALTO);
   // A alto doble entran las mismas columnas (solo cambia la altura).

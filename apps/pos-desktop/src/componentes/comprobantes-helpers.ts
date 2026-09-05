@@ -154,7 +154,7 @@ export function datosTicketDeComprobante(
     ...(asociado !== null ? { comprobanteAsociado: asociado } : {}),
     ...(receptor !== null ? { receptor } : {}),
     lineas: lineasDe(c),
-    subtotalesIva: [],
+    subtotalesIva: subtotalesIvaDe(c),
     descuento: Money.desde(c.descuento),
     total: Money.desde(c.total),
     formasDePago: (c.pagos ?? []).map((p) => ({
@@ -227,6 +227,34 @@ export function comprobanteDeVentaLocal(v: VentaLocal): Comprobante {
     estadoFiscal: estadoFiscalDe(v.estadoCae),
     motivoFiscal: null,
   };
+}
+
+/** Etiqueta legible de una alícuota, a partir del código de ARCA. */
+const ETIQUETA_POR_CODIGO_ARCA: Readonly<Record<number, string>> = {
+  3: "IVA 0%",
+  4: "IVA 10,5%",
+  5: "IVA 21%",
+  6: "IVA 27%",
+  8: "IVA 5%",
+  9: "IVA 2,5%",
+};
+
+/**
+ * El desglose por alícuota para reimprimir, tal como se declaró a ARCA.
+ *
+ * Hasta que se empezó a guardar, esto iba vacío y **una Factura A reimpresa
+ * salía sin discriminar IVA** — sólo el total, que no sirve como Factura A. Los
+ * comprobantes anteriores siguen sin desglose: reconstruirlo sería inventar
+ * algo que quizá no coincide con lo que se emitió.
+ */
+function subtotalesIvaDe(c: Comprobante): DatosTicket["subtotalesIva"] {
+  const renglones = c.ivaPorAlicuota;
+  if (renglones === undefined || renglones === null || renglones.length === 0) return [];
+  return renglones.map((r) => ({
+    etiqueta: ETIQUETA_POR_CODIGO_ARCA[r.codigoArca] ?? `IVA (${r.codigoArca})`,
+    base: Money.desde(r.base),
+    iva: Money.desde(r.importe),
+  }));
 }
 
 /**

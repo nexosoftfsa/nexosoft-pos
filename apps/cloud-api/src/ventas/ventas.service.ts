@@ -31,6 +31,7 @@ import {
   type ServicioCae,
 } from './cae/servicio-cae';
 import { comprobanteAsociadoDe } from './cae/comprobante-asociado';
+import { aDesglosePersistido } from './cae/desglose-persistido';
 import { fueraDeVentanaArca, motivoVentanaVencida } from './cae/ventana-de-fecha';
 import { fechaDeVenta } from './fecha-de-venta';
 import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
@@ -212,6 +213,8 @@ export class VentasService {
             usuarioId: original.usuarioId,
             terminalId: original.terminalId,
             comprobanteAsociadoId: original.id,
+            // El desglose declarado a ARCA, congelado para la reimpresión.
+            ...aDesglosePersistido(desgloseNc),
             items: {
               create: original.items.map((it) => ({
                 cantidad: it.cantidad,
@@ -352,6 +355,7 @@ export class VentasService {
             // Sin `productoId`: no hay mercadería. La línea existe para que el
             // comprobante tenga qué mostrar y para que el desglose cierre.
             conceptoLibre: dto.concepto,
+            ...aDesglosePersistido(desgloseNd),
           },
           include: { items: true },
         });
@@ -562,6 +566,9 @@ export class VentasService {
             usuarioId: usuario.id,
             terminalId: dto.terminalId ?? null,
             clienteId: dto.clienteId ?? null,
+            // El desglose declarado a ARCA, congelado para la reimpresión: sin
+            // esto una Factura A reimpresa sale sin discriminar IVA.
+            ...aDesglosePersistido(desglose),
             items: { create: itemsData },
             ...(pagos.length > 0
               ? {

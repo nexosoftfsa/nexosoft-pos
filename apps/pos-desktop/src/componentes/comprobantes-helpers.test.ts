@@ -244,6 +244,42 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
     expect(d.lineas[0]?.descripcion).toBe("Gaseosa");
   });
 
+  /**
+   * Sin esto una Factura A reimpresa salía con el total solo, y así no sirve
+   * como Factura A: el requisito de discriminar no es opcional.
+   */
+  describe("desglose de IVA al reimprimir", () => {
+    it("arma los subtotales desde lo que se declaró a ARCA", () => {
+      const c = comprobante({
+        tipoComprobante: "FacturaA",
+        ivaPorAlicuota: [
+          { codigoArca: 5, base: "1000.00", importe: "210.00" },
+          { codigoArca: 4, base: "200.00", importe: "21.00" },
+        ],
+      });
+      const d = datosTicketDeComprobante(c, CONFIG);
+
+      expect(d.subtotalesIva).toHaveLength(2);
+      expect(d.subtotalesIva[0]?.etiqueta).toBe("IVA 21%");
+      expect(d.subtotalesIva[0]?.base.aDecimalString(2)).toBe("1000.00");
+      expect(d.subtotalesIva[0]?.iva.aDecimalString(2)).toBe("210.00");
+      expect(d.subtotalesIva[1]?.etiqueta).toBe("IVA 10,5%");
+    });
+
+    it("un comprobante viejo, sin desglose guardado, no inventa uno", () => {
+      const d = datosTicketDeComprobante(comprobante({ tipoComprobante: "FacturaA" }), CONFIG);
+      expect(d.subtotalesIva).toEqual([]);
+    });
+
+    it("un código de alícuota desconocido no rompe la reimpresión", () => {
+      const c = comprobante({
+        tipoComprobante: "FacturaA",
+        ivaPorAlicuota: [{ codigoArca: 99, base: "100.00", importe: "0.00" }],
+      });
+      expect(datosTicketDeComprobante(c, CONFIG).subtotalesIva[0]?.etiqueta).toBe("IVA (99)");
+    });
+  });
+
   it("una nota de crédito dice qué comprobante corrige", () => {
     const nc = comprobante({
       tipoComprobante: "NotaCreditoB",

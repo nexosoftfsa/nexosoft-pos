@@ -13,6 +13,7 @@ import {
   letraFiscal,
   llevaDatosDelReceptor,
   numeroEsProvisional,
+  subtotalNeto,
 } from "./impresora.js";
 
 /** Base de datos suficiente para ejercitar las reglas; nada más. */
@@ -80,6 +81,38 @@ describe("llevaDatosDelReceptor", () => {
     expect(
       llevaDatosDelReceptor(base({ tipoComprobante: "Factura C", receptor: conReceptor })),
     ).toBe(false);
+  });
+});
+
+/**
+ * La regla vive en un solo lugar porque ya nos pasó: se puso el "Subtotal neto"
+ * en la impresión térmica y se olvidó el ticket HTML, y el mismo comprobante
+ * salía distinto según por dónde se imprimiera.
+ */
+describe("subtotalNeto", () => {
+  const conDesglose = [
+    { etiqueta: "IVA 21%", base: Money.desde("1000.00"), iva: Money.desde("210.00") },
+    { etiqueta: "IVA 10,5%", base: Money.desde("200.00"), iva: Money.desde("21.00") },
+  ];
+
+  it("en Factura A suma las bases de todas las alícuotas", () => {
+    const neto = subtotalNeto(
+      base({ tipoComprobante: "Factura A", subtotalesIva: conDesglose }),
+    );
+    expect(neto?.aDecimalString(2)).toBe("1200.00");
+  });
+
+  it("en B y C no aplica: no discriminan", () => {
+    expect(
+      subtotalNeto(base({ tipoComprobante: "Factura B", subtotalesIva: conDesglose })),
+    ).toBeNull();
+    expect(
+      subtotalNeto(base({ tipoComprobante: "Factura C", subtotalesIva: conDesglose })),
+    ).toBeNull();
+  });
+
+  it("una Factura A sin desglose guardado (comprobante viejo) devuelve null", () => {
+    expect(subtotalNeto(base({ tipoComprobante: "Factura A" }))).toBeNull();
   });
 });
 

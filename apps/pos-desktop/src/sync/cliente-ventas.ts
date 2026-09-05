@@ -60,6 +60,23 @@ export interface Comprobante {
    * línea con este texto y el total.
    */
   readonly conceptoLibre?: string | null;
+  /**
+   * Desglose de IVA tal como se declaró a ARCA, congelado al emitir. Lo usa la
+   * reimpresión de una Factura A, que sin esto salía con el total solo y no
+   * servía como Factura A.
+   *
+   * Ausente en las ventas anteriores a que se empezara a guardar: ésas se
+   * siguen reimprimiendo sin discriminar, y no se reconstruyen porque sería
+   * inventar un desglose que quizá no es el que se emitió.
+   */
+  readonly impNeto?: string | null;
+  readonly impIva?: string | null;
+  readonly impOpEx?: string | null;
+  readonly ivaPorAlicuota?: ReadonlyArray<{
+    readonly codigoArca: number;
+    readonly base: string;
+    readonly importe: string;
+  }> | null;
   readonly items: ItemComprobante[];
   /** Desglose de pagos (presente en ventas con pago combinado). */
   readonly pagos?: PagoComprobante[];
