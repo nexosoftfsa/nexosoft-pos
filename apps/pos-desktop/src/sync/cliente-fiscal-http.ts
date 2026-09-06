@@ -19,6 +19,12 @@ export interface EstadoCertificado {
   readonly certificado: DatosCertificado | null;
   readonly diasParaVencer: number | null;
   readonly carpeta: string;
+  /**
+   * Entorno al que corresponde este estado. Opcionales los dos: un servidor
+   * anterior a 0.16.0 no los manda y la pantalla tiene que seguir andando.
+   */
+  readonly entorno?: EntornoArca;
+  readonly hayCertificadoDelOtroEntorno?: boolean;
 }
 
 export interface CsrGenerado {
@@ -67,7 +73,12 @@ export interface ClienteCertificadoArca {
     alias: string;
     forzar?: boolean;
   }): Promise<CsrGenerado>;
-  subirCertificado(cuit: string, certificadoPem: string): Promise<DatosCertificado>;
+  /** El entorno es el activo del comercio salvo que se diga otro. */
+  subirCertificado(
+    cuit: string,
+    certificadoPem: string,
+    entorno?: EntornoArca,
+  ): Promise<DatosCertificado>;
   guardarDatosFiscales(datos: DatosFiscalesDelComercio): Promise<{ completa: boolean }>;
   configuracionFiscal(): Promise<ConfiguracionFiscalServidor>;
   cambiarEntorno(entorno: EntornoArca): Promise<ConfiguracionFiscalServidor>;
@@ -111,8 +122,16 @@ export class ClienteCertificadoArcaHttp implements ClienteCertificadoArca {
     return this.pedir("POST", "/fiscal/certificado/csr", datos);
   }
 
-  subirCertificado(cuit: string, certificadoPem: string): Promise<DatosCertificado> {
-    return this.pedir("PUT", "/fiscal/certificado", { cuit, certificadoPem });
+  subirCertificado(
+    cuit: string,
+    certificadoPem: string,
+    entorno?: EntornoArca,
+  ): Promise<DatosCertificado> {
+    return this.pedir("PUT", "/fiscal/certificado", {
+      cuit,
+      certificadoPem,
+      ...(entorno !== undefined ? { entorno } : {}),
+    });
   }
 
   /**

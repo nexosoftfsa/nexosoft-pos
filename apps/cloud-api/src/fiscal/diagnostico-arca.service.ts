@@ -60,19 +60,28 @@ export class DiagnosticoArcaService {
       };
     }
 
-    const material = this.certificados.materialDeFirma(fiscal.cuit);
-    const pasos: PasoDiagnostico[] = [];
     const entorno = fiscal.entorno;
+    const material = this.certificados.materialDeFirma(fiscal.cuit, entorno);
+    const pasos: PasoDiagnostico[] = [];
 
     pasos.push(await this.llegarAArca(entorno));
     if (!pasos[0]!.ok) return { entorno, pasos };
 
     if (material === null) {
+      // Distinguir los dos casos es todo el valor de este paso: "falta el
+      // trámite" y "el trámite está hecho pero para el otro entorno" se
+      // arreglan de maneras muy distintas, y el segundo es el que nos comió
+      // una prueba entera.
+      const otro = this.certificados.estado(fiscal.cuit, entorno).hayCertificadoDelOtroEntorno;
       pasos.push({
         paso: 'Certificado',
         ok: false,
-        detalle: 'No hay certificado cargado en este servidor.',
-        queHacer: 'Cargá el .crt en Configuración > Facturación electrónica.',
+        detalle: otro
+          ? `No hay certificado de ${entorno} en este servidor. Sí hay uno del otro entorno, y ARCA no lo acepta acá: son autoridades distintas.`
+          : 'No hay certificado cargado en este servidor.',
+        queHacer: otro
+          ? `Sacá el certificado de ${entorno} en el portal de ARCA que corresponde —con el MISMO pedido .csr, no generes uno nuevo— y cargalo en Configuración > Facturación electrónica.`
+          : 'Cargá el .crt en Configuración > Facturación electrónica.',
       });
       return { entorno, pasos };
     }

@@ -176,7 +176,14 @@ export function CertificadoArca({
     const advertencia = aProduccion
       ? "A partir de ahora los comprobantes se van a emitir DE VERDAD ante ARCA, con validez fiscal. Antes de seguir: ¿el certificado que subiste es el de producción y está autorizado en el Administrador de Relaciones? ¿Seguís?"
       : "Los comprobantes van a dejar de tener validez fiscal: pasan a emitirse contra el entorno de pruebas de ARCA. ¿Seguís?";
-    if (!window.confirm(advertencia)) return;
+    // Avisar ANTES si el entorno de destino no tiene certificado. Si no, el
+    // comercio se entera al intentar vender, con un error de ARCA que habla de
+    // autoridades certificantes y no dice qué hacer.
+    const faltaEnDestino = estado?.hayCertificadoDelOtroEntorno === false;
+    const previo = faltaEnDestino
+      ? `OJO: todavía no hay cargado un certificado de ${entorno === "produccion" ? "producción" : "homologación"}, y el del otro entorno no sirve — ARCA los rechaza cruzados. Si cambiás ahora, el comercio no va a poder facturar hasta que lo cargues.\n\n`
+      : "";
+    if (!window.confirm(previo + advertencia)) return;
 
     setTrabajando(true);
     setError(null);
@@ -184,6 +191,10 @@ export function CertificadoArca({
     try {
       const cliente = new ClienteCertificadoArcaHttp(servidorUrl, () => tokenRef.current());
       setFiscal(await cliente.cambiarEntorno(entorno));
+      // Recargar el estado del certificado, no sólo el del entorno: cada
+      // entorno tiene el suyo, así que cambiar de entorno cambia cuál está
+      // cargado. Sin esto la pantalla seguía mostrando el del entorno anterior.
+      await cargar();
       setAviso(
         aProduccion
           ? "Listo: el comercio está facturando en PRODUCCIÓN."
@@ -235,6 +246,16 @@ export function CertificadoArca({
   }
 
   const listo = estado?.tieneCertificado === true;
+  /**
+   * El entorno al que corresponde lo que se está mirando. Sale del estado del
+   * certificado, que es quien lo resuelve; `fiscal` es el respaldo para un
+   * servidor viejo que todavía no lo manda.
+   */
+  const entornoActivo: EntornoArca | null = estado?.entorno ?? fiscal?.config?.entorno ?? null;
+  const nombreEntorno = entornoActivo === "produccion" ? "producción" : "homologación";
+  /** Falta el de este entorno, pero el trámite ya está hecho para el otro. */
+  const soloTieneElOtro = !listo && estado?.hayCertificadoDelOtroEntorno === true;
+  const portalDelEntorno = entornoActivo === "produccion" ? AYUDA_PRODUCCION : AYUDA_HOMOLOGACION;
 
   return (
     <div className="card card__pad">
@@ -246,7 +267,8 @@ export function CertificadoArca({
       {listo && estado?.certificado ? (
         <>
           <p className="muted" style={{ marginTop: 2 }}>
-            Certificado cargado, a nombre del CUIT {estado.certificado.cuit ?? cuit}.
+            Certificado de <b>{nombreEntorno}</b> cargado, a nombre del CUIT{" "}
+            {estado.certificado.cuit ?? cuit}.
             <br />
             Vence el <b>{fecha(estado.certificado.validoHasta)}</b>
             {estado.diasParaVencer !== null && ` (faltan ${estado.diasParaVencer} días)`}.
@@ -311,12 +333,10 @@ export function CertificadoArca({
             está. Justo lo contrario de lo que se necesita.
           */}
           <div className="config-ayuda">
-            <b>¿Tenés otro certificado para cargar?</b>
+            <b>¿Querés reemplazar el certificado de {nombreEntorno}?</b>
             <br />
-            Es lo que hay que hacer para pasar a producción: el certificado de producción es
-            distinto del de homologación y se saca por otro portal de ARCA. Se sube{" "}
-            <b>con el mismo pedido (.csr)</b> que ya generaste, así que no hace falta generar uno
-            nuevo.
+            Sirve para renovarlo cuando está por vencer, o para corregirlo si cargaste el archivo
+            equivocado. Se sube <b>con el mismo pedido (.csr)</b> que ya generaste.
             <div className="field" style={{ marginTop: 6 }}>
               <input
                 className="input"
@@ -326,9 +346,16 @@ export function CertificadoArca({
                 onChange={(e) => void subirCertificado(e)}
               />
             </div>
-            Reemplaza al que está cargado ahora, pero <b>no toca la clave privada</b>: si después
-            querés volver al anterior, alcanza con subir ese .crt de nuevo. Guardá los dos
-            archivos.
+            Reemplaza sólo al de <b>{nombreEntorno}</b>, y <b>no toca la clave privada</b>. El del
+            otro entorno queda donde está: cada uno se guarda por separado en{" "}
+            <code>{estado.carpeta}</code>.
+            {estado.hayCertificadoDelOtroEntorno === true && (
+              <>
+                {" "}
+                Ya hay uno cargado también para el otro entorno, así que cambiar de entorno no
+                pide ningún trámite.
+              </>
+            )}
           </div>
           {/*
             Probar el circuito sin emitir nada. Hace falta porque hasta ahora
@@ -382,6 +409,69 @@ export function CertificadoArca({
             y deja inservible el certificado actual: no es lo que hay que usar para pasar a
             producción.
           </div>
+        </>
+      ) : soloTieneElOtro ? (
+        /*
+          El caso que nos costó la prueba de Facturas A y B del 4/9/2026: el
+          comercio hizo el trámite, pero para el otro entorno. ARCA contesta
+          "Certificado no emitido por AC de confianza", que no menciona
+          entornos, y la pantalla mandaba a generar un pedido nuevo — que
+          regenera la clave y deja inservible el certificado que SÍ sirve.
+          Es la peor salida posible, así que acá no se ofrece.
+        */
+        <>
+          <div className="error">
+            Falta el certificado de <b>{nombreEntorno}</b>. Hay uno cargado, pero es del otro
+            entorno y ARCA no lo acepta acá: producción y homologación tienen autoridades
+            certificantes distintas y no se reconocen entre sí.
+          </div>
+          <div className="config-ayuda">
+            <b>No generes un pedido nuevo.</b> El pedido (.csr) que ya tenés sirve para los dos
+            entornos; generar otro cambia la clave privada y deja inservible el certificado del
+            otro entorno, que hoy funciona.
+            <ol style={{ paddingLeft: "1.1rem", margin: "0.5rem 0" }}>
+              <li>
+                Entrá al portal de ARCA de {nombreEntorno}:<br />
+                <code>{portalDelEntorno}</code>
+              </li>
+              <li>
+                Subí el <b>mismo</b> pedido que ya está en <code>{estado?.carpeta}</code> (archivo{" "}
+                <code>pedido.csr</code>) y descargá el certificado que devuelve.
+              </li>
+              <li>
+                En <b>Administrador de Relaciones</b> de ese mismo entorno, asociá el servicio de
+                Facturación Electrónica a ese certificado.
+              </li>
+              <li>Cargalo acá abajo.</li>
+            </ol>
+            <div className="field">
+              <input
+                className="input"
+                type="file"
+                accept=".crt,.pem,.cer,text/plain"
+                disabled={trabajando}
+                onChange={(ev) => void subirCertificado(ev)}
+              />
+            </div>
+            Se guarda como el certificado de <b>{nombreEntorno}</b>. No pisa al del otro entorno:
+            quedan los dos y se usa el que corresponda según cómo esté configurado el comercio.
+          </div>
+          {fiscal?.config != null && (
+            <button
+              type="button"
+              className="linkbtn"
+              disabled={trabajando}
+              onClick={() =>
+                void cambiarEntorno(
+                  fiscal.config?.entorno === "produccion" ? "homologacion" : "produccion",
+                )
+              }
+            >
+              {fiscal.config.entorno === "produccion"
+                ? "O volver a homologación (pruebas)"
+                : "O volver a producción"}
+            </button>
+          )}
         </>
       ) : (
         <>

@@ -9,8 +9,10 @@ import {
   generarCsr,
   leerCertificado,
   normalizarAlias,
+  pareceDeHomologacion,
   type DatosCertificado,
 } from './csr';
+import type { EntornoArca } from './arca/wsaa';
 
 export interface EstadoCertificado {
   readonly tieneClave: boolean;
@@ -21,7 +23,22 @@ export interface EstadoCertificado {
   readonly diasParaVencer: number | null;
   /** Carpeta donde vive todo, para poder respaldarla. */
   readonly carpeta: string;
+  /** Entorno al que corresponde todo lo de arriba. */
+  readonly entorno: EntornoArca;
+  /**
+   * `true` si hay certificado cargado para el OTRO entorno.
+   *
+   * Es lo que separa "todavía no hiciste el trámite" de "lo hiciste, pero para
+   * el otro entorno". Sin distinguirlo, la pantalla manda a generar un pedido
+   * nuevo — que regenera la clave y rompe el certificado que sí sirve.
+   */
+  readonly hayCertificadoDelOtroEntorno: boolean;
 }
+
+const OTRO: Record<EntornoArca, EntornoArca> = {
+  produccion: 'homologacion',
+  homologacion: 'produccion',
+};
 
 export interface CsrParaSubir {
   readonly csrPem: string;
@@ -56,15 +73,39 @@ export class CertificadoService {
     return join(this.raiz, 'arca', normalizarCuit(cuit));
   }
 
-  private rutas(cuit: string) {
+  /**
+   * Dónde vive cada archivo.
+   *
+   * La clave, el pedido y el alias son del CUIT y NO del entorno: ARCA emite el
+   * certificado de homologación y el de producción a partir del mismo CSR, así
+   * que una sola clave sirve para los dos. El certificado sí es de cada uno —
+   * los emite una autoridad distinta, y el de producción no vale en
+   * homologación (ARCA contesta "Certificado no emitido por AC de confianza").
+   *
+   * El de producción se sigue llamando `certificado.crt`, sin sufijo, para no
+   * tener que migrar nada: todo comercio ya instalado tiene ese archivo y es el
+   * de producción. Renombrarlo obligaría a tocar carpetas que están fuera del
+   * repo y que el comercio respalda a mano.
+   */
+  private comunes(cuit: string) {
     const carpeta = this.carpetaDe(cuit);
     return {
       carpeta,
       clave: join(carpeta, 'privada.key'),
       csr: join(carpeta, 'pedido.csr'),
-      certificado: join(carpeta, 'certificado.crt'),
       alias: join(carpeta, 'alias.txt'),
     };
+  }
+
+  private rutaCertificado(cuit: string, entorno: EntornoArca): string {
+    return join(
+      this.carpetaDe(cuit),
+      entorno === 'produccion' ? 'certificado.crt' : 'certificado-homologacion.crt',
+    );
+  }
+
+  private rutas(cuit: string, entorno: EntornoArca) {
+    return { ...this.comunes(cuit), certificado: this.rutaCertificado(cuit, entorno) };
   }
 
   /** Carpeta raíz de los secretos, para que otros servicios ubiquen sus archivos. */
@@ -78,8 +119,11 @@ export class CertificadoService {
    * Es lo único que expone la clave privada, y sólo dentro del servidor: nunca
    * sale por HTTP.
    */
-  materialDeFirma(cuit: string): { certificadoPem: string; clavePrivadaPem: string } | null {
-    const r = this.rutas(cuit);
+  materialDeFirma(
+    cuit: string,
+    entorno: EntornoArca,
+  ): { certificadoPem: string; clavePrivadaPem: string } | null {
+    const r = this.rutas(cuit, entorno);
     if (!existsSync(r.clave) || !existsSync(r.certificado)) return null;
     return {
       certificadoPem: readFileSync(r.certificado, 'utf8'),
@@ -87,8 +131,8 @@ export class CertificadoService {
     };
   }
 
-  estado(cuit: string): EstadoCertificado {
-    const r = this.rutas(cuit);
+  estado(cuit: string, entorno: EntornoArca): EstadoCertificado {
+    const r = this.rutas(cuit, entorno);
     const tieneClave = existsSync(r.clave);
     const tieneCertificado = existsSync(r.certificado);
     let certificado: DatosCertificado | null = null;
@@ -117,19 +161,22 @@ export class CertificadoService {
       certificado,
       diasParaVencer,
       carpeta: r.carpeta,
+      entorno,
+      hayCertificadoDelOtroEntorno: existsSync(this.rutaCertificado(cuit, OTRO[entorno])),
     };
   }
 
   /**
    * Genera la clave y el pedido. No pisa una clave existente salvo que se
    * pida explícitamente: regenerarla deja inservible el certificado que ARCA
-   * ya haya emitido, y eso corta la facturación del comercio.
+   * ya haya emitido — los DOS, el de homologación y el de producción — y eso
+   * corta la facturación del comercio.
    */
   generar(
     datos: { cuit: string; razonSocial: string; alias: string },
     forzar = false,
   ): CsrParaSubir {
-    const r = this.rutas(datos.cuit);
+    const r = this.comunes(datos.cuit);
     if (existsSync(r.clave) && !forzar) {
       throw new ConflictException(
         'Este comercio ya tiene una clave generada. Si pedís una nueva, el certificado que ARCA haya emitido para la anterior deja de servir y hay que hacer el trámite otra vez.',
@@ -153,9 +200,20 @@ export class CertificadoService {
     return { csrPem: generado.csrPem, subject: generado.subject, archivo: r.csr };
   }
 
-  /** Guarda el .crt que devolvió ARCA, después de verificar que sea el nuestro. */
-  guardarCertificado(cuit: string, certificadoPem: string): DatosCertificado {
-    const r = this.rutas(cuit);
+  /**
+   * Guarda el .crt que devolvió ARCA, después de verificar que sea el nuestro.
+   *
+   * Se guarda **para el entorno que el comercio tiene activo**, no encima del
+   * otro. Antes había un solo archivo y cargar el de homologación pisaba el de
+   * producción: al volver a producción el comercio quedaba sin poder facturar
+   * y el error de ARCA no decía por qué.
+   */
+  guardarCertificado(
+    cuit: string,
+    certificadoPem: string,
+    entorno: EntornoArca,
+  ): DatosCertificado {
+    const r = this.rutas(cuit, entorno);
     if (!existsSync(r.clave)) {
       throw new BadRequestException(
         'Todavía no se generó el pedido de certificado en esta PC. Generalo primero y con ESE pedido sacá el certificado en ARCA.',
@@ -173,8 +231,18 @@ export class CertificadoService {
         `Ese certificado es del CUIT ${datos.cuit} y este comercio es ${normalizarCuit(cuit)}.`,
       );
     }
+    // Sólo se frena la dirección que se puede detectar sin adivinar: el emisor
+    // de un certificado de prueba dice "homologación". Al revés no hay una
+    // marca confiable, y un aviso falso acá haría dudar del archivo correcto.
+    if (entorno === 'produccion' && pareceDeHomologacion(datos.emisor)) {
+      throw new BadRequestException(
+        'Ese certificado es de HOMOLOGACIÓN (así lo dice quien lo emitió) y el comercio está en producción. Con ese certificado ARCA rechaza todo. Sacá el de producción, o pasá primero el entorno a homologación si lo que querías era probar.',
+      );
+    }
     writeFileSync(r.certificado, certificadoPem, 'utf8');
-    this.log.log(`Certificado de ARCA guardado, vence el ${datos.validoHasta}`);
+    this.log.log(
+      `Certificado de ARCA (${entorno}) guardado, vence el ${datos.validoHasta}`,
+    );
     return datos;
   }
 }

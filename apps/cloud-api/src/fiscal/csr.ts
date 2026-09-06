@@ -112,6 +112,22 @@ export interface DatosCertificado {
 }
 
 /**
+ * `true` si el certificado lo emitió la autoridad de PRUEBAS de ARCA.
+ *
+ * ARCA tiene dos autoridades certificantes distintas y no se reconocen entre
+ * sí: un certificado de producción usado en homologación se rechaza con
+ * "Certificado no emitido por AC de confianza", que no dice nada de entornos.
+ *
+ * Se mira el emisor y no el subject: el subject es del comercio (mismo CSR
+ * para los dos), el emisor es de ARCA. Sólo sirve en una dirección — la AC de
+ * homologación se nombra a sí misma, la de producción no dice "producción" —
+ * así que un `false` no prueba que sea de producción.
+ */
+export function pareceDeHomologacion(emisor: string): boolean {
+  return /homolog/i.test(emisor);
+}
+
+/**
  * Lee el certificado que devolvió ARCA y verifica que corresponda a NUESTRA
  * clave privada. Sin este chequeo, subir el archivo equivocado se descubre
  * recién al facturar, con un error de ARCA que no explica nada.

@@ -51,7 +51,7 @@ export class ServicioCaeSelector implements ServicioCae {
     try {
       const fiscal = await this.config.obtener();
       if (fiscal === null) return false;
-      return this.certificados.materialDeFirma(fiscal.cuit) !== null;
+      return this.certificados.materialDeFirma(fiscal.cuit, fiscal.entorno) !== null;
     } catch (e) {
       // Un error leyendo la configuración no puede frenar la venta.
       this.log.warn(`No se pudo determinar el alta fiscal: ${(e as Error).message}`);

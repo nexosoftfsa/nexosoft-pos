@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-04 · Publicado: POS **0.1.56** · Servidor **0.15.0**
+Actualizado: 2026-09-06 · Publicado: POS **0.1.57** · Servidor **0.16.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,25 +15,33 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Esperando respuesta
+## 1 · La prueba de Factura A y B, otra vez
 
-- [ ] **El motivo del rechazo de la Factura A.** En la prueba del 4/9 en
-      homologación, ARCA rechazó la Factura A y la Nota de Débito quedó sin CAE.
-      En Comprobantes, el badge rojo "Rechazada" es un botón: muestra el texto
-      textual de ARCA. **Con ese texto se resuelve en una pasada; sin él es
-      adivinar.**
-      *Bloquea: todo lo demás de Factura A y B.*
+La corrida del 4/9 **no llegó a ejecutar nada de lo que iba a probar**. ARCA
+rechazó todo al autenticar, antes de mirar el comprobante: *"Certificado no
+emitido por AC de confianza"*. Causa: hay un certificado por entorno y no valen
+cruzados; al pasar a homologación se seguía firmando con el de producción.
+Arreglado el 6/9 (ADR-0071) — ahora se guardan los dos y el sistema avisa antes.
+
+- [ ] **Correr `docs/PRUEBA-FACTURA-A-B-Y-ND-2.txt`.** Incluye sacar el
+      certificado de homologación en el portal de ARCA (~20 min de trámite), la
+      prueba entera de A, B y ND, y volver a producción para confirmar que ese
+      certificado no se perdió.
+      *Bloquea: vender a un Responsable Inscripto.*
+
+- [ ] **Que la venta de prueba sea de un producto al 21%.** El "Aceite de
+      Girasol" que usó Seba está cargado como **EXENTO**: con ese producto la
+      Factura A sale con `ImpNeto = 0` y todo en `ImpOpEx`, una A donde no hay
+      nada gravado, que es lo contrario de para qué existe la A. Ya está
+      corregido en el instructivo nuevo.
+
+- [ ] **Verificar que la reimpresión de una A ya discrimine IVA.** Arreglado el
+      4/9 (el desglose se guarda congelado al emitir), sin probar en campo.
+      Es el paso 7 del instructivo nuevo.
 
 ---
 
-## 2 · Factura A y B
-
-- [ ] **Repetir la prueba con un producto al 21%.** El "Aceite de Girasol" que
-      usó Seba está cargado como **EXENTO**, así que la Factura A salió con
-      `ImpNeto = 0` y todo en `ImpOpEx`: una A donde no hay nada gravado, que es
-      justamente lo contrario de para qué existe la A. Mal caso de prueba, y es
-      culpa del instructivo — decía "vendé algo" en vez de "vendé algo con IVA
-      21%".
+## 2 · Factura A y B — lo que queda después
 
 - [ ] **"Exento" significa cosas distintas en el POS y en el servidor.**
       El POS mapea `EXENTO → alícuota 0%`; el servidor lo trata como exento real
@@ -43,10 +51,9 @@ depende sólo de nosotros.
       9 archivos de producción más tests — el tipo, el cálculo de precio, el
       cálculo del comprobante, los dos mapeos de SQLite, el pull del catálogo,
       los servicios de venta y facturación, y los datos demo. Mecánico pero no
-      chico. **Esperar el motivo del rechazo antes de arrancar.**
-
-- [ ] **Verificar que la reimpresión de una A ya discrimine IVA.** Arreglado el
-      4/9 (el desglose se guarda congelado al emitir), sin probar en campo.
+      chico.
+      *No era la causa del rechazo del 4/9. Sigue siendo un problema real, pero
+      no bloquea nada todavía: dejarlo para después de la prueba.*
 
 - [ ] **No hay forma de sacar un A4 ORIGINAL.** El botón "Imprimir A4" vive en
       el panel de post-venta; una vez cerrada la venta, Comprobantes sólo ofrece
@@ -94,6 +101,9 @@ Implementado y con tests, nunca visto sobre el fierro.
 - [ ] **Reescribir el instructivo de instalación.** El que hay
       (`docs/INSTRUCTIVO-INSTALACION.txt`) es del **27/08**, anterior a todo lo
       de ARCA, el antivirus, el certificado y las Facturas A/B.
+      Tiene que decir, además, que el certificado es **por entorno**: si el alta
+      se prueba en homologación y después pasa a producción, son dos trámites
+      con el mismo `.csr` (ADR-0071).
       *Bloquea: que instale alguien que no seamos nosotros. O sea, bloquea vender.*
 
 - [ ] **Instalación en Program Files en vez de AppData.** Frenado por riesgo de

@@ -1,0 +1,325 @@
+===========================================================================
+  NEXOSOFT - FACTURA A, B Y NOTAS DE DEBITO (SEGUNDA VUELTA)
+  Para: Sebastian
+  Tiempo: 50 minutos, de los cuales 20 son tramite en la web de ARCA
+===========================================================================
+
+QUE PASO LA VEZ PASADA
+-----------------------
+Nada de lo que probamos llego a probarse. ARCA rechazo todo ANTES de mirar el
+comprobante, al autenticar. El motivo que copiaste:
+
+    "Certificado no emitido por AC de confianza"
+
+Traducido: ARCA tiene DOS certificados distintos, uno para produccion y otro
+para homologacion, y no valen cruzados. Vos tenes el de produccion. Cuando
+pasaste a homologacion, el sistema siguio firmando con ese, y homologacion no
+lo reconoce.
+
+Culpa mia: el instructivo anterior te mando a cambiar de entorno y no dijo nada
+del certificado. Y el sistema te dejo hacerlo sin avisar.
+
+Ya esta arreglado: ahora se guarda UN CERTIFICADO POR ENTORNO, los dos a la
+vez, y el sistema avisa antes si te falta el del entorno al que estas pasando.
+Tu certificado de produccion NO se toca ni se pierde.
+
+Versiones de esta prueba:  POS 0.1.57  -  Servidor 0.16.0
+Punto seguro anterior: POS 0.1.56 + Servidor 0.15.0.
+(El servidor NO toca la base esta vez.)
+
+
+PASO 1 - ACTUALIZAR
+--------------------
+1.1 Actualiza servidor a 0.16.0 y POS a 0.1.57.
+
+    [ ] Servidor 0.16.0
+    [ ] POS 0.1.57
+
+
+PASO 2 - VER EL AVISO NUEVO (30 segundos)
+------------------------------------------
+Esto es para confirmar que el arreglo esta puesto. Todavia estas en
+homologacion de la vez pasada.
+
+2.1 Configuracion > Facturacion electronica (ARCA).
+
+2.2 Mira lo que dice arriba de todo.
+
+    [ ] Aparece en ROJO: "Falta el certificado de homologacion".
+    [ ] Explica que hay uno cargado pero es del otro entorno.
+    [ ] Dice, en negrita, "No generes un pedido nuevo".
+
+    <- Si en vez de eso te muestra los tres pasos de siempre con un boton
+       "Generar de nuevo", PARA ACA y avisame: quedo el POS viejo.
+
+2.3 Toca "Probar conexion con ARCA".
+
+    [ ] El paso "Certificado" da FALLA y dice que el que hay es del otro
+        entorno.
+
+    Copiame el resultado con el boton "Copiar el resultado" y mandamelo.
+
+
+PASO 3 - SACAR EL CERTIFICADO DE HOMOLOGACION (lo mas largo)
+-------------------------------------------------------------
+OJO CON ESTO: es el MISMO pedido .csr que ya usaste para produccion. NO
+generes uno nuevo. Si generas uno nuevo se cambia la clave y se te muere el
+certificado de produccion, que hoy funciona.
+
+3.1 Busca el archivo del pedido. Esta en la carpeta que te muestra la pantalla,
+    se llama:
+
+        pedido.csr
+
+    (La ruta completa esta en el cuadro rojo del paso 2. Copiala de ahi.)
+
+3.2 Entra con tu Clave Fiscal a:
+
+        https://wsass-homo.afip.gob.ar/wsass/portal/main.aspx
+
+    Es OTRO portal, no el que usaste para produccion. Este es el de pruebas.
+
+3.3 Ahi adentro:
+    - "Crear certificado" (o "Nuevo certificado").
+    - Le pegas o le subis el contenido de pedido.csr.
+    - Le pones un alias. Poné el mismo que ya usas, o "nexosoft-homo".
+    - Te devuelve un certificado. DESCARGALO.
+
+    [ ] Tengo el archivo .crt de homologacion.
+
+3.4 En el MISMO portal de homologacion, entra a "Administrador de
+    Relaciones" (o "Asociar WSN a certificado") y asocia el servicio de
+    FACTURACION ELECTRONICA (wsfe) a ese certificado.
+
+    [ ] Asociado.
+
+    <- Este paso se olvida siempre y sin el ARCA rechaza igual, con otro
+       mensaje. Si tenes dudas, sacame una captura de esa pantalla antes de
+       seguir.
+
+
+PASO 4 - CARGARLO
+------------------
+4.1 Volve a Configuracion > Facturacion electronica.
+
+4.2 En el cuadro rojo, abajo, hay un selector de archivo. Carga ahi el .crt
+    que descargaste.
+
+    [ ] Dice "Certificado guardado".
+    [ ] Arriba ahora dice "Certificado de homologacion cargado".
+
+4.3 Toca "Probar conexion con ARCA" otra vez.
+
+    [ ] Los tres pasos en verde.
+
+    Copiame el resultado y mandamelo.
+
+    <- Si el paso "Punto de venta" falla, avisame: puede ser que en
+       homologacion tu punto de venta 2 no exista y haya que darlo de alta.
+
+4.4 Mira el cuadro que habla del certificado. Tiene que decir que hay uno
+    cargado tambien para el otro entorno.
+
+    [ ] Lo dice.
+
+    Eso quiere decir que ahora tenes los dos y podes ir y venir sin tramite.
+
+
+PASO 5 - AHORA SI, LA PRUEBA DE VERDAD
+---------------------------------------
+De aca en adelante es la prueba de la vez pasada, con UN CAMBIO IMPORTANTE en
+el paso 5.3.
+
+5.1 Configuracion > Facturacion > Condicion frente al IVA.
+    Que este en "Responsable Inscripto".
+
+    [ ] Asi esta (de la vez pasada ya deberia estarlo).
+
+5.2 Confirma que el entorno diga HOMOLOGACION.
+
+    [ ] Homologacion.
+
+5.3 ESTO ES NUEVO Y ES IMPORTANTE: la venta tiene que ser de un producto con
+    IVA 21%.
+
+    El "Aceite de Girasol 900ml" que usaste la vez pasada esta cargado como
+    EXENTO. Con ese producto la Factura A sale sin nada gravado — todo el
+    monto va a "exento" y el IVA discriminado da cero — que es justo lo
+    contrario de para que existe la Factura A.
+
+    Anda a Productos y elegi (o carga) uno que tenga IVA 21%.
+
+    Producto que vas a usar: ____________________
+    [ ] Verifique que dice 21%.
+
+5.4 Cliente: si quedo creado "Distribuidora Sur SRL" con CUIT 30712345671 y
+    condicion Responsable Inscripto, usa ese. Si no, crealo igual que la vez
+    pasada.
+
+    [ ] Cliente listo.
+
+
+PASO 6 - LA FACTURA A
+----------------------
+6.1 En ventas, elegi ese cliente y pone el receptor en "Responsable
+    Inscripto".
+
+    [ ] Arriba dice "Factura A".
+
+6.2 Vende el producto del 21% por $1210 y confirma.
+
+    [ ] Salio con CAE y QR.
+
+    Numero: 0002-________
+    CAE: ______________________________
+
+    <- Si vuelve a rechazar, tocame el badge rojo, "Copiar el motivo" y
+       mandamelo tal cual. Es lo unico que necesito.
+
+6.3 Mira el ticket con calma:
+
+    [ ] Arriba de los items estan los datos del cliente: razon social, CUIT,
+        direccion y condicion IVA.
+    [ ] Abajo, antes del TOTAL, dice "Subtotal neto" y despues "IVA 21%" por
+        separado, cada uno con su importe.
+    [ ] El IVA 21% NO es cero. Sobre $1210 tiene que dar $210.
+    [ ] Debajo de la fecha dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+6.4 Sacale el A4 (boton "Imprimir A4").
+
+    [ ] Letra A grande arriba a la derecha, en un recuadro.
+    [ ] Bloque "Receptor" con los datos.
+    [ ] Dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+
+PASO 7 - EL DUPLICADO
+----------------------
+7.1 Comprobantes > "Reimprimir" en esa Factura A.
+
+    [ ] Dice DUPLICADO donde antes decia ORIGINAL.
+    [ ] SIGUE trayendo el IVA discriminado, con los mismos importes que el
+        original.
+
+    <- Este segundo punto es lo que se arreglo el 4/9 y nunca se probo. Si el
+       duplicado sale sin discriminar, o con numeros distintos al original,
+       avisame.
+
+    MANDAME EL PDF.
+
+
+PASO 8 - LA FACTURA B
+----------------------
+8.1 Sin cliente (Consumidor final), receptor en "Consumidor Final".
+
+    [ ] Arriba dice "Factura B".
+
+8.2 Vende $1000 y confirma.
+
+    [ ] Salio con CAE.
+    [ ] El ticket NO tiene datos de receptor.
+    [ ] NO discrimina IVA.
+    [ ] Dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+8.3 Otra venta, tambien B, pero eligiendo el cliente Distribuidora Sur SRL y
+    dejando el receptor en Consumidor Final.
+
+    [ ] Dice "Factura B" (no A).
+    [ ] El ticket SI trae los datos del cliente.
+    [ ] Sigue sin discriminar IVA.
+
+    MANDAME EL PDF.
+
+
+PASO 9 - NOTA DE DEBITO
+------------------------
+Una Nota de Debito COBRA algo adicional sobre una factura ya emitida y NO la
+anula.
+
+9.1 Comprobantes > busca la Factura A del paso 6.
+
+    [ ] Al lado de "Anular" hay un boton "Nota de Debito".
+
+9.2 Tocalo. Carga:
+    Monto:    121
+    Concepto: Intereses por pago fuera de termino
+
+9.3 Emitila.
+
+    [ ] Salio con CAE.
+    [ ] Aparece una "Nota de Debito A" nueva en la lista.
+    [ ] La Factura A original SIGUE figurando como Emitida, NO anulada.
+
+    <- Lo ultimo es lo importante. Si te anulo la factura, avisame.
+
+    Numero de la ND: 0002-________
+    CAE de la ND: ______________________________
+
+9.4 Reimprimi la Nota de Debito.
+
+    [ ] Una sola linea: "Intereses por pago fuera de termino" por $121.
+    [ ] Dice "Comprobante asociado" con el numero de la Factura A.
+    [ ] Trae su propio CAE y QR.
+
+    MANDAME EL PDF.
+
+9.5 Emiti una SEGUNDA Nota de Debito sobre la MISMA factura, por $50,
+    concepto "Gastos administrativos".
+
+    [ ] Deja emitirla.
+
+9.6 Proba tocar "Nota de Debito" sobre una Nota de Credito o sobre una factura
+    anulada.
+
+    [ ] El boton NO aparece en esos casos.
+
+
+PASO 10 - VOLVER A PRODUCCION Y CONFIRMAR QUE NO SE ROMPIO NADA
+----------------------------------------------------------------
+Esto es nuevo y es la mitad del arreglo. Antes, cargar el certificado de
+homologacion te habria pisado el de produccion.
+
+10.1 Configuracion > Facturacion > Condicion frente al IVA > Monotributo.
+
+10.2 Configuracion > ARCA > "Pasar a produccion".
+
+     [ ] NO aparece ningun aviso de que falta el certificado.
+
+     <- Si aparece, PARA y avisame: significa que el de produccion se
+        perdio.
+
+10.3 Toca "Probar conexion con ARCA".
+
+     [ ] Los tres pasos en verde, en produccion.
+
+     Copiame el resultado y mandamelo.
+
+10.4 Volve a homologacion y probala de nuevo.
+
+     [ ] Tambien los tres en verde, sin cargar ningun archivo.
+
+     Esto prueba que los dos certificados conviven. Dejalo como mas te sirva
+     para seguir.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. El "Copiar el resultado" del paso 2.3 (la falla, antes de arreglar)
+  2. El del paso 4.3 (los tres en verde, homologacion)
+  3. PDF del ticket de la Factura A (paso 6.3) <- el mas importante
+  4. PDF del A4 de la Factura A (paso 6.4)
+  5. PDF de la reimpresion, que tiene que decir DUPLICADO y traer el IVA
+     discriminado (paso 7.1)
+  6. PDF de las dos Facturas B (pasos 8.2 y 8.3)
+  7. PDF de la Nota de Debito (paso 9.4)
+  8. Los dos "Copiar el resultado" del paso 10 (produccion y homologacion)
+
+Si algo rechaza: tocame el badge rojo "Rechazada", "Copiar el motivo" y
+mandamelo tal cual. Eso solo vale mas que cualquier descripcion.
+===========================================================================

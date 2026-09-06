@@ -75,14 +75,17 @@ export class ServicioCaeArca implements ServicioCae {
       );
     }
 
-    const material = this.certificados.materialDeFirma(fiscal.cuit);
+    const entorno: EntornoArca = fiscal.entorno;
+    const material = this.certificados.materialDeFirma(fiscal.cuit, entorno);
     if (material === null) {
+      // El entorno va en el mensaje porque el caso frecuente no es "no hay
+      // certificado" sino "hay, pero es el del otro entorno": el de producción
+      // no sirve en homologación ni al revés.
       throw new ErrorCaeNoDisponible(
-        'No hay certificado de ARCA cargado en este servidor. Cargalo en Configuración > Facturación electrónica.',
+        `No hay certificado de ARCA de ${entorno} cargado en este servidor. Cargalo en Configuración > Facturación electrónica.`,
       );
     }
 
-    const entorno: EntornoArca = fiscal.entorno;
     return {
       fiscal,
       wsaa: new ClienteWsaa({

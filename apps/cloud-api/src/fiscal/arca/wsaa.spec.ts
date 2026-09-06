@@ -175,6 +175,27 @@ describe('ClienteWsaa', () => {
     expect((error as ErrorWsaa).transitorio).toBe(false);
     expect((error as ErrorWsaa).message).toContain('AC de confianza');
   });
+
+  /**
+   * El mensaje de ARCA no menciona entornos, y ese es exactamente el problema:
+   * el 4/9/2026 significaba "estás en homologación con el certificado de
+   * producción" y nadie podía saberlo leyéndolo. Se traduce nombrando el
+   * entorno, y se conserva el texto original para poder buscarlo.
+   */
+  it('un rechazo de la AC nombra el entorno, que es lo que falta averiguar', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () =>
+        '<soap:Fault><faultstring>Certificado no emitido por AC de confianza</faultstring></soap:Fault>',
+    } as Response);
+
+    const error = await cliente(fetchMock as never)
+      .obtenerTicket('wsfe')
+      .catch((e: unknown) => e);
+    expect((error as ErrorWsaa).message).toContain('homologacion');
+    expect((error as ErrorWsaa).message).toContain('no valen cruzados');
+  });
 });
 
 describe('rutaCacheTicket', () => {

@@ -123,6 +123,17 @@ export class ClienteWsaa {
           true,
         );
       }
+      // ARCA tiene una autoridad certificante para producción y otra para
+      // homologación, y no se reconocen entre sí. Su mensaje no menciona
+      // entornos, así que sin esta traducción el comercio ve un error de
+      // criptografía cuando lo único que pasa es que el certificado es del
+      // otro lado. Nos costó la prueba de Facturas A y B del 4/9/2026.
+      if (/AC de confianza|no emitido por/i.test(fault)) {
+        throw new ErrorWsaa(
+          `ARCA no reconoce el certificado en el entorno ${this.opciones.entorno}: cada entorno tiene el suyo y no valen cruzados. Cargá el certificado de ${this.opciones.entorno} en Configuración > Facturación electrónica. (ARCA dijo: "${fault}")`,
+          false,
+        );
+      }
       throw new ErrorWsaa(`ARCA rechazó la autenticación: ${fault}`, false);
     }
     if (!res.ok) {
