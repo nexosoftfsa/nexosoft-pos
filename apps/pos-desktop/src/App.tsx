@@ -438,6 +438,30 @@ function AppTauri() {
     [construirEntorno],
   );
 
+  /**
+   * El catálogo cambió en el ABM: se vuelve a traer para que la caja lo vea.
+   *
+   * Se actualiza SÓLO el catálogo dentro del entorno, no se reconstruye el
+   * entorno entero: reconstruirlo pasa por la pantalla de "cargando" y tira
+   * abajo todo lo que esté en pantalla.
+   *
+   * Si falla —sin red, servidor caído— no se avisa ni se rompe nada: queda la
+   * foto anterior, que es exactamente lo que había antes de este arreglo.
+   */
+  const onCatalogoCambiado = useCallback(() => {
+    void (async () => {
+      try {
+        const recargar = entorno?.recargarCatalogo;
+        if (recargar === undefined) return;
+        const catalogo = await recargar();
+        setEntorno((previo) => (previo === null ? previo : { ...previo, catalogo }));
+      } catch {
+        // Ver el comentario de arriba: quedarse con la foto vieja es el
+        // comportamiento de siempre, no una regresión.
+      }
+    })();
+  }, [entorno]);
+
   const onCerrarSesion = useCallback(async () => {
     const sesion = sesionRef.current;
     if (sesion === null) return;
@@ -654,6 +678,7 @@ function AppTauri() {
         {...(clienteCatalogoRef.current !== null
           ? { clienteCatalogo: clienteCatalogoRef.current }
           : {})}
+        onCatalogoCambiado={onCatalogoCambiado}
         {...(clienteStockRef.current !== null ? { clienteStock: clienteStockRef.current } : {})}
         {...(clienteCajaRef.current !== null ? { clienteCaja: clienteCajaRef.current } : {})}
         {...(clienteCtaCteRef.current !== null ? { clienteCtaCte: clienteCtaCteRef.current } : {})}

@@ -88,6 +88,7 @@ export function Shell({
   entorno,
   usuario,
   clienteCatalogo,
+  onCatalogoCambiado,
   clienteStock,
   clienteCaja,
   clienteCtaCte,
@@ -117,6 +118,11 @@ export function Shell({
   suscripcion?: EstadoLicencia;
   /** Cliente del ABM de catálogo (HTTP en Tauri, simulado en el navegador). */
   clienteCatalogo?: ClienteCatalogoAdmin;
+  /**
+   * Aviso de que el catálogo cambió, para que la caja lo recargue. Quien lo
+   * implementa es `App`, que es el dueño del `entorno`.
+   */
+  onCatalogoCambiado?: () => void;
   /** Cliente de stock (HTTP en Tauri, simulado en el navegador). */
   clienteStock?: ClienteStock;
   /** Cliente de caja (HTTP en Tauri, simulado en el navegador). */
@@ -453,7 +459,10 @@ export function Shell({
               />
             )
           ) : activo?.id === "catalogo" && clienteCatalogo ? (
-            <CatalogoAbm cliente={clienteCatalogo} />
+            <CatalogoAbm
+              cliente={clienteCatalogo}
+              {...(onCatalogoCambiado !== undefined ? { onCambio: onCatalogoCambiado } : {})}
+            />
           ) : activo?.id === "etiquetas" && clienteCatalogo ? (
             <EtiquetasGondola cliente={clienteCatalogo} lector={entorno.lector} />
           ) : activo?.id === "stock" && clienteStock ? (

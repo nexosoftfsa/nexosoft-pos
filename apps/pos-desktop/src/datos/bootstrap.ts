@@ -119,6 +119,18 @@ export interface EntornoPos {
   readonly sync: SyncPos;
   /** Fase 17: toggle local de la estrella "grilla rápida" (nunca sincroniza). */
   readonly grillaRapida: ServicioGrillaRapida;
+  /**
+   * Vuelve a traer el catálogo del servidor y a releerlo de SQLite.
+   *
+   * `catalogo` es una foto tomada al iniciar sesión. Sin esto, editar un
+   * producto no se veía al vender hasta cerrar sesión y volver a entrar —
+   * cambiar un artículo de exento a 21% y que la caja lo siguiera vendiendo
+   * exento es la clase de diferencia que termina en un comprobante mal emitido.
+   *
+   * Opcional porque el entorno demo (navegador) no tiene servidor del que
+   * traer nada: ahí el catálogo es el que se sembró y no cambia solo.
+   */
+  readonly recargarCatalogo?: () => Promise<readonly ProductoCatalogo[]>;
 }
 
 /** Puerto local (Fase 17) para marcar/desmarcar un artículo en la grilla rápida. */

@@ -44,7 +44,22 @@ function precio(valor: string): string {
   }
 }
 
-export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
+export function CatalogoAbm({
+  cliente,
+  onCambio,
+}: {
+  cliente: ClienteCatalogoAdmin;
+  /**
+   * Se llama después de cada cambio que se guardó bien.
+   *
+   * El catálogo con el que vende la caja es una foto que se toma al iniciar
+   * sesión, así que sin este aviso un cambio acá no se veía al vender hasta
+   * cerrar sesión y volver a entrar. Pasó en la prueba del 6/9/2026: se cambió
+   * un producto de exento a 21%, la pantalla de catálogo lo mostraba bien y la
+   * caja lo seguía vendiendo exento.
+   */
+  onCambio?: () => void;
+}) {
   const [productos, setProductos] = useState<ProductoAdmin[]>([]);
   const [categorias, setCategorias] = useState<CategoriaAdmin[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -74,6 +89,17 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
   useEffect(() => {
     void cargar();
   }, [cargar]);
+
+  /**
+   * Después de guardar: se refresca esta lista Y se avisa afuera, para que la
+   * caja vea el cambio sin tener que cerrar sesión. Va junto a propósito: cada
+   * vez que estuvieron separados, alguien agregó una operación nueva y se
+   * olvidó de la mitad.
+   */
+  const recargarYAvisar = useCallback(async () => {
+    await cargar();
+    onCambio?.();
+  }, [cargar, onCambio]);
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -105,7 +131,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
     }
     try {
       await cliente.desactivarProducto(p.id);
-      await cargar();
+      await recargarYAvisar();
     } catch (e) {
       setError(mensaje(e));
     }
@@ -114,7 +140,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
   async function reactivar(p: ProductoAdmin) {
     try {
       await cliente.actualizarProducto(p.id, { activo: true });
-      await cargar();
+      await recargarYAvisar();
     } catch (e) {
       setError(mensaje(e));
     }
@@ -287,7 +313,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
           onCerrar={() => setEditando(null)}
           onGuardado={() => {
             setEditando(null);
-            void cargar();
+            void recargarYAvisar();
           }}
         />
       )}
@@ -298,7 +324,7 @@ export function CatalogoAbm({ cliente }: { cliente: ClienteCatalogoAdmin }) {
           columnasAyuda={Object.values(COLUMNAS_IMPORTAR_CATALOGO)}
           onImportar={(filas, dryRun) => cliente.importarProductos(filas, dryRun)}
           onCerrar={() => setImportando(false)}
-          onImportado={() => void cargar()}
+          onImportado={() => void recargarYAvisar()}
         />
       )}
     </div>

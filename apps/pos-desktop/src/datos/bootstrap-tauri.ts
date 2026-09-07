@@ -308,5 +308,14 @@ export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}):
     grillaRapida: {
       establecer: (articuloId, valor) => repos.articulos.establecerGrillaRapida(articuloId, valor),
     },
+    // Mismo camino que al iniciar sesión: pull del servidor y relectura de
+    // SQLite. Es lo que hacía falta hacer a mano —salir y volver a entrar—
+    // para que un cambio de catálogo llegara a la caja.
+    recargarCatalogo: async () => {
+      if (obtenerToken() !== null) {
+        await intentarPullCatalogo(ejecutor, config, clienteCatalogo);
+      }
+      return leerCatalogo(ejecutor, repos, config);
+    },
   };
 }
