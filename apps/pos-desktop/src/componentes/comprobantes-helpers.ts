@@ -142,7 +142,10 @@ export function datosTicketDeComprobante(
     puntoDeVenta: config.puntoDeVenta,
     ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
     tipoComprobante: etiquetaTipoComprobante(c.tipoComprobante),
-    numero: c.numeroComprobante ?? 0,
+    // Puede ser null: un comprobante que todavía espera el CAE no tiene número
+    // de la serie fiscal, y el correlativo interno vive en la terminal que hizo
+    // la venta, no acá. El ticket lo dice en vez de inventar un número.
+    numero: c.numeroComprobante,
     // Lo que viene del servidor es su propio registro: ese número es el bueno.
     numeroConfirmado: c.numeroConfirmado ?? true,
     fecha: new Date(c.creadaEn),

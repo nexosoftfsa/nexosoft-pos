@@ -63,7 +63,10 @@ export function pathDeModulos(
  * una impresión que no sale.
  */
 export async function conQrFiscal(datos: DatosTicket): Promise<DatosImpresion> {
-  if (!llevaQr(datos)) return datos;
+  // Sin número no hay QR posible: el número es parte de lo que se firma. No
+  // debería pasar —`llevaQr` exige CAE, y con CAE hay número— pero el tipo lo
+  // admite desde ADR-0072 y adivinar un número acá sería peor que no imprimirlo.
+  if (!llevaQr(datos) || datos.numero === null) return datos;
 
   try {
     const url = urlQrArca({

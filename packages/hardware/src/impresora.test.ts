@@ -13,6 +13,7 @@ import {
   letraFiscal,
   llevaDatosDelReceptor,
   numeroEsProvisional,
+  referenciaInterna,
   subtotalNeto,
 } from "./impresora.js";
 
@@ -113,6 +114,21 @@ describe("subtotalNeto", () => {
 
   it("una Factura A sin desglose guardado (comprobante viejo) devuelve null", () => {
     expect(subtotalNeto(base({ tipoComprobante: "Factura A" }))).toBeNull();
+  });
+});
+
+/**
+ * Al reimprimir desde Comprobantes un comprobante que todavía espera el CAE no
+ * hay ningún número: el fiscal lo asigna ARCA y el correlativo interno lo lleva
+ * la terminal que hizo la venta, no el servidor (ADR-0072).
+ */
+describe("referenciaInterna", () => {
+  it("con número interno lo imprime, con nombre propio", () => {
+    expect(referenciaInterna(base({ numero: 33 }))).toBe("Referencia interna 00000033");
+  });
+
+  it("sin número dice que no lo hay, en vez de imprimir 00000000", () => {
+    expect(referenciaInterna(base({ numero: null }))).toBe("Sin numerar todavía");
   });
 });
 

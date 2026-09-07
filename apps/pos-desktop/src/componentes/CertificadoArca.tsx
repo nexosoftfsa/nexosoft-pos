@@ -456,6 +456,37 @@ export function CertificadoArca({
             Se guarda como el certificado de <b>{nombreEntorno}</b>. No pisa al del otro entorno:
             quedan los dos y se usa el que corresponda según cómo esté configurado el comercio.
           </div>
+          {/* El diagnóstico hace más falta acá que con todo andando: es lo que
+              confirma que el certificado nuevo quedó bien y que el servicio
+              está asociado en ARCA. Faltaba, y la prueba del 6/9 se topó con
+              eso en el primer paso. */}
+          <button
+            type="button"
+            className="pill-btn"
+            disabled={trabajando}
+            onClick={() => void probarArca()}
+          >
+            {trabajando ? "Probando…" : "Probar conexión con ARCA"}
+          </button>
+
+          {diagnostico !== null && (
+            <div className="diagnostico-arca">
+              {diagnostico.pasos.map((p) => (
+                <div key={p.paso} className={p.ok ? "aviso-ok" : "error"}>
+                  <b>
+                    {p.ok ? "OK" : "FALLA"} · {p.paso}
+                  </b>
+                  <div>{p.detalle}</div>
+                  {p.queHacer !== undefined && (
+                    <div className="diagnostico-arca__ayuda">{p.queHacer}</div>
+                  )}
+                </div>
+              ))}
+              <button type="button" className="linkbtn" onClick={() => void copiarDiagnostico()}>
+                Copiar el resultado
+              </button>
+            </div>
+          )}
           {fiscal?.config != null && (
             <button
               type="button"

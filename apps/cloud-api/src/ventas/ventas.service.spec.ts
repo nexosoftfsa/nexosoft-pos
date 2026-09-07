@@ -361,6 +361,29 @@ describe('VentasService', () => {
       expect(result.id).toBe('v1');
       expect(prisma.$transaction).toHaveBeenCalledTimes(2);
     });
+
+    /**
+     * El caso que se comió la prueba del 6/9/2026. ARCA ya autorizó y el número
+     * que devolvió está ocupado por un provisional viejo. Reintentar es al
+     * pedo: da el mismo número las tres veces. Y el reintento tapaba lo único
+     * que importa contar — que hay un comprobante con CAE en ARCA que no está
+     * en la base.
+     */
+    it('con un número de ARCA no reintenta: avisa que quedó un CAE sin guardar', async () => {
+      const colision = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '6.19.3',
+      });
+      prisma.$transaction.mockRejectedValue(colision);
+
+      const error = await service.registrar(USUARIO, DTO).catch((e: unknown) => e);
+
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect((error as Error).message).toContain('CAE');
+      // El número y el CAE tienen que estar en el mensaje: es lo que se anota
+      // para regularizarlo con el contador.
+      expect((error as Error).message).toContain('12345678901234');
+    });
   });
 
   describe('venta de combo (Fase 8.1)', () => {
@@ -511,13 +534,25 @@ describe('VentasService', () => {
       expect(data.motivoFiscal).toContain('sin respuesta de AFIP');
     });
 
-    it('igual le asigna número, para no romper la correlatividad', async () => {
+    /**
+     * Este test decía lo contrario —"igual le asigna número, para no romper la
+     * correlatividad"— y esa idea nos costó cinco CAE quemados el 6/9/2026.
+     *
+     * La correlatividad de la serie fiscal no es nuestra: la lleva ARCA. Un
+     * número inventado mientras ARCA no responde no la mantiene, la sabotea:
+     * ocupa un lugar de la misma serie, con el mismo unique, que ARCA va a
+     * querer usar más adelante. Cuando llega, el INSERT falla — después de que
+     * ARCA ya autorizó. Ver ADR-0072.
+     */
+    it('NO le inventa número: el de la serie fiscal lo asigna ARCA', async () => {
       cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin red'));
       tx.venta.aggregate.mockResolvedValue({ _max: { numeroComprobante: 41 } });
 
       await service.registrar(USUARIO, DTO);
 
-      expect(tx.venta.create.mock.calls[0]?.[0]?.data.numeroComprobante).toBe(42);
+      expect(tx.venta.create.mock.calls[0]?.[0]?.data.numeroComprobante).toBeNull();
+      // Ni siquiera se consulta el último número: no hay serie propia que seguir.
+      expect(tx.venta.aggregate).not.toHaveBeenCalled();
     });
 
     it('descuenta el stock igual: la mercadería salió del local', async () => {

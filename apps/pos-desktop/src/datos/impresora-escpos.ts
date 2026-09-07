@@ -86,7 +86,15 @@ async function qrFiscalRaster(
   datos: DatosTicket,
   anchoPuntos: number,
 ): Promise<LogoRaster | null> {
-  if (!llevaQrFiscal(datos.cae) || typeof datos.codigoComprobanteArca !== "number") return null;
+  // El número es parte de lo que se firma en el QR: sin número no hay QR. Con
+  // CAE siempre lo hay; el chequeo es porque el tipo lo admite (ADR-0072).
+  if (
+    !llevaQrFiscal(datos.cae) ||
+    typeof datos.codigoComprobanteArca !== "number" ||
+    datos.numero === null
+  ) {
+    return null;
+  }
   try {
     const url = urlQrArca({
       fecha: datos.fecha,

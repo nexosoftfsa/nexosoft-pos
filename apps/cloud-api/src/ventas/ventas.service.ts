@@ -189,12 +189,11 @@ export class VentasService {
     );
     const cae = fiscal.cae;
 
-    const notaCredito = await this.conNumeroUnico(() =>
+    const notaCredito = await this.conNumeroUnico(cae, () =>
       this.prisma.$transaction(async (tx) => {
         const tipoFinal = cae?.tipoComprobante ?? tipoNc;
         const numeroComprobante =
-          cae?.numeroComprobante ??
-          (await this.siguienteNumeroNoFiscal(tx, sucursalId, tipoFinal));
+          cae?.numeroComprobante ?? (await this.numeroSinCae(tx, sucursalId, tipoFinal));
         const nc = await tx.venta.create({
           data: {
             operacionId: `${original.operacionId}-NC`,
@@ -316,12 +315,11 @@ export class VentasService {
     );
     const cae = fiscal.cae;
 
-    const notaDebito = await this.conNumeroUnico(() =>
+    const notaDebito = await this.conNumeroUnico(cae, () =>
       this.prisma.$transaction(async (tx) => {
         const tipoFinal = cae?.tipoComprobante ?? tipoNd;
         const numeroComprobante =
-          cae?.numeroComprobante ??
-          (await this.siguienteNumeroNoFiscal(tx, sucursalId, tipoFinal));
+          cae?.numeroComprobante ?? (await this.numeroSinCae(tx, sucursalId, tipoFinal));
         const nd = await tx.venta.create({
           data: {
             // A diferencia de la NC —una por venta— se pueden emitir VARIAS
@@ -541,12 +539,11 @@ export class VentasService {
     const cae = fiscal.cae;
 
     // Transacción: venta + ítems + pagos + movimientos de stock VENTA (atómico).
-    const venta = await this.conNumeroUnico(() =>
+    const venta = await this.conNumeroUnico(cae, () =>
       this.prisma.$transaction(async (tx) => {
         const tipoFinal = cae?.tipoComprobante ?? tipoComprobante;
         const numeroComprobante =
-          cae?.numeroComprobante ??
-          (await this.siguienteNumeroNoFiscal(tx, usuario.sucursalId, tipoFinal));
+          cae?.numeroComprobante ?? (await this.numeroSinCae(tx, usuario.sucursalId, tipoFinal));
         const v = await tx.venta.create({
           data: {
             operacionId: dto.operacionId,
@@ -748,10 +745,39 @@ export class VentasService {
   }
 
   /**
+   * Con qué número se guarda un comprobante al que ARCA todavía no le dio CAE.
+   *
+   * Para un comprobante **fiscal** es `null`, y eso no es un detalle: el número
+   * de la serie fiscal lo asigna ARCA, y hasta que lo asigne no hay ninguno.
+   *
+   * Antes se le ponía uno "provisional" de nuestra propia serie. Parecía
+   * inofensivo y era una bomba de tiempo: el provisional ocupa un lugar en la
+   * misma columna, con el mismo `@@unique`, que después va a usar el número
+   * real de ARCA. Cuando ARCA llega a ese número, el `INSERT` falla — y falla
+   * DESPUÉS de que ARCA ya autorizó el comprobante, así que se pierde la venta
+   * y queda un comprobante autorizado en ARCA que no existe en nuestra base.
+   *
+   * Pasó el 6/9/2026: los rechazos del 4/9 habían dejado ocupados los números
+   * 1 a 5 de Factura A y 1 y 2 de Nota de Débito, y ARCA venía empezando de 1.
+   * Cinco intentos de la misma venta, cinco CAE quemados. Ver ADR-0072.
+   *
+   * Un `TicketNoFiscal` sí lleva número propio: no existe en ARCA, nadie se lo
+   * va a pisar, y necesita algo con qué identificarse.
+   */
+  private async numeroSinCae(
+    tx: Tx,
+    sucursalId: string,
+    tipoComprobante: string,
+  ): Promise<number | null> {
+    if (esComprobanteFiscal(tipoComprobante)) return null;
+    return this.siguienteNumeroNoFiscal(tx, sucursalId, tipoComprobante);
+  }
+
+  /**
    * Próximo correlativo por (sucursal, tipo de comprobante) para comprobantes
-   * SIN CAE (Fase 12.J): un `TicketNoFiscal` no tiene numeración fiscal, pero
-   * igual necesita un número propio para identificarlo. Los comprobantes CON
-   * CAE siguen numerándose vía `ServicioCae` (ver ADR-0008), sin tocar acá.
+   * NO fiscales (Fase 12.J): un `TicketNoFiscal` no tiene numeración fiscal,
+   * pero igual necesita un número propio para identificarlo. Los comprobantes
+   * fiscales se numeran vía `ServicioCae` (ver ADR-0008), sin tocar acá.
    */
   private async siguienteNumeroNoFiscal(
     tx: Tx,
@@ -766,25 +792,55 @@ export class VentasService {
   }
 
   /**
+   * Reintenta el `INSERT` cuando dos comprobantes se pelean por el mismo número.
+   *
    * `siguienteNumeroNoFiscal` calcula el número dentro de la misma transacción
    * que el `INSERT`, así que dos ventas concurrentes del mismo tipo podrían
    * calcular el mismo número antes de que la primera confirme. La restricción
-   * `@@unique` de Prisma lo detecta (P2002); acá se reintenta la transacción
-   * completa con el siguiente número disponible.
+   * `@@unique` de Prisma lo detecta (P2002) y acá se reintenta con el siguiente
+   * disponible.
+   *
+   * **Con un número de ARCA no se reintenta.** Ese número no lo elegimos
+   * nosotros y volver a intentar da exactamente el mismo, tres veces. Peor: se
+   * pierde el hecho de que ARCA YA autorizó el comprobante, que es lo único
+   * importante que hay que contar. Se registra como discrepancia fiscal y se
+   * corta con un mensaje que se pueda leer.
    */
-  private async conNumeroUnico<T>(fn: () => Promise<T>): Promise<T> {
-    const intentosMax = 3;
+  private async conNumeroUnico<T>(
+    cae: { readonly cae: string; readonly numeroComprobante: number } | null,
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    const intentosMax = cae === null ? 3 : 1;
     for (let intento = 1; intento <= intentosMax; intento++) {
       try {
         return await fn();
       } catch (error) {
         const esColisionDeNumero =
           error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
-        if (!esColisionDeNumero || intento === intentosMax) throw error;
+        if (!esColisionDeNumero) throw error;
+        if (cae !== null) throw this.discrepanciaFiscal(cae);
+        if (intento === intentosMax) throw error;
       }
     }
     // Inalcanzable: el for siempre retorna o lanza en su última iteración.
     throw new Error('No se pudo asignar el número de comprobante');
+  }
+
+  /**
+   * ARCA autorizó y nosotros no pudimos guardar. Queda un comprobante con CAE
+   * en ARCA que no existe en nuestra base: hay que anotarlo con todos los datos
+   * para poder regularizarlo con el contador.
+   */
+  private discrepanciaFiscal(cae: {
+    readonly cae: string;
+    readonly numeroComprobante: number;
+  }): BadRequestException {
+    this.logger.error(
+      `DISCREPANCIA FISCAL: ARCA autorizó el comprobante N° ${cae.numeroComprobante} con CAE ${cae.cae} y no se pudo guardar en la base porque ese número ya estaba ocupado. El comprobante existe en ARCA y no acá.`,
+    );
+    return new BadRequestException(
+      `ARCA autorizó el comprobante N° ${cae.numeroComprobante} (CAE ${cae.cae}) pero ese número ya está ocupado en este servidor, así que no se pudo guardar. Anotá el CAE: el comprobante quedó emitido en ARCA y hay que regularizarlo. Avisanos antes de seguir facturando.`,
+    );
   }
 
   private async respaldarSiCorresponde(): Promise<void> {

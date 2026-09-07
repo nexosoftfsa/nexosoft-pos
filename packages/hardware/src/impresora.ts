@@ -97,14 +97,28 @@ export function leyendaNumeroProvisional(datos: DatosTicket): string {
  * Cómo se identifica un comprobante todavía sin número fiscal. El cajero
  * necesita poder encontrarlo después, así que el correlativo interno se
  * imprime — pero con nombre propio, para que nadie lo confunda con el fiscal.
+ *
+ * Puede no haber ninguno: el correlativo interno lo lleva la terminal que hizo
+ * la venta, así que al reimprimir desde Comprobantes —que lee del servidor— un
+ * comprobante que todavía espera el CAE no hay número que mostrar. Antes se
+ * mostraba el "provisional" que guardaba el servidor; ese número ya no existe
+ * (ADR-0072) y era engañoso además: no coincidía con el del ticket original.
  */
 export function referenciaInterna(datos: DatosTicket): string {
-  return `Referencia interna ${String(datos.numero).padStart(8, "0")}`;
+  return datos.numero === null
+    ? "Sin numerar todavía"
+    : `Referencia interna ${String(datos.numero).padStart(8, "0")}`;
 }
 
-/** "0002-00000003": la identificación fiscal, punto de venta y número. */
+/**
+ * "0002-00000003": la identificación fiscal, punto de venta y número.
+ *
+ * Sólo se llama cuando el comprobante NO es provisional, o sea cuando tiene
+ * CAE — y con CAE siempre hay número. El `?? 0` es para el tipo, no un caso.
+ */
 export function numeroFiscalFormateado(datos: DatosTicket): string {
-  return `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(datos.numero).padStart(8, "0")}`;
+  const n = datos.numero ?? 0;
+  return `${String(datos.puntoDeVenta).padStart(4, "0")}-${String(n).padStart(8, "0")}`;
 }
 
 /**
@@ -187,7 +201,12 @@ export interface DatosTicket {
 
   // Comprobante
   readonly tipoComprobante: string; // ej. "Factura B"
-  readonly numero: number;
+  /**
+   * El número con el que se identifica. `null` cuando todavía no hay ninguno:
+   * un comprobante fiscal sin CAE no tiene número de la serie fiscal, y el
+   * correlativo interno lo lleva la terminal, no el servidor.
+   */
+  readonly numero: number | null;
   readonly fecha: Date;
   readonly condicionIvaReceptor: string;
   /**

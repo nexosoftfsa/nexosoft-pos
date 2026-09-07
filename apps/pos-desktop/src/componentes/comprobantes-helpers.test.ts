@@ -311,7 +311,9 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
     const datos = datosTicketDeComprobante(c, CONFIG);
     expect(datos.esFiscal).toBe(false);
     expect(datos.cae).toBeUndefined();
-    expect(datos.numero).toBe(0);
+    // Sin número se pasa `null`, no un 0 disfrazado de número: el ticket dice
+    // "Sin numerar todavía" en vez de imprimir 00000000 (ADR-0072).
+    expect(datos.numero).toBeNull();
   });
 
   it("sin desglose de IVA persistido (limitación conocida del backend): subtotalesIva vacío", () => {
