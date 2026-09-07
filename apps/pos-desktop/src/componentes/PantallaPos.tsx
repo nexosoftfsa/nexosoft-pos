@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { ComandoVenta, PrevisualizacionVenta, VentaConfirmada } from "@nexosoft/app";
 import {
@@ -51,6 +51,7 @@ import {
   PROMOS_DEMO,
   promoAplicable,
 } from "./promos";
+import { motivoNoFacturable } from "./venta-facturable";
 import { useImpresionA4 } from "./usar-impresion-a4";
 import { useImpresionTicket } from "./usar-impresion-ticket";
 import { useLectorTeclado } from "./usar-lector-teclado";
@@ -331,6 +332,18 @@ export function PantallaPos({
   const tipo = emiteFiscal
     ? resolverTipoComprobante(config.condicionIvaEmisor, condicionReceptor)
     : TipoComprobante.TicketNoFiscal;
+
+  /** El cliente elegido en el selector, si hay alguno. */
+  const clienteElegido = useMemo(
+    () => (clienteId === "" ? undefined : clientes.find((c) => c.id === clienteId)),
+    [clienteId, clientes],
+  );
+  /**
+   * Qué le falta a esta venta para poder emitirse, o `null`. Se muestra apenas
+   * el receptor y el cliente no cierran, sin esperar a que el cajero cobre:
+   * corregirlo después de imprimir ya cuesta una nota de crédito.
+   */
+  const faltaParaFacturar = motivoNoFacturable(tipo, clienteElegido);
 
   /** `true` si el producto está marcado para la grilla rápida (Fase 17). */
   function esGrillaRapida(producto: ProductoCatalogo): boolean {
@@ -817,6 +830,15 @@ export function PantallaPos({
       setError("Elegí un cliente para vender en cuenta corriente.");
       return;
     }
+    // Una Factura A ES una factura a un CUIT identificado: sin receptor no es
+    // una A incompleta, no es una A. Se frena ACÁ, antes de cobrar e imprimir,
+    // que es el único momento en que todavía se puede corregir sin papeles de
+    // por medio.
+    const faltante = motivoNoFacturable(tipo, clienteElegido);
+    if (faltante !== null) {
+      setError(faltante);
+      return;
+    }
     const clienteVenta = clienteId === "" ? undefined : clienteId;
     // Se limpia ANTES de confirmar: si esta venta no llega a resolverse contra
     // el servidor, su ticket no puede salir con el CAE de la venta anterior.
@@ -1125,6 +1147,7 @@ export function PantallaPos({
               <kbd>F12</kbd> cobro exacto y confirma
             </span>
           </div>
+          {faltaParaFacturar !== null && <div className="error">{faltaParaFacturar}</div>}
           <div className="venta-cabecera">
             <div className="comprobante">
               <span className="tipo">{etiquetaComprobante(tipo)}</span>
