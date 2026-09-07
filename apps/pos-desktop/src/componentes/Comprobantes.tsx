@@ -89,7 +89,19 @@ export function Comprobantes({
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [soloHoy, setSoloHoy] = useState(true);
-  const [reimprimir, setReimprimir] = useState<Comprobante | null>(null);
+  /**
+   * Comprobante abierto para imprimir, y con qué leyenda.
+   *
+   * Casi siempre es una reimpresión (DUPLICADO). La excepción son las notas
+   * emitidas desde acá: una Nota de Crédito o de Débito nace en esta pantalla,
+   * así que su ORIGINAL —el papel que se lleva el cliente— también tiene que
+   * salir de acá. Antes no había forma: la nota se emitía, y lo único que se
+   * podía imprimir después era un duplicado de algo que nunca tuvo original.
+   */
+  const [impresion, setImpresion] = useState<{
+    comprobante: Comprobante;
+    leyenda: "ORIGINAL" | "DUPLICADO";
+  } | null>(null);
   const [anulando, setAnulando] = useState<string | null>(null);
   const [verificando, setVerificando] = useState<string | null>(null);
   const [verificacion, setVerificacion] = useState<VerificacionArca | null>(null);
@@ -99,29 +111,32 @@ export function Comprobantes({
   /** Comprobante al que se le va a emitir una Nota de Débito, o `null`. */
   const [notaDebito, setNotaDebito] = useState<Comprobante | null>(null);
 
-  const cargar = useCallback(async () => {
+  /** Devuelve la lista recargada: hace falta para poder buscar en ella recién emitido. */
+  const cargar = useCallback(async (): Promise<readonly Comprobante[]> => {
     setCargando(true);
     setError(null);
     try {
-      setComprobantes(await cliente.historial());
+      const lista = await cliente.historial();
+      setComprobantes(lista);
       setSinServidor(false);
+      return lista;
     } catch (e) {
       // Sin servidor se muestra lo que tiene la terminal. No reemplaza al
       // servidor —puede faltarle lo que vendieron otras cajas, y el CAE de lo
       // que todavía no subió— pero es mucho mejor que una pantalla vacía.
       if (ventasLocales !== undefined) {
         try {
-          setComprobantes(
-            (await ventasLocales.ultimas(TOPE_LOCALES)).map(comprobanteDeVentaLocal),
-          );
+          const locales = (await ventasLocales.ultimas(TOPE_LOCALES)).map(comprobanteDeVentaLocal);
+          setComprobantes(locales);
           setSinServidor(true);
           setError(null);
-          return;
+          return locales;
         } catch (localError) {
           console.error("Tampoco se pudo leer la base local:", localError);
         }
       }
       setError(mensajeError(e));
+      return [];
     } finally {
       setCargando(false);
     }
@@ -177,17 +192,38 @@ export function Comprobantes({
     setAviso(null);
     try {
       const r = await cliente.anular(c.id);
+      const esNotaFiscal = esFiscal(r.notaCredito.tipoComprobante);
       setAviso(
-        esFiscal(r.notaCredito.tipoComprobante)
+        esNotaFiscal
           ? `Se emitió la ${etiquetaTipoComprobante(r.notaCredito.tipoComprobante)} ${numeroComprobante(r.notaCredito.numeroComprobante)}.`
           : "Comprobante anulado.",
       );
-      await cargar();
+      // La Nota de Crédito también nace acá: su ORIGINAL sale de acá. Anular un
+      // ticket no fiscal no emite nada, así que ahí no hay nada que imprimir.
+      if (esNotaFiscal) await abrirOriginalReciEmitido(r.notaCredito.id);
+      else await cargar();
     } catch (e) {
       setError(mensajeError(e));
     } finally {
       setAnulando(null);
     }
+  }
+
+  /**
+   * Recarga la lista y abre para imprimir la nota que se acaba de emitir, como
+   * ORIGINAL.
+   *
+   * Se busca en la lista recargada en vez de usar lo que devolvió el servidor
+   * al emitir: para imprimir hace falta el comprobante completo —ítems, pagos,
+   * receptor, desglose— y la respuesta de la emisión trae sólo la cabecera.
+   *
+   * Si no aparece (sin conexión, por ejemplo) no se abre nada: la nota se
+   * emitió igual y queda en la lista para imprimir cuando se pueda.
+   */
+  async function abrirOriginalReciEmitido(id: string) {
+    const lista = await cargar();
+    const nota = lista.find((c) => c.id === id);
+    if (nota !== undefined) setImpresion({ comprobante: nota, leyenda: "ORIGINAL" });
   }
 
   async function exportar() {
@@ -318,7 +354,11 @@ export function Comprobantes({
                       })()}
                     </td>
                     <td className="acciones">
-                      <button type="button" className="linkbtn" onClick={() => setReimprimir(c)}>
+                      <button
+                        type="button"
+                        className="linkbtn"
+                        onClick={() => setImpresion({ comprobante: c, leyenda: "DUPLICADO" })}
+                      >
                         Reimprimir
                       </button>
                       {/* También sin CAE: ahí es cuando más falta hace saber
@@ -366,8 +406,13 @@ export function Comprobantes({
         </div>
       </div>
 
-      {reimprimir !== null && (
-        <ModalReimpresion comprobante={reimprimir} config={config} onCerrar={() => setReimprimir(null)} />
+      {impresion !== null && (
+        <ModalReimpresion
+          comprobante={impresion.comprobante}
+          config={config}
+          leyenda={impresion.leyenda}
+          onCerrar={() => setImpresion(null)}
+        />
       )}
 
       {notaDebito !== null && (
@@ -380,7 +425,7 @@ export function Comprobantes({
             setAviso(
               `Se emitió la ${etiquetaTipoComprobante(nd.tipoComprobante)} ${numeroComprobante(nd.numeroComprobante)}.`,
             );
-            void cargar();
+            void abrirOriginalReciEmitido(nd.id);
           }}
         />
       )}
@@ -586,10 +631,16 @@ function ModalReimpresion({
   comprobante,
   config,
   onCerrar,
+  leyenda = "DUPLICADO",
 }: {
   comprobante: Comprobante;
   config: ConfiguracionComercio;
   onCerrar: () => void;
+  /**
+   * `ORIGINAL` sólo para la primera impresión de una nota recién emitida desde
+   * esta pantalla. Todo lo demás es reimpresión y va como DUPLICADO.
+   */
+  leyenda?: "ORIGINAL" | "DUPLICADO";
 }) {
   const { datosA4, imprimirA4 } = useImpresionA4();
   const { datosTicket, imprimirTicketPreview } = useImpresionTicket();
@@ -630,10 +681,16 @@ function ModalReimpresion({
           </ul>
         )}
         <div className="ticket-acciones">
-          <button onClick={() => void imprimirTicketPreview(datosTicketDeComprobante(comprobante, config))}>
+          <button
+            onClick={() =>
+              void imprimirTicketPreview(datosTicketDeComprobante(comprobante, config, leyenda))
+            }
+          >
             Imprimir
           </button>
-          <button onClick={() => void imprimirA4(datosTicketDeComprobante(comprobante, config))}>
+          <button
+            onClick={() => void imprimirA4(datosTicketDeComprobante(comprobante, config, leyenda))}
+          >
             Imprimir A4
           </button>
           <button className="primario" onClick={onCerrar}>

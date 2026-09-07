@@ -316,6 +316,22 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
     expect(datos.numero).toBeNull();
   });
 
+  /**
+   * Una Nota de Crédito o de Débito nace en la pantalla de Comprobantes, así
+   * que su ORIGINAL —el papel que se lleva el cliente— también sale de ahí.
+   * Antes sólo se podía imprimir un duplicado de algo que nunca tuvo original.
+   */
+  it("por defecto marca DUPLICADO, pero acepta ORIGINAL para una nota recién emitida", () => {
+    const nota = comprobante({ tipoComprobante: "NotaDebitoA" });
+    expect(datosTicketDeComprobante(nota, CONFIG).leyenda).toBe("DUPLICADO");
+    expect(datosTicketDeComprobante(nota, CONFIG, "ORIGINAL").leyenda).toBe("ORIGINAL");
+  });
+
+  it("un comprobante no fiscal no lleva leyenda, ni siquiera pidiéndola", () => {
+    const ticket = comprobante({ tipoComprobante: "TicketNoFiscal", cae: null, caeFechaVto: null });
+    expect(datosTicketDeComprobante(ticket, CONFIG, "ORIGINAL").leyenda).toBeUndefined();
+  });
+
   it("sin desglose de IVA persistido (limitación conocida del backend): subtotalesIva vacío", () => {
     const datos = datosTicketDeComprobante(comprobante(), CONFIG);
     expect(datos.subtotalesIva).toEqual([]);

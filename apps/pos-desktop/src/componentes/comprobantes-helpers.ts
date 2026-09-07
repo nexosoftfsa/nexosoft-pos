@@ -128,6 +128,13 @@ export function esAnulable(c: Comprobante): boolean {
 export function datosTicketDeComprobante(
   c: Comprobante,
   config: ConfiguracionComercio,
+  /**
+   * DUPLICADO salvo que se pida lo contrario. `ORIGINAL` es para la PRIMERA
+   * impresión de una nota emitida desde acá: una Nota de Crédito o de Débito
+   * nace en esta pantalla, así que su original también sale de acá. Sin esto
+   * sólo se podía imprimir un duplicado de algo que nunca tuvo original.
+   */
+  leyenda: "ORIGINAL" | "DUPLICADO" = "DUPLICADO",
 ): DatosTicket {
   const asociado = comprobanteAsociadoDe(c, config.puntoDeVenta);
   const receptor = receptorDe(c);
@@ -151,9 +158,10 @@ export function datosTicketDeComprobante(
     fecha: new Date(c.creadaEn),
     condicionIvaReceptor: condicionReceptor,
     esFiscal: esFiscal(c.tipoComprobante),
-    // Reimprimir SIEMPRE marca "DUPLICADO" cuando el comprobante es fiscal: el
-    // original ya se emitió en el momento de la venta (ver PantallaPos).
-    ...(esFiscal(c.tipoComprobante) ? { leyenda: "DUPLICADO" as const } : {}),
+    // Reimprimir marca "DUPLICADO" cuando el comprobante es fiscal: el original
+    // ya se emitió en el momento de la venta (ver PantallaPos). La excepción
+    // son las notas emitidas desde Comprobantes, que nacen acá.
+    ...(esFiscal(c.tipoComprobante) ? { leyenda } : {}),
     ...(asociado !== null ? { comprobanteAsociado: asociado } : {}),
     ...(receptor !== null ? { receptor } : {}),
     lineas: lineasDe(c),
