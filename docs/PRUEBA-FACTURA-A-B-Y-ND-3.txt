@@ -1,0 +1,268 @@
+===========================================================================
+  NEXOSOFT - FACTURA A, B Y NOTAS DE DEBITO (TERCERA VUELTA)
+  Para: Sebastian
+  Tiempo: 35 minutos. Esta vez NO hay tramite en la web de ARCA.
+===========================================================================
+
+PRIMERO: GRACIAS
+-----------------
+Tu informe de la vuelta pasada encontro CINCO cosas, y una era grave de
+verdad. Todas arregladas. Te las cuento porque tres las vas a ver mientras
+probas.
+
+1. LO GRAVE: se perdio una venta que ARCA YA HABIA AUTORIZADO.
+
+   El "Unique constraint failed" que copiaste. Cuando ARCA no contestaba,
+   nosotros le poniamos al comprobante un numero "provisional" nuestro. Ese
+   numero ocupa el lugar que despues iba a usar el numero real de ARCA, y
+   cuando ARCA llegaba ahi, el guardado fallaba. Fallaba DESPUES de que ARCA
+   ya habia autorizado, asi que se perdia la venta y quedaba un comprobante
+   con CAE en ARCA que no existia en nuestra base.
+
+   Los rechazos del 4/9 habian dejado ocupados los numeros 1 al 5 de Factura
+   A y el 1 y el 2 de Nota de Debito. Por eso la Factura A fallo 5 veces y
+   entro con el 6, la Nota de Debito fallo 2 y entro con el 3, y la Factura B
+   entro a la primera (su serie iba por 5765). Todo cierra.
+
+   Ahora un comprobante sin CAE no tiene numero, y punto. El numero lo pone
+   ARCA cuando autoriza.
+
+2. Tu observacion del catalogo era un bug, y bueno. Cambiar el IVA de un
+   producto ahora se ve en la caja al toque, sin cerrar sesion.
+
+3. La primera Factura A salio sin datos del cliente y no deberia haberse
+   podido emitir. Ahora el sistema no te deja.
+
+4. La Nota de Debito no se podia imprimir como ORIGINAL. Arreglado, y a la
+   Nota de Credito le pasaba lo mismo desde siempre.
+
+5. Faltaba el boton "Probar conexion con ARCA" en la pantalla del
+   certificado faltante (tu punto 2.3). Ya esta.
+
+Y dos que NO eran errores:
+  - La Nota de Debito discrimina IVA: esta bien. Una Nota de Debito A tiene
+    que discriminar. $121 = $100 + $21.
+  - Factura B 0002-00005766: esta bien. Esa serie en homologacion ya venia
+    por 5765.
+
+Versiones de esta prueba:  POS 0.1.58  -  Servidor 0.17.0
+Punto seguro anterior: POS 0.1.57 + Servidor 0.16.0.
+
+OJO CON ESTO: el servidor trae una migracion que limpia los numeros
+provisionales viejos. No borra ninguna venta ni ningun CAE, pero si volves
+al 0.16.0 esos numeros no vuelven. No los vas a extranar (eran justamente el
+problema), pero te lo digo para que no te agarre de sorpresa.
+
+
+PASO 1 - ACTUALIZAR
+--------------------
+1.1 Actualiza servidor a 0.17.0 y POS a 0.1.58.
+
+    [ ] Servidor 0.17.0
+    [ ] POS 0.1.58
+
+1.2 Confirma que el entorno siga en HOMOLOGACION y el emisor en
+    "Responsable Inscripto".
+
+    [ ] Homologacion.
+    [ ] Responsable Inscripto.
+
+    (Si en el paso 10 de la vez pasada lo dejaste en produccion/Monotributo,
+    volvelo a homologacion + Responsable Inscripto.)
+
+
+PASO 2 - QUE NO TE DEJE HACER UNA FACTURA A MAL (2 minutos)
+------------------------------------------------------------
+Esto es nuevo. Es reproducir a proposito el error de la vez pasada.
+
+2.1 Andate a la pantalla de ventas.
+
+2.2 SIN elegir cliente, cambia el receptor a "Responsable Inscripto".
+
+    [ ] Arriba aparece un cartel rojo que dice que una Factura A necesita un
+        cliente con CUIT.
+    [ ] El cartel te ofrece la salida: elegir el cliente, o pasar el
+        receptor a Consumidor Final para emitir una B.
+
+2.3 Carga algo al carrito e intenta cobrar igual.
+
+    [ ] NO te deja. Muestra el mismo mensaje.
+
+    <- Antes te dejaba, y salia una "Factura A" sin ningun dato del
+       receptor. Esa era la del ticket de las 23:55 que me mandaste.
+
+2.4 Ahora si, elegi el cliente Distribuidora Sur SRL.
+
+    [ ] El cartel rojo desaparece.
+
+    Vacia el carrito, esta prueba ya esta.
+
+
+PASO 3 - EL CATALOGO SE ACTUALIZA SOLO (3 minutos)
+---------------------------------------------------
+Tambien nuevo, y sale de tu observacion.
+
+3.1 Anda a "Catalogos y precios" y elegi CUALQUIER producto (no hace falta
+    que sea el aceite).
+
+3.2 Cambiale el precio a algo que reconozcas facil. Por ejemplo $999.
+
+3.3 Guarda y anda DERECHO a la pantalla de ventas. NO cierres sesion.
+
+3.4 Busca ese producto y agregalo al carrito.
+
+    [ ] Sale $999.
+
+    <- Sin cerrar sesion. Eso es lo que antes no pasaba.
+
+3.5 Volve al catalogo y dejalo como estaba.
+
+    [ ] Precio restaurado.
+
+    Producto que usaste: ____________________
+    Precio original: ____________________
+
+
+PASO 4 - LA FACTURA A, DE NUEVO
+--------------------------------
+Igual que la vez pasada. El producto tiene que tener IVA 21%.
+
+4.1 Elegi el cliente Distribuidora Sur SRL y el receptor en "Responsable
+    Inscripto".
+
+    [ ] Arriba dice "Factura A" y NO hay cartel rojo.
+
+4.2 Vende el producto del 21% por $1210 y confirma.
+
+    [ ] Salio con CAE y QR.
+
+    Numero: 0002-________
+    CAE: ______________________________
+
+    <- Si vuelve a fallar el guardado, mandame el texto tal cual. Pero esta
+       vez no deberia: los numeros que chocaban ya no existen.
+
+4.3 Mira el ticket:
+
+    [ ] Datos del cliente arriba de los items.
+    [ ] "Subtotal neto" e "IVA 21%" por separado, y el IVA NO es cero.
+    [ ] Dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+4.4 Sacale el A4.
+
+    [ ] Letra A grande arriba a la derecha.
+    [ ] Dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+4.5 Comprobantes > Reimprimir esa Factura A.
+
+    [ ] Dice DUPLICADO.
+    [ ] SIGUE trayendo el IVA discriminado, con los mismos importes.
+
+    MANDAME EL PDF.
+
+
+PASO 5 - LA NOTA DE DEBITO, CON SU ORIGINAL
+--------------------------------------------
+Aca esta el arreglo de lo que anotaste.
+
+5.1 Comprobantes > busca la Factura A del paso 4 > "Nota de Debito".
+
+5.2 Carga:
+    Monto:    121
+    Concepto: Intereses por pago fuera de termino
+
+5.3 Emitila.
+
+    [ ] Salio a la PRIMERA (sin "Internal server error").
+    [ ] Se abre SOLA una ventana de impresion.
+    [ ] Esa ventana dice ORIGINAL, no DUPLICADO.
+
+    <- Las dos ultimas son lo nuevo. Antes se emitia y no se podia imprimir
+       mas que un duplicado.
+
+    Numero de la ND: 0002-________
+    CAE de la ND: ______________________________
+
+    MANDAME EL PDF del ORIGINAL.
+
+5.4 Cerra esa ventana y toca "Reimprimir" sobre la misma Nota de Debito.
+
+    [ ] Ahora SI dice DUPLICADO.
+
+    MANDAME EL PDF, asi comparo los dos.
+
+5.5 La Factura A original:
+
+    [ ] Sigue figurando como Emitida, NO anulada.
+
+
+PASO 6 - LA NOTA DE CREDITO TAMBIEN
+------------------------------------
+Le pasaba lo mismo y nadie lo habia notado.
+
+6.1 Comprobantes > agarra una Factura B vieja (de las de la vez pasada) >
+    "Anular".
+
+6.2 Confirma.
+
+    [ ] Se abre sola la ventana de impresion de la Nota de Credito.
+    [ ] Dice ORIGINAL.
+    [ ] Dice "Comprobante asociado" con el numero de la factura que anula.
+
+    MANDAME EL PDF.
+
+
+PASO 7 - LA FACTURA B
+----------------------
+7.1 Sin cliente, receptor en "Consumidor Final". Vende $1000.
+
+    [ ] Salio con CAE.
+    [ ] Sin datos de receptor, sin IVA discriminado, dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+
+PASO 8 - EL BOTON QUE FALTABA
+------------------------------
+8.1 Configuracion > Facturacion electronica.
+
+    [ ] Esta el boton "Probar conexion con ARCA" (tu punto 2.3 de la vez
+        pasada).
+
+8.2 Tocalo.
+
+    [ ] Los tres pasos en verde.
+
+    Copiame el resultado y mandamelo.
+
+
+PASO 9 - DEJARLO COMO QUERAS
+-----------------------------
+Si vas a seguir probando A y B, dejalo en homologacion + Responsable
+Inscripto. Si preferis volver a como estaba: Monotributo + produccion.
+
+Los dos certificados siguen ahi, asi que cambiar de entorno no pide ningun
+tramite.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. PDF del ticket de la Factura A (paso 4.3)
+  2. PDF del A4 de la Factura A (paso 4.4)
+  3. PDF de la reimpresion, que dice DUPLICADO y trae el IVA (paso 4.5)
+  4. PDF de la Nota de Debito ORIGINAL (paso 5.3) <- lo que faltaba
+  5. PDF de la Nota de Debito DUPLICADO (paso 5.4), para comparar
+  6. PDF de la Nota de Credito ORIGINAL (paso 6.2)
+  7. PDF de la Factura B (paso 7.1)
+  8. El "Copiar el resultado" del paso 8.2
+  9. Que producto y precio usaste en el paso 3
+
+Y lo de siempre: si algo no coincide con lo que dice aca, anotalo aunque
+parezca menor. Lo del catalogo de la vez pasada lo anotaste como
+"observacion de interes" al final, y era un bug de los buenos.
+===========================================================================
