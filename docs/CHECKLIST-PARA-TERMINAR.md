@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-06 · Publicado: POS **0.1.57** · Servidor **0.16.0**
+Actualizado: 2026-09-07 · Publicado: POS **0.1.58** · Servidor **0.17.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,29 +15,28 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · La prueba de Factura A y B, otra vez
+## 1 · La prueba de Factura A y B, tercera vuelta
 
-La corrida del 4/9 **no llegó a ejecutar nada de lo que iba a probar**. ARCA
-rechazó todo al autenticar, antes de mirar el comprobante: *"Certificado no
-emitido por AC de confianza"*. Causa: hay un certificado por entorno y no valen
-cruzados; al pasar a homologación se seguía firmando con el de producción.
-Arreglado el 6/9 (ADR-0071) — ahora se guardan los dos y el sistema avisa antes.
+La corrida del 6/9 **sí emitió**: Factura A con CAE y QR, IVA discriminado
+correcto, duplicado, dos Facturas B y dos Notas de Débito. Pero destapó cinco
+cosas, una grave: cuando ARCA no respondía se guardaba el comprobante con un
+número provisional nuestro, que después chocaba contra el número real de ARCA y
+hacía fallar el guardado — **después** de que ARCA ya había autorizado. Cinco
+CAE quemados en una sola venta (ADR-0072). Las cinco corregidas y publicadas.
 
-- [ ] **Correr `docs/PRUEBA-FACTURA-A-B-Y-ND-2.txt`.** Incluye sacar el
-      certificado de homologación en el portal de ARCA (~20 min de trámite), la
-      prueba entera de A, B y ND, y volver a producción para confirmar que ese
-      certificado no se perdió.
+- [ ] **Correr `docs/PRUEBA-FACTURA-A-B-Y-ND-3.txt`.** 35 minutos, sin trámite
+      en ARCA. Tres de los pasos son reproducir a propósito lo que se rompió:
+      que no deje emitir una Factura A sin cliente, que el catálogo se actualice
+      sin cerrar sesión, y que la Nota de Débito salga como ORIGINAL.
       *Bloquea: vender a un Responsable Inscripto.*
 
-- [ ] **Que la venta de prueba sea de un producto al 21%.** El "Aceite de
-      Girasol" que usó Seba está cargado como **EXENTO**: con ese producto la
-      Factura A sale con `ImpNeto = 0` y todo en `ImpOpEx`, una A donde no hay
-      nada gravado, que es lo contrario de para qué existe la A. Ya está
-      corregido en el instructivo nuevo.
+- [ ] **Verificar que la reimpresión de una A discrimine IVA.** Arreglado el
+      4/9 (el desglose se guarda congelado al emitir). En la prueba del 6/9 el
+      duplicado salió bien, pero conviene confirmarlo con el desglose nuevo.
 
-- [ ] **Verificar que la reimpresión de una A ya discrimine IVA.** Arreglado el
-      4/9 (el desglose se guarda congelado al emitir), sin probar en campo.
-      Es el paso 7 del instructivo nuevo.
+- [ ] **Que la venta de prueba sea de un producto al 21%.** Seba lo resolvió
+      editando el aceite de exento a 21% — y ahí encontró el bug del caché de
+      catálogo. Sigue valiendo la advertencia para la próxima.
 
 ---
 
@@ -141,6 +140,13 @@ Implementado y con tests, nunca visto sobre el fierro.
       B. Si hace falta elegirla, el concepto tendría que venir con su tasa.
 - [ ] **Nota de Crédito parcial.** Hoy anular es por el total. Devolver un solo
       producto de una venta de diez no se puede.
+- [ ] **El CAE se pide ANTES de abrir la transacción** (`ventas.service.ts`).
+      Con el arreglo de ADR-0072 la colisión de número ya no puede pasar, pero
+      cualquier otra falla del `INSERT` entre el CAE y el commit deja lo mismo:
+      un comprobante autorizado en ARCA que no existe en nuestra base. Hoy al
+      menos queda registrado como discrepancia fiscal, con el número y el CAE.
+      *Arreglarlo de verdad implica reservar la fila antes de hablar con ARCA,
+      o poder anular ante ARCA lo que no se pudo guardar. Ninguna es chica.*
 - [ ] **Cachear el último número de comprobante** para sacarle un viaje a ARCA
       por venta (ADR-0061). No se hizo a propósito.
 - [ ] **ADR-0018 quedó viejo:** dice que falta el plugin de impresora ESC/POS y
