@@ -216,6 +216,28 @@ export function PantallaPos({
     venta: VentaConfirmada;
     pagos: PagoUi[];
   } | null>(null);
+  /**
+   * Todo lo que el ticket de la venta en curso necesita y que la pantalla ya
+   * limpió: el cliente, los pagos, y la espera del comprobante del servidor.
+   *
+   * Vive en un `ref` y no en estado a propósito. El ticket se imprime desde un
+   * listener global de teclado, cuyo closure quedó con los valores del render
+   * en que se registró; leer `clienteId` o `comprobanteServidor` desde ahí da
+   * lo que había *en ese momento*, no lo que hay. Eso produjo exactamente dos
+   * tickets rotos según lo rápido que tipeara el cajero (ADR-0073):
+   *
+   *  - Enter rápido: closure viejo → salía el receptor pero sin CAE ni QR.
+   *  - Enter tranquilo: closure nuevo, con `clienteId` ya vaciado → salía el
+   *    CAE y el QR pero sin los datos del receptor.
+   *
+   * Un ref no puede quedar viejo, y esperar la promesa saca a la impresión de
+   * la carrera con el tecleo.
+   */
+  const impresionRef = useRef<{
+    receptor: ClienteVenta | undefined;
+    pagos: readonly PagoUi[];
+    delServidor: Promise<ComprobanteResuelto | null> | null;
+  }>({ receptor: undefined, pagos: [], delServidor: null });
   // Fase 17: `catalogo` es una foto tomada al bootstrapear (no se re-lee
   // sola), así que la estrella de "grilla rápida" se refleja acá al toque
   // (optimista) además de guardarse en el local `entorno.grillaRapida`.
@@ -843,6 +865,9 @@ export function PantallaPos({
     // Se limpia ANTES de confirmar: si esta venta no llega a resolverse contra
     // el servidor, su ticket no puede salir con el CAE de la venta anterior.
     setComprobanteServidor(null);
+    // Foto de lo que el ticket va a necesitar. Se saca ACÁ, antes de que el
+    // final de esta función limpie el cliente y los pagos.
+    impresionRef.current = { receptor: clienteElegido, pagos: [...pagos], delServidor: null };
     try {
       const venta = await servicio.confirmarVenta(
         armarComando(carrito, condicionReceptor, pagos, recargoPorc, clienteVenta),
@@ -923,8 +948,13 @@ export function PantallaPos({
         // El cartel "Autorizando en ARCA…" sólo tiene sentido en el fiscal: en
         // el interno la espera es de milisegundos y no hay nada que autorizar.
         if (esFiscalLaVenta) setAutorizando(true);
+        // La misma promesa la espera la impresión: así el ticket sale igual
+        // sea el cajero rápido o lento, en vez de depender de si el Enter
+        // llegó antes o después de que contestara el servidor.
+        const espera = sync.encolarYEsperarComprobante(operacion, esperaMs);
+        impresionRef.current = { ...impresionRef.current, delServidor: espera };
         try {
-          setComprobanteServidor(await sync.encolarYEsperarComprobante(operacion, esperaMs));
+          setComprobanteServidor(await espera);
         } finally {
           if (esFiscalLaVenta) setAutorizando(false);
         }
@@ -961,19 +991,42 @@ export function PantallaPos({
     setPagoElectronico(null);
   }
 
-  async function imprimirTicket(venta: VentaConfirmada, pagosDeLaVenta: readonly PagoUi[] = pagos) {
-    if (imprimiendo) return;
-    setImprimiendo(true);
-    const receptor = clienteId === "" ? undefined : clientes.find((c) => c.id === clienteId);
-    const datos = construirDatosTicket(
+  /**
+   * Arma el ticket de la venta recién hecha, esperando a que el servidor
+   * termine de resolver el comprobante.
+   *
+   * Esa espera tiene su propio tope (5s, ADR-0061) y ya la hace la venta: acá
+   * se engancha a la MISMA promesa, así que no agrega demora — sólo evita que
+   * el papel salga a medias porque el Enter llegó primero. Si falla o vence,
+   * el ticket sale con lo local, diciendo que el número y el CAE los asigna
+   * ARCA, que es lo correcto.
+   */
+  async function datosDeLaVenta(
+    venta: VentaConfirmada,
+    pagosDeLaVenta?: readonly PagoUi[],
+  ): Promise<DatosTicket> {
+    const foto = impresionRef.current;
+    let delServidor: ComprobanteResuelto | null = null;
+    try {
+      delServidor = (await foto.delServidor) ?? null;
+    } catch (e) {
+      console.error("No se pudo esperar el comprobante del servidor para el ticket:", e);
+    }
+    return construirDatosTicket(
       venta,
       config,
       catalogo,
-      pagosDeLaVenta,
+      pagosDeLaVenta ?? foto.pagos,
       tarjetas,
-      comprobanteServidor,
-      receptor,
+      delServidor,
+      foto.receptor,
     );
+  }
+
+  async function imprimirTicket(venta: VentaConfirmada, pagosDeLaVenta?: readonly PagoUi[]) {
+    if (imprimiendo) return;
+    setImprimiendo(true);
+    const datos = await datosDeLaVenta(venta, pagosDeLaVenta);
     try {
       await impresora.imprimirTicket(datos);
       // En la app instalada la impresora es la térmica real (ESC/POS directo
@@ -1490,19 +1543,14 @@ export function PantallaPos({
               <button onClick={() => imprimirTicket(ultimaVenta)} disabled={imprimiendo}>
                 {imprimiendo ? "Imprimiendo…" : "Imprimir"}
               </button>
-              <button onClick={() =>
-                  void imprimirA4(
-                    construirDatosTicket(
-                      ultimaVenta,
-                      config,
-                      catalogo,
-                      pagos,
-                      tarjetas,
-                      comprobanteServidor,
-                      clienteId === "" ? undefined : clientes.find((c) => c.id === clienteId),
-                    ),
-                  )
-                }>
+              {/* Misma foto que el ticket: acá también se limpiaban el cliente
+                  y los pagos antes de que alguien tocara el botón, así que el
+                  A4 de la venta salía sin receptor (ADR-0073). */}
+              <button
+                onClick={() =>
+                  void datosDeLaVenta(ultimaVenta).then((datos) => imprimirA4(datos))
+                }
+              >
                 Imprimir A4
               </button>
               <button
@@ -1560,7 +1608,15 @@ function Fila({
   );
 }
 
-function construirDatosTicket(
+/**
+ * Adapta una venta recién hecha a `DatosTicket`.
+ *
+ * Se exporta para poder testear el contrato: **el número/CAE y el receptor son
+ * independientes**. El 8/9/2026 salieron tickets con uno y sin el otro, según
+ * lo rápido que tipeara el cajero — pero el defecto estaba en QUÉ se le pasaba
+ * a esta función, no acá adentro (ADR-0073).
+ */
+export function construirDatosTicket(
   venta: VentaConfirmada,
   config: import("@nexosoft/app").ConfiguracionComercio,
   _catalogo: readonly ProductoCatalogo[],
