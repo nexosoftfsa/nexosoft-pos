@@ -51,7 +51,49 @@ if (-not (Get-NetTCPConnection -LocalPort $puertoDb -State Listen -ErrorAction S
 }
 Ok "PostgreSQL responde en el puerto $puertoDb"
 
-# 3. Que no haya otro servidor ya arriba: dos procesos en el mismo puerto es
+# 3. Migraciones sin aplicar. Es el otro motivo silencioso de "Internal server
+#    error": el servidor levanta perfecto y recien falla cuando alguien abre la
+#    pantalla que usa la columna nueva. El 09/09/2026 costo cinco dias darse
+#    cuenta de que la caja tiraba 500 y que las ventas no llegaban a los
+#    reportes por esto. En un comercio las corre el actualizador; aca, nadie.
+Titulo "Migraciones de la base"
+$ErrorActionPreference = "Continue"
+$estado = & corepack pnpm exec prisma migrate status 2>&1 | Out-String
+$hayPendientes = $LASTEXITCODE -ne 0 -and $estado -match "have not yet been applied"
+$ErrorActionPreference = "Stop"
+
+if ($hayPendientes) {
+    # Los nombres salen del bloque que imprime prisma, una por linea.
+    $nombres = ($estado -split "`n") | Where-Object { $_ -match "^\d{14}_" } | ForEach-Object { $_.Trim() }
+    Feo "La base esta atras del codigo: hay $($nombres.Count) migracion(es) sin aplicar."
+    foreach ($n in $nombres) { Write-Host "  - $n" -ForegroundColor Yellow }
+    Write-Host ""
+    Write-Host "Si arranco asi, el servidor va a levantar igual pero las pantallas que usen" -ForegroundColor Yellow
+    Write-Host "lo nuevo van a fallar con 'Internal server error', y las ventas pueden no" -ForegroundColor Yellow
+    Write-Host "llegar a los reportes." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Aplicarlas solo agrega lo que falta hacia adelante: no borra datos ni resetea nada."
+    $r = Read-Host "Las aplico ahora? (S/N)"
+    if ($r -match '^[SsYy]') {
+        Titulo "Aplicando migraciones"
+        $ErrorActionPreference = "Continue"
+        & corepack pnpm exec prisma migrate deploy
+        $codigo = $LASTEXITCODE
+        $ErrorActionPreference = "Stop"
+        if ($codigo -ne 0) {
+            Feo "`nNo se pudieron aplicar (exit $codigo). El error esta arriba."
+            Read-Host "`nENTER para cerrar"
+            exit 1
+        }
+        Ok "Base al dia"
+    } else {
+        Write-Host "Sigo sin aplicarlas. Acordate de esto si algo tira 500." -ForegroundColor Yellow
+    }
+} else {
+    Ok "La base esta al dia"
+}
+
+# 4. Que no haya otro servidor ya arriba: dos procesos en el mismo puerto es
 #    un rato de confusion garantizado.
 if (Get-NetTCPConnection -LocalPort $puerto -State Listen -ErrorAction SilentlyContinue) {
     Write-Host "Ya hay algo escuchando en el puerto $puerto." -ForegroundColor Yellow
@@ -66,7 +108,7 @@ if (Get-NetTCPConnection -LocalPort $puerto -State Listen -ErrorAction SilentlyC
     exit 0
 }
 
-# 4. Compilar si el codigo cambio despues del ultimo build. Arrancar un dist
+# 5. Compilar si el codigo cambio despues del ultimo build. Arrancar un dist
 #    viejo despues de tocar el backend es una forma silenciosa de perder media
 #    hora.
 $main = Join-Path $api "dist\main.js"

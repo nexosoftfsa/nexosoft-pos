@@ -1,9 +1,15 @@
 import 'reflect-metadata';
 import { createServer } from 'node:http';
+import { join } from 'node:path';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { PrismaService } from './prisma/prisma.service';
+import {
+  avisoDeMigracionesPendientes,
+  buscarMigracionesPendientes,
+} from './prisma/migraciones-pendientes';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -37,6 +43,17 @@ async function bootstrap() {
   const origenes = process.env['CORS_ORIGINS'];
   app.enableCors(origenes ? { origin: origenes.split(',').map((o) => o.trim()) } : undefined);
   app.setGlobalPrefix('api/v1');
+
+  // Una migración sin aplicar no se nota al arrancar: falla después, en la
+  // pantalla que use la columna nueva, con un 500 que no explica nada. Se avisa
+  // acá y NO se corta el arranque (ver `migraciones-pendientes.ts`).
+  const pendientes = await buscarMigracionesPendientes(
+    app.get(PrismaService),
+    join(process.cwd(), 'prisma', 'migrations'),
+  );
+  if (pendientes.length > 0) {
+    new Logger('Migraciones').warn(`\n${avisoDeMigracionesPendientes(pendientes)}\n`);
+  }
 
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);
