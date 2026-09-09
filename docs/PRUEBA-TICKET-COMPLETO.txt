@@ -1,0 +1,172 @@
+===========================================================================
+  NEXOSOFT - EL TICKET COMPLETO (CUARTA VUELTA, CORTA)
+  Para: Sebastian
+  Tiempo: 15 minutos
+===========================================================================
+
+LO QUE ENCONTRASTE
+-------------------
+Lo de "cajero tranqui" contra "cajero apurado" fue el mejor hallazgo de las
+tres vueltas. Variar la velocidad de tipeo para ver si cambia el resultado no
+se le ocurre a casi nadie, y destapo algo que ningun test nuestro iba a
+agarrar.
+
+Tenias razon en las dos observaciones, y eran EL MISMO problema:
+
+  Cajero tranqui  -> numero fiscal, CAE y QR, pero sin datos del receptor
+  Cajero apurado  -> datos del receptor, pero sin CAE ni QR
+
+Que pasaba: la impresion leia el cliente y la respuesta del servidor de lo que
+habia en pantalla, y la venta limpia el cliente apenas confirma para dejar la
+caja lista para el proximo. Ademas el ticket se dispara desde el teclado, y
+ese "escuchador" se queda con los valores de un momento anterior. Segun si tu
+Enter llegaba antes o despues, se perdia una mitad o la otra.
+
+O sea: no era una carrera con ARCA, era una carrera con tu tecleo. Tu
+parentesis "(No es culpa del cajero)" era exactamente el punto.
+
+Ahora se saca una foto al confirmar, antes de limpiar nada, y la impresion
+espera lo mismo que ya esperaba la venta. NO tarda mas: vos ya estabas
+esperando eso mismo para que se te vaciara la caja.
+
+El boton "Imprimir A4" de despues de la venta tenia el mismo defecto y nadie
+lo habia notado.
+
+Versiones de esta prueba:  POS 0.1.59  -  Servidor 0.17.0 (NO cambia)
+Punto seguro anterior: POS 0.1.58.
+
+
+PASO 1 - ACTUALIZAR SOLO EL POS
+--------------------------------
+1.1 Actualiza el POS a 0.1.59. El servidor queda como esta.
+
+    [ ] POS 0.1.59
+    [ ] Servidor sigue en 0.17.0
+
+1.2 Homologacion + Responsable Inscripto, como la vez pasada.
+
+    [ ] Confirmado.
+
+
+PASO 2 - LA PRUEBA DE FUEGO: LAS DOS VELOCIDADES
+--------------------------------------------------
+Esto es todo el punto de esta vuelta. Hace EXACTAMENTE lo mismo que la vez
+pasada.
+
+2.1 Cliente Distribuidora Sur SRL, receptor "Responsable Inscripto", el
+    producto de siempre.
+
+2.2 PRIMERA VENTA - CAJERO TRANQUI.
+    Apreta los Enter con calma, como la vez pasada.
+
+    [ ] Numero fiscal 0002-________ (NO dice "Referencia interna")
+    [ ] Tiene CAE y QR
+    [ ] Tiene los datos del receptor: razon social, CUIT, direccion
+    [ ] Dice ORIGINAL
+    [ ] Subtotal neto e IVA 21% por separado
+
+    Los cinco tienen que estar. MANDAME EL PDF.
+
+2.3 SEGUNDA VENTA - CAJERO APURADO.
+    Enter a lo loco, lo mas rapido que puedas, igual que la vez pasada.
+
+    [ ] Los MISMOS cinco puntos de arriba.
+
+    MANDAME EL PDF.
+
+    <- Este es el que importa. Antes salia con receptor pero sin CAE.
+
+2.4 Comparalos.
+
+    [ ] Los dos tickets tienen lo mismo (salvo el numero, obvio).
+
+2.5 Una tercera, mas apurado todavia si podes. Enter antes de que la
+    pantalla termine de reaccionar.
+
+    [ ] Igual de completo.
+
+    Si en alguna de las tres falta algo, mandame ESE pdf y decime cual de las
+    tres era. Es el dato que necesito.
+
+    NOTA: si el ticket tarda un segundo o dos en salir, esta bien. Esta
+    esperando la respuesta de ARCA, que es la misma espera que ya hacias
+    antes de que se te vaciara la caja. Si tarda MUCHO mas que antes,
+    avisame.
+
+
+PASO 3 - EL A4 DE POST-VENTA
+-----------------------------
+3.1 Justo despues de una de esas ventas, sin salir de la pantalla, toca
+    "Imprimir A4".
+
+    [ ] Tiene los datos del receptor.
+    [ ] Tiene la letra A grande y el CAE.
+    [ ] Dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+    <- Esto es lo que nadie habia mirado. Antes salia sin receptor.
+
+
+PASO 4 - LO DEL PUNTO 2.3 DE LA VEZ PASADA
+--------------------------------------------
+Me anotaste "TE DEJA AVANZAR DEJA FINALIZAR LA COMPRA". Revise el codigo y la
+venta NO se emitia (en tu lista de Comprobantes estan solo las cuatro del
+paso 4, ninguna del paso 2). Pero encontre algo igual: el aviso quedaba
+TAPADO por el asistente de cobro, asi que el Enter del ultimo paso no hacia
+nada visible. Se entiende perfecto que lo leyeras asi.
+
+Ahora el asistente directamente no abre. Comprobemos:
+
+4.1 SIN elegir cliente, pone el receptor en "Responsable Inscripto".
+
+    [ ] Aparece el cartel rojo en la cabecera.
+
+4.2 Carga algo al carrito y toca Enter para abrir el asistente de cobro.
+
+    [ ] El asistente NO abre.
+    [ ] El cartel rojo sigue a la vista.
+
+4.3 Deci con tus palabras que ves:
+
+    ____________________________________________________________
+
+    ____________________________________________________________
+
+4.4 Elegi el cliente Distribuidora Sur SRL.
+
+    [ ] El cartel desaparece y el asistente abre normal.
+
+    Vacia el carrito, listo.
+
+
+PASO 5 - QUE NO SE HAYA ROTO NADA
+----------------------------------
+Rapido, para confirmar que lo de la vez pasada sigue andando.
+
+5.1 Una Factura B sin cliente.
+
+    [ ] Sale con CAE, QR y ORIGINAL.
+
+5.2 Una Nota de Debito sobre alguna Factura A.
+
+    [ ] Se abre sola la impresion y dice ORIGINAL.
+
+5.3 Reimprimi cualquier comprobante desde Comprobantes.
+
+    [ ] Dice DUPLICADO y trae todo.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. PDF del ticket "cajero tranqui" (paso 2.2)
+  2. PDF del ticket "cajero apurado" (paso 2.3)  <- el que importa
+  3. PDF del A4 de post-venta (paso 3.1)
+  4. Que viste en el paso 4.3, con tus palabras
+  5. Si algo del paso 5 no anda
+
+Y si el ticket ahora tarda notoriamente mas en salir, decimelo aunque salga
+completo. Es el unico costo que puede tener este arreglo y quiero saber si
+se nota en la mano.
+===========================================================================
