@@ -487,6 +487,14 @@ export function PantallaPos({
    */
   function abrirAsistente(marcaDeTiempo = performance.now()) {
     if (pasoAsistenteRef.current !== "cerrado") return;
+    // Si la venta no se puede facturar, el asistente no abre. El motivo ya está
+    // a la vista en la cabecera, y el asistente la tapa: adentro, el Enter del
+    // último paso no hacía nada visible y parecía que el sistema se colgaba —
+    // o peor, que dejaba emitir. Mejor no dejar entrar.
+    if (faltaParaFacturar !== null) {
+      setError(faltaParaFacturar);
+      return;
+    }
     aperturaAsistenteRef.current = marcaDeTiempo;
     // Si los pagos ya cubren el total (por ejemplo se cerró el asistente con
     // Esc y se retoma), no tiene sentido volver a pedir medio de pago.
