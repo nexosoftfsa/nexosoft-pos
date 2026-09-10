@@ -27,6 +27,35 @@ export function moverCursor(cursor: number, delta: number, longitud: number): nu
   return (cursor + delta + longitud) % longitud;
 }
 
+/** Qué hacer al cerrar la venta, en el último paso del asistente. */
+export type AccionImpresion = "ticket" | "a4" | "ninguna";
+
+/**
+ * Las opciones del paso "¿imprimir?", en orden. El cursor indexa acá.
+ *
+ * La lista vive en un solo lugar porque la pinta el asistente y la interpreta
+ * la pantalla de venta: cuando estaban duplicadas, agregar una opción quería
+ * decir tocar dos archivos y acordarse de los dos.
+ *
+ * El A4 se agregó el 10/9/2026. Antes el botón de A4 sólo existía en el panel
+ * de post-venta, al que este camino no llega: cerrando la venta por el
+ * asistente —o sea, siempre— **no había forma de sacar el A4 ORIGINAL**. El
+ * único A4 posible era una reimpresión, que sale marcada DUPLICADO.
+ */
+export const OPCIONES_IMPRESION: ReadonlyArray<{
+  readonly etiqueta: string;
+  readonly accion: AccionImpresion;
+}> = [
+  { etiqueta: "Sí, imprimir", accion: "ticket" },
+  { etiqueta: "Sí, en A4", accion: "a4" },
+  { etiqueta: "No, gracias", accion: "ninguna" },
+];
+
+/** La acción que corresponde a la fila resaltada. Fuera de rango: no imprimir. */
+export function accionImpresionDe(cursor: number): AccionImpresion {
+  return OPCIONES_IMPRESION[cursor]?.accion ?? "ninguna";
+}
+
 /** Paso siguiente tras elegir el medio de pago en el primer paso del wizard. */
 export function pasoTrasElegirMedio(
   forma: FormaDePago,

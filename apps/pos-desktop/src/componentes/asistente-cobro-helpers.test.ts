@@ -2,8 +2,10 @@ import { FormaDePago, Money } from "@nexosoft/domain";
 import { describe, expect, it } from "vitest";
 
 import {
+  accionImpresionDe,
   moverCursor,
   montoBaseParaSaldoExacto,
+  OPCIONES_IMPRESION,
   pasoTrasElegirMedio,
   pasoTrasElegirTarjeta,
   superaSaldoSinVuelto,
@@ -115,5 +117,38 @@ describe("superaSaldoSinVuelto", () => {
     expect(superaSaldoSinVuelto(FormaDePago.Tarjeta, Money.desde("5000"), Money.desde("15100"))).toBe(
       false,
     );
+  });
+});
+
+/**
+ * El A4 se agregó el 10/9/2026: cerrando la venta por el asistente —o sea,
+ * siempre— no había forma de sacar el A4 ORIGINAL. El único A4 posible era una
+ * reimpresión desde Comprobantes, que sale marcada DUPLICADO.
+ */
+describe("accionImpresionDe", () => {
+  it("las tres filas hacen las tres cosas", () => {
+    expect(accionImpresionDe(0)).toBe("ticket");
+    expect(accionImpresionDe(1)).toBe("a4");
+    expect(accionImpresionDe(2)).toBe("ninguna");
+  });
+
+  /**
+   * "No imprimir" es la salida segura ante un cursor fuera de rango: imprimir
+   * de más gasta papel, pero un A4 inesperado abre el diálogo del sistema y
+   * traba la caja con el cliente adelante.
+   */
+  it("fuera de rango no imprime nada", () => {
+    expect(accionImpresionDe(3)).toBe("ninguna");
+    expect(accionImpresionDe(-1)).toBe("ninguna");
+  });
+
+  it("las etiquetas y las acciones no se desfasan", () => {
+    expect(OPCIONES_IMPRESION.map((o) => o.accion)).toEqual(
+      OPCIONES_IMPRESION.map((_, i) => accionImpresionDe(i)),
+    );
+  });
+
+  it("el cursor da la vuelta sobre las tres opciones", () => {
+    expect(moverCursor(2, 1, OPCIONES_IMPRESION.length)).toBe(0);
   });
 });

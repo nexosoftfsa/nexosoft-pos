@@ -80,11 +80,24 @@ const INTERVALO_MS = 15_000;
  * CAE se consigue solo.
  *
  * Una venta normal se resuelve en 1 a 3 segundos (dos llamadas a ARCA; el
- * ticket de acceso está cacheado). Si a los 5 no contestó, ya está degradada y
- * esperar más sólo hace más larga la cola: el servidor igual sigue intentando
- * por su cuenta hasta los 20 segundos que tiene de tope.
+ * ticket de acceso está cacheado). Pasado el tope el servidor igual sigue
+ * intentando por su cuenta, hasta los 20 segundos que tiene de tope.
+ *
+ * **8 segundos desde el 10/9/2026**, antes 5. Lo propuso Sebastián después de
+ * ver varios tickets salir con referencia interna en una tarde en que ARCA
+ * andaba inestable, y el argumento es del lado del mostrador:
+ *
+ *   "Es preferible unos segundos obligatorios —mientras el cajero carga los
+ *   productos en la bolsita o cuenta la plata— antes de entorpecer el ciclo de
+ *   ventas por un ticket que no sale bien."
+ *
+ * Tiene razón: esos segundos no son tiempo muerto, se solapan con algo que el
+ * cajero está haciendo igual. Y el costo de acortarlos no es esperar menos, es
+ * que el cliente se lleve un papel sin CAE. Sin servidor no se paga esta espera
+ * (la corrida corta sola), así que sólo se siente cuando ARCA está lento — que
+ * es exactamente cuando conviene esperarlo.
  */
-const ESPERA_COMPROBANTE_MS = 5_000;
+const ESPERA_COMPROBANTE_MS = 8_000;
 
 /**
  * Orquesta la cola de sync para la UI: cuenta pendientes/fallidas, sincroniza al

@@ -15,7 +15,7 @@ import type { FormaDePago, Money } from "@nexosoft/domain";
 import { pesos } from "../formato";
 import type { ClienteVenta, PagoUi } from "./PantallaPos";
 import type { Tarjeta, TasaCuota } from "../sync/cliente-medios-pago";
-import type { PasoAsistente } from "./asistente-cobro-helpers";
+import { OPCIONES_IMPRESION, type PasoAsistente } from "./asistente-cobro-helpers";
 
 function etiquetaTarjeta(t: Tarjeta): string {
   return `${t.banco}${t.marca ? ` — ${t.marca}` : ""} (${t.tipo === "CREDITO" ? "Crédito" : "Débito"})`;
@@ -190,15 +190,15 @@ export function AsistenteCobro({
 
             {paso === "imprimir" && (
               <div className="asistente-cierre">
-                <div className="asistente-cierre-titulo">¿Imprimir ticket?</div>
+                <div className="asistente-cierre-titulo">¿Imprimir el comprobante?</div>
                 <ul className="asistente-lista asistente-lista-si-no">
-                  {["Sí, imprimir", "No, gracias"].map((etiqueta, i) => (
+                  {OPCIONES_IMPRESION.map((o, i) => (
                     <li
-                      key={etiqueta}
+                      key={o.accion}
                       ref={i === cursor ? seleccionadoRef : null}
                       className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}
                     >
-                      {etiqueta}
+                      {o.etiqueta}
                     </li>
                   ))}
                 </ul>

@@ -26,12 +26,15 @@ import type { EstadoSync } from "../sync/useSync";
 import type { ClienteMediosPago, Tarjeta } from "../sync/cliente-medios-pago";
 import { AsistenteCobro } from "./AsistenteCobro";
 import {
+  accionImpresionDe,
   moverCursor,
   montoBaseParaSaldoExacto,
+  OPCIONES_IMPRESION,
   pasoTrasElegirMedio,
   pasoTrasElegirTarjeta,
   superaSaldoSinVuelto,
   volverPasoAtras,
+  type AccionImpresion,
   type PasoAsistente,
 } from "./asistente-cobro-helpers";
 import { ComprobanteA4 } from "./ComprobanteA4";
@@ -719,10 +722,12 @@ export function PantallaPos({
       } else if (pasoAsistente === "imprimir") {
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
-          setCursorAsistente((c) => moverCursor(c, 1, 2));
+          // Baja con las dos flechas, como estaba: la lista es corta y da la
+          // vuelta, así que subir y bajar terminan siendo lo mismo.
+          setCursorAsistente((c) => moverCursor(c, 1, OPCIONES_IMPRESION.length));
         } else if (e.key === "Enter") {
           e.preventDefault();
-          void resolverImpresionAsistente(cursorAsistente === 0);
+          void resolverImpresionAsistente(accionImpresionDe(cursorAsistente));
         }
       }
     }
@@ -1091,12 +1096,18 @@ export function PantallaPos({
    * Último paso del asistente: imprime (o no) el ticket de la venta recién
    * confirmada y deja la pantalla limpia para el próximo cliente.
    */
-  async function resolverImpresionAsistente(imprimir: boolean) {
+  async function resolverImpresionAsistente(accion: AccionImpresion) {
     const pendiente = ventaAsistente;
     cerrarAsistente();
-    if (imprimir && pendiente) {
+    if (pendiente === null || accion === "ninguna") return;
+    if (accion === "ticket") {
       await imprimirTicket(pendiente.venta, pendiente.pagos);
+      return;
     }
+    // A4 de la venta recién hecha: sale como ORIGINAL. El de Comprobantes es
+    // una reimpresión y sale DUPLICADO, así que este es el único A4 original
+    // que existe.
+    await imprimirA4(await datosDeLaVenta(pendiente.venta, pendiente.pagos));
   }
 
   async function autorizarCae() {
