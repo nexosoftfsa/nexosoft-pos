@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-09 · Publicado: POS **0.1.59** · Servidor **0.17.0**
+Actualizado: 2026-09-10 · Publicado: POS **0.1.60** · Servidor **0.18.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,26 +15,27 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · El ticket completo, cuarta vuelta
+## 1 · Quinta vuelta
 
-La corrida del 8/9 confirmó cinco arreglos —catálogo, guardrail de la A, ND y
-NC como ORIGINAL, botón de diagnóstico— y dejó **un solo hallazgo**, el mejor
-de las tres vueltas: Sebastián varió la velocidad de tipeo y encontró que el
-ticket salía a medias de dos maneras distintas según llegara el Enter antes o
-después de la respuesta del servidor. Una sola causa, corregida (ADR-0073).
+La corrida del 9/9 verificó el arreglo del ticket (los dos tickets iguales,
+ADR-0073) y encontró **dos bugs nuevos**, uno serio: tecleando Enter a
+repetición salían **dos comprobantes fiscales con dos CAE por una sola venta**.
+No hace falta un cajero apurado — un lector que repite la lectura o un teclado
+que rebota hacen lo mismo (ADR-0074). El otro: ARCA rechazaba una Nota de
+Débito reintentada con el error 10070, porque una ND no tiene ítems y el
+reintento recalculaba el IVA desde ellos. Los dos corregidos y publicados.
 
-- [ ] **Correr `docs/PRUEBA-TICKET-COMPLETO.txt`.** 15 minutos, sólo POS. El
-      paso 2 es su propia prueba repetida: las dos velocidades, y esta vez los
-      dos tickets tienen que salir iguales.
+- [ ] **Correr `docs/PRUEBA-QUINTA-VUELTA.txt`.** 20 minutos. El paso 2 es la
+      ametralladora otra vez; el 3 estrena el A4 ORIGINAL; el 4 es la ND que
+      ARCA rechazó.
       *Bloquea: vender a un Responsable Inscripto.*
 
-- [ ] **Confirmar que el ticket no tarde notoriamente más.** Es el único costo
-      posible del arreglo: la impresión ahora espera lo mismo que ya esperaba
-      la venta. En teoría no agrega demora; hay que verlo en la mano.
+- [ ] **Decidir si los 8 segundos de espera quedan.** Subimos de 5 a 8 por
+      propuesta de Sebastián. El paso 5 del instructivo no tiene casillas: le
+      pregunto cómo se siente con la mano en el teclado. *Si molesta, se baja.*
 
-- [ ] **Verificar que la reimpresión de una A discrimine IVA.** El 6/9 y el 8/9
-      el duplicado salió bien las dos veces. Falta una confirmación más para
-      darlo por cerrado.
+- [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
+      6/9, el 8/9 y el 9/9. Falta darlo por cerrado formalmente.
 
 ---
 
