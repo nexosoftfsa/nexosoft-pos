@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { codigoComprobanteArcaOpcional } from '@nexosoft/domain';
 import { PrismaService } from '../../prisma/prisma.service';
 import { comprobanteAsociadoDe } from './comprobante-asociado';
+import { aImportesParaArca, importesGuardados } from './desglose-persistido';
 import { DesgloseDeVentaService } from './desglose-de-venta.service';
 import {
   ErrorCaeNoDisponible,
@@ -115,14 +116,24 @@ export class CaePendientesService {
       }
 
       try {
-        // El desglose se reconstruye desde los ítems guardados. Mandar sólo el
-        // total dejaría la factura con IVA en cero: ARCA la rechazaría, y si la
-        // aceptara sería peor.
-        const desglose = await this.desgloses.deVentaGuardada(
-          venta.id,
-          tipoComprobante,
-          venta.total,
-        );
+        // Primero el desglose CONGELADO al emitir; recalcular es el respaldo.
+        //
+        // Recalcular lee los ítems de la venta, y una Nota de Débito no tiene
+        // ninguno: su importe es un concepto libre, no mercadería. El desglose
+        // salía sin renglones de IVA y con neto mayor a cero, y ARCA lo
+        // rechazaba con "10070: Si ImpNeto es mayor a 0 el objeto IVA es
+        // obligatorio". Sólo se veía si el primer intento fallaba por red, que
+        // es cuando entra este reintento — le pasó a la ND del 9/9/2026 después
+        // de un ECONNRESET.
+        //
+        // Y aun con ítems, lo correcto es mandar lo declarado: si un producto
+        // cambió de alícuota entre la emisión y el reintento, recalcular manda
+        // algo distinto de lo que dice el ticket que ya tiene el cliente.
+        const importes =
+          importesGuardados(venta) ??
+          aImportesParaArca(
+            await this.desgloses.deVentaGuardada(venta.id, tipoComprobante, venta.total),
+          );
         const receptor = await this.desgloses.receptorDe(venta.clienteId ?? null);
         const codigoComprobante = codigoComprobanteArcaOpcional(tipoComprobante);
         // Si la pendiente es una Nota de Crédito, ARCA exige que diga qué
@@ -136,14 +147,10 @@ export class CaePendientesService {
           // La fecha del comprobante es la de la venta, no la del reintento:
           // es la que ya salió impresa en el ticket del cliente.
           fecha: venta.creadaEn,
-          neto: desglose.neto.aDecimalString(2),
-          iva: desglose.iva.aDecimalString(2),
-          exento: desglose.exento.aDecimalString(2),
-          renglonesIva: desglose.porAlicuota.map((r) => ({
-            codigoArca: r.codigoArca,
-            base: r.base.aDecimalString(2),
-            importe: r.importe.aDecimalString(2),
-          })),
+          neto: importes.neto,
+          iva: importes.iva,
+          exento: importes.exento,
+          renglonesIva: importes.renglonesIva,
           tipoDocReceptor: receptor.tipoDocReceptor,
           nroDocReceptor: receptor.nroDocReceptor,
           condicionIvaReceptor: receptor.condicionIvaReceptor,

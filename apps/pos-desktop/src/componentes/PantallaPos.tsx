@@ -238,6 +238,19 @@ export function PantallaPos({
     pagos: readonly PagoUi[];
     delServidor: Promise<ComprobanteResuelto | null> | null;
   }>({ receptor: undefined, pagos: [], delServidor: null });
+  /**
+   * `true` mientras hay una venta confirmándose. Corta la reentrada.
+   *
+   * Confirmar tarda: se espera al servidor y a ARCA, hasta 5 segundos. En esa
+   * ventana el Enter sigue llegando, y cada uno arrancaba una venta NUEVA.
+   * Sebastián lo encontró tecleando "como ametralladora" el 9/9/2026: dos
+   * comprobantes fiscales, con dos CAE, por una sola venta real (ADR-0074).
+   *
+   * Va en un `ref` y no en estado por lo mismo que `impresionRef`: el Enter
+   * entra por un listener global cuyo closure puede tener el valor del render
+   * anterior, y un estado recién actualizado ahí todavía se lee viejo.
+   */
+  const confirmandoRef = useRef(false);
   // Fase 17: `catalogo` es una foto tomada al bootstrapear (no se re-lee
   // sola), así que la estrella de "grilla rápida" se refleja acá al toque
   // (optimista) además de guardarse en el local `entorno.grillaRapida`.
@@ -854,6 +867,19 @@ export function PantallaPos({
   }
 
   async function _finalizarVenta(desdeAsistente = false) {
+    // Un solo Enter, una sola venta. Confirmar tarda hasta 5 segundos entre el
+    // servidor y ARCA, y cada Enter que llegaba en esa ventana arrancaba una
+    // venta nueva: dos comprobantes fiscales por una sola venta real.
+    if (confirmandoRef.current) return;
+    confirmandoRef.current = true;
+    try {
+      await _finalizarVentaSinReentrada(desdeAsistente);
+    } finally {
+      confirmandoRef.current = false;
+    }
+  }
+
+  async function _finalizarVentaSinReentrada(desdeAsistente: boolean) {
     // Fiado: si se paga con cuenta corriente, hace falta elegir el cliente.
     const hayCuentaCorriente = pagos.some((p) => p.forma === FormaDePago.CuentaCorriente);
     if (hayCuentaCorriente && clienteId === "") {
@@ -1369,11 +1395,15 @@ export function PantallaPos({
                 </div>
               ))}
             </div>
+            {/* Apagado también cuando la venta no se puede facturar: el
+                asistente no abre en ese caso, y un botón que se puede tocar y
+                no hace nada parece la pantalla colgada. Lo pidió Sebastián con
+                esas palabras después de probarlo. */}
             <button
               type="button"
               className="cobrar-boton"
               onClick={() => abrirAsistente()}
-              disabled={carrito.length === 0 || !preview}
+              disabled={carrito.length === 0 || !preview || faltaParaFacturar !== null}
             >
               Cobrar (Enter)
             </button>
@@ -1402,7 +1432,7 @@ export function PantallaPos({
           <button
             className="confirmar"
             onClick={() => void confirmar()}
-            disabled={!puedeConfirmar || autorizando}
+            disabled={!puedeConfirmar || autorizando || faltaParaFacturar !== null}
           >
             {autorizando ? "Autorizando…" : "Confirmar venta"}
           </button>

@@ -127,6 +127,47 @@ describe('CaePendientesService', () => {
     expect(solicitud.fecha).toEqual(emitida);
   });
 
+  /**
+   * El caso que ARCA rechazó el 9/9/2026 con "10070: Si ImpNeto es mayor a 0 el
+   * objeto IVA es obligatorio".
+   *
+   * Una Nota de Débito NO tiene ítems: su importe es un concepto libre, no
+   * mercadería. Recalcular el desglose desde los ítems daba neto mayor a cero y
+   * ningún renglón de IVA. Sólo se veía si el primer intento fallaba por red,
+   * que es cuando entra este reintento.
+   */
+  it('una Nota de Débito usa el desglose congelado, no lo recalcula desde ítems', async () => {
+    prisma.venta.findMany.mockResolvedValue([
+      {
+        ...venta('nd1', haceDias(1)),
+        tipoComprobante: 'NotaDebitoA',
+        total: new Decimal('50.00'),
+        // Lo que se le declaró a ARCA al emitirla, congelado.
+        impNeto: new Decimal('41.32'),
+        impIva: new Decimal('8.68'),
+        impOpEx: new Decimal('0.00'),
+        ivaPorAlicuota: [{ codigoArca: 5, base: '41.32', importe: '8.68' }],
+      },
+    ]);
+    // Sin ítems, que es como es una Nota de Débito de verdad.
+    prisma.itemVenta.findMany.mockResolvedValue([]);
+    cae.autorizar.mockResolvedValue({
+      cae: '75123456789012',
+      caeFechaVto: new Date('2026-09-10'),
+      numeroComprobante: 3,
+      tipoComprobante: 'NotaDebitoA',
+    });
+
+    await service.reintentar();
+
+    const solicitud = cae.autorizar.mock.calls[0]?.[0];
+    expect(solicitud.neto).toBe('41.32');
+    // Lo que faltaba y ARCA exige cuando el neto es mayor a cero.
+    expect(solicitud.renglonesIva).toEqual([{ codigoArca: 5, base: '41.32', importe: '8.68' }]);
+    // No hizo falta ir a buscar los ítems: el desglose ya estaba guardado.
+    expect(prisma.itemVenta.findMany).not.toHaveBeenCalled();
+  });
+
   it('las pide EN ORDEN de emisión', async () => {
     // ARCA valida que la numeración sea correlativa: si se autoriza una
     // posterior antes que una anterior, la anterior ya no entra nunca.

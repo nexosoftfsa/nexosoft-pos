@@ -60,17 +60,65 @@ export function aDesglosePersistido(d: DesgloseIva): DesglosePersistido {
  * un desglose que quizá no es el que se declaró.
  */
 export function leerDesglosePersistido(venta: {
-  impNeto: Decimal | null;
-  impIva: Decimal | null;
-  impOpEx: Decimal | null;
-  ivaPorAlicuota: unknown;
+  // `undefined` además de `null` a propósito: la venta puede venir de un
+  // `select` que no pidió estas columnas. Tratar eso como "hay desglose" hacía
+  // reventar la lectura con "Cannot read properties of undefined".
+  impNeto?: Decimal | null;
+  impIva?: Decimal | null;
+  impOpEx?: Decimal | null;
+  ivaPorAlicuota?: unknown;
 }): { neto: string; iva: string; exento: string; porAlicuota: RenglonIvaGuardado[] } | null {
-  if (venta.impNeto === null || venta.impIva === null || venta.impOpEx === null) return null;
+  const { impNeto, impIva, impOpEx } = venta;
+  if (impNeto == null || impIva == null || impOpEx == null) return null;
   return {
-    neto: venta.impNeto.toFixed(2),
-    iva: venta.impIva.toFixed(2),
-    exento: venta.impOpEx.toFixed(2),
+    neto: impNeto.toFixed(2),
+    iva: impIva.toFixed(2),
+    exento: impOpEx.toFixed(2),
     porAlicuota: renglones(venta.ivaPorAlicuota),
+  };
+}
+
+/** Los importes tal como viajan en la solicitud a ARCA. */
+export interface ImportesParaArca {
+  readonly neto: string;
+  readonly iva: string;
+  readonly exento: string;
+  readonly renglonesIva: readonly RenglonIvaGuardado[];
+}
+
+/** Un desglose recién calculado, listo para mandar. */
+export function aImportesParaArca(d: DesgloseIva): ImportesParaArca {
+  return {
+    neto: d.neto.aDecimalString(2),
+    iva: d.iva.aDecimalString(2),
+    exento: d.exento.aDecimalString(2),
+    renglonesIva: d.porAlicuota.map((r) => ({
+      codigoArca: r.codigoArca,
+      base: r.base.aDecimalString(2),
+      importe: r.importe.aDecimalString(2),
+    })),
+  };
+}
+
+/**
+ * Lo guardado al emitir, listo para mandar. `null` si no hay nada guardado.
+ *
+ * Es lo que hay que preferir al reintentar: recalcular puede dar otra cosa —o
+ * nada— y lo que ARCA tiene que recibir es lo que ya se declaró y se imprimió.
+ */
+export function importesGuardados(venta: {
+  impNeto?: Decimal | null;
+  impIva?: Decimal | null;
+  impOpEx?: Decimal | null;
+  ivaPorAlicuota?: unknown;
+}): ImportesParaArca | null {
+  const leido = leerDesglosePersistido(venta);
+  if (leido === null) return null;
+  return {
+    neto: leido.neto,
+    iva: leido.iva,
+    exento: leido.exento,
+    renglonesIva: leido.porAlicuota,
   };
 }
 
