@@ -1,0 +1,209 @@
+===========================================================================
+  NEXOSOFT - QUINTA VUELTA
+  Para: Sebastian
+  Tiempo: 20 minutos
+===========================================================================
+
+LO QUE ENCONTRASTE, Y QUE PASO CON CADA COSA
+---------------------------------------------
+Tu prueba anterior encontro DOS bugs, y el del "Enter como ametralladora" es
+el mas serio de toda la fase.
+
+1. DOS COMPROBANTES POR UNA VENTA. Tenias razon y es peor de lo que pensabas.
+
+   Vos lo minimizaste ("nunca un cajero va a dar Enter como ametralladora"),
+   pero no hace falta un cajero apurado: un lector de codigo de barras que
+   repite la lectura, un teclado que rebota, una PC trabada un segundo. Todos
+   hacen lo mismo, y el que lo paga es el comercio, con dos facturas emitidas
+   ante ARCA y un cliente que compro una vez.
+
+   Confirmar tarda hasta 8 segundos entre el servidor y ARCA, y nada cortaba
+   la reentrada en esa ventana: cada Enter arrancaba una venta nueva.
+   Arreglado.
+
+   De paso: el ticket "Ref Int 14" que se te colo era la SEGUNDA venta
+   imprimiendo antes que la primera. Con esto no vuelve a existir.
+
+2. LA NOTA DE DEBITO RECHAZADA (10070). Bug real, y lo encontraste sin
+   proponertelo.
+
+   Una Nota de Debito no tiene items: su importe es un concepto libre, no
+   mercaderia. Cuando el primer intento fallaba por red -tu ECONNRESET- el
+   reintento recalculaba el IVA desde los items, no encontraba ninguno, y
+   mandaba neto mayor a cero con la lista de IVA vacia. Por eso el 10070.
+   Ahora el reintento manda el desglose tal como se declaro al emitir.
+
+3. EL A4. Tenias razon: cerrando la venta por el asistente -o sea, siempre-
+   no habia forma de sacar el A4 ORIGINAL. Lo agregue como tercera opcion.
+
+4. EL BOTON "COBRAR". Te hice caso, ahora se apaga.
+
+5. LOS 8 SEGUNDOS. Tu argumento nos convencio a los dos: esos segundos se
+   solapan con el cajero embolsando o contando la plata, y el costo de
+   acortarlos no es esperar menos, es que el cliente se lleve un papel sin
+   CAE. Pasamos de 5 a 8.
+
+LO QUE NO ERA UN BUG
+---------------------
+Los medios de pago. Vos mismo lo sospechaste ("no se si es un problema o
+solo fue un minicorte de internet justo") y tenias razon: fue ARCA.
+
+El dato que lo confirma lo capturaste vos: el ECONNRESET. Y ademas el patron
+no cierra por otro lado - Tarjeta y Billetera QR van por el MISMO camino en
+el codigo y una anduvo y la otra no; Efectivo y Transferencia van por el
+otro camino, igual. No hay forma de que sea el medio de pago.
+
+Versiones de esta prueba:  POS 0.1.60  -  Servidor 0.18.0
+Punto seguro anterior: POS 0.1.59 + Servidor 0.17.0.
+
+
+PASO 1 - ACTUALIZAR
+--------------------
+1.1 Servidor a 0.18.0 y POS a 0.1.60.
+
+    [ ] Servidor 0.18.0
+    [ ] POS 0.1.60
+
+1.2 Homologacion + Responsable Inscripto.
+
+    [ ] Confirmado.
+
+
+PASO 2 - LA AMETRALLADORA, OTRA VEZ
+------------------------------------
+Repeti exactamente lo que hiciste. Es la prueba principal.
+
+2.1 Cliente Distribuidora Sur SRL, receptor Responsable Inscripto, producto
+    con IVA 21%.
+
+2.2 Dale al Enter como ametralladora, igual o peor que la vez pasada. Sin
+    piedad.
+
+    [ ] Salio UN solo ticket.
+    [ ] En Comprobantes hay UNA sola venta nueva.
+
+    Cuantas ventas nuevas aparecieron: ______
+
+    <- Si aparecen dos, mandame captura de Comprobantes. Es lo que estamos
+       probando.
+
+2.3 Proba tambien con el boton "Confirmar venta": clic, clic, clic rapido.
+
+    [ ] Una sola venta.
+
+2.4 Y una vez normal, tranqui, para confirmar que no rompimos lo de siempre.
+
+    [ ] Ticket completo: numero fiscal, CAE, QR y datos del receptor.
+
+    MANDAME EL PDF.
+
+
+PASO 3 - EL A4 ORIGINAL (lo nuevo)
+-----------------------------------
+3.1 Hace una venta normal con el cliente Distribuidora Sur SRL.
+
+3.2 Al final, en "¿Imprimir el comprobante?", fijate que ahora hay TRES
+    opciones:
+
+        Si, imprimir
+        Si, en A4       <- nueva
+        No, gracias
+
+    [ ] Estan las tres.
+    [ ] Se puede bajar con la flecha hasta la tercera y vuelve a la primera.
+
+3.3 Elegi "Si, en A4".
+
+    [ ] Se abre el A4.
+    [ ] Dice ORIGINAL (no DUPLICADO).
+    [ ] Tiene la letra A grande, el CAE y los datos del receptor.
+
+    MANDAME EL PDF. Es el primero que existe.
+
+3.4 Ahora anda a Comprobantes y reimprimi esa misma venta en A4.
+
+    [ ] Esa dice DUPLICADO.
+
+    MANDAME EL PDF, para comparar los dos.
+
+
+PASO 4 - LA NOTA DE DEBITO QUE FALLO
+-------------------------------------
+Esta es la que ARCA rechazo con el 10070.
+
+4.1 Comprobantes > sobre una Factura A > "Nota de Debito".
+
+4.2 Monto 50, concepto "Gastos administrativos".
+
+4.3 Emitila.
+
+    [ ] Se abre sola la impresion y dice ORIGINAL.
+    [ ] Trae numero, CAE y QR.
+
+    Numero: 0002-________
+    CAE: ______________________________
+
+    MANDAME EL PDF.
+
+4.4 Mirala en Comprobantes al rato (5 minutos).
+
+    [ ] Dice Emitida, SIN cartel rojo.
+
+    <- La vez pasada aca aparecia "Rechazada - 10070". Si vuelve a pasar,
+       copiame el motivo.
+
+    NOTA: si justo ARCA esta caido, la ND puede salir "sin numerar todavia"
+    igual que la vez pasada. Eso NO es el bug: el bug era que despues la
+    rechazara. Esperá esos 5 minutos y fijate como queda.
+
+
+PASO 5 - LOS 8 SEGUNDOS
+------------------------
+5.1 Hace tres o cuatro ventas normales seguidas, a ritmo de comercio.
+
+    [ ] Todas salieron con CAE y QR en el ticket.
+
+5.2 Decime como se siente:
+
+    ¿Se nota la espera?  ____________________
+
+    ¿Molesta o esta bien?  ____________________
+
+    ¿Subirla mas, dejarla, bajarla?  ____________________
+
+    <- Sos vos el que tiene la mano en el teclado. Si decis que molesta, la
+       bajamos.
+
+
+PASO 6 - QUE NO SE HAYA ROTO NADA
+----------------------------------
+6.1 Una Factura B sin cliente.
+
+    [ ] Sale con CAE y QR.
+
+6.2 SIN cliente, receptor en Responsable Inscripto.
+
+    [ ] Cartel rojo.
+    [ ] El boton "Cobrar (Enter)" esta APAGADO (gris, no se puede tocar).
+
+    <- Esto es lo que pediste vos.
+
+6.3 Reimprimi cualquier comprobante.
+
+    [ ] Dice DUPLICADO y trae todo.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. Cuantas ventas aparecieron en el paso 2.2  <- lo mas importante
+  2. PDF del ticket normal (paso 2.4)
+  3. PDF del A4 ORIGINAL (paso 3.3)  <- el primero que existe
+  4. PDF del A4 DUPLICADO (paso 3.4), para comparar
+  5. PDF de la Nota de Debito (paso 4.3) y como quedo a los 5 minutos
+  6. Tus respuestas del paso 5.2 sobre los 8 segundos
+
+Y lo de siempre: cualquier cosa rara, aunque parezca menor. Las dos ultimas
+vueltas los mejores hallazgos salieron de cosas que anotaste al final como
+"observacion".
+===========================================================================
