@@ -87,6 +87,14 @@ const RECEPTORES: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
   { valor: CondicionIva.ResponsableInscripto, etiqueta: "Responsable Inscripto" },
   { valor: CondicionIva.Monotributo, etiqueta: "Monotributo" },
 ];
+/**
+ * Cuántas veces se le pregunta al dispositivo de cobro antes de rendirse.
+ * 60 × 2 segundos = dos minutos. Un cobro que no se confirmó en dos minutos ya
+ * no se va a confirmar, y un polling que no termina nunca es exactamente lo que
+ * emitió cientos de comprobantes en la prueba del 11/9/2026 (ADR-0075).
+ */
+const MAX_INTENTOS_PAGO_ELECTRONICO = 60;
+
 const FORMAS: ReadonlyArray<{ valor: FormaDePago; etiqueta: string; electronico?: boolean }> = [
   { valor: FormaDePago.Efectivo, etiqueta: "Efectivo" },
   { valor: FormaDePago.Tarjeta, etiqueta: "Tarjeta / Point", electronico: true },
@@ -753,6 +761,18 @@ export function PantallaPos({
     itemBusquedaRef.current?.scrollIntoView({ block: "nearest" });
   }, [cursorBusqueda, busquedaProducto]);
 
+  // Salir de la pantalla de venta apaga el polling del cobro electrónico. Sin
+  // esto queda corriendo contra un componente desmontado, emitiendo ventas que
+  // ya nadie pidió: es el mismo daño de ADR-0075 por otra puerta.
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current !== null) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, []);
+
   // Red de seguridad del espejo: cubre las transiciones que no pasan por
   // `abrirAsistente`/`avanzarPaso`/`cerrarAsistente` (el avance tras un pago
   // y el salto a "imprimir" al confirmar la venta).
@@ -825,6 +845,12 @@ export function PantallaPos({
    */
   async function confirmar(desdeAsistente = false) {
     if (carrito.length === 0) return;
+    // Un cobro electrónico en curso bloquea otro. El Enter sigue llegando
+    // mientras se espera al dispositivo, y cada uno abría un cobro NUEVO con su
+    // propio polling. Se mira el `ref` y no el estado `pagoElectronico`: esto
+    // se llama desde el listener global de teclado, cuyo closure puede tener el
+    // estado del render anterior — un `ref` no (ADR-0075).
+    if (pollingRef.current !== null) return;
 
     // Si hay un pago electrónico pendiente, iniciarlo antes de confirmar la venta
     const pagoElec = pagos.find((p) =>
@@ -841,19 +867,40 @@ export function PantallaPos({
           descripcion: `Venta ${config.razonSocial}`,
         });
         setPagoElectronico(intento);
-        // Polling cada 2 s hasta resolución
-        pollingRef.current = setInterval(async () => {
+        let intentos = 0;
+        // Polling cada 2 s hasta resolución.
+        //
+        // OJO con `id`: cada corrida apaga SU PROPIO intervalo. Antes hacía
+        // `clearInterval(pollingRef.current)`, que apaga el que esté vigente —
+        // si mientras tanto había arrancado otro cobro, una corrida vieja
+        // apagaba al nuevo y se quedaba viva ella, llamando a `_finalizarVenta`
+        // cada 2 segundos con el carrito viejo de su closure. Cientos de
+        // comprobantes fiscales emitidos en minutos (ADR-0075).
+        const id: ReturnType<typeof setInterval> = setInterval(async () => {
+          // Un intervalo que ya no es el vigente es un huérfano: se apaga solo.
+          // Es la red que atrapa cualquier otro camino que deje uno suelto.
+          if (pollingRef.current !== id) {
+            clearInterval(id);
+            return;
+          }
+          intentos += 1;
+          if (intentos > MAX_INTENTOS_PAGO_ELECTRONICO) {
+            detenerPolling(id);
+            setPagoElectronico(null);
+            setError(
+              "El pago electrónico no se confirmó a tiempo. Revisá en la app de cobro si entró, y volvé a cobrar si no entró.",
+            );
+            return;
+          }
           try {
             const estado = await pasarela.consultarEstado(intencionId);
             setPagoElectronico(estado);
             if (estado.estado === "aprobado") {
-              clearInterval(pollingRef.current!);
-              pollingRef.current = null;
+              detenerPolling(id);
               setPagoElectronico(null);
               await _finalizarVenta(desdeAsistente);
             } else if (estado.estado === "rechazado" || estado.estado === "cancelado") {
-              clearInterval(pollingRef.current!);
-              pollingRef.current = null;
+              detenerPolling(id);
               setPagoElectronico(null);
               setError(`Pago ${estado.estado}: ${estado.motivoRechazo ?? ""}`);
             }
@@ -861,6 +908,7 @@ export function PantallaPos({
             setError(mensajeError(e));
           }
         }, 2000);
+        pollingRef.current = id;
         return;
       } catch (e) {
         setError(mensajeError(e));
@@ -869,6 +917,12 @@ export function PantallaPos({
     }
 
     await _finalizarVenta(desdeAsistente);
+  }
+
+  /** Apaga ESTE intervalo, y suelta el ref sólo si era el vigente. */
+  function detenerPolling(id: ReturnType<typeof setInterval>) {
+    clearInterval(id);
+    if (pollingRef.current === id) pollingRef.current = null;
   }
 
   async function _finalizarVenta(desdeAsistente = false) {
@@ -885,6 +939,10 @@ export function PantallaPos({
   }
 
   async function _finalizarVentaSinReentrada(desdeAsistente: boolean) {
+    // Sin carrito no hay venta. El chequeo está también en `confirmar`, pero el
+    // camino del pago electrónico entra acá DIRECTO desde el polling, salteando
+    // aquél. Es la última red antes de emitir un comprobante fiscal.
+    if (carrito.length === 0) return;
     // Fiado: si se paga con cuenta corriente, hace falta elegir el cliente.
     const hayCuentaCorriente = pagos.some((p) => p.forma === FormaDePago.CuentaCorriente);
     if (hayCuentaCorriente && clienteId === "") {
@@ -1018,10 +1076,7 @@ export function PantallaPos({
 
   async function cancelarPagoElectronico() {
     if (!pagoElectronico) return;
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
+    if (pollingRef.current !== null) detenerPolling(pollingRef.current);
     try {
       await pasarela.cancelar(pagoElectronico.intencionPagoId);
     } catch {
