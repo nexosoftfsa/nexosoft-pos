@@ -1,0 +1,213 @@
+===========================================================================
+  NEXOSOFT - SEXTA VUELTA
+  Para: Sebastian
+  Tiempo: 25 minutos
+===========================================================================
+
+LO QUE ENCONTRASTE
+-------------------
+Encontraste el bug mas grave de todo el proyecto. Los cientos de
+comprobantes.
+
+No exagero: en un comercio de verdad eso eran cientos de facturas
+VERDADERAS ante ARCA, con su IVA, que despues hay que anular una por una.
+Y lo peor es que no hacia falta hacer nada raro para llegar: el cartel de
+"esperando confirmacion" aparece solo, y Enter es la tecla con la que se
+opera todo el POS.
+
+QUE PASABA (tres errores encadenados, cualquiera solo lo evitaba)
+
+1. Cuando el cobro terminaba, el sistema apagaba "el reloj vigente" en vez
+   de apagar EL SUYO. Con dos cobros dando vueltas, un reloj viejo apagaba
+   al nuevo y se quedaba vivo el. Ese reloj viejo seguia emitiendo una
+   venta cada dos segundos, para siempre.
+
+2. Tu Enter durante la espera arrancaba un cobro NUEVO, que es justo lo que
+   destapaba el error 1.
+
+3. Ese reloj viejo se acordaba del carrito de antes. Por eso todas las
+   copias eran del mismo producto y el mismo importe.
+
+La linea que lo causo tenia un signo de admiracion que decia "aca seguro
+hay algo". La pregunta que faltaba era si ese algo era el propio.
+
+Ahora: cada reloj apaga el suyo, un reloj que quedo huerfano se apaga solo,
+un cobro en curso bloquea otro, el cobro se rinde a los dos minutos, y
+salir de la pantalla lo apaga.
+
+ADEMAS, POR TUS OTRAS DOS OBSERVACIONES
+
+- EL SERVIDOR AHORA TAMBIEN FRENA. Aunque el POS se vuelva loco otra vez
+  por otro motivo, mas de 30 ventas por minuto desde una terminal se
+  rechazan. Treinta es altisimo a proposito: ninguna caja real cierra
+  treinta ventas en un minuto. Y NO afecta al modo sin internet: cuando una
+  terminal vuelve y sube su cola de golpe, esas ventas pasan todas, porque
+  el sistema mira CUANDO OCURRIO la venta, no cuando llego.
+
+- EL CLIC AFUERA YA NO TE ROBA EL ORIGINAL. Tenias razon en anotarlo. Desde
+  Comprobantes solo salen duplicados, asi que ese clic te lo perdia para
+  siempre. Los dos paneles donde vive el original ahora solo se cierran con
+  el boton Cerrar.
+
+- Y lo del asistente que se reabria en $0,00 tambien esta arreglado.
+
+Versiones de esta prueba:  POS 0.1.61  -  Servidor 0.19.0
+Punto seguro anterior: POS 0.1.60 + Servidor 0.18.0.
+
+OJO: en tu base de homologacion quedaron cientos de Facturas B de la prueba
+pasada. No las toques ni las anules, no hace falta: son de homologacion y no
+tienen ningun valor fiscal. Solo te van a correr la numeracion para arriba,
+nada mas.
+
+
+PASO 1 - ACTUALIZAR
+--------------------
+1.1 Servidor a 0.19.0 y POS a 0.1.61.
+
+    [ ] Servidor 0.19.0
+    [ ] POS 0.1.61
+
+    <- La vez pasada anotaste "POS 0.1.59" cuando en realidad tenias la
+       0.1.60 (se notaba porque te aparecio la opcion de A4). Fijate bien
+       el numero en Configuracion antes de arrancar, asi no dudamos.
+
+1.2 Homologacion + Responsable Inscripto.
+
+
+PASO 2 - EL BUCLE, A PROPOSITO (lo mas importante)
+----------------------------------------------------
+Reproduci EXACTAMENTE lo que hiciste. Sin piedad.
+
+2.1 Carga un producto y elegi "Billetera (QR)" como medio de pago.
+
+2.2 Confirma para que aparezca el cartel "Esperando confirmacion en el
+    dispositivo...".
+
+2.3 Ahi mismo, dale Enter varias veces, rapido, antes de que desaparezca.
+    Igual que la vez pasada.
+
+    [ ] NO pasa nada raro.
+    [ ] No se abre un cobro nuevo.
+    [ ] Cuando el cobro se confirma, sale UNA sola venta.
+
+2.4 Anda a Comprobantes.
+
+    Cuantas Facturas B nuevas hay: ______
+
+    <- Tiene que ser UNA. Si hay mas, mandame captura YA y cerra el POS.
+
+2.5 Repetilo dos o tres veces mas, variando: Enter a lo bestia, clics
+    afuera, Esc en el medio. Lo que se te ocurra.
+
+    [ ] Siempre una sola venta por cobro.
+
+    Contame que probaste: ____________________________________
+
+    ____________________________________________________________
+
+
+PASO 3 - EL CLIC YA NO TE ROBA EL ORIGINAL
+--------------------------------------------
+3.1 Hace una venta con el boton "Confirmar venta" (no con el asistente), asi
+    se abre el panel de post-venta.
+
+3.2 Con ese panel abierto, hace clic AFUERA, en la pantalla gris.
+
+    [ ] El panel NO se cierra.
+
+3.3 Ahora si, toca "Imprimir A4".
+
+    [ ] Sale el A4 y dice ORIGINAL.
+
+    MANDAME EL PDF.
+
+3.4 Cerra con el boton "Cerrar".
+
+    [ ] Ahora si se cierra.
+
+3.5 Lo mismo con una Nota de Debito: emitila desde Comprobantes y, con la
+    ventana de impresion abierta, hace clic afuera.
+
+    [ ] No se cierra.
+    [ ] Podes imprimir el ORIGINAL tranquilo.
+
+
+PASO 4 - EL FRENO DEL SERVIDOR
+--------------------------------
+Este no lo podes disparar a mano, y esta bien que sea asi. Lo que si podemos
+comprobar es que NO moleste.
+
+4.1 Hace 8 o 10 ventas normales seguidas, lo mas rapido que puedas, con
+    Enter y efectivo.
+
+    [ ] Todas entraron sin problema.
+    [ ] Ninguna dio error de "ventas en el ultimo minuto".
+
+    Cuantas hiciste: ______
+    En cuanto tiempo, mas o menos: ______
+
+    <- Si te frena con 8 o 10 ventas, el tope quedo bajo y lo subo. Decime.
+
+
+PASO 5 - EL MODO SIN INTERNET SIGUE ANDANDO
+---------------------------------------------
+Esto es lo que mas me preocupa del freno nuevo, asi que va aparte.
+
+5.1 Desconecta la red de la PC (wifi o cable).
+
+5.2 Hace 6 u 8 ventas seguidas, rapido.
+
+    [ ] Salen todas, con referencia interna.
+
+5.3 Volve a conectar la red y toca "Sincronizar".
+
+    [ ] SUBEN TODAS. Ninguna queda con error.
+
+    Cuantas hiciste: ______
+    Cuantas subieron: ______
+
+    <- Los dos numeros tienen que ser iguales. Si no lo son, mandame
+       captura del indicador de sincronizacion: seria el freno nuevo
+       pisando ventas buenas, y lo saco enseguida.
+
+
+PASO 6 - EL ASISTENTE EN CERO
+-------------------------------
+6.1 Termina una venta normal por el asistente y, cuando vuelve a la pantalla
+    de venta, dale Enter un par de veces con el carrito vacio.
+
+    [ ] NO se abre el asistente en "$ 0,00".
+
+    <- Eso es lo que te aparecia en la captura de la vez pasada.
+
+
+PASO 7 - QUE NO SE HAYA ROTO NADA
+-----------------------------------
+7.1 Una Factura A con cliente, tranqui.
+
+    [ ] Numero fiscal, CAE, QR y datos del receptor.
+
+    MANDAME EL PDF.
+
+7.2 Una Nota de Debito.
+
+    [ ] Sale con CAE y ORIGINAL, y a los 5 minutos sigue Emitida.
+
+7.3 Una Factura B sin cliente.
+
+    [ ] OK.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. Cuantas ventas aparecieron en el paso 2.4  <- lo mas importante
+  2. Que otras cosas probaste en el paso 2.5
+  3. PDF del A4 ORIGINAL (paso 3.3)
+  4. Los numeros del paso 4.1 (cuantas ventas, en cuanto tiempo)
+  5. Los DOS numeros del paso 5.3 (cuantas hiciste, cuantas subieron)
+  6. PDF de la Factura A (paso 7.1)
+
+Gracias de nuevo por la de la ametralladora. Ese hallazgo valia toda la
+prueba.
+===========================================================================
