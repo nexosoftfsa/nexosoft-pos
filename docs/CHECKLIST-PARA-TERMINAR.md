@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-10 · Publicado: POS **0.1.60** · Servidor **0.18.0**
+Actualizado: 2026-09-12 · Publicado: POS **0.1.61** · Servidor **0.19.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,24 +15,24 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Quinta vuelta
+## 1 · Sexta vuelta
 
-La corrida del 9/9 verificó el arreglo del ticket (los dos tickets iguales,
-ADR-0073) y encontró **dos bugs nuevos**, uno serio: tecleando Enter a
-repetición salían **dos comprobantes fiscales con dos CAE por una sola venta**.
-No hace falta un cajero apurado — un lector que repite la lectura o un teclado
-que rebota hacen lo mismo (ADR-0074). El otro: ARCA rechazaba una Nota de
-Débito reintentada con el error 10070, porque una ND no tiene ítems y el
-reintento recalculaba el IVA desde ellos. Los dos corregidos y publicados.
+La corrida del 11/9 destapó **el defecto más grave de todo el proyecto**:
+cobrando con Billetera QR y apretando Enter sobre el cartel de espera, el
+sistema emitió **cientos de comprobantes fiscales en dos minutos**, todos con
+CAE. Tres defectos encadenados en el polling del cobro electrónico; cualquiera
+de los tres, solo, lo habría evitado (ADR-0075). Corregido, más un freno de
+ráfaga en el servidor como red de abajo.
 
-- [ ] **Correr `docs/PRUEBA-QUINTA-VUELTA.txt`.** 20 minutos. El paso 2 es la
-      ametralladora otra vez; el 3 estrena el A4 ORIGINAL; el 4 es la ND que
-      ARCA rechazó.
-      *Bloquea: vender a un Responsable Inscripto.*
+- [ ] **Correr `docs/PRUEBA-SEXTA-VUELTA.txt`.** 25 minutos. El paso 2 es
+      reproducir el bucle a propósito.
+      *Bloquea: vender, y punto.*
 
-- [ ] **Decidir si los 8 segundos de espera quedan.** Subimos de 5 a 8 por
-      propuesta de Sebastián. El paso 5 del instructivo no tiene casillas: le
-      pregunto cómo se siente con la mano en el teclado. *Si molesta, se baja.*
+- [ ] **Confirmar que el freno de ráfaga NO pise la cola offline.** Es el
+      riesgo real de haber puesto un tope por ritmo. Está cubierto con test
+      —sólo cuentan las ventas ocurridas recién— pero hay que verlo en campo:
+      es el paso 5 del instructivo, con los dos números. *Si no coinciden, el
+      freno sale.*
 
 - [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
       6/9, el 8/9 y el 9/9. Falta darlo por cerrado formalmente.
