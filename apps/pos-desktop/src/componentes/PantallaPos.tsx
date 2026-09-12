@@ -511,6 +511,11 @@ export function PantallaPos({
    */
   function abrirAsistente(marcaDeTiempo = performance.now()) {
     if (pasoAsistenteRef.current !== "cerrado") return;
+    // Sin carrito no hay nada que cobrar. Un Enter de más después de cerrar la
+    // venta reabría el asistente en "$ 0,00 — Cobro completo", donde el Enter
+    // no hacía nada y había que salir con Esc. Lo capturó Sebastián el
+    // 11/9/2026 y tenía razón en que parecía el sistema colgado.
+    if (carrito.length === 0) return;
     // Si la venta no se puede facturar, el asistente no abre. El motivo ya está
     // a la vista en la cabecera, y el asistente la tapa: adentro, el Enter del
     // último paso no hacía nada visible y parecía que el sistema se colgaba —
