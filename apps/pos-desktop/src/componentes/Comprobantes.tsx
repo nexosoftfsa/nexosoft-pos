@@ -645,8 +645,11 @@ function ModalReimpresion({
   const { datosA4, imprimirA4 } = useImpresionA4();
   const { datosTicket, imprimirTicketPreview } = useImpresionTicket();
   return (
-    <div className="overlay" onClick={onCerrar}>
-      <div className="ticket" onClick={(e) => e.stopPropagation()}>
+    // NO se cierra con un clic afuera. Cuando se abre con leyenda ORIGINAL —una
+    // nota recién emitida— este es el único momento en que ese original se puede
+    // imprimir: después sólo salen duplicados. Se sale con el botón Cerrar.
+    <div className="overlay">
+      <div className="ticket">
         <div className="ticket-titulo">{etiquetaTipoComprobante(comprobante.tipoComprobante)}</div>
         <div className="ticket-numero">{numeroComprobante(comprobante.numeroComprobante)}</div>
         {comprobante.cae !== null ? (

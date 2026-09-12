@@ -1591,9 +1591,13 @@ export function PantallaPos({
         />
       )}
 
+      {/* NO se cierra con un clic afuera. Acá vive la única chance de imprimir
+          el ORIGINAL de esta venta: desde Comprobantes sólo salen duplicados.
+          Un clic de más lo perdía para siempre, y Sebastián lo perdió así el
+          11/9/2026. Se sale con el botón Cerrar, que está ahí abajo. */}
       {ultimaVenta && (
-        <div className="overlay" onClick={() => setUltimaVenta(null)}>
-          <div className="ticket" onClick={(e) => e.stopPropagation()}>
+        <div className="overlay">
+          <div className="ticket">
             <div className="ticket-titulo">{etiquetaComprobante(ultimaVenta.tipoComprobante)}</div>
             <div className="ticket-numero">
               N° {String(ultimaVenta.puntoDeVenta).padStart(4, "0")}-

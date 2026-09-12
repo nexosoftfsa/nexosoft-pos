@@ -34,6 +34,12 @@ import { comprobanteAsociadoDe } from './cae/comprobante-asociado';
 import { aDesglosePersistido } from './cae/desglose-persistido';
 import { fueraDeVentanaArca, motivoVentanaVencida } from './cae/ventana-de-fecha';
 import { fechaDeVenta } from './fecha-de-venta';
+import {
+  cuentaParaElTope,
+  esRafagaAnormal,
+  motivoRafaga,
+  VENTANA_RAFAGA_MS,
+} from './rafaga-de-ventas';
 import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
@@ -496,6 +502,9 @@ export class VentasService {
     // equivocado y con un `CbteFch` distinto al del ticket (`fecha-de-venta.ts`).
     const fechaVenta = fechaDeVenta(dto.fecha, new Date());
 
+    // Freno de emergencia: una terminal en bucle no llega a ARCA (ADR-0075).
+    await this.frenarSiEsRafaga(usuario.sucursalId, dto.terminalId ?? null, fechaVenta);
+
     // Combos: resolvemos qué ítems son combos para descontar el stock de sus
     // componentes en vez del combo (ADR-0033).
     const componentesPorCombo = await this.componentesDeCombos(
@@ -742,6 +751,37 @@ export class VentasService {
     } catch (error) {
       this.logger.error(`No se pudo actualizar el libro de ventas: ${(error as Error).message}`);
     }
+  }
+
+  /**
+   * Corta si esta terminal viene emitiendo a un ritmo imposible.
+   *
+   * Sólo cuenta ventas cuya FECHA es de recién: la cola de una terminal que
+   * estuvo offline sube de golpe y es legítima, y frenarla sería perder ventas
+   * reales. Ver `rafaga-de-ventas.ts` para el razonamiento del tope.
+   */
+  private async frenarSiEsRafaga(
+    sucursalId: string,
+    terminalId: string | null,
+    fechaVenta: Date,
+  ): Promise<void> {
+    const ahora = new Date();
+    if (!cuentaParaElTope(fechaVenta, ahora)) return;
+
+    const recientes = await this.prisma.venta.count({
+      where: {
+        sucursalId,
+        terminalId,
+        creadaEn: { gte: new Date(ahora.getTime() - VENTANA_RAFAGA_MS) },
+      },
+    });
+    if (!esRafagaAnormal(recientes)) return;
+
+    const motivo = motivoRafaga(recientes);
+    this.logger.error(
+      `RÁFAGA FRENADA en la terminal ${terminalId ?? '(sin terminal)'} de la sucursal ${sucursalId}: ${motivo}`,
+    );
+    throw new BadRequestException(motivo);
   }
 
   /**

@@ -41,7 +41,11 @@ const DTO = {
 
 describe('VentasService', () => {
   let prisma: {
-    venta: { findUnique: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
+    venta: {
+      findUnique: ReturnType<typeof vi.fn>;
+      findMany: ReturnType<typeof vi.fn>;
+      count: ReturnType<typeof vi.fn>;
+    };
     comboComponente: { findMany: ReturnType<typeof vi.fn> };
     producto: { findMany: ReturnType<typeof vi.fn> };
     lote: { findMany: ReturnType<typeof vi.fn> };
@@ -72,7 +76,12 @@ describe('VentasService', () => {
       movimientoCuentaCorriente: { create: vi.fn().mockResolvedValue({}) },
     };
     prisma = {
-      venta: { findUnique: vi.fn().mockResolvedValue(null), findMany: vi.fn() },
+      venta: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        findMany: vi.fn(),
+        // Ritmo normal de caja: el freno de ráfaga no se dispara (ADR-0075).
+        count: vi.fn().mockResolvedValue(0),
+      },
       comboComponente: { findMany: vi.fn().mockResolvedValue([]) },
       // Sin productos perecederos por defecto → sin FEFO (tramos sin lote).
       producto: { findMany: vi.fn().mockResolvedValue([]) },
@@ -520,6 +529,44 @@ describe('VentasService', () => {
    * frenar la venta. AFIP se cae seguido y el comercio ya entregó la
    * mercadería y cobró.
    */
+  /**
+   * La red de abajo de ADR-0075. El POS emitió cientos de comprobantes en dos
+   * minutos y el servidor los aceptó todos: cada uno traía su `operacionId`, así
+   * que la idempotencia no tenía nada que deduplicar.
+   */
+  describe('freno de ráfaga', () => {
+    it('a ritmo de caja real no frena nada', async () => {
+      prisma.venta.count.mockResolvedValue(10);
+      await expect(service.registrar(USUARIO, DTO)).resolves.toBeDefined();
+    });
+
+    it('a ritmo de bucle frena, y dice que lo emitido está bien', async () => {
+      prisma.venta.count.mockResolvedValue(42);
+
+      const error = await service.registrar(USUARIO, DTO).catch((e: unknown) => e);
+
+      expect((error as Error).message).toContain('42');
+      expect((error as Error).message).toContain('ya emitidas están bien');
+      // Lo importante: no se creó la venta.
+      expect(tx.venta.create).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Una terminal que estuvo offline sube su cola de golpe, y pueden ser
+     * cincuenta ventas en dos segundos. Son legítimas: ocurrieron hace rato.
+     */
+    it('la cola de una terminal offline NO cuenta para el tope', async () => {
+      prisma.venta.count.mockResolvedValue(42);
+      const hace2Horas = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+
+      await expect(
+        service.registrar(USUARIO, { ...DTO, fecha: hace2Horas }),
+      ).resolves.toBeDefined();
+      // Ni siquiera se pregunta: la fecha ya dice que no es un bucle.
+      expect(prisma.venta.count).not.toHaveBeenCalled();
+    });
+  });
+
   describe('cuando ARCA no está disponible', () => {
     it('registra la venta igual, sin CAE y marcada como PENDIENTE', async () => {
       cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin respuesta de AFIP'));

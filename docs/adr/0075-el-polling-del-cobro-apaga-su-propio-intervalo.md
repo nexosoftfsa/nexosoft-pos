@@ -108,18 +108,35 @@ componente desmontado, emitiendo ventas que ya nadie pidió.
 - Los comprobantes que ya se emitieron en la prueba están en homologación y no
   tienen consecuencia fiscal. En producción habría que anularlos uno por uno.
 
+### El servidor también frena
+
+El servidor aceptó los cientos de comprobantes sin chistar, y con razón: cada
+uno traía su propio `operacionId`, así que la idempotencia —que existe y
+funciona— no tenía nada que deduplicar. Eran ventas distintas para todo efecto.
+
+Se agregó un freno por **ritmo** (`rafaga-de-ventas.ts`): más de 30 ventas de la
+misma terminal en un minuto se rechazan con un mensaje que dice qué pasó y que
+lo ya emitido está bien.
+
+Por ritmo y no por contenido a propósito: un kiosco vende diez veces el mismo
+cigarrillo en un minuto y eso es normal. Lo que ninguna caja real hace es
+cerrar treinta ventas en un minuto — hay un cliente adelante, hay que cobrar,
+dar vuelto y entregar.
+
+Y **no rompe el modo offline**, que era el riesgo real de poner un tope: una
+terminal que vuelve de estar sin servidor sube su cola de golpe, y pueden ser
+cincuenta ventas en dos segundos. Se distinguen por la *fecha de la venta*, no
+por cuándo llegan: sólo cuentan para el tope las que ocurrieron recién, que son
+las únicas que un bucle puede producir.
+
+Esto no reemplaza al arreglo del POS. Es la red de abajo, para el próximo
+camino que se desboque.
+
 ## Lo que este arreglo NO cubre
 
-**El servidor aceptó los cientos de comprobantes sin chistar.** Cada uno traía
-su propio `operacionId`, así que la idempotencia —que existe y funciona— no
-tenía nada que deduplicar: eran ventas distintas para todo efecto.
-
-Distinguir una ráfaga de ventas legítimas de un bucle no es trivial: un kiosco
-puede vender diez veces el mismo cigarrillo en un minuto. Queda anotado como
-decisión pendiente, no como olvido.
-
-Tampoco hay tests de la carrera, por lo mismo de siempre: pide un test de
-componente que no tenemos montado. La defensa es estructural y de campo.
+No hay tests de la carrera en el POS, por lo mismo de siempre: pide un test de
+componente que no tenemos montado. La defensa ahí es estructural y de campo. El
+freno del servidor sí está cubierto, incluido el caso de la cola offline.
 
 ## Lo que se hizo mal
 
