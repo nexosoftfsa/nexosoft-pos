@@ -22,6 +22,7 @@ export function IndicadorSync({
     pendientes,
     fallidas,
     detalleFallidas,
+    detalleTrabadas,
     sincronizarAhora,
     reintentarFallidasYSincronizar,
     descartarFallidas,
@@ -55,14 +56,20 @@ export function IndicadorSync({
   const texto = pildora.texto;
 
   const mostrarBoton = online && !sincronizando && (pendientes > 0 || fallidas > 0);
+  /** Hay algo que explicar: rechazadas, o pendientes que no están entrando. */
+  const hayMotivoQueVer = fallidas > 0 || detalleTrabadas.length > 0;
 
   return (
     <>
       <div className={`sync sync-${pildora.tono}`} title={pildora.detalle}>
         <span className="sync-dot" aria-hidden />
-        {fallidas > 0 ? (
+        {hayMotivoQueVer ? (
           // Con ventas rechazadas el texto se vuelve un botón: el contador solo
           // no dice nada, y el motivo es lo único que permite arreglarlo.
+          //
+          // También con las TRABADAS —pendientes que ya fallaron alguna vez—,
+          // que antes no ofrecían nada: se quedaban en "N ventas sin subir" sin
+          // forma de saber por qué. Sebastián arrastró dos así tres pruebas.
           <button
             type="button"
             className="sync-texto sync-texto--boton"
@@ -98,9 +105,10 @@ export function IndicadorSync({
             */}
             <p className="sync-detalle-ayuda">
               Estas ventas están guardadas en esta terminal y el ticket salió, pero{" "}
-              <strong>no se pudieron registrar en el servidor</strong>, así que no figuran en el
+              <strong>todavía no se registraron en el servidor</strong>, así que no figuran en el
               panel de reportes. Abajo está el motivo de cada una.
             </p>
+            {detalleFallidas.length > 0 && <h3 className="sync-detalle-subtitulo">Rechazadas</h3>}
             <ul className="sync-detalle-lista">
               {detalleFallidas.map((op) => (
                 <li key={op.operacionId}>
@@ -112,6 +120,31 @@ export function IndicadorSync({
                 </li>
               ))}
             </ul>
+
+            {/* Las trabadas van aparte y con su propia explicación: se siguen
+                reintentando solas, así que "Reintentar todas" no es lo que
+                hace falta y decir lo contrario manda a tocar el botón
+                equivocado. */}
+            {detalleTrabadas.length > 0 && (
+              <>
+                <h3 className="sync-detalle-subtitulo">Siguen intentando</h3>
+                <p className="sync-detalle-ayuda">
+                  Estas <strong>se reintentan solas</strong> y no hace falta hacer nada. Si alguna
+                  lleva mucho rato acá, el motivo de abajo dice por qué no entra.
+                </p>
+                <ul className="sync-detalle-lista">
+                  {detalleTrabadas.map((op) => (
+                    <li key={op.operacionId}>
+                      <div className="sync-detalle-op">
+                        {op.tipo} · {op.operacionId.slice(0, 8)} · {op.intentos} intento
+                        {op.intentos === 1 ? "" : "s"}
+                      </div>
+                      <div className="sync-detalle-error">{op.ultimoError ?? "sin detalle"}</div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
             <div className="sync-detalle-acciones">
               <button
                 className="primario"
@@ -119,7 +152,7 @@ export function IndicadorSync({
                   void reintentarFallidasYSincronizar().then(() => setVerDetalle(false))
                 }
               >
-                Reintentar todas
+                {detalleFallidas.length > 0 ? "Reintentar todas" : "Sincronizar ahora"}
               </button>
               {/*
                 Para las que no pueden entrar nunca (apuntan a datos que el

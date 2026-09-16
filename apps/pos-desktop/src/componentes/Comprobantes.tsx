@@ -3,7 +3,7 @@
  * servidor de sucursal, con anulación (emite NC) y reimpresión. Online contra el
  * módulo de ventas del cloud-api.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Money } from "@nexosoft/domain";
 import type { ConfiguracionComercio } from "@nexosoft/app";
@@ -74,6 +74,7 @@ export function Comprobantes({
   cliente,
   config,
   ventasLocales,
+  pendientesDeSync,
 }: {
   cliente: ClienteVentas;
   config: ConfiguracionComercio;
@@ -83,6 +84,16 @@ export function Comprobantes({
    * podía ni reimprimir el ticket que acababa de emitir.
    */
   ventasLocales?: RepositorioVentas;
+  /**
+   * Cuántas operaciones quedan en la cola de sync. Cuando este número BAJA es
+   * que algo subió, y la lista se recarga sola.
+   *
+   * Sin esto, tocar "Sincronizar" parado en esta pantalla no mostraba nada
+   * nuevo: las ventas subían, pero la lista seguía siendo la de antes. Había
+   * que cambiar de menú y volver. Lo reportó Sebastián el 16/9/2026: "hice
+   * click en Sincronizar y no hacía nada".
+   */
+  pendientesDeSync?: number;
 }) {
   const [comprobantes, setComprobantes] = useState<Comprobante[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -145,6 +156,17 @@ export function Comprobantes({
   useEffect(() => {
     void cargar();
   }, [cargar]);
+
+  // La cola se vació un poco: algo subió, así que la lista cambió. Se recarga
+  // sola en vez de esperar a que alguien cambie de menú y vuelva.
+  const pendientesPrevias = useRef(pendientesDeSync);
+  useEffect(() => {
+    const antes = pendientesPrevias.current;
+    pendientesPrevias.current = pendientesDeSync;
+    if (antes !== undefined && pendientesDeSync !== undefined && pendientesDeSync < antes) {
+      void cargar();
+    }
+  }, [pendientesDeSync, cargar]);
 
   /**
    * Le pregunta a ARCA qué tiene registrado de este comprobante.

@@ -53,12 +53,6 @@ ráfaga en el servidor como red de abajo.
       *No era la causa del rechazo del 4/9. Sigue siendo un problema real, pero
       no bloquea nada todavía: dejarlo para después de la prueba.*
 
-- [ ] **No hay forma de sacar un A4 ORIGINAL.** El botón "Imprimir A4" vive en
-      el panel de post-venta; una vez cerrada la venta, Comprobantes sólo ofrece
-      "Reimprimir", que marca DUPLICADO — como corresponde. Si el cliente pide
-      la factura en A4 dos minutos después, sólo se le puede dar un duplicado.
-      *Decidir si vale agregar un A4 original mientras la venta sigue abierta.*
-
 - [ ] **Conseguir un CUIT de Responsable Inscripto.** Es lo único que separa a
       la A y la B de estar verificadas **en producción**. Con el CUIT de Seba
       —Monotributo en el padrón— se prueba el circuito pero no se emite de

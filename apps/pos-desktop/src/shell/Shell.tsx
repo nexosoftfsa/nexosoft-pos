@@ -483,6 +483,11 @@ export function Shell({
             <Comprobantes
               cliente={clienteVentas}
               config={entorno.config}
+              // Cuántas quedan en la cola. Cuando baja es que algo subió, y la
+              // lista se recarga sola: antes había que cambiar de menú y volver
+              // para ver los comprobantes recién sincronizados, y "Sincronizar"
+              // parecía no hacer nada.
+              pendientesDeSync={sync.pendientes}
               {...(entorno.sync.ventasLocales !== undefined
                 ? { ventasLocales: entorno.sync.ventasLocales }
                 : {})}

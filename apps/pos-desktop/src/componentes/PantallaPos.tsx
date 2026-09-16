@@ -262,6 +262,19 @@ export function PantallaPos({
    * anterior, y un estado recién actualizado ahí todavía se lee viejo.
    */
   const confirmandoRef = useRef(false);
+  /**
+   * Espejo del carrito, para leerlo desde handlers con closure viejo.
+   *
+   * `abrirAsistente` entra desde el listener global de teclado. Con el carrito
+   * en el closure, un Enter de más justo después de cerrar la venta lo veía
+   * todavía lleno y abría el asistente en "$ 0,00 — Cobro completo". Se tapó
+   * una vez mirando `carrito` directo y volvió a aparecer con Tarjeta y
+   * Transferencia, que tienen un paso más y dan más tiempo a que sobre un
+   * Enter. Cuarta vez que el problema es leer estado desde un closure viejo
+   * (ADR-0073, 0074, 0075).
+   */
+  const carritoRef = useRef<readonly ItemCarrito[]>([]);
+  carritoRef.current = carrito;
   // Fase 17: `catalogo` es una foto tomada al bootstrapear (no se re-lee
   // sola), así que la estrella de "grilla rápida" se refleja acá al toque
   // (optimista) además de guardarse en el local `entorno.grillaRapida`.
@@ -511,11 +524,10 @@ export function PantallaPos({
    */
   function abrirAsistente(marcaDeTiempo = performance.now()) {
     if (pasoAsistenteRef.current !== "cerrado") return;
-    // Sin carrito no hay nada que cobrar. Un Enter de más después de cerrar la
-    // venta reabría el asistente en "$ 0,00 — Cobro completo", donde el Enter
-    // no hacía nada y había que salir con Esc. Lo capturó Sebastián el
-    // 11/9/2026 y tenía razón en que parecía el sistema colgado.
-    if (carrito.length === 0) return;
+    // Sin carrito no hay nada que cobrar. Se mira el `ref` y no `carrito`: con
+    // el closure viejo del listener de teclado, el carrito ya vaciado seguía
+    // viéndose lleno y el asistente abría igual en "$ 0,00 — Cobro completo".
+    if (carritoRef.current.length === 0) return;
     // Si la venta no se puede facturar, el asistente no abre. El motivo ya está
     // a la vista en la cabecera, y el asistente la tapa: adentro, el Enter del
     // último paso no hacía nada visible y parecía que el sistema se colgaba —

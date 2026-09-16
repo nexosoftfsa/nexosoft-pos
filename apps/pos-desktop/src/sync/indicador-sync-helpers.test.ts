@@ -5,6 +5,7 @@ import type { OperacionEnCola } from "@nexosoft/sync";
 import {
   confirmacionDescartar,
   estadoDeLaPildora,
+  operacionesTrabadas,
   rangoDeFechas,
 } from "./indicador-sync-helpers";
 
@@ -96,6 +97,41 @@ function op(creadaEn: string): OperacionEnCola {
     intentos: 5,
   };
 }
+
+/**
+ * Una venta que no entra nunca se quedaba en "pendiente" para siempre y no
+ * había forma de ver por qué: el botón "ver motivo" sólo aparecía con las
+ * fallidas. Sebastián arrastró dos así durante tres pruebas.
+ */
+describe("operacionesTrabadas", () => {
+  const enCola = (extra: Partial<OperacionEnCola>): OperacionEnCola => ({
+    ...op("2026-09-16T10:00:00Z"),
+    estado: "pendiente",
+    intentos: 0,
+    ...extra,
+  });
+
+  it("una recién encolada no está trabada: todavía no falló", () => {
+    expect(operacionesTrabadas([enCola({})])).toEqual([]);
+  });
+
+  it("con intentos y motivo sí está trabada", () => {
+    const trabada = enCola({ intentos: 3, ultimoError: "No se pudo contactar al servidor" });
+    expect(operacionesTrabadas([trabada])).toEqual([trabada]);
+  });
+
+  /** Sin motivo no hay nada que mostrar, y un renglón vacío es peor que nada. */
+  it("con intentos pero sin motivo no cuenta", () => {
+    expect(operacionesTrabadas([enCola({ intentos: 3 })])).toEqual([]);
+    expect(operacionesTrabadas([enCola({ intentos: 3, ultimoError: "   " })])).toEqual([]);
+  });
+
+  it("separa las trabadas de las que van bien", () => {
+    const trabada = enCola({ intentos: 2, ultimoError: "timeout" });
+    const reciente = enCola({});
+    expect(operacionesTrabadas([reciente, trabada, reciente])).toEqual([trabada]);
+  });
+});
 
 describe("rangoDeFechas", () => {
   it("dice el rango cuando hay varias fechas", () => {

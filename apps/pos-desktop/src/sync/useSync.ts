@@ -11,6 +11,7 @@ import type {
 import type { RepositorioVentas } from "@nexosoft/app";
 
 import { esperarConTope } from "./esperar-con-tope";
+import { operacionesTrabadas } from "./indicador-sync-helpers";
 import { llegoAlServidor } from "./llego-al-servidor";
 import { volcarComprobantes } from "./volcar-comprobantes";
 
@@ -38,6 +39,19 @@ export interface EstadoSync {
    * faltan ventas en los reportes.
    */
   readonly detalleFallidas: readonly OperacionEnCola[];
+  /**
+   * Las que siguen pendientes pero YA FALLARON alguna vez, con su motivo.
+   *
+   * No son lo mismo que las fallidas: éstas se van a reintentar solas, y el
+   * motor no les gasta el presupuesto de reintentos cuando el problema es de
+   * transporte (ADR-0066). Eso está bien —un corte de red no tiene que marcar
+   * la venta con error— pero deja un agujero: una venta que no entra nunca se
+   * queda en "pendiente" para siempre y **no había forma de ver por qué**.
+   *
+   * Sebastián arrastró dos así durante tres pruebas: "no me deja ver el motivo
+   * ni nada, le doy sincronizar y no hace nada".
+   */
+  readonly detalleTrabadas: readonly OperacionEnCola[];
   readonly sincronizando: boolean;
   /**
    * Si la terminal llega a SU SERVIDOR de sucursal (no si hay internet: el
@@ -109,6 +123,7 @@ export function useSync(sync: SyncPos): EstadoSync {
   const [pendientes, setPendientes] = useState(0);
   const [fallidas, setFallidas] = useState(0);
   const [detalleFallidas, setDetalleFallidas] = useState<readonly OperacionEnCola[]>([]);
+  const [detalleTrabadas, setDetalleTrabadas] = useState<readonly OperacionEnCola[]>([]);
   const [sincronizando, setSincronizando] = useState(false);
   /**
    * `true` mientras la terminal logre hablar con SU SERVIDOR. Arranca en `true`
@@ -126,10 +141,14 @@ export function useSync(sync: SyncPos): EstadoSync {
 
   const refrescar = useCallback(async () => {
     const todas = await almacen.todas();
-    setPendientes(todas.filter((o) => o.estado === "pendiente" || o.estado === "enviando").length);
+    const enCola = todas.filter((o) => o.estado === "pendiente" || o.estado === "enviando");
+    setPendientes(enCola.length);
     const rechazadas = todas.filter((o) => o.estado === "fallida");
     setFallidas(rechazadas.length);
     setDetalleFallidas(rechazadas);
+    // Pendiente + ya falló alguna vez = trabada. Se sigue reintentando sola,
+    // pero el motivo tiene que poder verse: si no, queda enterrada en la cola.
+    setDetalleTrabadas(operacionesTrabadas(enCola));
   }, [almacen]);
 
   /**
@@ -243,6 +262,7 @@ export function useSync(sync: SyncPos): EstadoSync {
     pendientes,
     fallidas,
     detalleFallidas,
+    detalleTrabadas,
     sincronizando,
     online,
     error,

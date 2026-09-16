@@ -101,6 +101,25 @@ function soloFecha(iso: string): string {
 }
 
 /** El rango de fechas de un conjunto de operaciones, para decir qué se descarta. */
+/**
+ * Las que siguen en la cola pero ya fallaron alguna vez, con motivo.
+ *
+ * No son las "fallidas": esas agotaron los reintentos y quedaron marcadas. Una
+ * TRABADA se sigue reintentando sola —el motor no gasta el presupuesto cuando
+ * el problema es de transporte, ADR-0066— y eso está bien, pero dejaba un
+ * agujero: una venta que no entra nunca se queda en "pendiente" para siempre y
+ * no había forma de ver por qué. Sebastián arrastró dos así durante tres
+ * pruebas: *"no me deja ver el motivo ni nada"*.
+ *
+ * Se exige `intentos > 0` **y** motivo: una operación recién encolada todavía
+ * no falló, y mostrarla como problema sería ruido en cada venta.
+ */
+export function operacionesTrabadas(
+  enCola: readonly OperacionEnCola[],
+): readonly OperacionEnCola[] {
+  return enCola.filter((o) => o.intentos > 0 && (o.ultimoError ?? "").trim() !== "");
+}
+
 export function rangoDeFechas(ops: readonly OperacionEnCola[]): string | null {
   const fechas = ops.map((o) => o.creadaEn).sort();
   const primera = fechas[0];
