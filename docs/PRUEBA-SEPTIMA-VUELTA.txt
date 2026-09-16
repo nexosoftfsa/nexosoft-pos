@@ -1,0 +1,211 @@
+===========================================================================
+  NEXOSOFT - SEPTIMA VUELTA
+  Para: Sebastian
+  Tiempo: 20 minutos
+===========================================================================
+
+LO QUE CERRASTE LA VEZ PASADA
+------------------------------
+Las cuatro cosas gordas quedaron confirmadas:
+
+- El bucle de los cientos de comprobantes NO VUELVE. Enter a lo bestia sobre
+  el cartel de la Billetera QR: una sola venta.
+- El freno nuevo del servidor no se come la cola sin internet. 8 hechas, 8
+  subidas. Ese era el riesgo de haber puesto un tope, y no se cumplio.
+- Y tampoco molesta operando normal: 10 ventas en minuto y medio, ninguna
+  rechazada.
+- El clic afuera ya no te roba el original.
+
+Esta vuelta es corta y va por las tres cosas que anotaste vos, mas una que
+encontre yo.
+
+
+LO QUE ARREGLE POR TUS OBSERVACIONES
+-------------------------------------
+1. LAS DOS VENTAS TRABADAS. Tenias razon y el problema era peor de lo que
+   parecia: el boton para ver el motivo SOLO aparecia con las ventas
+   rechazadas, y esas dos estan pendientes, no rechazadas. O sea que no
+   habia ninguna forma de enterarse de por que no entraban. Por eso las
+   arrastraste tres pruebas.
+
+   OJO: lo que arregle es que ahora se pueda VER el motivo. Todavia no se
+   por que estan trabadas. Eso lo vamos a saber recien cuando me mandes lo
+   del paso 2, y por eso ese paso va primero.
+
+2. EL ASISTENTE EN $0,00, AHORA CON TARJETA Y TRANSFERENCIA. Misma causa de
+   siempre: la guarda que tenia que frenarlo miraba un carrito viejo, que
+   todavia lo veia lleno. Es la cuarta vez que la misma raiz me muerde, asi
+   que esta vez ademas quedo escrita la regla para no repetirla.
+
+3. COMPROBANTES NO SE RECARGABA SOLA. Lo de tu nota: tocabas Sincronizar
+   parado en Comprobantes, las ventas subian, y la lista seguia siendo la de
+   antes. Ahora se refresca sola cuando la cola baja.
+
+
+LO QUE ENCONTRE YO
+-------------------
+EL TICKET MENTIA CON LOS PRODUCTOS EXENTOS.
+
+Te acordas que para probar la Factura A tuviste que pasar el aceite de
+exento a 21%, porque con el exento la factura salia con neto $0? Eso estaba
+BIEN, pero cuando fui a mirar por que, aparecio otra cosa.
+
+Ante ARCA no es lo mismo "exento" que "IVA 0%": el 0% lleva su renglon en el
+detalle de IVA y lo exento va a un campo aparte, sin renglon. El sistema los
+confundia.
+
+Lo importante: la factura que se le declara a ARCA SIEMPRE ESTUVO BIEN. El
+que estaba mal era EL PAPEL. Un producto exento imprimia una linea
+
+    IVA 0%                 $ 0,00
+
+que la factura de ARCA no tenia, y ademas lo sumaba al "Subtotal neto". O
+sea que el ticket que se lleva el cliente y lo que ARCA tiene registrado
+decian cosas distintas de la misma venta. Eso es justo lo que no puede
+pasar.
+
+Ahora un exento sale como "Exento" con su importe, y no entra en el subtotal
+neto. No hay que tocar nada en los productos: se arregla solo cuando el POS
+baja el catalogo.
+
+
+Versiones de esta prueba:  POS 0.1.63  -  Servidor 0.19.0 (NO CAMBIA)
+Punto seguro anterior: POS 0.1.61 + Servidor 0.19.0.
+
+
+PASO 1 - ACTUALIZAR
+--------------------
+1.1 Actualiza SOLO el POS, a 0.1.63. El servidor queda como esta.
+
+    [ ] POS 0.1.63   <- confirmalo en Configuracion antes de arrancar
+
+1.2 Homologacion + Responsable Inscripto, como siempre.
+
+
+PASO 2 - LAS DOS VENTAS TRABADAS (esto primero, antes de vender nada)
+----------------------------------------------------------------------
+Si vendes antes, se mezclan con las nuevas y perdemos el rastro.
+
+2.1 Arriba a la derecha, donde dice "2 ventas sin subir", fijate que ahora
+    el texto diga ademas "- ver motivo".
+
+    [ ] Aparece "- ver motivo".
+
+    <- Si NO aparece, quiere decir que las dos ventas ya se subieron solas
+       en algun momento. Decimelo igual y salteate al paso 3.
+
+2.2 Hace clic ahi.
+
+2.3 Se abre un panel. Abajo de todo tiene que haber un titulo que dice
+    "Siguen intentando", con las dos ventas y el motivo de cada una.
+
+    MANDAME UNA CAPTURA DE ESE PANEL ENTERO.
+
+    <- Esto es lo mas importante de toda la prueba. Ese texto es lo unico
+       que tenemos para saber por que no entran.
+
+2.4 Copiame tambien el motivo escrito, por si la captura sale chica:
+
+    Venta 1: ________________________________________________
+
+    Venta 2: ________________________________________________
+
+2.5 NO toques "Descartar". Todavia no sabemos que son.
+
+
+PASO 3 - EL ASISTENTE EN CERO, CON TARJETA Y TRANSFERENCIA
+------------------------------------------------------------
+3.1 Termina una venta normal usando TARJETA.
+
+3.2 Cuando volves a la pantalla de venta, con el carrito vacio, dale Enter
+    dos o tres veces.
+
+    [ ] NO se abre el asistente en "$ 0,00".
+
+3.3 Lo mismo con TRANSFERENCIA.
+
+    [ ] Tampoco.
+
+3.4 Y de nuevo con EFECTIVO y con BILLETERA (QR), para cerrar las cuatro.
+
+    [ ] Efectivo: no se abre.
+    [ ] Billetera QR: no se abre.
+
+
+PASO 4 - COMPROBANTES SE RECARGA SOLA
+---------------------------------------
+Exactamente lo de tu nota, a ver si ya no pasa.
+
+4.1 Desconecta la red y hace 2 o 3 ventas.
+
+4.2 Volve a conectar la red y anda al menu "Comprobantes". Quedate ahi.
+
+4.3 Desde ahi, toca "Sincronizar".
+
+    [ ] Las ventas nuevas aparecen SOLAS en la lista, sin cambiar de menu.
+
+    <- La vez pasada tenias que salir del menu y volver.
+
+
+PASO 5 - EL PRODUCTO EXENTO
+-----------------------------
+5.1 Volve el aceite (o el producto que uses) a EXENTO en el panel de
+    productos.
+
+5.2 En el POS, toca "Sincronizar" y esperalo. Asi baja el catalogo
+    corregido.
+
+    <- Si no sincronizas, el POS sigue con el dato viejo y la prueba no
+       sirve.
+
+5.3 Hace una FACTURA A con cliente, con DOS productos: el exento y uno
+    comun de 21%.
+
+5.4 Imprimi el A4 y miralo.
+
+    [ ] Aparece una linea que dice "Exento" con su importe (NO "IVA 0%").
+    [ ] El "Subtotal neto" NO incluye el importe del exento: tiene que ser
+        solo el neto del producto de 21%.
+    [ ] El total esta bien.
+
+    MANDAME EL PDF.
+
+5.5 Y ahora una FACTURA A con SOLO el producto exento.
+
+    [ ] No muestra "Subtotal neto" (esta bien: no hay nada gravado).
+    [ ] Sale con CAE.
+
+    MANDAME EL PDF TAMBIEN.
+
+    <- Estos dos PDF son la unica forma de confirmarlo: es un tema de
+       impresion, no se ve desde la pantalla.
+
+
+PASO 6 - QUE NO SE HAYA ROTO NADA
+-----------------------------------
+6.1 Una Factura B sin cliente.
+
+    [ ] Sale con CAE y QR.
+
+6.2 Una Nota de Credito anulando alguna de las de arriba.
+
+    [ ] Sale con CAE y dice ORIGINAL.
+
+6.3 Reimprimi desde Comprobantes la Factura A del paso 5.3.
+
+    [ ] Sale igual que el original, con el IVA discriminado y el exento
+        aparte.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. LA CAPTURA DEL PANEL DEL PASO 2.3   <- lo mas importante de todo
+  2. Los dos motivos escritos (paso 2.4)
+  3. PDF de la Factura A con exento + 21% (paso 5.4)
+  4. PDF de la Factura A con solo exento (paso 5.5)
+  5. Si el asistente en $0,00 aparecio con alguna forma de pago (paso 3)
+
+Lo de las dos ventas trabadas fue un buen ojo: las arrastraste tres pruebas
+porque el sistema no te dejaba verlas, no porque se te pasaran.
+===========================================================================

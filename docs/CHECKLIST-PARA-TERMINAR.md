@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-12 · Publicado: POS **0.1.61** · Servidor **0.19.0**
+Actualizado: 2026-09-16 · Publicado: POS **0.1.63** · Servidor **0.19.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,31 +15,41 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Sexta vuelta
+## 1 · Séptima vuelta — POS 0.1.63
 
-La corrida del 11/9 destapó **el defecto más grave de todo el proyecto**:
-cobrando con Billetera QR y apretando Enter sobre el cartel de espera, el
-sistema emitió **cientos de comprobantes fiscales en dos minutos**, todos con
-CAE. Tres defectos encadenados en el polling del cobro electrónico; cualquiera
-de los tres, solo, lo habría evitado (ADR-0075). Corregido, más un freno de
-ráfaga en el servidor como red de abajo.
+### Lo que la sexta vuelta (11/9) dejó cerrado
 
-- [ ] **Correr `docs/PRUEBA-SEXTA-VUELTA.txt`.** 25 minutos. El paso 2 es
-      reproducir el bucle a propósito.
-      *Bloquea: vender, y punto.*
+- **El bucle de los cientos de comprobantes: no vuelve.** Con Billetera QR y
+  Enter a lo bestia sobre el cartel de espera salió **una sola venta**. Era el
+  defecto más grave del proyecto (ADR-0075).
+- **El freno de ráfaga no pisa la cola offline.** Los dos números coincidieron:
+  8 ventas sin internet, 8 subidas. Era el riesgo real de haber puesto un tope
+  por ritmo.
+- **El tope no molesta operando normal.** 10 ventas en un minuto y medio, sin
+  un solo rechazo.
+- **El clic afuera ya no roba el original**, y el A4 sale como ORIGINAL.
 
-- [ ] **Confirmar que el freno de ráfaga NO pise la cola offline.** Es el
-      riesgo real de haber puesto un tope por ritmo. Está cubierto con test
-      —sólo cuentan las ventas ocurridas recién— pero hay que verlo en campo:
-      es el paso 5 del instructivo, con los dos números. *Si no coinciden, el
-      freno sale.*
+### Lo que la sexta vuelta destapó, ya corregido y sin verificar
 
-- [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
-      6/9, el 8/9 y el 9/9. Falta darlo por cerrado formalmente.
+- [ ] **Correr `docs/PRUEBA-SEPTIMA-VUELTA.txt`.** 20 minutos.
 
----
+- [ ] **Las dos ventas trabadas de Seba: saber POR QUÉ.** Es la única incógnita
+      real que queda. Las viene arrastrando desde hace tres pruebas y hasta
+      ahora el POS no le mostraba el motivo: el botón de ver el error sólo
+      aparecía con las fallidas, y éstas están pendientes. Eso se arregló
+      (0.1.62) — ahora las trabadas se listan aparte con su motivo.
+      *El arreglo es de visibilidad: la causa sigue sin conocerse. El paso 2 del
+      instructivo es leerla.*
 
-## 2 · Factura A y B — lo que queda después
+- [ ] **El asistente en $0,00, ahora con Tarjeta y Transferencia.** Cuarta vez
+      con la misma raíz: un listener de teclado mirando el carrito de un closure
+      viejo. Va contra un `ref` (0.1.62).
+      *La regla ya está escrita: lo que coordina trabajo asincrónico va en un
+      `ref`.*
+
+- [ ] **Comprobantes se recarga sola cuando baja la cola.** Seba tocó
+      Sincronizar parado ahí, las ventas subieron y la lista siguió siendo la
+      de antes; tuvo que cambiar de menú y volver (0.1.62).
 
 - [ ] **Verificar en campo un producto exento.** Arreglado el 16/9 (ADR-0076):
       `EXENTO` ya no se mapea a la alícuota del 0%. El comprobante que se le
@@ -47,6 +57,13 @@ ráfaga en el servidor como red de abajo.
       imprimía "IVA 0%" y sumaba el exento al subtotal neto.
       *Falta venderlo una vez y mirar el ticket: tiene que decir "Exento" con su
       importe, y el subtotal neto no tiene que incluirlo.*
+
+- [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
+      6/9, el 8/9 y el 9/9. Falta darlo por cerrado formalmente.
+
+---
+
+## 2 · Factura A y B — lo que queda después
 
 - [ ] **Conseguir un CUIT de Responsable Inscripto.** Es lo único que separa a
       la A y la B de estar verificadas **en producción**. Con el CUIT de Seba
