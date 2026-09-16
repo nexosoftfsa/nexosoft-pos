@@ -41,17 +41,12 @@ ráfaga en el servidor como red de abajo.
 
 ## 2 · Factura A y B — lo que queda después
 
-- [ ] **"Exento" significa cosas distintas en el POS y en el servidor.**
-      El POS mapea `EXENTO → alícuota 0%`; el servidor lo trata como exento real
-      (`ImpOpEx`, sin renglón). No son lo mismo y nuestro propio comentario en
-      `iva-de-producto.ts` lo explica.
-      **Alcance del arreglo:** `Articulo.alicuotaIva` pasa a nullable, y eso toca
-      9 archivos de producción más tests — el tipo, el cálculo de precio, el
-      cálculo del comprobante, los dos mapeos de SQLite, el pull del catálogo,
-      los servicios de venta y facturación, y los datos demo. Mecánico pero no
-      chico.
-      *No era la causa del rechazo del 4/9. Sigue siendo un problema real, pero
-      no bloquea nada todavía: dejarlo para después de la prueba.*
+- [ ] **Verificar en campo un producto exento.** Arreglado el 16/9 (ADR-0076):
+      `EXENTO` ya no se mapea a la alícuota del 0%. El comprobante que se le
+      declara a ARCA siempre estuvo bien; lo que estaba mal era el **papel**, que
+      imprimía "IVA 0%" y sumaba el exento al subtotal neto.
+      *Falta venderlo una vez y mirar el ticket: tiene que decir "Exento" con su
+      importe, y el subtotal neto no tiene que incluirlo.*
 
 - [ ] **Conseguir un CUIT de Responsable Inscripto.** Es lo único que separa a
       la A y la B de estar verificadas **en producción**. Con el CUIT de Seba

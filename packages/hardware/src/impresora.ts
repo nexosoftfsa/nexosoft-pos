@@ -29,6 +29,25 @@ export interface SubtotalIva {
   readonly etiqueta: string; // ej. "IVA 21%"
   readonly base: Money;
   readonly iva: Money;
+  /**
+   * `true` cuando el renglón es de importe **exento**, no de una alícuota.
+   *
+   * No es lo mismo que una alícuota del 0%: el 0% lleva renglón ante ARCA con
+   * Id 3, y lo exento va a `ImpOpEx` sin renglón. En el papel también se leen
+   * distinto — de un exento importa **la base**, porque su IVA es cero por
+   * definición y mostrar "$ 0,00" no dice nada.
+   */
+  readonly esExento?: boolean;
+}
+
+/**
+ * Qué importe se muestra en un renglón del desglose.
+ *
+ * De una alícuota, el IVA. De un exento, la base: su IVA es cero y el dato que
+ * el contador necesita es cuánto del comprobante no estaba gravado.
+ */
+export function montoDelSubtotal(s: SubtotalIva): Money {
+  return s.esExento === true ? s.base : s.iva;
 }
 
 /**
@@ -168,7 +187,10 @@ export function llevaDatosDelReceptor(datos: DatosTicket): boolean {
  */
 export function subtotalNeto(datos: DatosTicket): Money | null {
   if (letraFiscal(datos) !== "A") return null;
-  const [primero, ...resto] = datos.subtotalesIva;
+  // Lo exento NO es neto gravado: va aparte, en su propio renglón. Sumarlo acá
+  // daría un "Subtotal neto" que no coincide con el `ImpNeto` declarado a ARCA.
+  const gravados = datos.subtotalesIva.filter((s) => s.esExento !== true);
+  const [primero, ...resto] = gravados;
   if (primero === undefined) return null;
   return resto.reduce((a, s) => a.sumar(s.base), primero.base);
 }

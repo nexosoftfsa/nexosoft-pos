@@ -12,6 +12,7 @@ import {
   identificacionComprobanteAsociado,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
+  montoDelSubtotal,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
@@ -115,7 +116,8 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
         datos.subtotalesIva.map((s, i) => (
           <div className="ticket-print-fila" key={`iva-${i}`}>
             <span>{s.etiqueta}</span>
-            <span>{pesos(s.iva)}</span>
+            {/* De un exento se muestra la base: su IVA es cero por definición. */}
+            <span>{pesos(montoDelSubtotal(s))}</span>
           </div>
         ))}
       <div className="ticket-print-fila ticket-print-total">

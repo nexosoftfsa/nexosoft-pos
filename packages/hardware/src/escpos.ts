@@ -15,6 +15,7 @@ import {
   letraFiscal,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
+  montoDelSubtotal,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
@@ -349,7 +350,7 @@ export function construirEscPos(
     b.lineaCruda(filaIzquierdaDerecha("Subtotal neto", pesos(neto), columnas));
   }
   for (const s of datos.subtotalesIva) {
-    b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(s.iva), columnas));
+    b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(montoDelSubtotal(s)), columnas));
   }
   b.comando(NEGRITA_ON).comando(DOBLE_ALTO);
   // A alto doble entran las mismas columnas (solo cambia la altura).

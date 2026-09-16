@@ -12,6 +12,7 @@ import {
   letraFiscal,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
+  montoDelSubtotal,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
@@ -125,10 +126,13 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
         {neto !== null &&
           datos.subtotalesIva.map((s, i) => (
             <div className="a4-fila-total" key={i}>
+              {/* Un exento no tiene "neto gravado" que aclarar: su importe ES
+                  la base, y se muestra sola. */}
               <span>
-                {s.etiqueta} (neto {pesos(s.base)})
+                {s.etiqueta}
+                {s.esExento === true ? "" : ` (neto ${pesos(s.base)})`}
               </span>
-              <span>{pesos(s.iva)}</span>
+              <span>{pesos(montoDelSubtotal(s))}</span>
             </div>
           ))}
         {datos.descuento.esPositivo() && (

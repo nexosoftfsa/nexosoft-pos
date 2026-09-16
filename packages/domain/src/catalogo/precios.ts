@@ -15,7 +15,7 @@
  * fiscal. Esta función expone ambas cosas.
  */
 import { ErrorDominio } from "../comun/errores.js";
-import type { AlicuotaIva } from "../fiscal/alicuota-iva.js";
+import { porcentajeDeAlicuota, type AlicuotaIva } from "../fiscal/alicuota-iva.js";
 import { CondicionIva, emisorDiscriminaIva } from "../fiscal/condicion-iva.js";
 import { Money } from "../dinero/money.js";
 import type { Articulo } from "./articulo.js";
@@ -50,9 +50,11 @@ function redondearNumero(valor: number, decimales: number): number {
 export function calcularPrecioVenta(
   costoNeto: Money,
   margenUtilidad: number,
-  alicuota: AlicuotaIva,
+  /** `null` es exento: para el precio se comporta como 0%, no hay IVA que sumar. */
+  alicuota: AlicuotaIva | null,
   opciones: OpcionesPrecio,
 ): ResultadoPrecio {
+  const porcentaje = porcentajeDeAlicuota(alicuota);
   if (!Number.isFinite(margenUtilidad) || margenUtilidad < 0) {
     throw new ErrorDominio(
       "MARGEN_INVALIDO",
@@ -66,7 +68,7 @@ export function calcularPrecioVenta(
   if (emisorDiscriminaIva(opciones.condicionEmisor)) {
     // RI: marca sobre el neto y agrega IVA de venta.
     const precioNetoVenta = costoNeto.sumar(costoNeto.porcentaje(margenUtilidad)).redondear(2);
-    const ivaVenta = precioNetoVenta.porcentaje(alicuota.porcentaje).redondear(2);
+    const ivaVenta = precioNetoVenta.porcentaje(porcentaje).redondear(2);
     return {
       margenUtilidad,
       costoConsiderado: costoNeto.redondear(2),
@@ -77,7 +79,7 @@ export function calcularPrecioVenta(
   }
 
   // Monotributo: el IVA de compra es costo; no hay IVA de venta.
-  const costoConsiderado = costoNeto.sumar(costoNeto.porcentaje(alicuota.porcentaje));
+  const costoConsiderado = costoNeto.sumar(costoNeto.porcentaje(porcentaje));
   const precioFinal = costoConsiderado
     .sumar(costoConsiderado.porcentaje(margenUtilidad))
     .redondear(2);
@@ -99,16 +101,18 @@ export function calcularPrecioVenta(
 export function calcularMargen(
   costoNeto: Money,
   precioFinal: Money,
-  alicuota: AlicuotaIva,
+  /** `null` es exento: se comporta como 0%. */
+  alicuota: AlicuotaIva | null,
   opciones: OpcionesPrecio,
 ): number {
   if (costoNeto.esCero()) {
     throw new ErrorDominio("COSTO_CERO", "No se puede calcular el margen con costo cero.");
   }
+  const porcentaje = porcentajeDeAlicuota(alicuota);
   const discrimina = emisorDiscriminaIva(opciones.condicionEmisor);
-  const base = discrimina ? costoNeto : costoNeto.sumar(costoNeto.porcentaje(alicuota.porcentaje));
+  const base = discrimina ? costoNeto : costoNeto.sumar(costoNeto.porcentaje(porcentaje));
   const precioComparable = discrimina
-    ? precioFinal.multiplicarPor(100).dividirPor(100 + alicuota.porcentaje)
+    ? precioFinal.multiplicarPor(100).dividirPor(100 + porcentaje)
     : precioFinal;
   const ratio = precioComparable.proporcionRespectoDe(base);
   return redondearNumero((ratio - 1) * 100, 2);

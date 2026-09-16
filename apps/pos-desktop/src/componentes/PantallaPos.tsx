@@ -12,6 +12,7 @@ import {
   Money,
   resolverTipoComprobante,
   TipoComprobante,
+  type AlicuotaIva,
 } from "@nexosoft/domain";
 import type { DatosTicket } from "@nexosoft/hardware";
 import type { IntentoPago } from "@nexosoft/pagos";
@@ -134,6 +135,17 @@ function promoDeItem(c: ItemCarrito) {
     c.producto.articulo.rubroId,
     new Date(),
   );
+}
+
+/**
+ * Cómo se llama el renglón del desglose: "IVA 21%", o "Exento".
+ *
+ * Un exento NO es una alícuota del 0%, y decirle "IVA 0%" —que es lo que hacía
+ * el POS hasta el 16/9/2026— contradice al comprobante que se le declara a
+ * ARCA, donde ese importe va a `ImpOpEx` sin renglón de IVA.
+ */
+function etiquetaSubtotal(alicuota: AlicuotaIva | null): string {
+  return alicuota === null ? "Exento" : `IVA ${alicuota.etiqueta}`;
 }
 
 function armarComando(
@@ -1420,9 +1432,10 @@ export function PantallaPos({
                   <Fila etiqueta="Neto gravado" valor={pesos(preview.resultado.netoGravado)} />
                   {preview.resultado.subtotalesPorAlicuota.map((s) => (
                     <Fila
-                      key={s.alicuota.porcentaje}
-                      etiqueta={`IVA ${s.alicuota.etiqueta}`}
-                      valor={pesos(s.iva)}
+                      key={s.alicuota?.porcentaje ?? "exento"}
+                      etiqueta={etiquetaSubtotal(s.alicuota)}
+                      // De un exento importa la base: su IVA es cero.
+                      valor={pesos(s.alicuota === null ? s.neto : s.iva)}
                     />
                   ))}
                 </>
@@ -1799,9 +1812,10 @@ export function construirDatosTicket(
       importe: venta.resultado.lineas[i]?.importe ?? it.precioUnitario,
     })),
     subtotalesIva: venta.resultado.subtotalesPorAlicuota.map((s) => ({
-      etiqueta: `IVA ${s.alicuota.etiqueta}`,
+      etiqueta: etiquetaSubtotal(s.alicuota),
       base: s.neto,
       iva: s.iva,
+      ...(s.alicuota === null ? { esExento: true } : {}),
     })),
     descuento: venta.resultado.descuento,
     total: venta.resultado.total,

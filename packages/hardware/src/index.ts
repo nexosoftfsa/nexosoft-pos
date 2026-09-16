@@ -13,6 +13,7 @@ export {
   letraFiscal,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
+  montoDelSubtotal,
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,

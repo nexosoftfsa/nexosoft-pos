@@ -22,7 +22,15 @@ export interface Articulo {
   readonly unidadDeMedida: UnidadDeMedida;
   /** Costo de reposición SIN IVA. */
   readonly costoNeto: Money;
-  readonly alicuotaIva: AlicuotaIva;
+  /**
+   * `null` es **exento**, y no es lo mismo que el 0%.
+   *
+   * Para calcular plata dan igual, pero ante ARCA no: el 0% lleva renglón en el
+   * detalle de IVA con Id 3, y el exento va a `ImpOpEx` sin renglón. Mientras
+   * esto no admitía `null`, el POS mapeaba EXENTO a 0% y el ticket imprimía una
+   * línea "IVA 0%" que el comprobante fiscal no tenía.
+   */
+  readonly alicuotaIva: AlicuotaIva | null;
   readonly activo: boolean;
   /**
    * Flag local (Fase 17): el cajero lo marca a mano en la propia pantalla de
@@ -38,7 +46,8 @@ export interface DatosNuevoArticulo {
   readonly descripcion: string;
   readonly unidadDeMedida: UnidadDeMedida;
   readonly costoNeto: Money;
-  readonly alicuotaIva: AlicuotaIva;
+  /** `null` es exento. Ver `Articulo.alicuotaIva`. */
+  readonly alicuotaIva: AlicuotaIva | null;
   readonly codigoBarras?: string;
   readonly rubroId?: string;
   readonly proveedorId?: string;

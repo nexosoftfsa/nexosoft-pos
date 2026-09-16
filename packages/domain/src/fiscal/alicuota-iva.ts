@@ -15,6 +15,23 @@ export interface AlicuotaIva {
   readonly etiqueta: string;
 }
 
+/**
+ * El porcentaje de una alícuota, tratando `null` (exento) como cero.
+ *
+ * Para calcular plata, exento y 0% dan lo mismo: no hay IVA que sumar. Lo que
+ * NO es lo mismo es lo que se le declara a ARCA —el 0% lleva renglón con Id 3 y
+ * el exento va a `ImpOpEx` sin renglón— y esa diferencia la resuelve
+ * `desglosarIvaIncluido`, no esta función.
+ */
+export function porcentajeDeAlicuota(alicuota: AlicuotaIva | null): number {
+  return alicuota?.porcentaje ?? 0;
+}
+
+/** Cómo se nombra en pantalla y en el papel. `null` es "Exento". */
+export function etiquetaDeAlicuota(alicuota: AlicuotaIva | null): string {
+  return alicuota?.etiqueta ?? "Exento";
+}
+
 export const ALICUOTAS_IVA = {
   CERO: { codigoArca: 3, porcentaje: 0, etiqueta: "0%" },
   DOS_CON_CINCO: { codigoArca: 9, porcentaje: 2.5, etiqueta: "2,5%" },

@@ -44,7 +44,8 @@ export interface LineaVenta {
   readonly cantidad: number | string;
   /** Precio unitario, IVA incluido o neto según `preciosIncluyenIva`. */
   readonly precioUnitario: Money;
-  readonly alicuota: AlicuotaIva;
+  /** `null` es exento: ver `Articulo.alicuotaIva`. */
+  readonly alicuota: AlicuotaIva | null;
   /** Descuento de la línea, en porcentaje 0..100. */
   readonly descuentoPorcentaje?: number;
 }
@@ -59,18 +60,26 @@ export interface OpcionesCalculo {
   readonly recargoPorcentaje?: number;
 }
 
+/**
+ * Clave del grupo exento. Negativa a propósito: ningún porcentaje de IVA lo es,
+ * así que no puede chocar con una alícuota real.
+ */
+const CLAVE_EXENTO = -1;
+
 export interface LineaCalculada {
   readonly descripcion: string;
   readonly cantidad: string;
   readonly precioUnitario: Money;
-  readonly alicuota: AlicuotaIva;
+  /** `null` es exento: ver `Articulo.alicuotaIva`. */
+  readonly alicuota: AlicuotaIva | null;
   readonly descuentoPorcentaje: number;
   /** Importe final de la línea (con descuentos de línea y global aplicados). */
   readonly importe: Money;
 }
 
 export interface SubtotalPorAlicuota {
-  readonly alicuota: AlicuotaIva;
+  /** `null` es exento: ver `Articulo.alicuotaIva`. */
+  readonly alicuota: AlicuotaIva | null;
   readonly neto: Money;
   readonly iva: Money;
 }
@@ -131,7 +140,12 @@ export function calcularComprobante(
   let sinRecargoAcum = Money.cero();
 
   // Grupos por alícuota, acumulando importes de línea YA redondeados.
-  const grupos = new Map<number, { readonly alicuota: AlicuotaIva; bruto: Money }>();
+  //
+  // La clave es el porcentaje, y lo exento (`null`) va a una clave propia que
+  // ningún porcentaje puede ocupar: si se agrupara con el 0% quedarían mezclados
+  // dos tratamientos fiscales distintos —el 0% lleva renglón ante ARCA, el
+  // exento no— y se perdería justamente la distinción que da sentido a esto.
+  const grupos = new Map<number, { readonly alicuota: AlicuotaIva | null; bruto: Money }>();
 
   for (const linea of lineas) {
     const cantidad = Money.desde(linea.cantidad); // factor numérico exacto
@@ -168,12 +182,10 @@ export function calcularComprobante(
 
     brutoSinDescAcum = brutoSinDescAcum.sumar(brutoLista);
 
-    const grupo = grupos.get(linea.alicuota.porcentaje);
+    const clave = linea.alicuota === null ? CLAVE_EXENTO : linea.alicuota.porcentaje;
+    const grupo = grupos.get(clave);
     if (grupo === undefined) {
-      grupos.set(linea.alicuota.porcentaje, {
-        alicuota: linea.alicuota,
-        bruto: importe,
-      });
+      grupos.set(clave, { alicuota: linea.alicuota, bruto: importe });
     } else {
       grupo.bruto = grupo.bruto.sumar(importe);
     }
@@ -188,7 +200,7 @@ export function calcularComprobante(
     let neto: Money;
     let ivaGrupo: Money;
 
-    if (!tieneIva || alicuota.porcentaje === 0) {
+    if (!tieneIva || alicuota === null || alicuota.porcentaje === 0) {
       neto = bruto;
       ivaGrupo = Money.cero();
     } else if (preciosIncluyenIva) {

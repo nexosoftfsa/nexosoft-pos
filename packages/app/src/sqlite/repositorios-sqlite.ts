@@ -62,7 +62,9 @@ export class RepositorioArticulosSqlite implements RepositorioArticulos {
         a.proveedorId ?? null,
         a.unidadDeMedida,
         a.costoNeto.aCentavos(),
-        String(a.alicuotaIva.porcentaje),
+        // NULL es EXENTO. Guardar un 0 lo haría indistinguible de la alícuota
+        // del 0%, que ante ARCA es otra cosa.
+        a.alicuotaIva === null ? null : String(a.alicuotaIva.porcentaje),
         bool01(a.activo),
       ],
     );
@@ -383,7 +385,8 @@ export class RepositorioVentasSqlite implements RepositorioVentas {
           item.descripcion,
           item.cantidad.aDecimalString(3),
           item.precioUnitario.aCentavos(),
-          String(item.alicuota.porcentaje),
+          // NULL es exento, igual que en `articulo`. Un 0 lo confundiría con el 0%.
+          item.alicuota === null ? null : String(item.alicuota.porcentaje),
           item.descuentoPorcentaje !== undefined ? String(item.descuentoPorcentaje) : null,
           linea.importe.aCentavos(),
           item.costoNeto.aCentavos(),

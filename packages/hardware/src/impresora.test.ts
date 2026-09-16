@@ -12,6 +12,7 @@ import type { DatosTicket } from "./impresora.js";
 import {
   letraFiscal,
   llevaDatosDelReceptor,
+  montoDelSubtotal,
   numeroEsProvisional,
   referenciaInterna,
   subtotalNeto,
@@ -114,6 +115,65 @@ describe("subtotalNeto", () => {
 
   it("una Factura A sin desglose guardado (comprobante viejo) devuelve null", () => {
     expect(subtotalNeto(base({ tipoComprobante: "Factura A" }))).toBeNull();
+  });
+
+  /**
+   * Lo exento no es neto gravado: va en su propio renglón y fuera del subtotal.
+   * Sumarlo daría un "Subtotal neto" distinto del `ImpNeto` declarado a ARCA.
+   */
+  it("el importe exento NO entra en el subtotal neto", () => {
+    const neto = subtotalNeto(
+      base({
+        tipoComprobante: "Factura A",
+        subtotalesIva: [
+          { etiqueta: "IVA 21%", base: Money.desde("1000.00"), iva: Money.desde("210.00") },
+          {
+            etiqueta: "Exento",
+            base: Money.desde("500.00"),
+            iva: Money.cero(),
+            esExento: true,
+          },
+        ],
+      }),
+    );
+    expect(neto?.aDecimalString(2)).toBe("1000.00");
+  });
+
+  it("una Factura A con SÓLO exento no tiene subtotal neto que mostrar", () => {
+    expect(
+      subtotalNeto(
+        base({
+          tipoComprobante: "Factura A",
+          subtotalesIva: [
+            { etiqueta: "Exento", base: Money.desde("500.00"), iva: Money.cero(), esExento: true },
+          ],
+        }),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("montoDelSubtotal", () => {
+  it("de una alícuota se muestra el IVA", () => {
+    expect(
+      montoDelSubtotal({
+        etiqueta: "IVA 21%",
+        base: Money.desde("1000.00"),
+        iva: Money.desde("210.00"),
+      }).aDecimalString(2),
+    ).toBe("210.00");
+  });
+
+  /** Su IVA es cero por definición: mostrar "$ 0,00" no le dice nada a nadie. */
+  it("de un exento se muestra la base", () => {
+    expect(
+      montoDelSubtotal({
+        etiqueta: "Exento",
+        base: Money.desde("500.00"),
+        iva: Money.cero(),
+        esExento: true,
+      }).aDecimalString(2),
+    ).toBe("500.00");
   });
 });
 

@@ -112,7 +112,7 @@ describe("Adaptador SQLite — round-trip de catálogo", () => {
     const a = await repos.articulos.obtener("art");
     expect(a?.descripcion).toBe("Gaseosa");
     expect(a?.costoNeto.aDecimalString()).toBe("500.00");
-    expect(a?.alicuotaIva.porcentaje).toBe(21);
+    expect(a?.alicuotaIva?.porcentaje).toBe(21);
     expect(a?.unidadDeMedida).toBe(UnidadDeMedida.Unidad);
   });
 

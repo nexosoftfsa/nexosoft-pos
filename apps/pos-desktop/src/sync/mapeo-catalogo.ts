@@ -9,7 +9,11 @@
  *    define como "código de barras o interno"; así el lector funciona).
  *  - El servidor no tiene unidad de medida → se asume `Unidad`.
  *  - `precioVenta` es el precio final (IVA incluido, igual que `preciosIncluyenIva`).
- *  - `EXENTO` se mapea a alícuota 0% (el dominio no distingue exento de 0%).
+ *  - `EXENTO` se mapea a `null`, que en el dominio ES exento. Hasta el
+ *    16/9/2026 se mapeaba a la alícuota del 0%, y no son lo mismo: el 0% lleva
+ *    renglón ante ARCA con Id 3 y el exento va a `ImpOpEx` sin renglón. El
+ *    servidor siempre lo mandó bien —usa su propio `tipoIva`— pero el TICKET
+ *    imprimía una línea "IVA 0%" que el comprobante fiscal no tenía.
  */
 import {
   ALICUOTAS_IVA,
@@ -55,15 +59,20 @@ export interface SaldoRemoto {
   readonly saldo: string;
 }
 
-const ALICUOTA_POR_TIPO: Record<TipoIvaRemoto, AlicuotaIva> = {
-  EXENTO: ALICUOTAS_IVA.CERO,
+const ALICUOTA_POR_TIPO: Record<TipoIvaRemoto, AlicuotaIva | null> = {
+  EXENTO: null,
   IVA_10_5: ALICUOTAS_IVA.DIEZ_CON_CINCO,
   IVA_21: ALICUOTAS_IVA.VEINTIUNO,
   IVA_27: ALICUOTAS_IVA.VEINTISIETE,
 };
 
-export function mapearAlicuota(tipo: TipoIvaRemoto): AlicuotaIva {
-  return ALICUOTA_POR_TIPO[tipo] ?? ALICUOTAS_IVA.VEINTIUNO;
+/**
+ * `null` es exento. Un tipo desconocido cae al 21%, que es la alícuota del 99%
+ * del comercio minorista y la que menos sorprende — igual criterio que el
+ * servidor en `alicuotaDeTipoIva`.
+ */
+export function mapearAlicuota(tipo: TipoIvaRemoto): AlicuotaIva | null {
+  return tipo in ALICUOTA_POR_TIPO ? ALICUOTA_POR_TIPO[tipo] : ALICUOTAS_IVA.VEINTIUNO;
 }
 
 /** Traduce un producto remoto a su `Articulo` + `PrecioArticulo` (lista por defecto). */

@@ -22,7 +22,11 @@ export function centavosAMoney(valor: unknown): Money {
   return Money.desdeCentavos(Number(valor));
 }
 
-export function alicuotaDeTexto(valor: unknown): AlicuotaIva {
+export function alicuotaDeTexto(valor: unknown): AlicuotaIva | null {
+  // NULL en la base es EXENTO. Se chequea ANTES de convertir: `Number(null)` es
+  // 0, así que sin esto un exento volvería como alícuota del 0% — que es
+  // exactamente la confusión que esto viene a arreglar.
+  if (valor === null || valor === undefined || valor === "") return null;
   const alicuota = alicuotaPorPorcentaje(Number(valor));
   if (alicuota === undefined) {
     throw new ErrorDominio(

@@ -21,7 +21,8 @@ export interface ItemVenta {
   readonly descripcion: string;
   readonly cantidad: Cantidad;
   readonly precioUnitario: Money;
-  readonly alicuota: AlicuotaIva;
+  /** `null` es exento: ver `Articulo.alicuotaIva`. */
+  readonly alicuota: AlicuotaIva | null;
   readonly descuentoPorcentaje?: number;
   /** Costo neto del artículo al momento de la venta (para calcular ganancia real, ver ADR-0048). */
   readonly costoNeto: Money;

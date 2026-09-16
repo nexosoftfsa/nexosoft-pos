@@ -12,6 +12,69 @@ const ITEM_21 = (precio: string, cantidad: number | string = 1): LineaVenta => (
   alicuota: ALICUOTAS_IVA.VEINTIUNO,
 });
 
+/**
+ * Exento NO es la alícuota del 0%.
+ *
+ * Ante ARCA el 0% lleva renglón en el detalle de IVA con Id 3, y lo exento va a
+ * `ImpOpEx` sin renglón. Mientras `Articulo.alicuotaIva` no admitió `null`, el
+ * POS mapeaba EXENTO al 0% y el ticket imprimía una línea "IVA 0%" que el
+ * comprobante fiscal no tenía: el papel y lo declarado decían cosas distintas.
+ */
+describe("calcularComprobante — exento", () => {
+  const EXENTO = (precio: string): LineaVenta => ({
+    descripcion: "Producto exento",
+    cantidad: 1,
+    precioUnitario: Money.desde(precio),
+    alicuota: null,
+  });
+
+  it("una línea exenta no paga IVA y su neto es el importe entero", () => {
+    const r = calcularComprobante([EXENTO("1000.00")], { tipo: TipoComprobante.FacturaA });
+
+    const exento = r.subtotalesPorAlicuota.find((s) => s.alicuota === null);
+    expect(exento?.neto.aDecimalString(2)).toBe("1000.00");
+    expect(exento?.iva.aDecimalString(2)).toBe("0.00");
+    expect(r.iva.aDecimalString(2)).toBe("0.00");
+  });
+
+  it("NO se mezcla con el 0%: son dos renglones distintos", () => {
+    const cero: LineaVenta = {
+      descripcion: "Producto 0%",
+      cantidad: 1,
+      precioUnitario: Money.desde("500.00"),
+      alicuota: ALICUOTAS_IVA.CERO,
+    };
+
+    const r = calcularComprobante([EXENTO("1000.00"), cero], { tipo: TipoComprobante.FacturaA });
+
+    expect(r.subtotalesPorAlicuota).toHaveLength(2);
+    expect(r.subtotalesPorAlicuota.filter((s) => s.alicuota === null)).toHaveLength(1);
+    expect(
+      r.subtotalesPorAlicuota.filter((s) => s.alicuota?.codigoArca === 3),
+    ).toHaveLength(1);
+  });
+
+  it("convive con una línea gravada sin ensuciarle el IVA", () => {
+    const r = calcularComprobante([ITEM_21("1210.00"), EXENTO("1000.00")], {
+      tipo: TipoComprobante.FacturaA,
+    });
+
+    // El IVA sale sólo de la línea gravada: 1210 × 21 / 121 = 210.
+    expect(r.iva.aDecimalString(2)).toBe("210.00");
+    expect(r.total.aDecimalString(2)).toBe("2210.00");
+  });
+
+  it("dos líneas exentas se agrupan en un solo renglón", () => {
+    const r = calcularComprobante([EXENTO("1000.00"), EXENTO("500.00")], {
+      tipo: TipoComprobante.FacturaA,
+    });
+
+    const exentos = r.subtotalesPorAlicuota.filter((s) => s.alicuota === null);
+    expect(exentos).toHaveLength(1);
+    expect(exentos[0]?.neto.aDecimalString(2)).toBe("1500.00");
+  });
+});
+
 describe("calcularComprobante — Factura B (IVA incluido, no discrimina)", () => {
   const r = calcularComprobante([ITEM_21("1210.00")], {
     tipo: TipoComprobante.FacturaB,
