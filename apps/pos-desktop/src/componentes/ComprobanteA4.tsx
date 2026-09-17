@@ -7,9 +7,11 @@
  */
 import type { Cantidad } from "@nexosoft/domain";
 import {
+  ACLARACION_IMPUESTOS_NACIONALES,
   fechaHoraTicket,
   identificacionComprobanteAsociado,
   letraFiscal,
+  LEYENDA_TRANSPARENCIA_FISCAL,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
   montoDelSubtotal,
@@ -17,6 +19,7 @@ import {
   numeroFiscalFormateado,
   referenciaInterna,
   subtotalNeto,
+  transparenciaFiscal,
 } from "@nexosoft/hardware";
 import { pesos } from "../formato";
 import type { DatosImpresion } from "./qr-fiscal-datos";
@@ -33,6 +36,7 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
   const letra = letraFiscal(datos);
   const conReceptor = llevaDatosDelReceptor(datos);
   const neto = subtotalNeto(datos);
+  const transparencia = transparenciaFiscal(datos);
 
   return (
     <div className="hoja-a4">
@@ -156,6 +160,34 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
               <span>{pesos(p.monto)}</span>
             </div>
           ))}
+          {/* El vuelto lo imprimían la térmica y el ticket en pantalla, y el A4
+              no. Sin él, una venta de $ 9.258,86 pagada con $ 10.000 muestra
+              "Efectivo $ 10.000,00" contra un total menor y nada que lo
+              explique: parece un comprobante mal sumado. */}
+          {datos.vuelto.esPositivo() && (
+            <div className="a4-fila-total">
+              <span>Vuelto</span>
+              <span>-{pesos(datos.vuelto)}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Régimen de Transparencia Fiscal: obligatorio en toda Factura B desde
+          el 1/4/2025. Acá hay lugar, así que el renglón lleva el nombre
+          completo que usa la norma; en la térmica va abreviado. */}
+      {transparencia !== null && (
+        <div className="a4-transparencia">
+          <div className="a4-subtitulo">{LEYENDA_TRANSPARENCIA_FISCAL}</div>
+          <div className="a4-fila-total">
+            <span>IVA Contenido</span>
+            <span>{pesos(transparencia.ivaContenido)}</span>
+          </div>
+          <div className="a4-fila-total">
+            <span>Otros Impuestos Nacionales Indirectos</span>
+            <span>{pesos(transparencia.otrosImpuestosNacionales)}</span>
+          </div>
+          <div className="a4-nota">{ACLARACION_IMPUESTOS_NACIONALES}</div>
         </div>
       )}
 

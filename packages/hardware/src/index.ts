@@ -6,11 +6,14 @@ export type {
   SubtotalIva,
   EstadoImpresora,
   ComprobanteAsociadoTicket,
+  TransparenciaFiscal,
 } from "./impresora.js";
 export {
+  ACLARACION_IMPUESTOS_NACIONALES,
   fechaHoraTicket,
   identificacionComprobanteAsociado,
   letraFiscal,
+  LEYENDA_TRANSPARENCIA_FISCAL,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
   montoDelSubtotal,
@@ -18,6 +21,7 @@ export {
   numeroFiscalFormateado,
   referenciaInterna,
   subtotalNeto,
+  transparenciaFiscal,
 } from "./impresora.js";
 export type { LectorDeBarras, CallbackEscaneo } from "./lector.js";
 export type { Balanza, EstadoBalanza } from "./balanza.js";

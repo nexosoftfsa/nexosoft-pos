@@ -195,6 +195,67 @@ export function subtotalNeto(datos: DatosTicket): Money | null {
   return resto.reduce((a, s) => a.sumar(s.base), primero.base);
 }
 
+// ---------------------------------------------------------------------------
+// Régimen de Transparencia Fiscal al Consumidor (Ley 27.743, RG 5614/2024)
+// ---------------------------------------------------------------------------
+
+/**
+ * La leyenda que exige la norma, textual.
+ *
+ * Obligatoria desde el 1/4/2025 para todos los contribuyentes. No es una
+ * aclaración nuestra: el texto lo fija la RG 5614/2024 y abajo tienen que ir
+ * los dos importes.
+ */
+export const LEYENDA_TRANSPARENCIA_FISCAL =
+  "Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)";
+
+/**
+ * Lo que aclara que esto no incluye Ingresos Brutos ni tasas municipales.
+ *
+ * Sin esto, un consumidor suma IVA + internos y concluye que ésa es toda la
+ * carga impositiva del precio, que no es cierto. Los tickets de supermercado
+ * la traen por el mismo motivo.
+ */
+export const ACLARACION_IMPUESTOS_NACIONALES =
+  "Los impuestos informados son sólo los que corresponden a nivel nacional.";
+
+/** Los dos importes del régimen. */
+export interface TransparenciaFiscal {
+  /** El IVA contenido en el precio final: la suma de todas las alícuotas. */
+  readonly ivaContenido: Money;
+  /** Los otros impuestos nacionales indirectos. Cero en un comercio que revende. */
+  readonly otrosImpuestosNacionales: Money;
+}
+
+/**
+ * Los datos del régimen que van en este comprobante, o `null` si no lleva.
+ *
+ * **Sólo la letra B.** El régimen es para el consumidor final y el sujeto
+ * exento, que son justamente a quienes se les emite una B. La A va a un
+ * responsable inscripto, que ya recibe el IVA discriminado renglón por renglón.
+ * La C la emite un monotributista o un exento: no tienen IVA que discriminar.
+ * Las notas de crédito y débito B entran solas, porque la regla es la letra.
+ *
+ * Devuelve `null` también cuando **no hay desglose guardado**, que es el caso
+ * de los comprobantes viejos reimpresos. Es a propósito: sin el detalle por
+ * alícuota no se sabe cuánto IVA tenía, y un "IVA Contenido $ 0,00" en una B
+ * que sí lo tuvo es peor que no imprimir nada. No se inventa.
+ */
+export function transparenciaFiscal(datos: DatosTicket): TransparenciaFiscal | null {
+  if (datos.esFiscal === false) return null;
+  if (letraFiscal(datos) !== "B") return null;
+  const [primero, ...resto] = datos.subtotalesIva;
+  if (primero === undefined) return null;
+  const ivaContenido = resto.reduce((a, s) => a.sumar(s.iva), primero.iva);
+  return {
+    ivaContenido,
+    // `restar` consigo mismo da el cero de esa moneda. Se hace así porque este
+    // paquete no depende de `@nexosoft/domain` en runtime (ADR-0018: los
+    // adaptadores son planos) y `Money.cero()` es una fábrica estática.
+    otrosImpuestosNacionales: datos.otrosImpuestosNacionales ?? ivaContenido.restar(ivaContenido),
+  };
+}
+
 /**
  * "02/09/2026 19:46" — fecha y hora del comprobante, **en 24 horas**.
  *
@@ -272,6 +333,21 @@ export interface DatosTicket {
   readonly subtotalesIva: readonly SubtotalIva[];
   readonly descuento: Money;
   readonly total: Money;
+  /**
+   * Los "Otros Impuestos Nacionales Indirectos" del Régimen de Transparencia
+   * Fiscal. Ausente = cero, que es el caso de un comercio que **revende**.
+   *
+   * Los impuestos internos son de etapa única: se pagan en el expendio, la
+   * primera venta del fabricante o del importador. Un almacén que revende una
+   * cerveza no es sujeto pasivo de nada — el interno ya está adentro del precio
+   * que pagó, calculado sobre el precio de venta de la fábrica, que nunca vio.
+   * Por eso un supermercado real imprime "Imp. Internos: 0".
+   *
+   * El campo existe para cuando el comercio SÍ es sujeto pasivo (una fábrica,
+   * un importador). En ese caso el importe no es una estimación nuestra: lo
+   * pone quien lo liquida, y además tiene que viajar a ARCA en `Tributos`.
+   */
+  readonly otrosImpuestosNacionales?: Money;
 
   // Cobro
   readonly formasDePago: ReadonlyArray<{ etiqueta: string; monto: Money }>;

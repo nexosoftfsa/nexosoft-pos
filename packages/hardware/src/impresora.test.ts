@@ -16,6 +16,7 @@ import {
   numeroEsProvisional,
   referenciaInterna,
   subtotalNeto,
+  transparenciaFiscal,
 } from "./impresora.js";
 
 /** Base de datos suficiente para ejercitar las reglas; nada más. */
@@ -174,6 +175,90 @@ describe("montoDelSubtotal", () => {
         esExento: true,
       }).aDecimalString(2),
     ).toBe("500.00");
+  });
+});
+
+/**
+ * Régimen de Transparencia Fiscal al Consumidor (Ley 27.743, RG 5614/2024),
+ * obligatorio para todos los contribuyentes desde el 1/4/2025.
+ *
+ * Hasta el 17/9/2026 nuestras Facturas B salían con el total y nada más: ni la
+ * leyenda, ni el IVA contenido, ni los otros impuestos nacionales.
+ */
+describe("transparenciaFiscal", () => {
+  const desglose = [
+    { etiqueta: "IVA 21%", base: Money.desde("1000.00"), iva: Money.desde("210.00") },
+    { etiqueta: "IVA 10,5%", base: Money.desde("200.00"), iva: Money.desde("21.00") },
+  ];
+  const facturaB = (extra: Partial<DatosTicket> = {}) =>
+    base({ tipoComprobante: "Factura B", subtotalesIva: desglose, ...extra });
+
+  it("en una B suma el IVA de todas las alícuotas en un solo importe", () => {
+    const t = transparenciaFiscal(facturaB());
+    expect(t?.ivaContenido.aDecimalString(2)).toBe("231.00");
+  });
+
+  /**
+   * Los internos son de etapa única: se pagan en el expendio, la primera venta
+   * del fabricante. Un comercio que revende no es sujeto pasivo, y es lo que
+   * imprimen los tickets de supermercado: "Imp. Internos: 0".
+   */
+  it("los otros impuestos nacionales van en cero si nadie los informó", () => {
+    const t = transparenciaFiscal(facturaB());
+    expect(t?.otrosImpuestosNacionales.aDecimalString(2)).toBe("0.00");
+  });
+
+  it("si el comercio SÍ los liquida, se imprime lo que informó", () => {
+    const t = transparenciaFiscal(
+      facturaB({ otrosImpuestosNacionales: Money.desde("143.58") }),
+    );
+    expect(t?.otrosImpuestosNacionales.aDecimalString(2)).toBe("143.58");
+  });
+
+  /**
+   * El régimen es para el consumidor final y el sujeto exento, que son a
+   * quienes se les emite una B. La A va a un responsable inscripto, que ya
+   * recibe el IVA discriminado; la C la emite quien no tiene IVA que
+   * discriminar.
+   */
+  it("no va en la A ni en la C", () => {
+    expect(transparenciaFiscal(base({ tipoComprobante: "Factura A", subtotalesIva: desglose }))).toBeNull();
+    expect(transparenciaFiscal(base({ tipoComprobante: "Factura C", subtotalesIva: desglose }))).toBeNull();
+  });
+
+  it("una Nota de Crédito B sí lo lleva: la regla es la letra", () => {
+    const t = transparenciaFiscal(
+      base({ tipoComprobante: "Nota de Crédito B", subtotalesIva: desglose }),
+    );
+    expect(t?.ivaContenido.aDecimalString(2)).toBe("231.00");
+  });
+
+  it("un ticket interno no lo lleva: no es un comprobante fiscal", () => {
+    expect(
+      transparenciaFiscal(base({ tipoComprobante: "Ticket", esFiscal: false, subtotalesIva: desglose })),
+    ).toBeNull();
+  });
+
+  /**
+   * Sin el detalle por alícuota no se sabe cuánto IVA tenía, y un "IVA
+   * Contenido $ 0,00" en una B que sí lo tuvo es peor que no imprimir nada.
+   * Pasa sólo al reimprimir comprobantes anteriores a que se guardara.
+   */
+  it("una B sin desglose guardado no imprime un cero inventado", () => {
+    expect(transparenciaFiscal(base({ tipoComprobante: "Factura B" }))).toBeNull();
+  });
+
+  /** Una B de sólo productos exentos tiene IVA cero, y ese cero SÍ es cierto. */
+  it("una B de sólo exentos informa cero, que es el dato real", () => {
+    const t = transparenciaFiscal(
+      base({
+        tipoComprobante: "Factura B",
+        subtotalesIva: [
+          { etiqueta: "Exento", base: Money.desde("500.00"), iva: Money.cero(), esExento: true },
+        ],
+      }),
+    );
+    expect(t?.ivaContenido.aDecimalString(2)).toBe("0.00");
   });
 });
 

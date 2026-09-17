@@ -23,6 +23,7 @@ import {
   TipoComprobante,
 } from "@nexosoft/domain";
 import type { VentaConfirmada } from "@nexosoft/app";
+import { transparenciaFiscal } from "@nexosoft/hardware";
 
 import { construirDatosTicket, type ClienteVenta } from "./PantallaPos";
 
@@ -91,6 +92,33 @@ const DEL_SERVIDOR = {
   cae: "86360865578637",
   caeFechaVto: "2026-09-18T00:00:00.000Z",
 };
+
+/**
+ * El ticket de una Factura B tiene que llevar el IVA contenido (Ley 27.743).
+ *
+ * La regla de qué se imprime vive en `@nexosoft/hardware` y está probada ahí;
+ * lo que se prueba acá es que el dato LLEGUE — que `construirDatosTicket`
+ * ponga el desglose aunque la B no lo discrimine renglón por renglón. Sin eso
+ * la regla no tiene con qué trabajar y el bloque no sale.
+ */
+describe("construirDatosTicket — transparencia fiscal en la Factura B", () => {
+  function ventaB(): VentaConfirmada {
+    return {
+      ...venta(),
+      tipoComprobante: TipoComprobante.FacturaB,
+      condicionIvaReceptor: CondicionIva.ConsumidorFinal,
+    } as unknown as VentaConfirmada;
+  }
+
+  it("el desglose por alícuota viaja en el ticket, y de ahí sale el IVA contenido", () => {
+    const d = construirDatosTicket(ventaB(), CONFIG, [], [], [], null, undefined);
+
+    expect(d.tipoComprobante).toBe("Factura B");
+    expect(d.subtotalesIva).toHaveLength(1);
+    expect(transparenciaFiscal(d)?.ivaContenido.aDecimalString(2)).toBe("286.36");
+    expect(transparenciaFiscal(d)?.otrosImpuestosNacionales.aDecimalString(2)).toBe("0.00");
+  });
+});
 
 describe("construirDatosTicket", () => {
   it("con respuesta del servidor Y receptor, el ticket lleva los dos", () => {

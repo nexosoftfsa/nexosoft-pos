@@ -8,8 +8,10 @@
  */
 import type { Cantidad } from "@nexosoft/domain";
 import {
+  ACLARACION_IMPUESTOS_NACIONALES,
   fechaHoraTicket,
   identificacionComprobanteAsociado,
+  LEYENDA_TRANSPARENCIA_FISCAL,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
   montoDelSubtotal,
@@ -17,6 +19,7 @@ import {
   numeroFiscalFormateado,
   referenciaInterna,
   subtotalNeto,
+  transparenciaFiscal,
 } from "@nexosoft/hardware";
 import type { DatosImpresion } from "./qr-fiscal-datos";
 import { pesos } from "../formato";
@@ -32,6 +35,8 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
   const conReceptor = llevaDatosDelReceptor(datos);
   // `null` salvo en Factura A con desglose: la misma regla que usa la térmica.
   const neto = subtotalNeto(datos);
+  // `null` salvo en Factura B con desglose. Misma regla, mismo lugar.
+  const transparencia = transparenciaFiscal(datos);
 
   return (
     <div className="hoja-ticket">
@@ -141,6 +146,25 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
           <span>Vuelto</span>
           <span>{pesos(datos.vuelto)}</span>
         </div>
+      )}
+
+      {/* Régimen de Transparencia Fiscal: obligatorio en toda Factura B desde
+          el 1/4/2025. Va después del cobro y antes del CAE, como en los
+          tickets que ya cumplen. */}
+      {transparencia !== null && (
+        <>
+          <div className="ticket-print-sep" />
+          <div className="ticket-print-centro">{LEYENDA_TRANSPARENCIA_FISCAL}</div>
+          <div className="ticket-print-fila">
+            <span>IVA contenido</span>
+            <span>{pesos(transparencia.ivaContenido)}</span>
+          </div>
+          <div className="ticket-print-fila">
+            <span>Otros imp. nacionales indirectos</span>
+            <span>{pesos(transparencia.otrosImpuestosNacionales)}</span>
+          </div>
+          <div className="ticket-print-nota">{ACLARACION_IMPUESTOS_NACIONALES}</div>
+        </>
       )}
 
       <div className="ticket-print-sep" />

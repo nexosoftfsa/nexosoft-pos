@@ -11,8 +11,10 @@
  * es un comando.
  */
 import {
+  ACLARACION_IMPUESTOS_NACIONALES,
   identificacionComprobanteAsociado,
   letraFiscal,
+  LEYENDA_TRANSPARENCIA_FISCAL,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
   montoDelSubtotal,
@@ -20,6 +22,7 @@ import {
   numeroFiscalFormateado,
   referenciaInterna,
   subtotalNeto,
+  transparenciaFiscal,
   type DatosTicket,
 } from "./impresora.js";
 
@@ -349,8 +352,16 @@ export function construirEscPos(
   if (neto !== null) {
     b.lineaCruda(filaIzquierdaDerecha("Subtotal neto", pesos(neto), columnas));
   }
-  for (const s of datos.subtotalesIva) {
-    b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(montoDelSubtotal(s)), columnas));
+  // El desglose por alicuota va SOLO en la A, igual que el subtotal neto. Antes
+  // este bucle corria siempre, asi que una Factura B impresa por la termica
+  // mostraba "IVA 21%" y la misma B en A4 no mostraba nada: el mismo
+  // comprobante decia cosas distintas segun por donde saliera. No lo vio nadie
+  // porque todavia no hay termica conectada. Lo que lleva una B es el bloque de
+  // transparencia fiscal, mas abajo.
+  if (neto !== null) {
+    for (const s of datos.subtotalesIva) {
+      b.lineaCruda(filaIzquierdaDerecha(s.etiqueta, pesos(montoDelSubtotal(s)), columnas));
+    }
   }
   b.comando(NEGRITA_ON).comando(DOBLE_ALTO);
   // A alto doble entran las mismas columnas (solo cambia la altura).
@@ -365,6 +376,24 @@ export function construirEscPos(
     b.comando(NEGRITA_ON);
     b.lineaCruda(filaIzquierdaDerecha("VUELTO", pesos(datos.vuelto), columnas));
     b.comando(NEGRITA_OFF);
+  }
+
+  // --- Transparencia Fiscal al Consumidor (Ley 27.743) ---
+  // Obligatorio en toda Factura B desde el 1/4/2025. Va DESPUES del cobro y
+  // antes del CAE, que es donde lo ponen los tickets que ya cumplen.
+  const transparencia = transparenciaFiscal(datos);
+  if (transparencia !== null) {
+    b.separador();
+    b.linea(LEYENDA_TRANSPARENCIA_FISCAL);
+    b.lineaCruda(filaIzquierdaDerecha("IVA contenido", pesos(transparencia.ivaContenido), columnas));
+    // "Otros Impuestos Nacionales Indirectos" no entra en 32 columnas ni
+    // abreviado, asi que en papel angosto va el nombre del unico que le aplica
+    // a un comercio — el mismo que imprimen los tickets de supermercado. En el
+    // A4, donde hay lugar, va el nombre completo que usa la norma.
+    b.lineaCruda(
+      filaIzquierdaDerecha("Imp. internos", pesos(transparencia.otrosImpuestosNacionales), columnas),
+    );
+    b.linea(ACLARACION_IMPUESTOS_NACIONALES);
   }
 
   // --- Pie ---

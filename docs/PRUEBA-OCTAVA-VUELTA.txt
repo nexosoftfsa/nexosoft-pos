@@ -81,15 +81,19 @@ el tiempo con eso, perdon.
 Desde esta version, Sincronizar TAMBIEN baja el catalogo.
 
 
-Versiones de esta prueba:  POS 0.1.64  -  Servidor 0.19.0 (NO CAMBIA)
+Versiones de esta prueba:  POS 0.1.66  -  Servidor 0.19.0 (NO CAMBIA)
 Punto seguro anterior: POS 0.1.63 + Servidor 0.19.0.
+
+OJO: si ya te mande este instructivo diciendo 0.1.64, actualiza igual a la
+0.1.66. Salieron dos versiones mas el mismo dia, con el regimen de
+transparencia fiscal en la Factura B (ver el paso 7, que es nuevo).
 
 
 PASO 1 - ACTUALIZAR
 --------------------
-1.1 Actualiza SOLO el POS, a 0.1.64. El servidor queda como esta.
+1.1 Actualiza SOLO el POS, a 0.1.66. El servidor queda como esta.
 
-    [ ] POS 0.1.64   <- confirmalo en Configuracion
+    [ ] POS 0.1.66   <- confirmalo en Configuracion
 
 
 PASO 2 - LAS DOS VENTAS TRABADAS (mira esto apenas abras)
@@ -218,6 +222,46 @@ Toque el corazon de la venta, asi que esto importa mas que otras veces.
     Cuantas hiciste: ______   Cuantas subieron: ______
 
 
+PASO 7 - LA FACTURA B AHORA LLEVA MAS COSAS (nuevo)
+-----------------------------------------------------
+Esto no lo pediste vos. Lo encontramos revisando y resulta que la Factura B
+tenia que llevar, desde abril de 2025, tres cosas que no llevaba. Es la Ley
+de Transparencia Fiscal al Consumidor: la misma que hace que el ticket del
+supermercado te diga cuanto IVA pagaste.
+
+La factura que se le declara a ARCA siempre estuvo bien. Lo que faltaba era
+en el papel.
+
+7.1 Hace una FACTURA B a consumidor final, con dos o tres productos, y
+    pagando con un billete MAS GRANDE que el total (para que haya vuelto).
+
+7.2 Imprimi el A4 y miralo abajo de todo.
+
+    [ ] Dice "Regimen de Transparencia Fiscal al Consumidor (Ley 27.743)".
+    [ ] Abajo dice "IVA Contenido" con un importe.
+    [ ] Abajo dice "Otros Impuestos Nacionales Indirectos" en $ 0,00.
+    [ ] Y una linea chica que aclara que son solo los impuestos nacionales.
+    [ ] En "Forma de pago" aparece el VUELTO. Antes no salia en el A4.
+
+    MANDAME EL PDF.
+
+7.3 Una cuenta, que es lo unico que no puedo verificar yo solo: agarra el
+    importe de "IVA Contenido" y comparalo con el IVA de esa misma factura
+    en el panel (o en ARCA).
+
+    IVA Contenido que dice el papel: ______________
+    IVA que figura en el sistema:    ______________
+
+    <- Tienen que ser iguales. Si no lo son, avisame enseguida: querria decir
+       que el papel y lo declarado dicen cosas distintas, que es justo lo que
+       esto viene a arreglar.
+
+7.4 Ahora una FACTURA A.
+
+    [ ] NO lleva ese bloque (va solo en la B: la A ya discrimina el IVA).
+    [ ] Sigue mostrando "Subtotal neto" y el IVA por alicuota, como siempre.
+
+
 ===========================================================================
   QUE MANDARME
 ===========================================================================
@@ -227,6 +271,8 @@ Toque el corazon de la venta, asi que esto importa mas que otras veces.
   4. PDF de su reimpresion (paso 5.5)
   5. Si el asistente en $0,00 aparecio con alguna forma de pago (paso 4)
   6. Los dos numeros del paso 6.4
+  7. PDF de la Factura B con el bloque nuevo (paso 7.2) y los dos importes
+     del paso 7.3
 
 Las dos ventas trabadas las encontraste vos, insistiendo cuatro pruebas con
 algo que el sistema te mostraba como un numero y no te dejaba abrir. Y lo

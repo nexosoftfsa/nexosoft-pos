@@ -1188,6 +1188,23 @@ body {
   font-weight: 700;
   margin-bottom: 0.2rem;
 }
+/* Régimen de Transparencia Fiscal al Consumidor (Ley 27.743). Encuadrado a
+   propósito: es un bloque informativo para el comprador, no parte de los
+   totales, y confundirlo con el total del comprobante sería peor que no
+   imprimirlo. Mismo ancho que los pagos, del otro lado. */
+.a4-transparencia {
+  margin-top: 1rem;
+  margin-left: auto;
+  width: 45%;
+  border: 1px solid #999;
+  padding: 0.5rem 0.6rem;
+  font-size: 10pt;
+}
+.a4-nota {
+  margin-top: 0.35rem;
+  font-size: 8.5pt;
+  color: #444;
+}
 .a4-footer {
   margin-top: 2rem;
   padding-top: 0.6rem;
@@ -1229,6 +1246,13 @@ body {
 }
 .ticket-print-aviso {
   font-weight: 700;
+}
+/* La aclaración de que los impuestos informados son sólo los nacionales. Es
+   letra chica de verdad: aclara, no avisa. */
+.ticket-print-nota {
+  font-size: 0.85em;
+  line-height: 1.2;
+  margin-top: 2px;
 }
 .ticket-print-sep {
   border-top: 1px dashed #000;

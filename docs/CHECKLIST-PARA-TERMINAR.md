@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-17 · Publicado: POS **0.1.64** · Servidor **0.19.0**
+Actualizado: 2026-09-17 · Publicado: POS **0.1.66** · Servidor **0.19.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -66,25 +66,26 @@ depende sólo de nosotros.
 
 ## 2 · Factura A y B — lo que queda después
 
-- [ ] **Transparencia Fiscal al Consumidor (Ley 27.743): NO cumplimos.**
-      Toda Factura B a consumidor final o a un sujeto exento tiene que llevar,
-      en el papel, tres cosas que hoy no lleva:
-      la leyenda *"Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)"*,
-      el renglón **IVA Contenido** con su importe, y el renglón
-      **Otros Impuestos Nacionales Indirectos** con el suyo.
-      Rige **desde el 1/4/2025** para todos los contribuyentes (RG 5614/2024).
-      *El dato ya existe y ya se le declara a ARCA: es un problema de la
-      impresión, no del comprobante. Toca los tres renderers.*
-      *Pendiente de decidir con el contador: "Otros Impuestos Nacionales
-      Indirectos" — no modelamos impuestos internos, así que hoy iría en $0,00,
-      y eso sólo es cierto si el comercio no vende nada alcanzado (bebidas
-      alcohólicas, cigarrillos, electrónica).*
-      *Los comprobantes C (Monotributo) no discriminan IVA: esto es sólo de la B.*
+- [ ] **Verificar en campo la Transparencia Fiscal (Ley 27.743).** Hecho el
+      17/9 (ADR-0079): la Factura B sale con la leyenda del régimen, el **IVA
+      Contenido** y **Otros Impuestos Nacionales Indirectos**, más la aclaración
+      de que son sólo los nacionales. Rige desde el 1/4/2025 y no lo
+      cumplíamos. De paso se corrigió que la térmica discriminara el IVA por
+      alícuota en una B, que el A4 no hacía.
+      *Falta mirar un PDF: el IVA contenido tiene que coincidir con el IVA que
+      se le declaró a ARCA.*
 
-- [ ] **La térmica y el A4 no dicen lo mismo en una Factura B.** La impresión
-      ESC/POS lista los subtotales de IVA sin mirar la letra; el A4 y el ticket
-      HTML sólo los muestran en la A. Nadie lo vio porque todavía no hay
-      térmica. Se arregla junto con lo de arriba, que redefine qué va en la B.
+- [ ] **Preguntarle al contador por los impuestos internos.** Hoy el renglón va
+      en **$0,00**, que es lo que imprime un supermercado real y la lectura
+      literal de la norma: los internos son de etapa única y un comercio que
+      revende no es sujeto pasivo. La norma **no resuelve** el caso del
+      revendedor —los tributaristas se lo están reclamando a ARCA— así que
+      conviene tenerlo confirmado por escrito.
+      *Si dijera que hay que estimarlo, necesitamos que diga con qué criterio:
+      inventarlo nosotros no es una opción.*
+      *El campo `otrosImpuestosNacionales` ya existe, para el día que le
+      vendamos a alguien que sí los liquida. Ese caso además tiene que mandar
+      el importe a ARCA en `Tributos`, que es trabajo de servidor.*
 
 - [ ] **Conseguir un CUIT de Responsable Inscripto.** Es lo único que separa a
       la A y la B de estar verificadas **en producción**. Con el CUIT de Seba

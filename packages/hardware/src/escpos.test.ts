@@ -409,19 +409,84 @@ describe("construirEscPos", () => {
     expect(separadores[0]).toHaveLength(48);
   });
 
-  it("incluye los subtotales de IVA discriminados", () => {
+  const DESGLOSE = [
+    { etiqueta: "IVA 21%", base: Money.desde("2066.12"), iva: Money.desde("433.88") },
+  ];
+
+  it("en una Factura A incluye los subtotales de IVA discriminados", () => {
     const t = texto(
       construirEscPos(
-        ticket({
-          esFiscal: true,
-          subtotalesIva: [
-            { etiqueta: "IVA 21%", base: Money.desde("2066.12"), iva: Money.desde("433.88") },
-          ],
-        }),
+        ticket({ tipoComprobante: "Factura A", esFiscal: true, subtotalesIva: DESGLOSE }),
       ),
     );
+    expect(t).toContain("Subtotal neto");
     expect(t).toContain("IVA 21%");
     expect(t).toContain("$ 433,88");
+  });
+
+  /**
+   * La térmica los imprimía sin mirar la letra, y el A4 sólo en la A: el mismo
+   * comprobante salía distinto según por dónde se imprimiera. Lo que lleva una
+   * B es el bloque de transparencia fiscal, no el desglose por alícuota.
+   */
+  it("en una Factura B NO los discrimina, como el A4 y el ticket HTML", () => {
+    const t = texto(
+      construirEscPos(
+        ticket({ tipoComprobante: "Factura B", esFiscal: true, subtotalesIva: DESGLOSE }),
+      ),
+    );
+    expect(t).not.toContain("Subtotal neto");
+    expect(t).not.toContain("IVA 21%");
+  });
+
+  /**
+   * Régimen de Transparencia Fiscal al Consumidor (Ley 27.743), obligatorio
+   * desde el 1/4/2025. Hasta el 17/9/2026 la Factura B salía con el total y
+   * nada más.
+   */
+  describe("Transparencia Fiscal al Consumidor", () => {
+    it("la Factura B lleva la leyenda, el IVA contenido y los otros impuestos", () => {
+      const t = texto(
+        construirEscPos(
+          ticket({ tipoComprobante: "Factura B", esFiscal: true, subtotalesIva: DESGLOSE }),
+        ),
+      );
+      expect(t).toContain("Transparencia Fiscal");
+      expect(t).toContain("Ley 27.743");
+      expect(t).toContain("IVA contenido");
+      expect(t).toContain("$ 433,88");
+      expect(t).toContain("Imp. internos");
+      expect(t).toContain("$ 0,00");
+      expect(t).toContain("nivel nacional");
+    });
+
+    it("ningún renglón del bloque se pasa del ancho del papel", () => {
+      const lineas = texto(
+        construirEscPos(
+          ticket({
+            tipoComprobante: "Factura B",
+            esFiscal: true,
+            subtotalesIva: [
+              { etiqueta: "IVA 21%", base: Money.desde("500000"), iva: Money.desde("105000") },
+            ],
+          }),
+        ),
+      ).split("\n");
+      // El importe grande es el que aprieta: "Imp. internos" tiene que seguir
+      // entrando entero, sin que `filaIzquierdaDerecha` le coma letras.
+      expect(lineas.every((l) => l.length <= 32)).toBe(true);
+      expect(lineas.some((l) => l.startsWith("IVA contenido"))).toBe(true);
+      expect(lineas.some((l) => l.startsWith("Imp. internos"))).toBe(true);
+    });
+
+    it("la Factura A no lo lleva: va a un responsable inscripto", () => {
+      const t = texto(
+        construirEscPos(
+          ticket({ tipoComprobante: "Factura A", esFiscal: true, subtotalesIva: DESGLOSE }),
+        ),
+      );
+      expect(t).not.toContain("Transparencia Fiscal");
+    });
   });
 });
 
