@@ -66,6 +66,26 @@ depende sólo de nosotros.
 
 ## 2 · Factura A y B — lo que queda después
 
+- [ ] **Transparencia Fiscal al Consumidor (Ley 27.743): NO cumplimos.**
+      Toda Factura B a consumidor final o a un sujeto exento tiene que llevar,
+      en el papel, tres cosas que hoy no lleva:
+      la leyenda *"Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)"*,
+      el renglón **IVA Contenido** con su importe, y el renglón
+      **Otros Impuestos Nacionales Indirectos** con el suyo.
+      Rige **desde el 1/4/2025** para todos los contribuyentes (RG 5614/2024).
+      *El dato ya existe y ya se le declara a ARCA: es un problema de la
+      impresión, no del comprobante. Toca los tres renderers.*
+      *Pendiente de decidir con el contador: "Otros Impuestos Nacionales
+      Indirectos" — no modelamos impuestos internos, así que hoy iría en $0,00,
+      y eso sólo es cierto si el comercio no vende nada alcanzado (bebidas
+      alcohólicas, cigarrillos, electrónica).*
+      *Los comprobantes C (Monotributo) no discriminan IVA: esto es sólo de la B.*
+
+- [ ] **La térmica y el A4 no dicen lo mismo en una Factura B.** La impresión
+      ESC/POS lista los subtotales de IVA sin mirar la letra; el A4 y el ticket
+      HTML sólo los muestran en la A. Nadie lo vio porque todavía no hay
+      térmica. Se arregla junto con lo de arriba, que redefine qué va en la B.
+
 - [ ] **Conseguir un CUIT de Responsable Inscripto.** Es lo único que separa a
       la A y la B de estar verificadas **en producción**. Con el CUIT de Seba
       —Monotributo en el padrón— se prueba el circuito pero no se emite de
