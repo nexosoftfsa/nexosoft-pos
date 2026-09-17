@@ -36,6 +36,27 @@ export interface AlmacenDeOperaciones {
   reintentarFallidas(): Promise<number>;
 
   /**
+   * Devuelve a `pendiente` lo que quedó colgado en `enviando`. Se llama UNA VEZ
+   * al arrancar. Devuelve cuántas rescató.
+   *
+   * `enviando` es un estado de tránsito: se marca justo antes de hablar con el
+   * servidor y dura lo que dura esa llamada. Si el proceso muere en el medio
+   * —se cierra el POS, se corta la luz— la operación queda ahí para siempre, y
+   * ese estado es un pozo sin fondo: `pendientes()` no la devuelve (así que no
+   * se reintenta nunca), `reintentarFallidas()` no la toca, `descartarFallidas()`
+   * tampoco, y como nunca falló no tiene motivo que mostrar. La cuenta de "sin
+   * subir" la sigue contando, así que la píldora queda encendida para siempre.
+   *
+   * Es exactamente lo que le pasó a Sebastián: dos ventas arrastradas cuatro
+   * pruebas, "le doy sincronizar y no hace nada". No hacía nada porque no había
+   * nada que hacer — el motor no las veía.
+   *
+   * Reenviar es seguro: el servidor descarta los duplicados por `operacionId`
+   * (ADR-0005). Que se suba dos veces no puede pasar; que no se suba nunca, sí.
+   */
+  recuperarEnviando(): Promise<number>;
+
+  /**
    * Saca de la cola las operaciones `fallida`. Devuelve cuántas sacó.
    *
    * Para las que **no pueden entrar nunca**: su payload es una foto del momento

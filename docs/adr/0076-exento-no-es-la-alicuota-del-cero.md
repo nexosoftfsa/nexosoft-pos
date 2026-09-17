@@ -90,6 +90,41 @@ equivocado para equivocarse.
 - Una Factura A de sólo productos exentos no muestra "Subtotal neto", que es lo
   correcto: no hay nada gravado.
 
+## Apéndice del 17/9/2026: el arreglo no llegaba al papel
+
+La prueba de campo salió igual que antes: el ticket seguía imprimiendo
+`IVA 0%` y sumando el exento al subtotal neto.
+
+El arreglo estaba bien. Lo que fallaba era que **el catálogo corregido no bajaba
+a la terminal**. El POS trae el catálogo del servidor sólo al arrancar; el botón
+"Sincronizar" únicamente subía la cola de ventas. Así que un producto corregido
+en el panel no llegaba a la caja por más que se tocara el botón, y no había
+ninguna forma de traerlo sin cerrar y volver a abrir el programa.
+
+Lo prueba el mismo comprobante impreso dos veces. El ORIGINAL, armado con el
+catálogo viejo de la terminal:
+
+```
+Subtotal neto     $ 9.714,46
+IVA 0%                $ 0,00
+IVA 21%           $ 1.735,54
+```
+
+El DUPLICADO, armado con el desglose congelado tal como se le declaró a ARCA:
+
+```
+Subtotal neto     $ 8.264,46
+IVA 21%           $ 1.735,54
+```
+
+Sin renglón de IVA 0%, y con el exento afuera del neto. El duplicado es el que
+está bien. Ese renglón de diferencia entre un comprobante y su propia copia es
+exactamente la contradicción que ADR-0076 venía a cerrar.
+
+**Desde 0.1.64 el botón "Sincronizar" también baja el catálogo** cuando lo
+aprieta una persona (no en la corrida automática cada 15 segundos, que no tiene
+por qué pedir el catálogo entero).
+
 ## Lo que se hizo mal
 
 Esto estuvo escrito como limitación conocida, en un comentario, durante meses. Y

@@ -1,0 +1,235 @@
+===========================================================================
+  NEXOSOFT - OCTAVA VUELTA
+  Para: Sebastian
+  Tiempo: 20 minutos
+===========================================================================
+
+LO QUE ENCONTRASTE, Y TENIAS RAZON EN TODO
+-------------------------------------------
+Las dos ventas duplicadas con la Billetera QR eran de verdad, y tu
+explicacion era la correcta: el carrito seguia ahi unos segundos despues de
+confirmar, y el Enter siguiente lo agarraba.
+
+Te cuento donde estaba el agujero, porque es feo. Habia DOS candados, uno de
+cada vez que esto paso antes:
+
+  - uno mientras se espera al dispositivo de cobro
+  - otro mientras se registra la venta
+
+Y entre los dos quedaba un hueco. Cuando el pago QR se aprueba, el primer
+candado se suelta, y el segundo recien empieza a valer un instante despues
+-mientras tanto pasan hasta 8 segundos esperando a ARCA-. Tu Enter entraba
+justo ahi: no habia cobro esperando, y la venta "todavia no habia empezado".
+Arrancaba un cobro nuevo, que se aprobaba, y que terminaba en una segunda
+Factura B con su CAE.
+
+Es la CUARTA vez que el mismo problema me muerde de una forma distinta. Asi
+que esta vez no tape el camino: escribi la regla completa -"no se arranca
+una venta si hay una en curso"- en un archivo aparte, con pruebas, una por
+cada vez que nos paso. Ahora hay UN candado que cubre el ciclo entero.
+
+Ademas, la caja se limpia apenas la venta esta confirmada, sin esperar al
+CAE. Eso achica esa ventana de 8 segundos a casi nada.
+
+
+LAS DOS VENTAS TRABADAS: YA SE QUE PASABA
+-------------------------------------------
+Esta la encontraste vos insistiendo cuatro pruebas, y era buena.
+
+Una venta pasa por tres estados: "pendiente", "enviando" y "subida". El
+"enviando" dura lo que dura la llamada al servidor. Si el POS se cierra
+justo en ese momento -o se corta la luz-, la venta se queda en "enviando"
+para siempre.
+
+Y en ese estado no la mira NADIE: ni el reintento automatico, ni el boton
+Reintentar, ni el boton Descartar. El unico que las veia era el contador de
+arriba a la derecha. Por eso te decia "2 ventas sin subir" eternamente y por
+eso Sincronizar no hacia nada: no es que fallara, es que no habia nada que
+hacer, el sistema no las veia.
+
+Ahora, al abrir el POS, lo que quedo colgado en "enviando" vuelve a la cola.
+Reenviar es seguro: el servidor descarta los duplicados.
+
+Tus dos ventas se van a subir solas apenas abras el POS actualizado. El paso
+2 es justamente mirar eso.
+
+
+LO DEL PRODUCTO EXENTO: EL ARREGLO ESTABA, NO LLEGABA
+-------------------------------------------------------
+El ticket volvio a salir con "IVA 0%". Pero fijate lo que me mandaste en el
+paso 6.3, que creiste que era un problema de la reimpresion:
+
+  ORIGINAL                    DUPLICADO
+  Subtotal neto  $ 9.714,46   Subtotal neto  $ 8.264,46
+  IVA 0%             $ 0,00   IVA 21%        $ 1.735,54
+  IVA 21%        $ 1.735,54
+
+El duplicado es el que esta BIEN: se arma con lo que se le declaro a ARCA, y
+ahi el arroz va como exento, sin renglon de IVA y afuera del neto. El
+original se arma con el catalogo que tiene la terminal, y esa terminal
+todavia tenia el arroz como "0%".
+
+O sea: ese renglon de diferencia que marcaste no era un defecto de la
+reimpresion. Era la prueba del problema que yo creia arreglado.
+
+Por que no llego: el POS baja el catalogo SOLO al arrancar. El boton
+"Sincronizar" nada mas subia las ventas. Asi que cambiar el producto en el
+panel y tocar Sincronizar no alcanzaba, y no habia forma de traerlo sin
+cerrar y volver a abrir el programa. Mi instructivo anterior te hizo perder
+el tiempo con eso, perdon.
+
+Desde esta version, Sincronizar TAMBIEN baja el catalogo.
+
+
+Versiones de esta prueba:  POS 0.1.64  -  Servidor 0.19.0 (NO CAMBIA)
+Punto seguro anterior: POS 0.1.63 + Servidor 0.19.0.
+
+
+PASO 1 - ACTUALIZAR
+--------------------
+1.1 Actualiza SOLO el POS, a 0.1.64. El servidor queda como esta.
+
+    [ ] POS 0.1.64   <- confirmalo en Configuracion
+
+
+PASO 2 - LAS DOS VENTAS TRABADAS (mira esto apenas abras)
+-----------------------------------------------------------
+2.1 Abri el POS ya actualizado y mira arriba a la derecha.
+
+    Que dice ahora: ________________________________
+
+    [ ] Dice "Sincronizado" (o al menos ya no dice "2 ventas sin subir").
+
+    <- Si todavia dice 2, tocá Sincronizar una vez y mira de nuevo.
+
+2.2 Anda a Comprobantes y fijate si aparecieron dos ventas viejas, de alguna
+    prueba anterior.
+
+    [ ] Aparecieron.
+
+    Que fecha tienen: ________________________________
+
+    <- Son las que venias arrastrando. Si aparecen, estan subidas y el tema
+       se cierra. No las anules: son de homologacion y no valen nada.
+
+2.3 Si SIGUE diciendo "2 ventas sin subir", tocá el texto para ver el motivo
+    y mandame la captura. Seria otra cosa distinta.
+
+
+PASO 3 - LA VENTA DUPLICADA CON QR (lo mas importante)
+--------------------------------------------------------
+Reproduci exactamente lo de la vez pasada. Sin piedad.
+
+3.1 Carga UN producto y cobra con "Billetera (QR)".
+
+3.2 Apenas confirmas, dale Enter como ametralladora y NO PARES: segui
+    apretando mientras aparece el cartel, mientras se aprueba el pago, y
+    mientras sale el ticket.
+
+3.3 Anda a Comprobantes y conta.
+
+    Cuantas Facturas B nuevas hay: ______
+
+    <- Tiene que ser UNA. Si hay dos, mandame captura y avisame enseguida.
+
+3.4 Repetilo DOS veces mas. La vez pasada te salio duplicada las dos veces
+    que probaste, asi que con una sola vez no alcanza para creerle.
+
+    Intento 2 - cuantas salieron: ______
+    Intento 3 - cuantas salieron: ______
+
+3.5 Y ahora lo mismo con TARJETA (que tambien espera al dispositivo).
+
+    [ ] Una sola venta.
+
+
+PASO 4 - EL ASISTENTE EN $0,00
+--------------------------------
+4.1 Hace una venta con EFECTIVO y, apenas termina, dale Enter varias veces
+    rapido con el carrito vacio.
+
+    [ ] NO se abre el asistente en "$ 0,00".
+
+4.2 Lo mismo con TARJETA.
+
+    [ ] Tampoco.
+
+4.3 Lo mismo con TRANSFERENCIA.
+
+    [ ] Tampoco.
+
+4.4 Y con BILLETERA (QR).
+
+    [ ] Tampoco.
+
+    <- Si aparece con alguna, decime con cual: cada forma de pago tiene un
+       paso mas o menos y eso cambia los tiempos.
+
+
+PASO 5 - EL PRODUCTO EXENTO, AHORA SI
+---------------------------------------
+5.1 Fijate que el arroz siga en EXENTO en el panel de productos.
+
+5.2 En el POS, tocá "Sincronizar" y esperá a que termine.
+
+    <- Esto ahora SI baja el catalogo. Es el cambio de esta version.
+
+5.3 Hace una FACTURA A con cliente, con el arroz (exento) y el agua (21%).
+
+5.4 Imprimi el A4 y miralo.
+
+    [ ] Dice "Exento" con su importe (NO "IVA 0%").
+    [ ] El "Subtotal neto" NO incluye el exento: tiene que dar 8.264,46 y no
+        9.714,46, como en el duplicado que me mandaste.
+
+    MANDAME EL PDF.
+
+5.5 Reimprimi ESA MISMA factura desde Comprobantes.
+
+    [ ] El duplicado dice lo mismo que el original, renglon por renglon.
+
+    MANDAME EL PDF TAMBIEN.
+
+    <- Estos dos papeles juntos son la prueba. Si dicen lo mismo, cerramos
+       dos temas de una: el exento y la reimpresion de la A.
+
+
+PASO 6 - QUE NO SE HAYA ROTO NADA
+-----------------------------------
+Toque el corazon de la venta, asi que esto importa mas que otras veces.
+
+6.1 Una Factura B sin cliente, con efectivo.
+
+    [ ] Sale con CAE y QR.
+
+6.2 Una venta con vuelto.
+
+    [ ] El vuelto sale bien en pantalla y en el ticket.
+
+6.3 Una Nota de Credito anulando alguna de las de arriba.
+
+    [ ] Sale con CAE y dice ORIGINAL.
+
+6.4 Desconecta la red, hace 3 ventas, volve a conectar y tocá Sincronizar.
+
+    [ ] Salen las 3 con referencia interna.
+    [ ] Suben las 3.
+
+    Cuantas hiciste: ______   Cuantas subieron: ______
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. Los tres numeros del paso 3 (cuantas ventas por intento)  <- lo primero
+  2. Que dice el indicador en el paso 2.1
+  3. PDF de la Factura A con el exento (paso 5.4)
+  4. PDF de su reimpresion (paso 5.5)
+  5. Si el asistente en $0,00 aparecio con alguna forma de pago (paso 4)
+  6. Los dos numeros del paso 6.4
+
+Las dos ventas trabadas las encontraste vos, insistiendo cuatro pruebas con
+algo que el sistema te mostraba como un numero y no te dejaba abrir. Y lo
+del renglon de diferencia en la reimpresion tambien: creiste que era un
+detalle y era la prueba del otro problema.
+===========================================================================

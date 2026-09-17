@@ -101,6 +101,53 @@ describe("AlmacenSqlite", () => {
     expect(pend.map((o) => o.operacionId)).toEqual(["op-2"]);
   });
 
+  /**
+   * El pozo sin fondo: una operación que quedó en `enviando` porque el POS se
+   * cerró en el medio del envío no la vuelve a mirar nadie — ni `pendientes()`,
+   * ni `reintentarFallidas()`, ni `descartarFallidas()` — y como nunca falló,
+   * tampoco tiene motivo que mostrar. Sebastián arrastró dos así cuatro
+   * pruebas: "le doy sincronizar y no hace nada".
+   */
+  describe("recuperarEnviando", () => {
+    it("una operación colgada en enviando NO se reintenta sola: por eso hay que rescatarla", async () => {
+      await almacen.encolar(op("op-1"));
+      await almacen.marcar("op-1", "enviando");
+
+      expect(await almacen.pendientes()).toEqual([]);
+      expect(await almacen.reintentarFallidas()).toBe(0);
+      expect(await almacen.descartarFallidas()).toBe(0);
+
+      expect(await almacen.recuperarEnviando()).toBe(1);
+      expect((await almacen.pendientes()).map((o) => o.operacionId)).toEqual(["op-1"]);
+    });
+
+    it("no toca los intentos ni el motivo: son la única pista de por qué venía costando", async () => {
+      await almacen.encolar(op("op-1"));
+      await almacen.marcar("op-1", "pendiente", { intentos: 4, ultimoError: "timeout" });
+      await almacen.marcar("op-1", "enviando");
+
+      await almacen.recuperarEnviando();
+
+      const o = await almacen.obtener("op-1");
+      expect(o?.estado).toBe("pendiente");
+      expect(o?.intentos).toBe(4);
+      expect(o?.ultimoError).toBe("timeout");
+    });
+
+    it("no se mete con las demás", async () => {
+      await almacen.encolar(op("op-1"));
+      await almacen.encolar(op("op-2"));
+      await almacen.encolar(op("op-3"));
+      await almacen.marcar("op-1", "completada");
+      await almacen.marcar("op-2", "fallida", { intentos: 5, ultimoError: "Sync HTTP 401" });
+
+      expect(await almacen.recuperarEnviando()).toBe(0);
+      expect((await almacen.obtener("op-1"))?.estado).toBe("completada");
+      expect((await almacen.obtener("op-2"))?.estado).toBe("fallida");
+      expect((await almacen.obtener("op-3"))?.estado).toBe("pendiente");
+    });
+  });
+
   describe("reintentarFallidas", () => {
     it("vuelve a pendiente las fallidas, resetea intentos y limpia el error", async () => {
       await almacen.encolar(op("op-1"));

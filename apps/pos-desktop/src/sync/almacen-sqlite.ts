@@ -119,6 +119,28 @@ export class AlmacenSqlite implements AlmacenDeOperaciones {
   }
 
   /**
+   * Rescata lo que quedó colgado en `enviando` al morir el proceso. Ver el
+   * puerto: ese estado no lo mira nadie más, así que una operación ahí no se
+   * reintenta, no se puede descartar y no tiene motivo que mostrar.
+   *
+   * NO se tocan los `intentos` ni el `ultimo_error`: son la única pista de por
+   * qué venía costando, y borrarlos sería tapar el problema justo cuando por
+   * fin se puede ver.
+   */
+  async recuperarEnviando(): Promise<number> {
+    const filas = await this.ejecutor.consultar<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM operacion_sync WHERE estado = 'enviando'`,
+    );
+    const n = Number(filas[0]?.n ?? 0);
+    if (n > 0) {
+      await this.ejecutor.ejecutar(
+        `UPDATE operacion_sync SET estado = 'pendiente' WHERE estado = 'enviando'`,
+      );
+    }
+    return n;
+  }
+
+  /**
    * Borra las fallidas en vez de marcarlas con un estado nuevo: el `CHECK` de
    * la tabla no admite otro valor, y `CREATE TABLE IF NOT EXISTS` no lo
    * actualiza en las bases que ya están instaladas. Cambiarlo obligaría a

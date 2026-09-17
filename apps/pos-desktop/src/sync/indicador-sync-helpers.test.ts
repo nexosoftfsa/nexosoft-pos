@@ -120,10 +120,14 @@ describe("operacionesTrabadas", () => {
     expect(operacionesTrabadas([trabada])).toEqual([trabada]);
   });
 
-  /** Sin motivo no hay nada que mostrar, y un renglón vacío es peor que nada. */
-  it("con intentos pero sin motivo no cuenta", () => {
-    expect(operacionesTrabadas([enCola({ intentos: 3 })])).toEqual([]);
-    expect(operacionesTrabadas([enCola({ intentos: 3, ultimoError: "   " })])).toEqual([]);
+  /**
+   * Antes se exigía motivo, y eso escondía el caso peor: una venta que falló
+   * sin que quedara registrado por qué no aparecía por ningún lado. El panel
+   * dice "sin detalle", que es poco, pero saber que está trabada vale más.
+   */
+  it("con intentos y sin motivo TAMBIÉN está trabada", () => {
+    const sinMotivo = enCola({ intentos: 3 });
+    expect(operacionesTrabadas([sinMotivo])).toEqual([sinMotivo]);
   });
 
   it("separa las trabadas de las que van bien", () => {

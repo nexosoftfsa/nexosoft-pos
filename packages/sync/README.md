@@ -44,6 +44,14 @@ siguen vendiendo aunque el servidor esté caído.
   al superar `maxIntentos` pasa a `fallida`.
 - **no reintentable** (payload inválido, 4xx): `fallida` de inmediato.
 
+Hay una tercera salida de `enviando` que el dibujo no muestra: **que el proceso
+muera en el medio**. Ahí la operación se queda en `enviando` para siempre, y ese
+estado no lo mira nadie — ni el motor, ni "Reintentar", ni "Descartar" — aunque
+el contador de pendientes la siga contando. Por eso `recuperarEnviando()` se
+llama **una vez al arrancar** y las devuelve a `pendiente`: si el proceso está
+arrancando, no hay ningún envío en vuelo. Reenviar es seguro (idempotencia por
+`operacionId`); no reenviar nunca, no. Ver ADR-0078.
+
 La **resolución de conflictos por agregado** (stock como delta, comprobantes
 inmutables, catálogo autoritativo del backend) vive en el servidor — ver
 ADR-0005. Esta cola garantiza el envío ordenado e idempotente.

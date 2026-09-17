@@ -52,6 +52,29 @@ describe("AlmacenEnMemoria", () => {
     expect(op1?.ultimoError).toBeUndefined();
     expect((await almacen.obtener("op-2"))?.estado).toBe("completada");
   });
+
+  /**
+   * `enviando` dura lo que dura la llamada al servidor. Si el proceso muere en
+   * el medio, la operación se queda ahí y no la mira nadie: `pendientes()` no
+   * la devuelve, así que no se reintenta nunca, y como no falló tampoco tiene
+   * motivo que mostrar. La cuenta de "sin subir" sí la sigue contando.
+   */
+  it("recuperarEnviando devuelve a la cola lo que quedó colgado al morir el proceso", async () => {
+    const almacen = new AlmacenEnMemoria();
+    await almacen.encolar(op("op-1"));
+    await almacen.encolar(op("op-2"));
+    await almacen.marcar("op-1", "enviando", { intentos: 2, ultimoError: "timeout" });
+
+    expect(await almacen.pendientes()).toHaveLength(1); // op-1 no está
+
+    expect(await almacen.recuperarEnviando()).toBe(1);
+
+    const op1 = await almacen.obtener("op-1");
+    expect(op1?.estado).toBe("pendiente");
+    // Los intentos y el motivo quedan: son la pista de por qué venía costando.
+    expect(op1?.intentos).toBe(2);
+    expect(op1?.ultimoError).toBe("timeout");
+  });
 });
 
 describe("MotorDeSincronizacion", () => {
@@ -92,6 +115,25 @@ describe("MotorDeSincronizacion", () => {
     });
     expect((await almacen.obtener("op-1"))?.estado).toBe("completada");
     expect(await almacen.pendientes()).toHaveLength(0);
+  });
+
+  /**
+   * La prueba de campo del 17/9/2026, en dos actos: una venta que se quedó en
+   * `enviando` no vuelve a salir por más veces que se sincronice, y el rescate
+   * la devuelve a la cola para que suba como cualquier otra.
+   */
+  it("no reenvía sola una operación colgada en enviando; el rescate la destraba", async () => {
+    await motor.encolar(op("op-1"));
+    await almacen.marcar("op-1", "enviando"); // murió el proceso acá
+
+    expect(await motor.sincronizar()).toMatchObject({ enviadas: 0 });
+    expect(cliente.enviar).not.toHaveBeenCalled();
+
+    await almacen.recuperarEnviando();
+    cliente.enviar.mockResolvedValue({ "op-1": { ok: true } } satisfies Record<string, ResultadoEnvio>);
+
+    expect(await motor.sincronizar()).toMatchObject({ enviadas: 1, completadas: 1 });
+    expect((await almacen.obtener("op-1"))?.estado).toBe("completada");
   });
 
   it("deja en pendiente (con intento++) un error reintentable", async () => {

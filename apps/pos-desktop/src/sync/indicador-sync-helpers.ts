@@ -111,13 +111,18 @@ function soloFecha(iso: string): string {
  * no había forma de ver por qué. Sebastián arrastró dos así durante tres
  * pruebas: *"no me deja ver el motivo ni nada"*.
  *
- * Se exige `intentos > 0` **y** motivo: una operación recién encolada todavía
- * no falló, y mostrarla como problema sería ruido en cada venta.
+ * Se exige `intentos > 0`: una operación recién encolada todavía no falló, y
+ * mostrarla como problema sería ruido en cada venta.
+ *
+ * **No se exige motivo.** Antes sí, y eso dejaba invisible justo el caso peor:
+ * una operación que falló sin que quedara registrado por qué no aparecía por
+ * ningún lado. Sin motivo el panel dice "sin detalle", que es poco — pero
+ * saber que hay una venta trabada vale más que el texto.
  */
 export function operacionesTrabadas(
   enCola: readonly OperacionEnCola[],
 ): readonly OperacionEnCola[] {
-  return enCola.filter((o) => o.intentos > 0 && (o.ultimoError ?? "").trim() !== "");
+  return enCola.filter((o) => o.intentos > 0);
 }
 
 export function rangoDeFechas(ops: readonly OperacionEnCola[]): string | null {

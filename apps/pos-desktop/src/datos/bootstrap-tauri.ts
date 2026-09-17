@@ -287,6 +287,19 @@ export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}):
   const catalogo = await leerCatalogo(ejecutor, repos, config);
 
   const almacen = new AlmacenSqlite(ejecutor);
+  // Rescate de arranque: lo que quedó en `enviando` cuando murió el proceso no
+  // lo mira nadie más, ni el motor ni ninguno de los botones. Sebastián
+  // arrastró dos ventas así cuatro pruebas. Reenviar es seguro (el servidor
+  // descarta duplicados por `operacionId`); no reenviar nunca, no.
+  try {
+    const rescatadas = await almacen.recuperarEnviando();
+    if (rescatadas > 0) {
+      console.info(`Sync: ${rescatadas} operación(es) colgadas en "enviando" vuelven a la cola.`);
+    }
+  } catch (e) {
+    // Que no arranque el POS por esto sería peor que la cola trabada.
+    console.error("No se pudo rescatar la cola de sincronización:", e);
+  }
   const cliente = new ClienteSyncHttp(baseUrl, obtenerToken);
   const sync: SyncPos = {
     motor: new MotorDeSincronizacion(almacen, cliente),

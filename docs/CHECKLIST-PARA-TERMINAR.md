@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-16 · Publicado: POS **0.1.63** · Servidor **0.19.0**
+Actualizado: 2026-09-17 · Publicado: POS **0.1.64** · Servidor **0.19.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,51 +15,52 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Séptima vuelta — POS 0.1.63
+## 1 · Octava vuelta — POS 0.1.64
 
-### Lo que la sexta vuelta (11/9) dejó cerrado
+### Lo que la séptima vuelta (17/9) dejó cerrado
 
-- **El bucle de los cientos de comprobantes: no vuelve.** Con Billetera QR y
-  Enter a lo bestia sobre el cartel de espera salió **una sola venta**. Era el
-  defecto más grave del proyecto (ADR-0075).
-- **El freno de ráfaga no pisa la cola offline.** Los dos números coincidieron:
-  8 ventas sin internet, 8 subidas. Era el riesgo real de haber puesto un tope
-  por ritmo.
-- **El tope no molesta operando normal.** 10 ventas en un minuto y medio, sin
-  un solo rechazo.
-- **El clic afuera ya no roba el original**, y el A4 sale como ORIGINAL.
+- **Comprobantes se actualiza sola.** Tarda hasta un par de minutos, y Seba lo
+  dio por bueno con un argumento que comparto: *"el cajero nunca se va a quedar
+  mirando la pantalla de comprobantes a ver si se actualiza, debe seguir
+  cobrando mientras las ventas se actualizan en segundo plano"*.
+- **Nota de Crédito y Factura B sin cliente**, sin novedad.
 
-### Lo que la sexta vuelta destapó, ya corregido y sin verificar
+### Lo que la séptima vuelta destapó
 
-- [ ] **Correr `docs/PRUEBA-SEPTIMA-VUELTA.txt`.** 20 minutos.
+- [ ] **Correr `docs/PRUEBA-OCTAVA-VUELTA.txt`.** 20 minutos.
 
-- [ ] **Las dos ventas trabadas de Seba: saber POR QUÉ.** Es la única incógnita
-      real que queda. Las viene arrastrando desde hace tres pruebas y hasta
-      ahora el POS no le mostraba el motivo: el botón de ver el error sólo
-      aparecía con las fallidas, y éstas están pendientes. Eso se arregló
-      (0.1.62) — ahora las trabadas se listan aparte con su motivo.
-      *El arreglo es de visibilidad: la causa sigue sin conocerse. El paso 2 del
-      instructivo es leerla.*
+- [ ] **Confirmar que NO vuelva la venta duplicada con Billetera QR.** Es lo más
+      grave de esta vuelta: con Enter rápido salieron **dos Facturas B con CAE
+      por un solo cobro**, dos veces de dos intentos. Cuarto incidente con la
+      misma raíz (ADR-0077). El hueco estaba entre las dos guardas que ya
+      existían: al aprobarse el pago el polling se apaga, y la registración
+      —hasta 8 segundos esperando a ARCA— quedaba sin candado.
+      *Bloquea vender. El paso 2 es reproducirlo a propósito.*
 
-- [ ] **El asistente en $0,00, ahora con Tarjeta y Transferencia.** Cuarta vez
-      con la misma raíz: un listener de teclado mirando el carrito de un closure
-      viejo. Va contra un `ref` (0.1.62).
-      *La regla ya está escrita: lo que coordina trabajo asincrónico va en un
-      `ref`.*
+- [ ] **Confirmar que las dos ventas trabadas de Seba SUBAN.** Causa
+      encontrada (ADR-0078): estaban en estado `enviando`, que no lo mira nadie
+      —ni el motor, ni Reintentar, ni Descartar— aunque el contador las siga
+      contando. Por eso "sincronizar no hacía nada": no había nada que hacer.
+      Al arrancar el POS vuelven a la cola.
+      *Se verifica solo: abrir el POS y mirar que el contador baje a cero.*
 
-- [ ] **Comprobantes se recarga sola cuando baja la cola.** Seba tocó
-      Sincronizar parado ahí, las ventas subieron y la lista siguió siendo la
-      de antes; tuvo que cambiar de menú y volver (0.1.62).
+- [ ] **Confirmar que el asistente ya no se abra en $0,00.** Seguía apareciendo
+      con Tarjeta, Transferencia y Efectivo. Ahora la caja se limpia apenas la
+      venta está confirmada, el asistente no abre con una venta en curso, y se
+      cierra solo si se queda sin carrito.
 
-- [ ] **Verificar en campo un producto exento.** Arreglado el 16/9 (ADR-0076):
-      `EXENTO` ya no se mapea a la alícuota del 0%. El comprobante que se le
-      declara a ARCA siempre estuvo bien; lo que estaba mal era el **papel**, que
-      imprimía "IVA 0%" y sumaba el exento al subtotal neto.
-      *Falta venderlo una vez y mirar el ticket: tiene que decir "Exento" con su
-      importe, y el subtotal neto no tiene que incluirlo.*
+- [ ] **Verificar en campo un producto exento.** El arreglo del 16/9 (ADR-0076)
+      estaba bien pero **no llegaba al papel**: el catálogo sólo bajaba al
+      arrancar el POS, y el botón Sincronizar únicamente subía ventas. Quedó
+      probado por el mismo comprobante impreso dos veces — el original decía
+      "IVA 0%" y su duplicado, armado con lo declarado a ARCA, no.
+      *Desde 0.1.64 Sincronizar también baja el catálogo. Falta venderlo y mirar
+      los dos PDF.*
 
 - [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
-      6/9, el 8/9 y el 9/9. Falta darlo por cerrado formalmente.
+      6/9, el 8/9 y el 9/9. La diferencia que Seba marcó el 17/9 entre original
+      y duplicado **no era un defecto de la reimpresión**: era el exento. Falta
+      darlo por cerrado formalmente con los dos papeles iguales.
 
 ---
 

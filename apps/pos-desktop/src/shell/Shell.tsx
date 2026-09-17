@@ -405,7 +405,13 @@ export function Shell({
             <span className="chip chip--muted" title="Comercio">
               {entorno.config.razonSocial}
             </span>
-            <IndicadorSync estado={sync} esperandoCae={esperandoCae} />
+            <IndicadorSync
+              estado={sync}
+              esperandoCae={esperandoCae}
+              {...(onCatalogoCambiado !== undefined
+                ? { onSincronizacionManual: onCatalogoCambiado }
+                : {})}
+            />
             {terminalNombre !== undefined && (
               <span className="chip chip--muted" title="Terminal">
                 {terminalNombre}

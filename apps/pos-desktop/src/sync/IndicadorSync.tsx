@@ -8,6 +8,7 @@ import type { EstadoSync } from "./useSync";
 export function IndicadorSync({
   estado,
   esperandoCae,
+  onSincronizacionManual,
 }: {
   estado: EstadoSync;
   /**
@@ -15,6 +16,21 @@ export function IndicadorSync({
    * de la cola: sin esto la píldora dice "Sincronizado" con ARCA caída.
    */
   esperandoCae?: EsperandoCae | null;
+  /**
+   * Qué más hacer cuando el botón lo aprieta una persona. Hoy: bajar el
+   * catálogo del servidor.
+   *
+   * El botón dice "Sincronizar" y sólo subía la cola; el catálogo únicamente se
+   * bajaba al arrancar el POS. Así, un producto corregido en el panel —un IVA,
+   * un precio— no llegaba a la caja por más que se tocara el botón, y no había
+   * ninguna forma de traerlo sin cerrar y volver a abrir el programa. Pasó con
+   * un producto exento el 17/9/2026: el comprobante salió bien y el ticket
+   * impreso siguió mostrando el IVA viejo.
+   *
+   * Sólo en el manual: la corrida automática cada 15 segundos no tiene por qué
+   * pedir el catálogo entero.
+   */
+  onSincronizacionManual?: () => void;
 }) {
   const {
     online,
@@ -43,6 +59,19 @@ export function IndicadorSync({
       setVerDetalle(false);
     } finally {
       setDescartando(false);
+    }
+  }
+
+  /**
+   * Lo que hace el botón cuando lo aprieta una persona: sube la cola y además
+   * baja el catálogo. Que el catálogo falle no puede tapar que la cola subió.
+   */
+  async function sincronizarAMano() {
+    await (fallidas > 0 ? reintentarFallidasYSincronizar() : sincronizarAhora());
+    try {
+      onSincronizacionManual?.();
+    } catch (e) {
+      console.error("No se pudo refrescar el catálogo al sincronizar:", e);
     }
   }
 
@@ -82,12 +111,7 @@ export function IndicadorSync({
           <span className="sync-texto">{texto}</span>
         )}
         {mostrarBoton && (
-          <button
-            className="sync-boton"
-            onClick={() =>
-              void (fallidas > 0 ? reintentarFallidasYSincronizar() : sincronizarAhora())
-            }
-          >
+          <button className="sync-boton" onClick={() => void sincronizarAMano()}>
             {fallidas > 0 ? "Reintentar" : "Sincronizar"}
           </button>
         )}

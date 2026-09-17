@@ -56,6 +56,7 @@ import {
   promoAplicable,
 } from "./promos";
 import { motivoNoFacturable } from "./venta-facturable";
+import { puedeAbrirAsistente, puedeArrancarVenta } from "./venta-en-curso";
 import { useImpresionA4 } from "./usar-impresion-a4";
 import { useImpresionTicket } from "./usar-impresion-ticket";
 import { useLectorTeclado } from "./usar-lector-teclado";
@@ -274,6 +275,23 @@ export function PantallaPos({
    * anterior, y un estado recién actualizado ahí todavía se lee viejo.
    */
   const confirmandoRef = useRef(false);
+  /**
+   * `true` desde que arranca un cobro hasta que la venta terminó y la pantalla
+   * quedó limpia. Es el candado de TODO el ciclo, no sólo de la confirmación.
+   *
+   * `confirmandoRef` cubre `_finalizarVenta` y `pollingRef` cubre el cobro
+   * electrónico, pero entre los dos quedaba un hueco por el que se colaron dos
+   * Facturas B con CAE en la prueba del 17/9/2026: al aprobarse el pago QR, el
+   * polling se apaga —`pollingRef` vuelve a null— y recién ahí se llama a
+   * `_finalizarVenta`, que tarda hasta 8 segundos esperando a ARCA. Un Enter en
+   * esa ventana pasaba los dos controles: no había polling vigente y
+   * `confirmar` no miraba `confirmandoRef`. Arrancaba un cobro QR nuevo, con el
+   * mismo carrito, que terminaba en una segunda venta real.
+   *
+   * Dos ventas seguidas por el mismo importe, con segundos de diferencia: eso
+   * es lo que mostró Comprobantes.
+   */
+  const ventaEnCursoRef = useRef(false);
   /**
    * Espejo del carrito, para leerlo desde handlers con closure viejo.
    *
@@ -535,17 +553,24 @@ export function PantallaPos({
    * el listener global de teclado del wizard no compita con su `onKeyDown`.
    */
   function abrirAsistente(marcaDeTiempo = performance.now()) {
-    if (pasoAsistenteRef.current !== "cerrado") return;
-    // Sin carrito no hay nada que cobrar. Se mira el `ref` y no `carrito`: con
-    // el closure viejo del listener de teclado, el carrito ya vaciado seguía
-    // viéndose lleno y el asistente abría igual en "$ 0,00 — Cobro completo".
-    if (carritoRef.current.length === 0) return;
-    // Si la venta no se puede facturar, el asistente no abre. El motivo ya está
-    // a la vista en la cabecera, y el asistente la tapa: adentro, el Enter del
-    // último paso no hacía nada visible y parecía que el sistema se colgaba —
-    // o peor, que dejaba emitir. Mejor no dejar entrar.
-    if (faltaParaFacturar !== null) {
-      setError(faltaParaFacturar);
+    // La regla entera vive en `venta-en-curso.ts`, con su prueba. Todo se lee
+    // de refs: esto entra desde el listener global de teclado, cuyo closure
+    // puede tener el estado del render anterior — y ahí el carrito ya vaciado
+    // seguía viéndose lleno, que es de donde salía el "$ 0,00".
+    if (
+      !puedeAbrirAsistente({
+        yaAbierto: pasoAsistenteRef.current !== "cerrado",
+        carritoVacio: carritoRef.current.length === 0,
+        hayCobroElectronicoVigente: pollingRef.current !== null,
+        ventaEnCurso: ventaEnCursoRef.current,
+        faltaParaFacturar,
+      })
+    ) {
+      // El único de los motivos que se le explica al cajero: los demás son
+      // "esperá un segundo", y un cartel ahí sería ruido en cada venta.
+      if (faltaParaFacturar !== null && carritoRef.current.length > 0) {
+        setError(faltaParaFacturar);
+      }
       return;
     }
     aperturaAsistenteRef.current = marcaDeTiempo;
@@ -809,6 +834,23 @@ export function PantallaPos({
     pasoAsistenteRef.current = pasoAsistente;
   }, [pasoAsistente]);
 
+  /**
+   * Un asistente de COBRO sin carrito no tiene nada que cobrar: se cierra solo.
+   *
+   * Es la red de abajo del "$ 0,00 — Cobro completo". Da igual por qué quedó
+   * abierto —un Enter que se coló, un carrito vaciado a mano—: sin carrito ese
+   * panel no puede hacer nada útil y lo único que logra es asustar.
+   *
+   * El paso "imprimir" queda afuera a propósito: ahí el carrito TIENE que
+   * estar vacío, la venta ya se hizo y falta preguntar por el papel.
+   */
+  useEffect(() => {
+    if (pasoAsistente === "cerrado" || pasoAsistente === "imprimir") return;
+    if (carrito.length > 0) return;
+    cerrarAsistente();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pasoAsistente, carrito.length]);
+
   // Foco + selección automática del monto al entrar al paso "monto" (mismo
   // detalle que el simulador: el monto pre-cargado queda listo para
   // sobreescribir en un pago mixto).
@@ -873,13 +915,19 @@ export function PantallaPos({
    *   Comprobantes para reimprimir, sacar A4 o anular.
    */
   async function confirmar(desdeAsistente = false) {
-    if (carrito.length === 0) return;
-    // Un cobro electrónico en curso bloquea otro. El Enter sigue llegando
-    // mientras se espera al dispositivo, y cada uno abría un cobro NUEVO con su
-    // propio polling. Se mira el `ref` y no el estado `pagoElectronico`: esto
-    // se llama desde el listener global de teclado, cuyo closure puede tener el
-    // estado del render anterior — un `ref` no (ADR-0075).
-    if (pollingRef.current !== null) return;
+    // Los tres controles juntos, con su prueba, en `venta-en-curso.ts`. Se
+    // miran los `refs` y no el estado: esto entra desde el listener global de
+    // teclado, cuyo closure puede tener el valor del render anterior.
+    if (
+      !puedeArrancarVenta({
+        carritoVacio: carrito.length === 0,
+        hayCobroElectronicoVigente: pollingRef.current !== null,
+        ventaEnCurso: ventaEnCursoRef.current,
+      })
+    ) {
+      return;
+    }
+    ventaEnCursoRef.current = true;
 
     // Si hay un pago electrónico pendiente, iniciarlo antes de confirmar la venta
     const pagoElec = pagos.find((p) =>
@@ -916,6 +964,7 @@ export function PantallaPos({
           if (intentos > MAX_INTENTOS_PAGO_ELECTRONICO) {
             detenerPolling(id);
             setPagoElectronico(null);
+            ventaEnCursoRef.current = false;
             setError(
               "El pago electrónico no se confirmó a tiempo. Revisá en la app de cobro si entró, y volvé a cobrar si no entró.",
             );
@@ -927,19 +976,26 @@ export function PantallaPos({
             if (estado.estado === "aprobado") {
               detenerPolling(id);
               setPagoElectronico(null);
+              // OJO: el candado NO se suelta acá. Se suelta cuando la venta
+              // terminó de registrarse, allá abajo. Soltarlo antes es
+              // exactamente lo que dejaba entrar la segunda venta.
               await _finalizarVenta(desdeAsistente);
             } else if (estado.estado === "rechazado" || estado.estado === "cancelado") {
               detenerPolling(id);
               setPagoElectronico(null);
+              ventaEnCursoRef.current = false;
               setError(`Pago ${estado.estado}: ${estado.motivoRechazo ?? ""}`);
             }
           } catch (e) {
+            // Consultar falló, pero el cobro sigue vivo: el candado queda
+            // puesto y el polling sigue preguntando hasta el tope.
             setError(mensajeError(e));
           }
         }, 2000);
         pollingRef.current = id;
         return;
       } catch (e) {
+        ventaEnCursoRef.current = false;
         setError(mensajeError(e));
         return;
       }
@@ -964,7 +1020,26 @@ export function PantallaPos({
       await _finalizarVentaSinReentrada(desdeAsistente);
     } finally {
       confirmandoRef.current = false;
+      // Fin del ciclo: recién acá se puede empezar otra venta. Va en el
+      // `finally` a propósito — si esto no se suelta, la caja queda muda, así
+      // que no puede depender de que la venta haya salido bien.
+      ventaEnCursoRef.current = false;
     }
+  }
+
+  /** Deja la caja lista para el próximo cliente. */
+  function limpiarParaLaProxima() {
+    setCarrito([]);
+    // El espejo se adelanta al render: `abrirAsistente` lo lee desde el
+    // listener de teclado, y un Enter que llegue antes del próximo render vería
+    // el carrito todavía lleno. Es la misma carrera de siempre, un paso antes.
+    carritoRef.current = [];
+    setPagos([]);
+    setRecargoPorc(0);
+    setClienteId("");
+    setTarjetaSeleccionada("");
+    setCuotasSeleccionadas("");
+    setError(null);
   }
 
   async function _finalizarVentaSinReentrada(desdeAsistente: boolean) {
@@ -991,8 +1066,8 @@ export function PantallaPos({
     // Se limpia ANTES de confirmar: si esta venta no llega a resolverse contra
     // el servidor, su ticket no puede salir con el CAE de la venta anterior.
     setComprobanteServidor(null);
-    // Foto de lo que el ticket va a necesitar. Se saca ACÁ, antes de que el
-    // final de esta función limpie el cliente y los pagos.
+    // Foto de lo que el ticket va a necesitar. Se saca ACÁ, antes de que
+    // `limpiarParaLaProxima` borre el cliente y los pagos.
     impresionRef.current = { receptor: clienteElegido, pagos: [...pagos], delServidor: null };
     try {
       const venta = await servicio.confirmarVenta(
@@ -1008,6 +1083,18 @@ export function PantallaPos({
       } else {
         setUltimaVenta(venta);
       }
+
+      // La caja se limpia ACÁ, no al final. La venta ya está confirmada en la
+      // base local; lo que falta —encolar, esperar a ARCA— puede tardar hasta 8
+      // segundos, y durante esos 8 segundos el carrito seguía en pantalla,
+      // lleno y cobrado. Un Enter de más en esa ventana reabría el asistente
+      // sobre una venta que ya no existía, y lo que se veía era el famoso
+      // "$ 0,00 — Cobro completo".
+      //
+      // No afecta a lo que sigue: `carrito` y `pagos` son las constantes del
+      // closure, y `setCarrito` no las toca. El asistente en el paso
+      // "¿imprimir?" tampoco, que se dibuja con `ventaAsistente`.
+      limpiarParaLaProxima();
 
       // Encolar la venta para sincronizar con el servidor de sucursal.
       // No rompe la venta (ya confirmada localmente) si el encolado falla.
@@ -1088,13 +1175,6 @@ export function PantallaPos({
         console.error("No se pudo encolar la venta para sync:", e);
       }
 
-      setCarrito([]);
-      setPagos([]);
-      setRecargoPorc(0);
-      setClienteId("");
-      setTarjetaSeleccionada("");
-      setCuotasSeleccionadas("");
-      setError(null);
       // Desde el asistente el foco NO vuelve al buscador todavía: falta el
       // paso "¿imprimir ticket?", que se maneja con el listener global.
       if (!desdeAsistente) refocarBuscador();
@@ -1106,6 +1186,10 @@ export function PantallaPos({
   async function cancelarPagoElectronico() {
     if (!pagoElectronico) return;
     if (pollingRef.current !== null) detenerPolling(pollingRef.current);
+    // El cobro se cancela: el ciclo terminó y la caja tiene que poder volver a
+    // cobrar. Se suelta ANTES de hablar con la pasarela, que puede tardar o
+    // fallar — y dejar la caja trabada por eso sería peor.
+    ventaEnCursoRef.current = false;
     try {
       await pasarela.cancelar(pagoElectronico.intencionPagoId);
     } catch {
