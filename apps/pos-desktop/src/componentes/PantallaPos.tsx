@@ -10,6 +10,7 @@ import {
   etiquetaCondicionIva,
   FormaDePago,
   Money,
+  recargoQueCorresponde,
   resolverTipoComprobante,
   TipoComprobante,
   type AlicuotaIva,
@@ -389,6 +390,19 @@ export function PantallaPos({
 
   const tarjetaActual = tarjetas.find((t) => t.id === tarjetaSeleccionada);
   const tasaActual = tarjetaActual?.tasas.find((t) => t.cantidadCuotas === Number(cuotasSeleccionadas));
+  /**
+   * El recargo que de verdad corresponde cobrar con esta tarjeta.
+   *
+   * No es `tasaActual.recargoPorcentaje`: en un débito es SIEMPRE cero, por más
+   * que la configuración guardada traiga otra cosa (Ley 27.253). Un comercio
+   * que cargó un recargo en débito antes de que existiera la regla lo sigue
+   * teniendo en su base, y sin esto el POS le seguiría cobrando de más al
+   * cliente hasta que alguien entrara a editar la tarjeta.
+   */
+  const recargoActual =
+    tarjetaActual === undefined || tasaActual === undefined
+      ? 0
+      : recargoQueCorresponde(tarjetaActual.tipo, tasaActual.recargoPorcentaje);
 
   useEffect(() => {
     if (carrito.length === 0) {
@@ -631,10 +645,15 @@ export function PantallaPos({
 
   function elegirCuotasAsistente(indice: number) {
     const tasa = tarjetaActual?.tasas[indice];
-    if (!tasa || !preview) return;
+    if (!tasa || !preview || !tarjetaActual) return;
     setCuotasSeleccionadas(String(tasa.cantidadCuotas));
     setMontoPago(
-      montoBaseParaSaldoExacto(preview.cobro.saldoPendiente, tasa.recargoPorcentaje).aDecimalString(2),
+      montoBaseParaSaldoExacto(
+        preview.cobro.saldoPendiente,
+        // Misma regla que `recargoActual`: en un débito no hay recargo que
+        // descontar del saldo, por más que la tasa guardada diga otra cosa.
+        recargoQueCorresponde(tarjetaActual.tipo, tasa.recargoPorcentaje),
+      ).aDecimalString(2),
     );
     avanzarPaso("monto");
   }
@@ -863,8 +882,8 @@ export function PantallaPos({
 
   /** Arma el `PagoUi`: si hay tarjeta+cuotas elegida, calcula y suma su recargo. */
   function armarPagoUi(montoBase: Money): PagoUi {
-    if (tarjetaActual && tasaActual && tasaActual.recargoPorcentaje > 0) {
-      const recargoAplicado = montoBase.porcentaje(tasaActual.recargoPorcentaje);
+    if (tarjetaActual && tasaActual && recargoActual > 0) {
+      const recargoAplicado = montoBase.porcentaje(recargoActual);
       return {
         forma: formaPago,
         monto: montoBase.sumar(recargoAplicado),
@@ -884,9 +903,9 @@ export function PantallaPos({
     if (!preview) return;
     const saldo = preview.cobro.saldoPendiente;
     if (!saldo.esPositivo()) return;
-    if (tarjetaActual && tasaActual && tasaActual.recargoPorcentaje > 0) {
+    if (tarjetaActual && tasaActual && recargoActual > 0) {
       // saldo = base + base×tasa% → base = saldo / (1 + tasa/100)
-      const base = saldo.dividirPor(1 + tasaActual.recargoPorcentaje / 100).redondear(2);
+      const base = saldo.dividirPor(1 + recargoActual / 100).redondear(2);
       const recargoAplicado = saldo.restar(base);
       setPagos((prev) => [
         ...prev,
@@ -1320,9 +1339,7 @@ export function PantallaPos({
     }
   })();
   const recargoVivo =
-    montoBaseVivo && tasaActual && tasaActual.recargoPorcentaje > 0
-      ? montoBaseVivo.porcentaje(tasaActual.recargoPorcentaje)
-      : null;
+    montoBaseVivo && recargoActual > 0 ? montoBaseVivo.porcentaje(recargoActual) : null;
 
   return (
     <div className="pos">

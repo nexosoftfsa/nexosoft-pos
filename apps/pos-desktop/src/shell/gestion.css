@@ -770,6 +770,13 @@
   color: var(--muted);
   font-weight: 600;
 }
+/* Aclaración debajo de un campo: por qué una opción restringe lo que sigue.
+   Se dice antes de cargar, no como error después de tipear. */
+.field__ayuda {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+}
 .input {
   height: 46px;
   border: 1.5px solid var(--line);

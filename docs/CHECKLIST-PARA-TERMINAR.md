@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-17 · Publicado: POS **0.1.66** · Servidor **0.19.0**
+Actualizado: 2026-09-17 · Publicado: POS **0.1.67** · Servidor **0.19.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -80,14 +80,13 @@ minorista puede **elegir** entre controlador fiscal y factura electrónica. No
 necesitamos homologar nada ni competir contra el controlador: nuestros clientes
 pueden usarnos legalmente. Era la duda más cara de todas.
 
-- [ ] **Débito con recargo: el sistema lo permite y la ley lo prohíbe.**
-      La Ley 27.253 obliga a aceptar tarjeta de débito **sin recargo alguno**,
-      y `validarTarjeta` acepta un `recargoPorcentaje` en una tarjeta de tipo
-      `DEBITO` igual que en una de crédito. Un comercio puede configurarlo sin
-      que nada lo frene, y las multas de Defensa del Consumidor por cobrar de
-      más con débito son reales.
-      *Arreglo chico: prohibirlo en la validación, del lado del servidor y del
-      formulario. Es lo único de este barrido que está roto hoy.*
+- [ ] **Verificar que el débito no cobre recargo.** Hecho el 17/9 (ADR-0080):
+      el servidor lo rechaza, el formulario lo avisa al elegir el tipo, y **la
+      caja ignora cualquier recargo de débito que haya quedado guardado de
+      antes** — que era la parte que importaba, porque si no el arreglo quedaba
+      esperando a que alguien entrara a editar la tarjeta.
+      *Prueba de un minuto: configurar un débito, ver que no deje poner recargo
+      ni cuotas, y cobrar con él.*
 
 - [ ] **Ingresos Brutos en el comprobante.** El mismo régimen de transparencia,
       pero provincial: hay que informar la **alícuota** de IIBB (no el importe)

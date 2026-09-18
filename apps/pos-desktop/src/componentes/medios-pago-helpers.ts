@@ -1,4 +1,6 @@
 /** Lógica pura de Medios de pago (Fase 12.E): formulario, validación y filtro. */
+import { admiteRecargo, motivosDeTasasInvalidas } from "@nexosoft/domain";
+
 import type { DatosTarjeta, Tarjeta, TasaCuota, TipoTarjeta } from "../sync/cliente-medios-pago";
 
 export const TIPOS_TARJETA: ReadonlyArray<{ valor: TipoTarjeta; etiqueta: string }> = [
@@ -66,7 +68,37 @@ export function validarTarjeta(f: FormTarjeta): string[] {
       errores.push(`El recargo de ${cuotas} cuota(s) debe ser un número válido (0 o más).`);
     }
   }
+
+  // Un débito no puede llevar recargo ni cuotas (Ley 27.253). La regla vive en
+  // el dominio y la comparten el servidor y esta pantalla: acá se muestra
+  // mientras se carga, allá se rechaza.
+  errores.push(...motivosDeTasasInvalidas(f.tipo, tasasNumericas(f)));
+
   return errores;
+}
+
+/** Las tasas del formulario como números, descartando lo que todavía no es uno. */
+function tasasNumericas(
+  f: FormTarjeta,
+): Array<{ cantidadCuotas: number; recargoPorcentaje: number }> {
+  return f.tasas
+    .map((t) => ({
+      cantidadCuotas: Number(t.cuotas.trim()),
+      recargoPorcentaje: Number(normalizarImporte(t.porcentaje)),
+    }))
+    .filter((t) => Number.isFinite(t.cantidadCuotas) && Number.isFinite(t.recargoPorcentaje));
+}
+
+/**
+ * Qué aclarar debajo del tipo de tarjeta, o `null`.
+ *
+ * Se dice ANTES de que el usuario cargue un recargo que no va a poder guardar.
+ * Un error después de tipear es peor que un aviso antes.
+ */
+export function aclaracionDelTipo(tipo: TipoTarjeta): string | null {
+  return admiteRecargo(tipo)
+    ? null
+    : "El débito va sin recargo y en 1 cuota: la Ley 27.253 obliga a aceptarlo sin recargo alguno.";
 }
 
 export function aDatosTarjeta(f: FormTarjeta): DatosTarjeta {

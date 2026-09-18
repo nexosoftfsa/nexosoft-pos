@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { motivosDeTasasInvalidas } from '@nexosoft/domain';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CrearTarjetaDto } from './dto/crear-tarjeta.dto';
 import type { ActualizarTarjetaDto } from './dto/actualizar-tarjeta.dto';
@@ -32,7 +33,21 @@ export class MediosPagoService {
     return tarjeta;
   }
 
+  /**
+   * Un débito no puede llevar recargo ni cuotas (Ley 27.253). Se valida acá y
+   * no sólo en la pantalla: la validación del formulario es una cortesía para
+   * quien lo está cargando, la del servidor es la que manda.
+   */
+  private validarTasas(
+    tipo: string,
+    tasas: ReadonlyArray<{ cantidadCuotas: number; recargoPorcentaje: number }>,
+  ): void {
+    const motivos = motivosDeTasasInvalidas(tipo, tasas);
+    if (motivos.length > 0) throw new BadRequestException(motivos.join(' '));
+  }
+
   async crearTarjeta(sucursalId: string, dto: CrearTarjetaDto) {
+    this.validarTasas(dto.tipo, dto.tasas);
     const tarjeta = await this.prisma.tarjetaConfig.create({
       data: {
         banco: dto.banco,
@@ -47,7 +62,18 @@ export class MediosPagoService {
   }
 
   async actualizarTarjeta(sucursalId: string, id: string, dto: ActualizarTarjetaDto) {
-    await this.obtenerTarjeta(sucursalId, id);
+    const actual = await this.obtenerTarjeta(sucursalId, id);
+    // Los dos campos son opcionales, así que se valida la tarjeta COMO VA A
+    // QUEDAR. Si no, pasar una tarjeta de crédito con recargo a débito sin
+    // tocarle las tasas entraría sin que nadie mire el recargo que ya tenía.
+    this.validarTasas(
+      dto.tipo ?? actual.tipo,
+      dto.tasas ??
+        actual.tasas.map((t) => ({
+          cantidadCuotas: t.cantidadCuotas,
+          recargoPorcentaje: Number(t.recargoPorcentaje),
+        })),
+    );
     return this.prisma.$transaction(async (tx) => {
       await tx.tarjetaConfig.update({
         where: { id },

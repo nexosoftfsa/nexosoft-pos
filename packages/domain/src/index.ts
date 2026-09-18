@@ -41,6 +41,7 @@ export * from "./stock/alerta-stock.js";
 // Ventas: cálculo de comprobante y cobro (pago combinado, vuelto)
 export * from "./ventas/calculo-comprobante.js";
 export * from "./ventas/pago.js";
+export * from "./ventas/recargo-de-tarjeta.js";
 
 // Esquemas de validación (zod) para los bordes
 export * from "./esquemas/esquemas.js";

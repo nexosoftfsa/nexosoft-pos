@@ -81,19 +81,20 @@ el tiempo con eso, perdon.
 Desde esta version, Sincronizar TAMBIEN baja el catalogo.
 
 
-Versiones de esta prueba:  POS 0.1.66  -  Servidor 0.19.0 (NO CAMBIA)
+Versiones de esta prueba:  POS 0.1.67  -  Servidor 0.19.0 (NO CAMBIA)
 Punto seguro anterior: POS 0.1.63 + Servidor 0.19.0.
 
 OJO: si ya te mande este instructivo diciendo 0.1.64, actualiza igual a la
-0.1.66. Salieron dos versiones mas el mismo dia, con el regimen de
-transparencia fiscal en la Factura B (ver el paso 7, que es nuevo).
+0.1.67. Salieron varias versiones el mismo dia, con el regimen de
+transparencia fiscal en la Factura B (paso 7) y el debito sin recargo
+(paso 8). Los dos pasos son nuevos.
 
 
 PASO 1 - ACTUALIZAR
 --------------------
-1.1 Actualiza SOLO el POS, a 0.1.66. El servidor queda como esta.
+1.1 Actualiza SOLO el POS, a 0.1.67. El servidor queda como esta.
 
-    [ ] POS 0.1.66   <- confirmalo en Configuracion
+    [ ] POS 0.1.67   <- confirmalo en Configuracion
 
 
 PASO 2 - LAS DOS VENTAS TRABADAS (mira esto apenas abras)
@@ -262,6 +263,28 @@ en el papel.
     [ ] Sigue mostrando "Subtotal neto" y el IVA por alicuota, como siempre.
 
 
+PASO 8 - EL DEBITO NO PUEDE LLEVAR RECARGO (nuevo)
+----------------------------------------------------
+Otra que encontramos revisando. La Ley 27.253 obliga a aceptar tarjeta de
+debito "sin aplicar recargo alguno", y el sistema te dejaba configurarle un
+recargo igual que a una de credito. Y despues lo cobraba.
+
+8.1 Anda a Medios de pago y proba dar de alta una tarjeta de DEBITO.
+
+    [ ] Al elegir "Debito" aparece una aclaracion abajo del tipo.
+    [ ] Si le pones un recargo mayor a 0, NO deja guardar y explica por que.
+    [ ] Si le pones mas de 1 cuota, tampoco deja.
+    [ ] Con 1 cuota y recargo 0, guarda sin problema.
+
+8.2 Si tenias alguna tarjeta de debito con recargo cargada de antes, dejala
+    como esta y cobra una venta con ella.
+
+    [ ] NO se le suma el recargo: el cliente paga el precio de lista.
+
+    <- Esto es lo importante del paso. El arreglo no depende de que alguien
+       entre a corregir la tarjeta.
+
+
 ===========================================================================
   QUE MANDARME
 ===========================================================================
@@ -273,6 +296,7 @@ en el papel.
   6. Los dos numeros del paso 6.4
   7. PDF de la Factura B con el bloque nuevo (paso 7.2) y los dos importes
      del paso 7.3
+  8. Si el debito con recargo viejo te cobro de mas (paso 8.2)
 
 Las dos ventas trabadas las encontraste vos, insistiendo cuatro pruebas con
 algo que el sistema te mostraba como un numero y no te dejaba abrir. Y lo

@@ -217,9 +217,14 @@ export function centrar(texto: string, columnas = COLUMNAS_58MM): string {
   return " ".repeat(Math.max(0, izq)) + t;
 }
 
+function soloFecha(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
 function fecha(d: Date): string {
   const p = (n: number) => String(n).padStart(2, "0");
-  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  return `${soloFecha(d)} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 /** Acumula texto y comandos y los serializa a bytes. */
@@ -400,7 +405,11 @@ export function construirEscPos(
   if (datos.cae !== undefined) {
     b.separador();
     b.linea(`CAE ${datos.cae}`);
-    if (datos.vencimientoCae) b.linea(`Vto. ${fecha(datos.vencimientoCae)}`);
+    // El vencimiento del CAE es un DÍA, no un instante: ARCA lo devuelve como
+    // fecha sola. Imprimirlo con hora salia "Vto. 26/09/2026 00:00", una hora
+    // que no significa nada y que encima sugiere que vence a la medianoche del
+    // dia anterior.
+    if (datos.vencimientoCae) b.linea(`Vto. ${soloFecha(datos.vencimientoCae)}`);
   } else if (provisional) {
     b.separador();
     if (datos.esFiscal !== false) b.linea("Pendiente de autorizacion de ARCA");

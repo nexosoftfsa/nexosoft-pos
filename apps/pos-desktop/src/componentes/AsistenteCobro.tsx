@@ -10,6 +10,7 @@
  */
 import { useEffect, useRef, type RefObject } from "react";
 
+import { recargoQueCorresponde } from "@nexosoft/domain";
 import type { FormaDePago, Money } from "@nexosoft/domain";
 
 import { pesos } from "../formato";
@@ -127,7 +128,13 @@ export function AsistenteCobro({
                     className={i === cursor ? "asistente-item seleccionado" : "asistente-item"}
                   >
                     {t.cantidadCuotas} cuota{t.cantidadCuotas === 1 ? "" : "s"} —{" "}
-                    {t.recargoPorcentaje}%
+                    {/* El recargo que se va a cobrar de verdad, no el guardado:
+                        en un débito es siempre 0 (Ley 27.253). Mostrar el de la
+                        configuración vieja anunciaría un precio que no es. */}
+                    {tarjetaActual === undefined
+                      ? t.recargoPorcentaje
+                      : recargoQueCorresponde(tarjetaActual.tipo, t.recargoPorcentaje)}
+                    %
                   </li>
                 ))}
               </ul>

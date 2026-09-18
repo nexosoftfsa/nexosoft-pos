@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MediosPagoService } from './medios-pago.service';
 
 const mockTarjeta = { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), findUniqueOrThrow: vi.fn() };
@@ -75,6 +75,68 @@ describe('MediosPagoService', () => {
       expect(data.sucursalId).toBe(SUCURSAL);
       expect(data.tasas.create).toHaveLength(2);
       expect(data.tasas.create[1]).toEqual({ cantidadCuotas: 6, recargoPorcentaje: 18 });
+    });
+  });
+
+  /**
+   * La Ley 27.253 obliga a aceptar tarjeta de débito "sin aplicar recargo
+   * alguno". Se valida en el servidor y no sólo en la pantalla: la validación
+   * del formulario es una cortesía para quien carga, ésta es la que manda.
+   */
+  describe('débito sin recargo (Ley 27.253)', () => {
+    it('rechaza dar de alta un débito con recargo', async () => {
+      await expect(
+        service.crearTarjeta(SUCURSAL, {
+          banco: 'Banco Galicia',
+          tipo: 'DEBITO' as never,
+          tasas: [{ cantidadCuotas: 1, recargoPorcentaje: 5 }],
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockTarjeta.create).not.toHaveBeenCalled();
+    });
+
+    it('rechaza dar de alta un débito en cuotas', async () => {
+      await expect(
+        service.crearTarjeta(SUCURSAL, {
+          banco: 'Banco Galicia',
+          tipo: 'DEBITO' as never,
+          tasas: [{ cantidadCuotas: 6, recargoPorcentaje: 0 }],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deja pasar un débito en 1 cuota y sin recargo', async () => {
+      mockTarjeta.create.mockResolvedValue(tarjeta({ tipo: 'DEBITO' }));
+      await service.crearTarjeta(SUCURSAL, {
+        banco: 'Banco Galicia',
+        tipo: 'DEBITO' as never,
+        tasas: [{ cantidadCuotas: 1, recargoPorcentaje: 0 }],
+      });
+      expect(mockTarjeta.create).toHaveBeenCalled();
+    });
+
+    /**
+     * El agujero que deja validar sólo lo que viene en el DTO: los dos campos
+     * son opcionales, así que pasar a débito una tarjeta de crédito que YA
+     * tenía recargo entraría sin que nadie mire el recargo que ya tenía.
+     */
+    it('rechaza pasar a débito una tarjeta que ya tenía recargo, sin tocarle las tasas', async () => {
+      mockTarjeta.findFirst.mockResolvedValue(
+        tarjeta({ tasas: [{ id: 'ta1', cantidadCuotas: 6, recargoPorcentaje: '18' }] }),
+      );
+      await expect(
+        service.actualizarTarjeta(SUCURSAL, ID, { tipo: 'DEBITO' as never }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('rechaza ponerle recargo a una tarjeta que ya es de débito', async () => {
+      mockTarjeta.findFirst.mockResolvedValue(tarjeta({ tipo: 'DEBITO' }));
+      await expect(
+        service.actualizarTarjeta(SUCURSAL, ID, {
+          tasas: [{ cantidadCuotas: 1, recargoPorcentaje: 7 }],
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

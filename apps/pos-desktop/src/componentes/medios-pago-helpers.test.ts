@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Tarjeta } from "../sync/cliente-medios-pago";
 import {
+  aclaracionDelTipo,
   aDatosTarjeta,
   filtrarTarjetas,
   FORM_TARJETA_VACIO,
@@ -20,6 +21,17 @@ const valido: FormTarjeta = {
   ],
 };
 
+/** Se avisa ANTES de tipear un recargo que no se va a poder guardar. */
+describe("aclaracionDelTipo", () => {
+  it("el crédito no necesita aclaración", () => {
+    expect(aclaracionDelTipo("CREDITO")).toBeNull();
+  });
+
+  it("el débito la lleva, con la ley adentro", () => {
+    expect(aclaracionDelTipo("DEBITO")).toContain("27.253");
+  });
+});
+
 describe("validarTarjeta", () => {
   it("acepta un formulario válido", () => {
     expect(validarTarjeta(valido)).toEqual([]);
@@ -32,6 +44,34 @@ describe("validarTarjeta", () => {
   it("rechaza cuotas no numéricas o menores a 1", () => {
     const errores = validarTarjeta({ ...valido, tasas: [{ cuotas: "0", porcentaje: "10" }] });
     expect(errores.some((e) => e.includes("no es una cantidad de cuotas válida"))).toBe(true);
+  });
+
+  /**
+   * La Ley 27.253 obliga a aceptar débito "sin aplicar recargo alguno". Hasta
+   * el 17/9/2026 esta validación lo dejaba pasar igual que en una de crédito.
+   */
+  it("rechaza el recargo en una tarjeta de débito, y dice por qué", () => {
+    const errores = validarTarjeta({
+      ...valido,
+      tipo: "DEBITO",
+      tasas: [{ cuotas: "1", porcentaje: "5" }],
+    });
+    expect(errores.some((e) => e.includes("27.253"))).toBe(true);
+  });
+
+  it("rechaza las cuotas en una tarjeta de débito: el pago es único", () => {
+    const errores = validarTarjeta({
+      ...valido,
+      tipo: "DEBITO",
+      tasas: [{ cuotas: "6", porcentaje: "0" }],
+    });
+    expect(errores.some((e) => e.includes("no tiene cuotas"))).toBe(true);
+  });
+
+  it("un débito en 1 cuota y sin recargo pasa", () => {
+    expect(
+      validarTarjeta({ ...valido, tipo: "DEBITO", tasas: [{ cuotas: "1", porcentaje: "0" }] }),
+    ).toEqual([]);
   });
 
   it("rechaza cuotas duplicadas", () => {

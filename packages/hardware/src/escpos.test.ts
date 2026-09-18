@@ -403,6 +403,18 @@ describe("construirEscPos", () => {
     expect(t).toContain("CAE 75123456789012");
   });
 
+  /**
+   * El vencimiento del CAE es un día, no un instante: ARCA lo devuelve como
+   * fecha sola. Salía "Vto. 01/09/2026 00:00", una hora que no significa nada.
+   */
+  it("el vencimiento del CAE va sin hora", () => {
+    const t = texto(
+      construirEscPos(ticket({ esFiscal: true, cae: "75123456789012", vencimientoCae: new Date(2026, 8, 1) })),
+    );
+    expect(t).toContain("Vto. 01/09/2026");
+    expect(t).not.toContain("Vto. 01/09/2026 00:00");
+  });
+
   it("respeta el ancho de 80mm cuando se le pasan 48 columnas", () => {
     const t = texto(construirEscPos(ticket(), 48));
     const separadores = t.split("\n").filter((l) => l.startsWith("---"));

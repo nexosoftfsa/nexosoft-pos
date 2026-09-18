@@ -14,6 +14,7 @@ import {
   type Tarjeta,
 } from "../sync/cliente-medios-pago";
 import {
+  aclaracionDelTipo,
   aDatosTarjeta,
   filtrarTarjetas,
   FORM_TARJETA_VACIO,
@@ -289,6 +290,12 @@ function ModalTarjeta({
                   </option>
                 ))}
               </select>
+              {/* Se avisa ANTES de que carguen un recargo que no van a poder
+                  guardar: un error después de tipear es peor que un aviso
+                  antes. */}
+              {aclaracionDelTipo(form.tipo) !== null && (
+                <small className="field__ayuda">{aclaracionDelTipo(form.tipo)}</small>
+              )}
             </div>
           </div>
           <div className="field">
