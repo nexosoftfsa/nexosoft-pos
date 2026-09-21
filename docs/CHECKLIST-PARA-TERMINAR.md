@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-17 · Publicado: POS **0.1.67** · Servidor **0.19.0**
+Actualizado: 2026-09-21 · Publicado: POS **0.1.68** · Servidor **0.19.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,52 +15,71 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Octava vuelta — POS 0.1.66
+## 1 · Novena vuelta — POS 0.1.68
 
-### Lo que la séptima vuelta (17/9) dejó cerrado
+### Lo que la octava vuelta (18/9) dejó cerrado
 
-- **Comprobantes se actualiza sola.** Tarda hasta un par de minutos, y Seba lo
-  dio por bueno con un argumento que comparto: *"el cajero nunca se va a quedar
-  mirando la pantalla de comprobantes a ver si se actualiza, debe seguir
-  cobrando mientras las ventas se actualizan en segundo plano"*.
-- **Nota de Crédito y Factura B sin cliente**, sin novedad.
+Fue la mejor corrida hasta ahora: **los cuatro defectos graves quedaron
+confirmados en campo.**
 
-### Lo que la séptima vuelta destapó
+- **La venta duplicada con Billetera QR no vuelve.** Tres intentos, una sola
+  venta cada uno (ADR-0077).
+- **Las dos ventas trabadas subieron solas** al abrir el POS. La píldora dice
+  "Sincronizado" por primera vez en cinco pruebas (ADR-0078).
+- **El asistente en $0,00 no aparece más**, probado con las cuatro formas de
+  pago.
+- **El bloque de Transparencia Fiscal sale bien en la Factura B**, con el
+  vuelto en el A4. El IVA contenido está verificado contra el comprobante:
+  $ 286,36 sobre un aceite de $ 1.650 al 21%, con los otros cinco productos
+  exentos.
+- **La Factura A no lleva el bloque**, como corresponde.
 
-- [ ] **Correr `docs/PRUEBA-OCTAVA-VUELTA.txt`.** 20 minutos.
+### Lo que la octava vuelta destapó
 
-- [ ] **Confirmar que NO vuelva la venta duplicada con Billetera QR.** Es lo más
-      grave de esta vuelta: con Enter rápido salieron **dos Facturas B con CAE
-      por un solo cobro**, dos veces de dos intentos. Cuarto incidente con la
-      misma raíz (ADR-0077). El hueco estaba entre las dos guardas que ya
-      existían: al aprobarse el pago el polling se apaga, y la registración
-      —hasta 8 segundos esperando a ARCA— quedaba sin candado.
-      *Bloquea vender. El paso 2 es reproducirlo a propósito.*
+- [ ] **Correr `docs/PRUEBA-NOVENA-VUELTA.txt`.** 15 minutos.
 
-- [ ] **Confirmar que las dos ventas trabadas de Seba SUBAN.** Causa
-      encontrada (ADR-0078): estaban en estado `enviando`, que no lo mira nadie
-      —ni el motor, ni Reintentar, ni Descartar— aunque el contador las siga
-      contando. Por eso "sincronizar no hacía nada": no había nada que hacer.
-      Al arrancar el POS vuelven a la cola.
-      *Se verifica solo: abrir el POS y mirar que el contador baje a cero.*
+- [ ] **Confirmar que los pagos no sobrevivan a un cambio de carrito.** Lo más
+      grave de esta vuelta: Seba cerró el asistente con Esc, sacó el producto,
+      cargó otro más barato y el primer Enter lo llevó a "Cobro completo" con
+      un vuelto de $ 50 — **la plata de la venta anterior seguía cargada**. Una
+      venta a punto de emitirse con el cobro de otra (ADR-0081).
+      *Bloquea vender.*
 
-- [ ] **Confirmar que el asistente ya no se abra en $0,00.** Seguía apareciendo
-      con Tarjeta, Transferencia y Efectivo. Ahora la caja se limpia apenas la
-      venta está confirmada, el asistente no abre con una venta en curso, y se
-      cierra solo si se queda sin carrito.
+- [ ] **Confirmar que Esc en el resumen deje corregir el medio de pago.** No
+      había forma de volver atrás: Esc cerraba, el siguiente Enter reabría en
+      el resumen y la única salida era vaciar el carrito y escanear todo de
+      nuevo. *"La gente de la fila se va a otro comercio."*
 
-- [ ] **Verificar en campo un producto exento.** El arreglo del 16/9 (ADR-0076)
-      estaba bien pero **no llegaba al papel**: el catálogo sólo bajaba al
-      arrancar el POS, y el botón Sincronizar únicamente subía ventas. Quedó
-      probado por el mismo comprobante impreso dos veces — el original decía
-      "IVA 0%" y su duplicado, armado con lo declarado a ARCA, no.
-      *Desde 0.1.64 Sincronizar también baja el catálogo. Falta venderlo y mirar
-      los dos PDF.*
+- [ ] **Verificar en campo un producto exento.** Sigue sin poder probarse: el
+      catálogo nunca bajó, porque **el botón Sincronizar desaparecía cuando no
+      había nada en la cola** — o sea justo en el caso normal. Error mío al
+      colgar el pull del catálogo de ese botón (0.1.64). Ahora está siempre.
+      *El original del 18/9 sigue diciendo "IVA 0%" y su duplicado no: el POS
+      todavía tiene el arroz al 0%.*
+
+- [ ] **Verificar la reimpresión de una B de puros exentos.** Salía **sin el
+      bloque de transparencia fiscal**: se derivaba de los renglones por
+      alícuota, y una venta totalmente exenta no tiene ninguno. El original
+      cumplía y su duplicado no (corrección en ADR-0079).
+
+- [ ] **Verificar que el lector siga andando después de elegir cliente.** El
+      foco se quedaba en el desplegable y había que ir con el mouse al
+      buscador. Un cajero no tiene por qué darse cuenta de eso.
+
+- [ ] **Verificar F4 (cancelar venta) y el cartel de cobro.** Las dos
+      sugerencias de Seba: no había forma de abandonar una venta sin sacar los
+      productos de a uno, y el tilde verde de "Cobro completo" hacía creer que
+      la venta ya se había emitido.
 
 - [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
-      6/9, el 8/9 y el 9/9. La diferencia que Seba marcó el 17/9 entre original
-      y duplicado **no era un defecto de la reimpresión**: era el exento. Falta
-      darlo por cerrado formalmente con los dos papeles iguales.
+      6/9, el 8/9 y el 9/9. Se cierra junto con el exento: los dos papeles
+      tienen que decir lo mismo.
+
+- [ ] **El duplicado no muestra el vuelto.** El servidor no lo guarda, así que
+      la reimpresión lo pone en cero. El original sí lo muestra, y difieren.
+      *Arreglarlo es una columna nueva en la venta, el payload de sync y el
+      DTO. No es grave —el vuelto no es un dato fiscal— pero el papel tiene que
+      decir lo mismo las dos veces.*
 
 ---
 
@@ -79,6 +98,11 @@ DUPLICADO; Transparencia Fiscal al Consumidor (Ley 27.743, desde 0.1.65).
 minorista puede **elegir** entre controlador fiscal y factura electrónica. No
 necesitamos homologar nada ni competir contra el controlador: nuestros clientes
 pueden usarnos legalmente. Era la duda más cara de todas.
+
+- [ ] **Verificar en campo la Transparencia Fiscal.** El original de la
+      Factura B salió perfecto el 18/9 y el IVA contenido da bien. Falta
+      cerrarlo con la reimpresión de una B de puros exentos, que es lo que se
+      corrigió en 0.1.68.
 
 - [ ] **Verificar que el débito no cobre recargo.** Hecho el 17/9 (ADR-0080):
       el servidor lo rechaza, el formulario lo avisa al elegir el tipo, y **la

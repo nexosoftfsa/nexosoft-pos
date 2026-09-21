@@ -637,10 +637,37 @@ body {
   line-height: 1;
   color: var(--ok);
 }
+/* Deliberadamente sobrio: dice que la PLATA está completa, no que la venta
+   esté hecha. Lo que tiene que saltar a la vista es el Enter que falta. */
 .asistente-cierre-titulo {
-  font-size: 22px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--suave);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+/* La acción que falta. Es lo único llamativo de este paso, a propósito: acá
+   es donde el cajero creía que ya había terminado. */
+.asistente-confirmar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  background: var(--primario, #0d7a78);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+}
+.asistente-confirmar-kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 15px;
   font-weight: 800;
-  color: var(--texto);
+  padding: 3px 12px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.45);
 }
 .asistente-cierre-detalle {
   font-size: 14px;
@@ -792,6 +819,23 @@ body {
 }
 .confirmar:hover:not(:disabled) {
   background: var(--ok-fuerte);
+}
+/* Debajo del botón grande, y a propósito sin peso: es la salida, no la
+   acción. Pero tiene que estar a la vista sin buscarla. */
+.cancelar-venta {
+  align-self: center;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--suave);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.cancelar-venta:hover {
+  color: var(--peligro, #e5484d);
 }
 .confirmar:disabled {
   background: #cbd5e1;

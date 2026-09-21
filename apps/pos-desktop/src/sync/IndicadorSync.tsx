@@ -84,7 +84,17 @@ export function IndicadorSync({
   });
   const texto = pildora.texto;
 
-  const mostrarBoton = online && !sincronizando && (pendientes > 0 || fallidas > 0);
+  /**
+   * El botón está SIEMPRE que se pueda sincronizar, aunque no haya nada en la
+   * cola.
+   *
+   * Antes se escondía con la cola vacía, que parecía razonable —"no hay nada
+   * que subir"— hasta que el botón pasó a bajar también el catálogo: entonces
+   * desaparecía exactamente en el caso normal, y no quedaba ninguna forma de
+   * traer un producto corregido sin cerrar y volver a abrir el POS. Sebastián:
+   * *"no tengo la opción de apretar Sincronizar, ya está en Sincronizado"*.
+   */
+  const mostrarBoton = online && !sincronizando;
   /** Hay algo que explicar: rechazadas, o pendientes que no están entrando. */
   const hayMotivoQueVer = fallidas > 0 || detalleTrabadas.length > 0;
 

@@ -462,8 +462,23 @@ export function PantallaPos({
     void grillaRapida.establecer(id, nuevoValor);
   }
 
+  /**
+   * Los pagos son de la venta que había cuando se cargaron: si cambia el
+   * carrito, dejan de valer.
+   *
+   * Sin esto pasaba lo que encontró Sebastián el 18/9/2026: cerró el asistente
+   * con Esc dejando los pagos cargados, sacó el producto del carrito, cargó
+   * otro más barato, y el primer Enter lo llevó directo a "Cobro completo" con
+   * un vuelto de $ 50 — los pagos del carrito anterior seguían ahí. Una venta
+   * a punto de cobrarse con la plata de otra.
+   */
+  function descartarPagosDeOtraVenta() {
+    setPagos((prev) => (prev.length === 0 ? prev : []));
+  }
+
   function agregar(producto: ProductoCatalogo) {
     setError(null);
+    descartarPagosDeOtraVenta();
     setCarrito((prev) => {
       const actual = prev.find((c) => c.producto.articulo.id === producto.articulo.id);
       if (actual) {
@@ -475,16 +490,19 @@ export function PantallaPos({
   }
 
   function cambiarCantidad(id: string, delta: number) {
+    descartarPagosDeOtraVenta();
     setCarrito((prev) => cambiarCantidadCarrito(prev, id, delta));
     refocarBuscador();
   }
 
   function fijarCantidad(id: string, cantidad: number) {
+    descartarPagosDeOtraVenta();
     setCarrito((prev) => fijarCantidadCarrito(prev, id, cantidad));
     refocarBuscador();
   }
 
   function quitar(id: string) {
+    descartarPagosDeOtraVenta();
     setCarrito((prev) => quitarDelCarrito(prev, id));
     refocarBuscador();
   }
@@ -504,6 +522,26 @@ export function PantallaPos({
       return;
     }
     fijarCantidad(ultimo.producto.articulo.id, cantidad);
+  }
+
+  /**
+   * Atajo F4: tira la venta en curso y deja la caja lista para el próximo.
+   *
+   * Hacía falta una salida. Hasta ahora, para abandonar una venta —al cliente
+   * le rebotó la tarjeta, se arrepintió— había que sacar los productos uno por
+   * uno. Pregunta antes, porque con quince productos cargados un F4 sin querer
+   * cuesta escanearlos todos de nuevo.
+   */
+  function cancelarVenta() {
+    if (carrito.length === 0 && pagos.length === 0) return;
+    const cuantos = carrito.length;
+    const aviso =
+      `Cancelar esta venta y vaciar la caja.\n\n` +
+      `Se descartan ${cuantos} producto${cuantos === 1 ? "" : "s"} y los pagos cargados. ` +
+      `No se emite ningún comprobante ni se registra nada.\n\n¿Cancelar la venta?`;
+    if (!window.confirm(aviso)) return;
+    limpiarParaLaProxima();
+    refocarBuscador();
   }
 
   /** Atajo Supr: saca del carrito el último ítem agregado. */
@@ -734,8 +772,20 @@ export function PantallaPos({
           // La venta YA está confirmada: Esc equivale a "no imprimir".
           cerrarAsistente();
         } else if (pasoAsistente === "resumen") {
-          // Los pagos quedan cargados; se retoma con Enter desde el buscador.
-          cerrarAsistente();
+          // Esc en el resumen DESHACE el último pago y vuelve a pedir medio,
+          // en vez de cerrar. Es lo que significa "volver atrás", y es lo que
+          // faltaba: un cajero que se equivocaba de medio de pago no tenía
+          // cómo corregirlo — cerraba, volvía a entrar y el asistente le
+          // abría de nuevo en el resumen, porque los pagos seguían cargados.
+          // Su única salida era vaciar el carrito y escanear todo otra vez.
+          if (pagos.length > 0) {
+            quitarPago(pagos.length - 1);
+            setPasoAsistente("medio");
+            setCursorAsistente(0);
+            setHistorialAsistente([]);
+          } else {
+            cerrarAsistente();
+          }
         } else {
           const atras = volverPasoAtras(historialAsistente);
           setHistorialAsistente(atras.historial);
@@ -827,6 +877,11 @@ export function PantallaPos({
     preview,
     formaPago,
     ventaAsistente,
+    // Esc en el resumen deshace el último pago: sin esta dependencia el
+    // listener se quedaría con la lista de pagos del render anterior. Hoy
+    // `preview` cambia junto con `pagos` y lo tapaba de casualidad, que es
+    // precisamente la clase de casualidad que ya nos costó cuatro incidentes.
+    pagos,
   ]);
 
   // Mantiene visible el resultado resaltado al moverse con las flechas.
@@ -1413,6 +1468,9 @@ export function PantallaPos({
               } else if (e.key === "F12") {
                 e.preventDefault();
                 cobroRapido();
+              } else if (e.key === "F4") {
+                e.preventDefault();
+                cancelarVenta();
               }
             }}
           />
@@ -1427,6 +1485,9 @@ export function PantallaPos({
               <kbd>F8</kbd> cambia su cantidad
             </span>
             <span>
+              <kbd>F4</kbd> cancela la venta
+            </span>
+            <span>
               <kbd>F12</kbd> cobro exacto y confirma
             </span>
           </div>
@@ -1437,7 +1498,12 @@ export function PantallaPos({
               {emiteFiscal && (
                 <select
                   value={condicionReceptor}
-                  onChange={(e) => setCondicionReceptor(e.target.value as CondicionIva)}
+                  onChange={(e) => {
+                    setCondicionReceptor(e.target.value as CondicionIva);
+                    // Mismo motivo que el selector de cliente: sin esto el
+                    // lector escribe en el desplegable y no carga nada.
+                    refocarBuscador();
+                  }}
                 >
                   {RECEPTORES.map((r) => (
                     <option key={r.valor} value={r.valor}>
@@ -1450,7 +1516,17 @@ export function PantallaPos({
             {clientes.length > 0 && (
               <div className="comprobante cliente-venta">
                 <span className="tipo">Cliente</span>
-                <select value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+                {/* El foco vuelve al buscador apenas se elige: si se queda en
+                    el selector, el lector de barras "tipea" ahí y el producto
+                    no entra. El cajero no tiene por qué darse cuenta de que
+                    necesita el mouse para volver — Sebastián, 18/9/2026. */}
+                <select
+                  value={clienteId}
+                  onChange={(e) => {
+                    setClienteId(e.target.value);
+                    refocarBuscador();
+                  }}
+                >
                   <option value="">— Consumidor final —</option>
                   {clientes.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -1633,6 +1709,14 @@ export function PantallaPos({
           >
             {autorizando ? "Autorizando…" : "Confirmar venta"}
           </button>
+          {/* La salida de emergencia. Sin esto, abandonar una venta era sacar
+              los productos de a uno. Va discreto y al lado del botón grande:
+              tiene que estar, no tiene que competir. */}
+          {(carrito.length > 0 || pagos.length > 0) && !autorizando && (
+            <button type="button" className="cancelar-venta" onClick={cancelarVenta}>
+              Cancelar venta (F4)
+            </button>
+          )}
           </div>
         </section>
 

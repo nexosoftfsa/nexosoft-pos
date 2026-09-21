@@ -248,6 +248,34 @@ describe("transparenciaFiscal", () => {
     expect(transparenciaFiscal(base({ tipoComprobante: "Factura B" }))).toBeNull();
   });
 
+  /**
+   * El caso que rompió en campo el 18/9/2026: una Factura B de seis productos
+   * exentos no tiene NINGÚN renglón de IVA —ante ARCA lo exento va a `ImpOpEx`
+   * sin renglón— y su reimpresión salía sin el bloque de transparencia. El
+   * servidor sí sabe cuánto IVA tenía: cero. Ese cero hay que imprimirlo.
+   *
+   * "No se sabe" y "es cero" no son lo mismo, y la diferencia la marca que el
+   * importe venga informado aparte.
+   */
+  it("una B de puros exentos, reimpresa, informa cero aunque no tenga renglones", () => {
+    const t = transparenciaFiscal(
+      base({ tipoComprobante: "Factura B", subtotalesIva: [], ivaContenido: Money.cero() }),
+    );
+    expect(t?.ivaContenido.aDecimalString(2)).toBe("0.00");
+  });
+
+  it("el importe informado manda sobre la suma de los renglones", () => {
+    // Al reimprimir, el que vale es el que se le declaró a ARCA.
+    const t = transparenciaFiscal(
+      base({
+        tipoComprobante: "Factura B",
+        subtotalesIva: desglose,
+        ivaContenido: Money.desde("999.00"),
+      }),
+    );
+    expect(t?.ivaContenido.aDecimalString(2)).toBe("999.00");
+  });
+
   /** Una B de sólo productos exentos tiene IVA cero, y ese cero SÍ es cierto. */
   it("una B de sólo exentos informa cero, que es el dato real", () => {
     const t = transparenciaFiscal(

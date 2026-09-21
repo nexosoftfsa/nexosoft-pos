@@ -166,6 +166,7 @@ export function datosTicketDeComprobante(
     ...(receptor !== null ? { receptor } : {}),
     lineas: lineasDe(c),
     subtotalesIva: subtotalesIvaDe(c),
+    ...(ivaContenidoDe(c) !== null ? { ivaContenido: ivaContenidoDe(c) as Money } : {}),
     descuento: Money.desde(c.descuento),
     total: Money.desde(c.total),
     formasDePago: (c.pagos ?? []).map((p) => ({
@@ -258,6 +259,23 @@ const ETIQUETA_POR_CODIGO_ARCA: Readonly<Record<number, string>> = {
  * comprobantes anteriores siguen sin desglose: reconstruirlo sería inventar
  * algo que quizá no coincide con lo que se emitió.
  */
+/**
+ * El IVA contenido que el servidor guardó, para el bloque de Transparencia
+ * Fiscal (Ley 27.743). `null` si este comprobante no tiene importes guardados.
+ *
+ * No se deriva de `ivaPorAlicuota` porque ese arreglo **puede estar vacío con
+ * todo el derecho del mundo**: una Factura B de puros productos exentos no
+ * lleva ningún renglón de IVA, y su IVA contenido es cero. Sin esto, la
+ * reimpresión de esa factura salía sin el bloque — lo encontró Sebastián el
+ * 18/9/2026, con una B de seis productos exentos.
+ *
+ * `impIva` sólo falta en los comprobantes anteriores a que se empezara a
+ * guardar el desglose. Ahí sí no se sabe, y no se imprime nada.
+ */
+function ivaContenidoDe(c: Comprobante): Money | null {
+  return c.impIva == null ? null : Money.desde(c.impIva);
+}
+
 function subtotalesIvaDe(c: Comprobante): DatosTicket["subtotalesIva"] {
   const renglones = c.ivaPorAlicuota;
   if (renglones === undefined || renglones === null || renglones.length === 0) return [];

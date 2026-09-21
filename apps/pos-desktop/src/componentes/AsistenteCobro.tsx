@@ -179,9 +179,14 @@ export function AsistenteCobro({
               </div>
             )}
 
+            {/* El paso "resumen" es el ANTEÚLTIMO: la plata está completa pero
+                la venta todavía no se emitió. El tilde verde grande decía lo
+                contrario —"esto ya está"— y el único indicio de que faltaba un
+                Enter era una línea gris al pie. Sebastián: *"no hay nada que
+                obligue al cajero a confirmar la venta"*. Ahora lo que resalta
+                es lo que falta hacer, no lo que ya se hizo. */}
             {paso === "resumen" && (
               <div className="asistente-cierre">
-                <div className="asistente-cierre-icono">✔</div>
                 <div className="asistente-cierre-titulo">Cobro completo</div>
                 {vuelto.esPositivo() ? (
                   <div className="asistente-vuelto">
@@ -191,6 +196,13 @@ export function AsistenteCobro({
                 ) : (
                   <div className="asistente-cierre-detalle">Pagó justo — sin vuelto.</div>
                 )}
+                <div className="asistente-confirmar">
+                  <span className="asistente-confirmar-kbd">Enter</span>
+                  <span>para confirmar la venta</span>
+                </div>
+                <div className="asistente-cierre-detalle">
+                  Todavía no se emitió el comprobante.
+                </div>
                 {error && <div className="error">{error}</div>}
               </div>
             )}
@@ -289,7 +301,7 @@ function pieDeAyuda(paso: Exclude<PasoAsistente, "cerrado">): string {
     case "monto":
       return "Modificá el monto (pago mixto) y presioná Enter. Esc vuelve atrás.";
     case "resumen":
-      return "Enter finaliza la venta. Esc vuelve sin confirmar.";
+      return "Enter emite el comprobante. Esc deshace el último pago y vuelve a elegir medio.";
     case "imprimir":
       return "Usá ↑ ↓ para elegir y Enter para confirmar.";
     default:

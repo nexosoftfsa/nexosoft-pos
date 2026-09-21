@@ -1,0 +1,257 @@
+===========================================================================
+  NEXOSOFT - NOVENA VUELTA
+  Para: Sebastian
+  Tiempo: 15 minutos
+===========================================================================
+
+LA MEJOR CORRIDA HASTA AHORA
+-----------------------------
+Los cuatro defectos graves quedaron confirmados:
+
+- La venta duplicada con QR no vuelve. Tres intentos, una venta cada uno.
+- Tus dos ventas trabadas subieron solas. "Sincronizado" por primera vez en
+  cinco pruebas.
+- El asistente en $0,00 no aparece mas, con las cuatro formas de pago.
+- La Factura B sale con el bloque de transparencia fiscal, y con el vuelto.
+
+Del punto 7.3, el que no se entendio: era culpa mia, estaba mal explicado.
+Lo verifique yo con tu PDF y da bien. El aceite de $1.650 al 21% tiene
+$286,36 de IVA adentro, los otros cinco productos son exentos y no aportan
+nada, y el papel dice exactamente $286,36. Olvidate de esa cuenta.
+
+
+LAS DOS COSAS SERIAS QUE ENCONTRASTE
+-------------------------------------
+1. LOS PAGOS QUEDABAN PEGADOS. Esta es grave y es tuya: cerraste con Esc,
+   sacaste el producto, cargaste otro mas barato y el primer Enter te llevo a
+   "Cobro completo" con $50 de vuelto. Era la plata de la venta anterior.
+
+   Estaba puesto a proposito, para no perder el cobro si cerrabas sin querer.
+   Lo que nadie se pregunto es que pasa si entre que cerras y volves a entrar
+   cambia justamente lo que esos pagos estaban pagando. Ahora: si toca el
+   carrito, los pagos se van.
+
+2. NO SE PODIA VOLVER ATRAS. Tenias toda la razon. Esc en el resumen cerraba,
+   y como los pagos quedaban, el siguiente Enter te devolvia al mismo lugar.
+   Estabas encerrado y la unica salida era vaciar el carrito.
+
+   Ahora Esc en el resumen DESHACE EL ULTIMO PAGO y te devuelve a elegir
+   medio. Con un pago mixto los deshace de a uno.
+
+
+TUS DOS SUGERENCIAS, LAS DOS TOMADAS
+-------------------------------------
+- EL CARTEL. Tenias razon: el tilde verde gigante decia "esto ya esta" y no
+  habia nada que te avisara que faltaba un Enter. Saque el tilde, "Cobro
+  completo" quedo como subtitulo gris —habla de la PLATA, no de la venta— y
+  ahora lo que resalta es un boton que dice "Enter para confirmar la venta",
+  con la aclaracion de que el comprobante todavia no se emitio.
+
+- EL BOTON PARA LIMPIAR. Nuevo: F4 cancela la venta entera. Tambien hay un
+  boton chico abajo de "Confirmar venta". Pregunta antes, porque con quince
+  productos cargados un F4 sin querer se paga caro.
+
+
+Y DOS MAS QUE SALIERON DE TUS NOTAS
+------------------------------------
+- EL BOTON SINCRONIZAR DESAPARECIA. Tu nota 1 del paso 5. Error mio: cuando
+  hice que ese boton bajara tambien el catalogo, me olvide de que el boton
+  solo aparece si hay algo en la cola. O sea que desaparecia justo en el caso
+  normal, y por eso el arroz nunca bajo como exento y el paso 5 no se pudo
+  probar. Ahora el boton esta siempre.
+
+- EL LECTOR DESPUES DE ELEGIR CLIENTE. Tu nota 2. El foco se quedaba en el
+  desplegable. Ahora vuelve solo al buscador, tambien al cambiar el receptor.
+
+
+Versiones de esta prueba:  POS 0.1.68  -  Servidor 0.19.0 (NO CAMBIA)
+Punto seguro anterior: POS 0.1.67 + Servidor 0.19.0.
+
+
+PASO 1 - ACTUALIZAR
+--------------------
+1.1 Actualiza SOLO el POS, a 0.1.68.
+
+    [ ] POS 0.1.68
+
+
+PASO 2 - LOS PAGOS PEGADOS (lo mas importante)
+------------------------------------------------
+Reproduci exactamente lo que hiciste.
+
+2.1 Carga un producto de $1.650. Enter, elegi Efectivo, poné $1.650 y Enter.
+
+2.2 Con el cartel de "Cobro completo" a la vista, apreta Esc.
+
+    [ ] NO se cierra: vuelve a "Seleccionar Medio".
+    [ ] En el resumen de la derecha el pago YA NO ESTA.
+
+    <- Eso es lo nuevo: Esc deshace el pago en vez de cerrar.
+
+2.3 Apreta Esc de nuevo.
+
+    [ ] Ahora si se cierra y volves al carrito.
+
+2.4 Saca ese producto del carrito y carga otro mas barato.
+
+2.5 Apreta Enter.
+
+    [ ] Te lleva a "Seleccionar Medio", NO a "Cobro completo".
+    [ ] No hay ningun vuelto ni ningun pago cargado.
+
+    Que paso: ____________________________________
+
+2.6 Termina esa venta normal.
+
+    [ ] El importe cobrado es el del producto nuevo, no el del anterior.
+
+
+PASO 3 - CAMBIAR EL MEDIO DE PAGO A MITAD DE CAMINO
+-----------------------------------------------------
+Esto es lo que pediste vos.
+
+3.1 Carga 3 o 4 productos. Enter para cobrar.
+
+3.2 Elegi TARJETA a proposito (el medio equivocado) y completa el monto.
+
+3.3 En el resumen, apreta Esc.
+
+    [ ] Volves a "Seleccionar Medio" con el carrito INTACTO.
+
+3.4 Ahora elegi Efectivo y termina la venta.
+
+    [ ] Sale bien, sin haber tenido que escanear nada de nuevo.
+
+    <- Ese era el problema de la fila.
+
+
+PASO 4 - EL CARTEL Y EL F4
+----------------------------
+4.1 Llega otra vez al paso de "Cobro completo" y mira la pantalla.
+
+    [ ] Ya no esta el tilde verde grande.
+    [ ] Hay un boton que dice "Enter para confirmar la venta".
+    [ ] Dice que el comprobante todavia no se emitio.
+
+    Te parece mas claro ahora? ____________________________________
+
+    MANDAME UNA CAPTURA.
+
+4.2 Cerra con Esc hasta volver al carrito, y apreta F4.
+
+    [ ] Pregunta si queres cancelar, diciendo cuantos productos se descartan.
+    [ ] Si decis que si, el carrito queda vacio y listo para el proximo.
+    [ ] No se emitio ningun comprobante.
+
+4.3 Fijate que abajo del boton verde tambien esta "Cancelar venta (F4)".
+
+
+PASO 5 - EL EXENTO, AHORA SI (tercer intento)
+-----------------------------------------------
+Las dos veces anteriores no se pudo por culpa mia. Ahora deberia andar.
+
+5.1 Mira arriba a la derecha. Aunque diga "Sincronizado", **tiene que haber
+    un boton Sincronizar al lado**.
+
+    [ ] El boton esta.
+
+    <- Si no esta, avisame y frena aca: sin eso el resto del paso no sirve.
+
+5.2 Fijate que el arroz siga como EXENTO en el panel de productos.
+
+5.3 Tocá Sincronizar y esperá unos segundos.
+
+5.4 Hace una FACTURA A con cliente, con el arroz y el agua (21%).
+
+5.5 Imprimi el A4.
+
+    [ ] Dice "Exento" con su importe, NO "IVA 0%".
+    [ ] El "Subtotal neto" dice 8.264,46 y NO 9.714,46.
+
+    MANDAME EL PDF.
+
+    <- Este es el numero de la discordia. Tu razonamiento del 5.4 pasado era
+       correcto para un producto al 0%, pero el arroz es EXENTO, y un exento
+       queda AFUERA del subtotal neto. Por eso el duplicado te daba 8.264,46:
+       ese estaba bien y el original estaba mal.
+
+5.6 Reimprimi esa misma factura desde Comprobantes.
+
+    [ ] El duplicado dice lo mismo que el original, renglon por renglon.
+
+    MANDAME EL PDF.
+
+
+PASO 6 - LA FACTURA B DE PUROS EXENTOS
+----------------------------------------
+Esto lo encontraste vos en la nota 2 del paso 7.
+
+6.1 Hace una FACTURA B con varios productos exentos y NINGUNO con IVA.
+
+6.2 Imprimi el A4 original.
+
+    [ ] Lleva el bloque de transparencia fiscal, con IVA Contenido $ 0,00.
+
+6.3 Reimprimila desde Comprobantes.
+
+    [ ] El DUPLICADO tambien lleva el bloque, con el mismo $ 0,00.
+
+    MANDAME LOS DOS PDF.
+
+    <- Antes el original lo llevaba y el duplicado no. El mismo comprobante
+       cumplia en un papel y no en el otro.
+
+    OJO: el duplicado TODAVIA no muestra el vuelto. Eso ya lo se y esta
+    anotado: el servidor no guarda el vuelto, asi que hay que agregarlo. No
+    hace falta que lo reportes.
+
+
+PASO 7 - EL LECTOR DESPUES DEL CLIENTE
+----------------------------------------
+7.1 Elegi un cliente en el desplegable.
+
+7.2 Sin tocar el mouse, escaneá o tipeá un codigo y dale Enter.
+
+    [ ] El producto se carga.
+
+7.3 Lo mismo cambiando el receptor (Consumidor Final / Responsable Inscripto).
+
+    [ ] Despues de cambiarlo, podes seguir cargando sin tocar el mouse.
+
+
+PASO 8 - QUE NO SE HAYA ROTO NADA
+-----------------------------------
+Toque el cobro otra vez, asi que esto importa.
+
+8.1 Una venta con efectivo y vuelto.
+
+    [ ] El vuelto sale bien en pantalla y en el A4.
+
+8.2 Una venta con pago mixto (efectivo + tarjeta).
+
+    [ ] Los dos pagos quedan cargados y la venta cierra bien.
+
+8.3 F12 (cobro exacto) sobre un carrito cargado.
+
+    [ ] Cobra y confirma de una.
+
+8.4 Una Nota de Credito.
+
+    [ ] Sale con CAE.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. Que paso en el paso 2.5  <- lo mas importante
+  2. Si el paso 3 te dejo corregir el medio de pago sin perder el carrito
+  3. Captura del cartel nuevo (paso 4.1) y si te parece mas claro
+  4. PDF de la Factura A con el exento y su reimpresion (pasos 5.5 y 5.6)
+  5. Los dos PDF del paso 6
+  6. Si algo del paso 8 se rompio
+
+Las dos cosas de las Observaciones eran buenas y las dos estan hechas. Y lo
+del boton Sincronizar que desaparecia lo destapo tu nota al pasar: llevaba
+dos vueltas haciendo que el paso del exento no se pudiera probar, y yo no me
+daba cuenta.
+===========================================================================

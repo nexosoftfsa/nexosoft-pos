@@ -47,6 +47,38 @@ function comprobante(overrides: Partial<Comprobante> = {}): Comprobante {
   };
 }
 
+/**
+ * El bloque de Transparencia Fiscal (Ley 27.743) en una REIMPRESIÓN.
+ *
+ * El 18/9/2026 Sebastián reimprimió una Factura B de seis productos exentos y
+ * salió sin el bloque. La causa: se derivaba de `ivaPorAlicuota`, que en una
+ * venta totalmente exenta está vacío con todo el derecho —ante ARCA lo exento
+ * va a `ImpOpEx`, sin renglón de IVA—. El servidor sí sabía cuánto IVA tenía:
+ * cero.
+ */
+describe("datosTicketDeComprobante — IVA contenido para transparencia fiscal", () => {
+  it("toma el importe que guardó el servidor, no la suma de los renglones", () => {
+    const d = datosTicketDeComprobante(
+      comprobante({ impIva: "231.00", ivaPorAlicuota: [] }),
+      CONFIG,
+    );
+    expect(d.ivaContenido?.aDecimalString(2)).toBe("231.00");
+  });
+
+  it("una venta de puros exentos informa cero, que es un dato cierto", () => {
+    const d = datosTicketDeComprobante(
+      comprobante({ impIva: "0.00", impOpEx: "5050.00", ivaPorAlicuota: [] }),
+      CONFIG,
+    );
+    expect(d.ivaContenido?.aDecimalString(2)).toBe("0.00");
+  });
+
+  /** Un comprobante anterior a que se guardara el desglose: no se inventa. */
+  it("sin importes guardados no informa nada", () => {
+    expect(datosTicketDeComprobante(comprobante(), CONFIG).ivaContenido).toBeUndefined();
+  });
+});
+
 describe("etiquetaTipoComprobante", () => {
   it("traduce los tipos conocidos", () => {
     expect(etiquetaTipoComprobante("FacturaB")).toBe("Factura B");

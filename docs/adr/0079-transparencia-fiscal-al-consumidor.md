@@ -110,6 +110,34 @@ desglose por alícuota es de la A, y lo que lleva una B es este bloque.
 - Un comprobante emitido antes de que se guardara el desglose se reimprime sin
   el bloque. Es un límite conocido y preferible a inventar el importe.
 
+## Corrección del 21/9/2026: "no se sabe" no es "es cero"
+
+La regla de arriba —*sin desglose guardado no se imprime nada*— estaba bien
+pensada y mal implementada. Se apoyaba en que `subtotalesIva` estuviera vacío
+para decidir que no se sabía cuánto IVA tenía el comprobante, y ese arreglo
+puede estar vacío **con todo el derecho del mundo**: una Factura B de puros
+productos exentos no lleva ningún renglón de IVA, porque ante ARCA lo exento va
+a `ImpOpEx`.
+
+Sebastián reimprimió una B de seis productos exentos y salió sin el bloque. El
+original, en cambio, lo llevaba con `$ 0,00` — o sea que el mismo comprobante
+cumplía en un papel y no en el otro.
+
+Son dos situaciones distintas que se estaban tratando igual:
+
+| Situación | ¿Se sabe el IVA? | Qué corresponde |
+|---|---|---|
+| Comprobante viejo, sin desglose guardado | no | no imprimir |
+| Comprobante de puros exentos | **sí: es cero** | imprimir `$ 0,00` |
+
+`DatosTicket.ivaContenido` lleva ahora el importe **informado**, que la
+reimpresión toma del `impIva` que guardó el servidor, y manda sobre la suma de
+los renglones. Si ese campo no está —los comprobantes anteriores a que se
+guardara el desglose— sigue sin imprimirse nada.
+
+La lección: **no se deduce un dato fiscal de la ausencia de filas.** La
+ausencia puede significar "no hay" o "no lo guardamos", y son cosas distintas.
+
 ## Lo que se hizo mal
 
 Nadie preguntó por esto en catorce fases. Se implementó el CAE, el QR fiscal,

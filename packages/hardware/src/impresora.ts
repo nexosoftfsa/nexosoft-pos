@@ -236,17 +236,21 @@ export interface TransparenciaFiscal {
  * La C la emite un monotributista o un exento: no tienen IVA que discriminar.
  * Las notas de crédito y débito B entran solas, porque la regla es la letra.
  *
- * Devuelve `null` también cuando **no hay desglose guardado**, que es el caso
- * de los comprobantes viejos reimpresos. Es a propósito: sin el detalle por
- * alícuota no se sabe cuánto IVA tenía, y un "IVA Contenido $ 0,00" en una B
- * que sí lo tuvo es peor que no imprimir nada. No se inventa.
+ * Devuelve `null` cuando **no se sabe cuánto IVA tenía**: un comprobante viejo
+ * reimpreso, de antes de que se guardara el desglose. Un "IVA Contenido
+ * $ 0,00" en una B que sí lo tuvo es peor que no imprimir nada. No se inventa.
+ *
+ * Y no es lo mismo "no se sabe" que "es cero". Una Factura B de puros
+ * productos exentos **no tiene ningún renglón de IVA** —ante ARCA lo exento va
+ * a `ImpOpEx`— y su IVA contenido es cero, un dato cierto que hay que
+ * imprimir. Por eso `ivaContenido` puede venir aparte: lo pone la reimpresión
+ * con el importe que guardó el servidor, y manda sobre los renglones.
  */
 export function transparenciaFiscal(datos: DatosTicket): TransparenciaFiscal | null {
   if (datos.esFiscal === false) return null;
   if (letraFiscal(datos) !== "B") return null;
-  const [primero, ...resto] = datos.subtotalesIva;
-  if (primero === undefined) return null;
-  const ivaContenido = resto.reduce((a, s) => a.sumar(s.iva), primero.iva);
+  const ivaContenido = ivaContenidoDe(datos);
+  if (ivaContenido === null) return null;
   return {
     ivaContenido,
     // `restar` consigo mismo da el cero de esa moneda. Se hace así porque este
@@ -254,6 +258,14 @@ export function transparenciaFiscal(datos: DatosTicket): TransparenciaFiscal | n
     // adaptadores son planos) y `Money.cero()` es una fábrica estática.
     otrosImpuestosNacionales: datos.otrosImpuestosNacionales ?? ivaContenido.restar(ivaContenido),
   };
+}
+
+/** El IVA contenido: el informado si vino, si no la suma de los renglones. */
+function ivaContenidoDe(datos: DatosTicket): Money | null {
+  if (datos.ivaContenido !== undefined) return datos.ivaContenido;
+  const [primero, ...resto] = datos.subtotalesIva;
+  if (primero === undefined) return null;
+  return resto.reduce((a, s) => a.sumar(s.iva), primero.iva);
 }
 
 /**
@@ -348,6 +360,20 @@ export interface DatosTicket {
    * pone quien lo liquida, y además tiene que viajar a ARCA en `Tributos`.
    */
   readonly otrosImpuestosNacionales?: Money;
+  /**
+   * El IVA contenido, cuando se sabe de forma independiente del desglose por
+   * alícuota. Lo pone la reimpresión, con el importe que el servidor guardó.
+   *
+   * Hace falta porque los renglones por alícuota **no alcanzan**: una Factura
+   * B de puros productos exentos no tiene ninguno —ante ARCA lo exento va a
+   * `ImpOpEx`, sin renglón de IVA— y sin esto el bloque de transparencia
+   * fiscal no salía en su reimpresión. Pasó en campo el 18/9/2026.
+   *
+   * La diferencia con no tener nada es real: en un comprobante sin desglose
+   * guardado no se sabe cuánto IVA tenía; en uno totalmente exento se sabe que
+   * es cero. El primero no se imprime, el segundo sí.
+   */
+  readonly ivaContenido?: Money;
 
   // Cobro
   readonly formasDePago: ReadonlyArray<{ etiqueta: string; monto: Money }>;
