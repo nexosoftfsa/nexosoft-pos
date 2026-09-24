@@ -13,8 +13,11 @@
 import {
   ACLARACION_IMPUESTOS_NACIONALES,
   identificacionComprobanteAsociado,
+  importeImpreso,
   letraFiscal,
   LEYENDA_TRANSPARENCIA_FISCAL,
+  lineasSinIva,
+  precioUnitarioImpreso,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
   montoDelSubtotal,
@@ -338,10 +341,22 @@ export function construirEscPos(
   // --- Ítems ---
   b.comando(ALINEAR_IZQ);
   b.separador();
+  // En una Factura A el renglón va SIN IVA: la norma pide precios unitarios
+  // netos de impuestos. En la B y la C va el precio final, que es lo que paga
+  // el cliente. Lo decide `lineasSinIva`, para que los tres papeles no puedan
+  // disentir.
+  const sinIva = lineasSinIva(datos);
+  if (sinIva) b.linea("Precios sin IVA");
   for (const l of datos.lineas) {
     b.linea(l.descripcion);
     const cant = l.cantidad.esEntera() ? l.cantidad.aDecimalString(0) : l.cantidad.aDecimalString(3);
-    b.lineaCruda(filaIzquierdaDerecha(`${cant} x ${pesos(l.precioUnitario)}`, pesos(l.importe), columnas));
+    b.lineaCruda(
+      filaIzquierdaDerecha(
+        `${cant} x ${pesos(precioUnitarioImpreso(datos, l))}`,
+        pesos(importeImpreso(datos, l)),
+        columnas,
+      ),
+    );
   }
   b.separador();
 

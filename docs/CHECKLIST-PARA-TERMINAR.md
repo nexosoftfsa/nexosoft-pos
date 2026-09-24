@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-23 · Publicado: POS **0.1.69** · Servidor **0.19.0**
+Actualizado: 2026-09-24 · Publicado: POS **0.1.70** · Servidor **0.20.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,7 +15,7 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Décima vuelta — POS 0.1.69
+## 1 · Décima vuelta — POS 0.1.70 + Servidor 0.20.0
 
 ### Lo que la novena vuelta (22/9) dejó cerrado
 
@@ -49,12 +49,19 @@ depende sólo de nosotros.
       vio nadie porque nunca se usó.
       *Se arregla esperando la respuesta. Va con test de los dos entornos.*
 
-- [ ] **Decidir qué hacer con F12.** Seba propone sacarlo: dispara la venta sin
-      preguntar el medio de pago, sin dejar cargar el efectivo y sin mostrar el
-      vuelto, y para salir del panel hay que apretar TAB cinco veces. Su
-      argumento: *"si se aprieta ese botón de manera accidental ya te genera la
-      venta en un medio de pago que quizás no era"*, y el flujo con Enter quedó
-      rápido igual. **Es decisión de Rodrigo.**
+- [ ] **Confirmar que la Factura A imprima los renglones SIN IVA.** La norma
+      pide precios unitarios netos de impuestos y el precio neto de la línea
+      como cantidad × unitario neto. Salía con el precio final por renglón y el
+      IVA recién al pie, así que los renglones no ataban con los totales
+      (ADR-0083). *Toca el servidor: hay migración.*
+      *La suma de los renglones tiene que dar el subtotal neto, y neto + IVA el
+      total. En el ejemplo de Seba: 8.264,46 + 1.450,00 + 1.735,54 = 11.450,00.*
+
+- [ ] **Confirmar que F12 ya no emita solo.** Seba proponía sacarlo: disparaba
+      la venta sin preguntar el medio de pago, sin dejar ver el vuelto, y dejaba
+      un panel del que había que salir con TAB cinco veces. Se conserva pero
+      deja de emitir: ahora carga el efectivo exacto y frena en el resumen, a un
+      Enter de confirmar. *Y Esc cierra el panel de post-venta.*
 
 - [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
       6/9, el 8/9 y el 9/9. Se cierra junto con el exento: los dos papeles

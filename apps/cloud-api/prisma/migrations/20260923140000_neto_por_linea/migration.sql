@@ -1,0 +1,15 @@
+-- El importe de cada línea SIN IVA, tal como se imprimió en el comprobante.
+--
+-- Lo exige la Factura A: la norma pide precios unitarios netos de impuestos y
+-- el precio neto de la línea como cantidad × precio unitario neto. Hasta ahora
+-- el renglón salía con el precio final y el IVA recién se discriminaba al pie,
+-- así que los renglones no ataban con los totales.
+--
+-- Viaja congelado desde el POS, igual que el desglose de IVA: recalcularlo al
+-- reimprimir daría otra cosa si el producto cambió de alícuota en el medio, y
+-- el duplicado tiene que decir exactamente lo mismo que el original.
+--
+-- NULLABLE a propósito: las ventas anteriores a este campo no lo tienen y se
+-- reimprimen como salieron, con el precio final. Rellenarlas ahora sería
+-- inventar un renglón que quizá no es el que se emitió.
+ALTER TABLE "items_venta" ADD COLUMN "neto" DECIMAL(12,2);

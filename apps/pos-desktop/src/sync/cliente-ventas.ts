@@ -12,6 +12,12 @@ export interface ItemComprobante {
   readonly cantidad: string;
   readonly precioUnitario: string;
   readonly subtotal: string;
+  /**
+   * El importe de la línea SIN IVA, congelado al emitirse (ADR-0083). Lo
+   * imprime la Factura A. Ausente en las ventas anteriores al 23/9/2026: ésas
+   * se reimprimen como salieron, con el precio final.
+   */
+  readonly neto?: string | null;
   readonly producto: { readonly id: string; readonly nombre: string; readonly codigo: string } | null;
 }
 

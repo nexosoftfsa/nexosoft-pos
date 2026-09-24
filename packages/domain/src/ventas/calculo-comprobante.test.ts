@@ -75,6 +75,95 @@ describe("calcularComprobante — exento", () => {
   });
 });
 
+/**
+ * El neto por línea, que es lo que tiene que imprimir una Factura A.
+ *
+ * La norma pide precios unitarios **netos de impuestos** y el precio neto de la
+ * línea como cantidad × precio unitario neto. Hasta el 23/9/2026 la A salía con
+ * el precio final por renglón y el IVA recién al pie: el renglón decía
+ * $ 10.000 y abajo aparecía un neto de $ 8.264,46 que no salía de ningún lado.
+ */
+describe("calcularComprobante — neto por línea", () => {
+  it("descompone el IVA de cada línea", () => {
+    const r = calcularComprobante([ITEM_21("1210.00")], { tipo: TipoComprobante.FacturaA });
+    expect(r.lineas[0]?.neto.aDecimalString(2)).toBe("1000.00");
+    expect(r.lineas[0]?.netoUnitario.aDecimalString(2)).toBe("1000.00");
+  });
+
+  it("con cantidad, el unitario es el neto dividido por la cantidad", () => {
+    const r = calcularComprobante([ITEM_21("1210.00", 3)], { tipo: TipoComprobante.FacturaA });
+    expect(r.lineas[0]?.neto.aDecimalString(2)).toBe("3000.00");
+    expect(r.lineas[0]?.netoUnitario.aDecimalString(2)).toBe("1000.00");
+  });
+
+  /**
+   * LA invariante. Calcular cada línea por separado —dividiéndola por
+   * (1 + tasa)— redondea una vez por renglón y la suma queda a centavos del
+   * neto declarado a ARCA. Una Factura A cuyos renglones no suman su propio
+   * neto es peor que una con renglones brutos.
+   */
+  it("la suma de los netos da EXACTAMENTE el neto del grupo", () => {
+    // Tres líneas de 0,10: cada una por separado daría 0,08 (0,0826 redondeado)
+    // y sumarían 0,24, cuando el neto del grupo es 0,25.
+    const r = calcularComprobante([ITEM_21("0.10"), ITEM_21("0.10"), ITEM_21("0.10")], {
+      tipo: TipoComprobante.FacturaA,
+    });
+    const suma = r.lineas.reduce((a, l) => a.sumar(l.neto), Money.cero());
+    expect(suma.aDecimalString(2)).toBe(r.netoGravado.aDecimalString(2));
+    expect(suma.aDecimalString(2)).toBe("0.25");
+  });
+
+  it("cierra exacto también con varias alícuotas mezcladas", () => {
+    const r = calcularComprobante(
+      [
+        ITEM_21("333.33"),
+        ITEM_21("333.33"),
+        {
+          descripcion: "Alimento 10,5%",
+          cantidad: 1,
+          precioUnitario: Money.desde("221.11"),
+          alicuota: ALICUOTAS_IVA.DIEZ_CON_CINCO,
+        },
+        {
+          descripcion: "Exento",
+          cantidad: 1,
+          precioUnitario: Money.desde("99.99"),
+          alicuota: null,
+        },
+      ],
+      { tipo: TipoComprobante.FacturaA },
+    );
+
+    for (const grupo of r.subtotalesPorAlicuota) {
+      const deEsteGrupo = r.lineas.filter((l) => l.alicuota?.porcentaje === grupo.alicuota?.porcentaje);
+      const suma = deEsteGrupo.reduce((a, l) => a.sumar(l.neto), Money.cero());
+      expect(suma.aDecimalString(2)).toBe(grupo.neto.aDecimalString(2));
+    }
+  });
+
+  it("una línea exenta tiene neto igual a su importe: no hay IVA que sacarle", () => {
+    const r = calcularComprobante(
+      [{ descripcion: "Exento", cantidad: 1, precioUnitario: Money.desde("1450"), alicuota: null }],
+      { tipo: TipoComprobante.FacturaA },
+    );
+    expect(r.lineas[0]?.neto.aDecimalString(2)).toBe("1450.00");
+  });
+
+  it("con precios ya netos (mayorista) el neto es el importe", () => {
+    const r = calcularComprobante([ITEM_21("1000.00")], {
+      tipo: TipoComprobante.FacturaA,
+      preciosIncluyenIva: false,
+    });
+    expect(r.lineas[0]?.neto.aDecimalString(2)).toBe("1000.00");
+  });
+
+  /** En una C no hay IVA que descomponer: el precio ES el neto. */
+  it("en Factura C el neto es el importe", () => {
+    const r = calcularComprobante([ITEM_21("1000.00")], { tipo: TipoComprobante.FacturaC });
+    expect(r.lineas[0]?.neto.aDecimalString(2)).toBe("1000.00");
+  });
+});
+
 describe("calcularComprobante — Factura B (IVA incluido, no discrimina)", () => {
   const r = calcularComprobante([ITEM_21("1210.00")], {
     tipo: TipoComprobante.FacturaB,

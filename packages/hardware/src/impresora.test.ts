@@ -10,9 +10,12 @@ import { Cantidad, Money } from "@nexosoft/domain";
 
 import type { DatosTicket } from "./impresora.js";
 import {
+  importeImpreso,
   letraFiscal,
+  lineasSinIva,
   llevaDatosDelReceptor,
   montoDelSubtotal,
+  precioUnitarioImpreso,
   numeroEsProvisional,
   referenciaInterna,
   subtotalNeto,
@@ -151,6 +154,74 @@ describe("subtotalNeto", () => {
         }),
       ),
     ).toBeNull();
+  });
+});
+
+/**
+ * La Factura A imprime los renglones SIN IVA: la norma pide precios unitarios
+ * netos de impuestos y el precio neto de la línea como cantidad × unitario
+ * neto. Hasta el 23/9/2026 salía con el precio final por renglón y el IVA
+ * recién al pie, así que el contador no podía atar los renglones con los
+ * totales.
+ */
+describe("lineasSinIva", () => {
+  const conNeto = [
+    {
+      descripcion: "Agua",
+      cantidad: Cantidad.de("1"),
+      precioUnitario: Money.desde("10000"),
+      importe: Money.desde("10000"),
+      neto: Money.desde("8264.46"),
+      netoUnitario: Money.desde("8264.46"),
+    },
+  ];
+
+  it("la Factura A imprime sin IVA", () => {
+    expect(lineasSinIva(base({ tipoComprobante: "Factura A", lineas: conNeto }))).toBe(true);
+  });
+
+  /** La B y la C llevan el precio final: es lo que paga el cliente. */
+  it("la B y la C imprimen el precio final", () => {
+    expect(lineasSinIva(base({ tipoComprobante: "Factura B", lineas: conNeto }))).toBe(false);
+    expect(lineasSinIva(base({ tipoComprobante: "Factura C", lineas: conNeto }))).toBe(false);
+  });
+
+  /**
+   * Un comprobante viejo, de antes de que se guardara el neto, se reimprime
+   * como salió. Dividirlo ahora por la alícuota de hoy puede dar otra cosa que
+   * la que se emitió.
+   */
+  it("una A sin neto guardado se reimprime como salió", () => {
+    expect(lineasSinIva(base({ tipoComprobante: "Factura A" }))).toBe(false);
+  });
+
+  it("si una sola línea no tiene neto, no se mezcla: van todas con precio final", () => {
+    const mezclado = [
+      ...conNeto,
+      {
+        descripcion: "Viejo",
+        cantidad: Cantidad.de("1"),
+        precioUnitario: Money.desde("100"),
+        importe: Money.desde("100"),
+      },
+    ];
+    expect(lineasSinIva(base({ tipoComprobante: "Factura A", lineas: mezclado }))).toBe(false);
+  });
+
+  describe("qué se imprime en cada renglón", () => {
+    const linea = conNeto[0]!;
+
+    it("en una A, el neto", () => {
+      const datos = base({ tipoComprobante: "Factura A", lineas: conNeto });
+      expect(precioUnitarioImpreso(datos, linea).aDecimalString(2)).toBe("8264.46");
+      expect(importeImpreso(datos, linea).aDecimalString(2)).toBe("8264.46");
+    });
+
+    it("en una B, el precio final", () => {
+      const datos = base({ tipoComprobante: "Factura B", lineas: conNeto });
+      expect(precioUnitarioImpreso(datos, linea).aDecimalString(2)).toBe("10000.00");
+      expect(importeImpreso(datos, linea).aDecimalString(2)).toBe("10000.00");
+    });
   });
 });
 

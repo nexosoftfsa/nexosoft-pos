@@ -65,15 +65,50 @@ duplicado te daba 8.264,46. El duplicado esta bien; el original esta mal
 porque el POS todavia cree que el arroz es 0%.
 
 
-Versiones de esta prueba:  POS 0.1.69  -  Servidor 0.19.0 (NO CAMBIA)
-Punto seguro anterior: POS 0.1.68 + Servidor 0.19.0.
+LA FACTURA A ESTABA MAL, Y LA ENCONTRO RODRI
+----------------------------------------------
+Leyendo los requisitos, Rodri vio que le estabamos errando en algo grande.
+
+En una Factura A, la norma exige que el precio unitario de cada renglon vaya
+SIN IVA, y que el importe del renglon sea cantidad x precio unitario neto.
+Nosotros poniamos el precio final en el renglon y recien discriminabamos el
+IVA al pie.
+
+Mira la que hiciste vos:
+
+    Agua Mineral 1.5L   1   $ 10.000,00   $ 10.000,00
+                            Subtotal neto  $ 9.714,46
+                            IVA 21%        $ 1.735,54
+
+El renglon dice 10.000 y abajo aparece un neto de 8.264,46 que no sale de
+ningun lado. Un contador no puede atar una cosa con la otra. Ahora dice:
+
+    Precios sin IVA
+    Agua Mineral 1.5L   1   $ 8.264,46    $ 8.264,46
+
+Y todo cierra: 8.264,46 + 1.450,00 (el arroz exento) + 1.735,54 de IVA dan
+los 11.450,00 del total.
+
+Esto toca el servidor, asi que ESTA VEZ HAY QUE ACTUALIZAR LOS DOS.
 
 
-PASO 1 - ACTUALIZAR
---------------------
-1.1 Actualiza SOLO el POS, a 0.1.69.
+Versiones de esta prueba:  POS 0.1.70  -  Servidor 0.20.0 (CAMBIA)
+Punto seguro anterior: POS 0.1.69 + Servidor 0.19.0.
 
-    [ ] POS 0.1.69
+
+PASO 1 - ACTUALIZAR LOS DOS
+-----------------------------
+1.1 Primero el SERVIDOR, a 0.20.0.
+
+    OJO: esta version trae un cambio en la base. Al levantar el servidor te
+    va a preguntar si queres aplicar las migraciones pendientes. Deci que SI.
+
+    [ ] Servidor 0.20.0
+    [ ] Aplicaste la migracion cuando te pregunto
+
+1.2 Despues el POS, a 0.1.70.
+
+    [ ] POS 0.1.70
 
 
 PASO 2 - QUE DICE EL BOTON SINCRONIZAR (lo mas importante)
@@ -178,21 +213,100 @@ PASO 6 - EL TICKET CHICO
     MANDAME EL PDF.
 
 
-PASO 7 - QUE NO SE HAYA ROTO NADA
+PASO 7 - LA FACTURA A SIN IVA EN LOS RENGLONES (nuevo)
+--------------------------------------------------------
+7.1 Hace una FACTURA A con cliente: el arroz (exento) y el agua (21%).
+
+7.2 Imprimi el A4 y mira la tabla de productos.
+
+    [ ] El encabezado dice "P. Unitario neto" e "Importe neto".
+    [ ] El agua dice 8.264,46 y NO 10.000,00.
+    [ ] El arroz sigue en 1.450,00 (un exento no tiene IVA que sacarle).
+
+7.3 Ahora la cuenta, que es lo que importa. Suma los importes de los
+    renglones:
+
+    Renglon del arroz:  ______________
+    Renglon del agua:   ______________
+    Suma:               ______________
+
+    [ ] La suma da 9.714,46, que es "Subtotal neto + Exento" del pie.
+    [ ] Y subtotal neto + exento + IVA da el TOTAL: 11.450,00.
+
+    <- Esto es lo que antes no cerraba. Si algun numero no da, mandame el PDF
+       y frena.
+
+    MANDAME EL PDF.
+
+7.4 Reimprimila desde Comprobantes.
+
+    [ ] El duplicado dice EXACTAMENTE lo mismo, renglon por renglon.
+
+    MANDAME EL PDF.
+
+    <- El neto de cada renglon queda guardado al emitirse, asi que el
+       duplicado no lo vuelve a calcular: imprime lo mismo que el original.
+
+7.5 Ahora una FACTURA B con los mismos productos.
+
+    [ ] Los renglones van con el PRECIO FINAL, como siempre.
+    [ ] NO dice "Precios sin IVA".
+
+    <- Es a proposito: la B no discrimina, y el cliente paga ese precio.
+
+7.6 Y el ticket chico de la Factura A.
+
+    [ ] Arriba de los productos dice "Precios sin IVA".
+    [ ] Los renglones van netos.
+
+    MANDAME EL PDF.
+
+
+PASO 8 - F12 YA NO EMITE SOLO (tu observacion)
+------------------------------------------------
+Tenias razon en que era un riesgo. No lo saque, pero deja de facturar solo.
+
+8.1 Carga un producto y apreta F12.
+
+    [ ] NO se emite la venta.
+    [ ] Se abre el asistente directo en "Cobro completo", con el efectivo
+        exacto ya cargado.
+    [ ] Te falta un Enter para confirmar.
+
+8.2 Apreta Esc.
+
+    [ ] Vuelve atras sin haber emitido nada.
+
+8.3 Volve a apretar F12 y despues Enter.
+
+    [ ] Ahora si se emite, y sigue el paso de "¿imprimir?" de siempre.
+
+    Te sirve asi, o preferis que lo saquemos? ____________________________
+
+8.4 Hace una venta con el boton "Confirmar venta" (no con el asistente), asi
+    se abre el panel de post-venta.
+
+    [ ] Apretando Esc se cierra.
+    [ ] El boton "Cerrar" ya dice "Cerrar (Esc)".
+
+    <- Antes habia que apretar TAB cinco veces para llegar a un boton.
+
+
+PASO 9 - QUE NO SE HAYA ROTO NADA
 -----------------------------------
-7.1 Una venta con efectivo y vuelto.
+9.1 Una venta con efectivo y vuelto.
 
     [ ] Bien en pantalla y en el papel.
 
-7.2 Una venta con pago mixto.
+9.2 Una venta con pago mixto.
 
     [ ] Los dos pagos entran y la venta cierra.
 
-7.3 Esc en el resumen sigue deshaciendo el ultimo pago.
+9.3 Esc en el resumen sigue deshaciendo el ultimo pago.
 
     [ ] Si.
 
-7.4 Una Nota de Credito.
+9.4 Una Nota de Credito.
 
     [ ] Sale con CAE.
 
@@ -205,6 +319,8 @@ PASO 7 - QUE NO SE HAYA ROTO NADA
   3. Los PDF del paso 2.3 y 2.4, si el cartel fue verde
   4. Si F4 ahora pregunta (paso 3)
   5. PDF del ticket chico (paso 6)
+  6. Los PDF de la Factura A original y duplicada (pasos 7.3 y 7.4)
+  7. Si te sirve el F12 nuevo o preferis que lo saquemos (paso 8.3)
 
 Y decime que opinas de sacar el F12. Tu argumento me parece bueno —un F12
 accidental te genera una venta con un medio de pago que quizas no era— pero

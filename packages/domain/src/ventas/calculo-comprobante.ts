@@ -75,6 +75,28 @@ export interface LineaCalculada {
   readonly descuentoPorcentaje: number;
   /** Importe final de la línea (con descuentos de línea y global aplicados). */
   readonly importe: Money;
+  /**
+   * El importe de la línea SIN IVA, y el precio unitario que le corresponde.
+   *
+   * Es lo que tiene que imprimir una Factura A: la norma pide precios unitarios
+   * **netos de impuestos**, y el precio neto de la línea como cantidad ×
+   * precio unitario neto. Hasta el 23/9/2026 la A salía con el precio final por
+   * renglón y el IVA recién discriminado al pie, así que el contador que la
+   * recibía no podía atar los renglones con los totales.
+   *
+   * **La suma de los `neto` de un grupo de alícuota da EXACTAMENTE el neto de
+   * ese grupo.** No se calcula línea por línea dividiendo por (1 + tasa): eso
+   * redondea una vez por renglón y la suma queda a uno o dos centavos del neto
+   * declarado a ARCA. Se reparte el neto del grupo entre sus líneas y el resto
+   * va a la última. Una Factura A cuyos renglones no suman su propio neto es
+   * peor que una con renglones brutos: ahí el error se ve y parece nuestro.
+   *
+   * `netoUnitario` es informativo: con cantidades fraccionadas,
+   * `netoUnitario × cantidad` puede diferir de `neto` en centavos. Manda el
+   * `neto` de la línea, como en cualquier factura.
+   */
+  readonly neto: Money;
+  readonly netoUnitario: Money;
 }
 
 export interface SubtotalPorAlicuota {
@@ -101,6 +123,50 @@ export interface ResultadoComprobante {
   /** Reservado: siempre 0,00 en Fase 1.1 (ver nota del módulo). */
   readonly impuestosInternos: Money;
   readonly total: Money;
+}
+
+/**
+ * Reparte el neto de cada grupo de alícuota entre sus líneas, en proporción al
+ * importe de cada una, y le da el resto a la última.
+ *
+ * Es lo que hace que **la suma de los netos de las líneas dé exactamente el
+ * neto del grupo**. Calcular cada línea por separado —dividiéndola por
+ * (1 + tasa)— redondea una vez por renglón y deja la suma a uno o dos centavos
+ * del neto que se le declaró a ARCA.
+ *
+ * Cuando el neto del grupo es igual a su bruto —exento, 0%, letra C, o precios
+ * ya netos— el reparto da el importe de cada línea sin tocar nada: la
+ * proporción es 1 y el resto es cero.
+ */
+function repartirNetoEntreLineas(
+  enProceso: ReadonlyArray<Omit<LineaCalculada, "neto" | "netoUnitario"> & { clave: number }>,
+  grupos: ReadonlyMap<number, { readonly bruto: Money }>,
+  netoPorClave: ReadonlyMap<number, Money>,
+): LineaCalculada[] {
+  /** Cuántas líneas de cada grupo quedan por resolver, y cuánto neto sobra. */
+  const pendientes = new Map<number, number>();
+  for (const l of enProceso) pendientes.set(l.clave, (pendientes.get(l.clave) ?? 0) + 1);
+  const restante = new Map(netoPorClave);
+
+  return enProceso.map(({ clave, ...linea }) => {
+    const brutoGrupo = grupos.get(clave)?.bruto ?? linea.importe;
+    const sobra = restante.get(clave) ?? linea.importe;
+    const quedan = (pendientes.get(clave) ?? 1) - 1;
+    pendientes.set(clave, quedan);
+
+    // La última línea del grupo se lleva lo que quede: así cierra exacto.
+    const neto = quedan === 0 || brutoGrupo.esCero()
+      ? sobra
+      : linea.importe.multiplicarPor(sobra.aDecimalString(4)).dividirPor(brutoGrupo.aDecimalString(4)).redondear(2);
+    restante.set(clave, sobra.restar(neto));
+
+    const cantidad = Money.desde(linea.cantidad);
+    return {
+      ...linea,
+      neto,
+      netoUnitario: cantidad.esCero() ? neto : neto.dividirPor(linea.cantidad).redondear(2),
+    };
+  });
 }
 
 function validarPorcentaje(valor: number, contexto: string): void {
@@ -134,7 +200,8 @@ export function calcularComprobante(
   const letra = letraDe(opciones.tipo);
   const tieneIva = letra === "A" || letra === "B";
 
-  const lineasCalc: LineaCalculada[] = [];
+  /** Las líneas mientras se arman, antes de conocer el neto de cada grupo. */
+  const enProceso: Array<Omit<LineaCalculada, "neto" | "netoUnitario"> & { clave: number }> = [];
   let brutoSinDescAcum = Money.cero();
   // Suma de importes tras descuentos pero ANTES del recargo (para reportar montos).
   let sinRecargoAcum = Money.cero();
@@ -171,18 +238,20 @@ export function calcularComprobante(
     const importe = brutoFinal.redondear(2);
     sinRecargoAcum = sinRecargoAcum.sumar(trasDescuentos.redondear(2));
 
-    lineasCalc.push({
+    const clave = linea.alicuota === null ? CLAVE_EXENTO : linea.alicuota.porcentaje;
+
+    enProceso.push({
       descripcion: linea.descripcion,
       cantidad: cantidad.aDecimalString(3),
       precioUnitario: linea.precioUnitario,
       alicuota: linea.alicuota,
       descuentoPorcentaje: descLinea,
       importe,
+      clave,
     });
 
     brutoSinDescAcum = brutoSinDescAcum.sumar(brutoLista);
 
-    const clave = linea.alicuota === null ? CLAVE_EXENTO : linea.alicuota.porcentaje;
     const grupo = grupos.get(clave);
     if (grupo === undefined) {
       grupos.set(clave, { alicuota: linea.alicuota, bruto: importe });
@@ -193,10 +262,12 @@ export function calcularComprobante(
 
   // Descomposición de IVA por grupo de alícuota.
   const subtotalesPorAlicuota: SubtotalPorAlicuota[] = [];
+  /** El neto de cada grupo, para repartirlo después entre sus líneas. */
+  const netoPorClave = new Map<number, Money>();
   let netoGravado = Money.cero();
   let iva = Money.cero();
 
-  for (const { alicuota, bruto } of grupos.values()) {
+  for (const [clave, { alicuota, bruto }] of grupos) {
     let neto: Money;
     let ivaGrupo: Money;
 
@@ -216,9 +287,12 @@ export function calcularComprobante(
     }
 
     subtotalesPorAlicuota.push({ alicuota, neto, iva: ivaGrupo });
+    netoPorClave.set(clave, neto);
     netoGravado = netoGravado.sumar(neto);
     iva = iva.sumar(ivaGrupo);
   }
+
+  const lineasCalc = repartirNetoEntreLineas(enProceso, grupos, netoPorClave);
 
   const sumaImportes = lineasCalc.reduce((acc, l) => acc.sumar(l.importe), Money.cero());
   const brutoSinDescuento = brutoSinDescAcum.redondear(2);

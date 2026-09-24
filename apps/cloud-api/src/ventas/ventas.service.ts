@@ -490,6 +490,9 @@ export class VentasService {
         subtotal: subItem,
         productoId: it.productoId,
         costoUnitario: it.costoUnitario !== undefined ? new Decimal(it.costoUnitario) : null,
+        // Congelado, como el desglose de IVA: es el renglón que ya imprimió el
+        // original y el que tiene que imprimir su duplicado.
+        neto: it.neto !== undefined ? new Decimal(it.neto) : null,
       };
     });
 

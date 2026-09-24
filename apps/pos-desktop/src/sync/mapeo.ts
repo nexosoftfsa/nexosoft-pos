@@ -36,6 +36,15 @@ export interface ItemVentaSync {
   readonly descuento?: string;
   /** Costo neto del artículo al momento de la venta, snapshot (ADR-0048). */
   readonly costoUnitario?: string;
+  /**
+   * El importe de la línea SIN IVA, como string decimal.
+   *
+   * Viaja **congelado**, igual que el desglose de IVA: es lo que imprimió la
+   * Factura A original, y el duplicado tiene que decir exactamente lo mismo.
+   * Recalcularlo al reimprimir daría otra cosa si el producto cambió de
+   * alícuota en el medio.
+   */
+  readonly neto?: string;
 }
 
 /** Un pago de la venta (pago combinado). */
@@ -96,6 +105,7 @@ export function construirOperacionVenta(args: {
           ? { descuento: i.descuento }
           : {}),
         ...(i.costoUnitario !== undefined ? { costoUnitario: i.costoUnitario } : {}),
+        ...(i.neto !== undefined ? { neto: i.neto } : {}),
       })),
       ...(args.pagos !== undefined && args.pagos.length > 0
         ? {

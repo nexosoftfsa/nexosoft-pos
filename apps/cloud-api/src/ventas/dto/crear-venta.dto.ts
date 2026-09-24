@@ -36,6 +36,21 @@ export class ItemVentaDto {
   @IsNumberString()
   @IsOptional()
   costoUnitario?: string;
+
+  /**
+   * El importe de la línea SIN IVA, tal como se imprimió en el comprobante.
+   *
+   * Es lo que exige la Factura A: precios unitarios netos de impuestos. Viaja
+   * congelado y no se recalcula acá, por el mismo motivo que el desglose de
+   * IVA (ADR-0073): el duplicado tiene que imprimir los mismos renglones que
+   * el original, y recalcularlo daría otra cosa si el producto cambió de
+   * alícuota entre la venta y la reimpresión.
+   *
+   * Opcional: las ventas emitidas antes del 23/9/2026 no lo traen.
+   */
+  @IsNumberString()
+  @IsOptional()
+  neto?: string;
 }
 
 /** Un pago de la venta (pago combinado: varios medios en una misma venta). */

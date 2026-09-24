@@ -148,6 +148,28 @@ describe('VentasService', () => {
       expect(items[1].costoUnitario).toBeNull();
     });
 
+    /**
+     * El neto de cada línea viaja congelado desde el POS y NO se recalcula
+     * acá: es el renglón que ya imprimió la Factura A original, y el duplicado
+     * tiene que decir lo mismo. Recalcularlo daría otra cosa si el producto
+     * cambió de alícuota entre la venta y la reimpresión (ADR-0083).
+     */
+    it('guarda el neto por línea tal como vino, sin recalcularlo', async () => {
+      await service.registrar(USUARIO, {
+        ...DTO,
+        items: [
+          { productoId: 'p1', cantidad: '1', precioUnitario: '10000', neto: '8264.46' },
+          { productoId: 'p2', cantidad: '1', precioUnitario: '50' },
+        ],
+      });
+
+      const items = tx.venta.create.mock.calls[0]![0].data.items.create;
+      expect(items[0].neto.toString()).toBe('8264.46');
+      // Una venta vieja, o un POS sin actualizar: se guarda null y se reimprime
+      // con el precio final, como salió.
+      expect(items[1].neto).toBeNull();
+    });
+
     it('persiste tarjetaConfigId/cuotas/recargo por pago cuando vienen del POS (ADR-0050)', async () => {
       await service.registrar(USUARIO, {
         ...DTO,

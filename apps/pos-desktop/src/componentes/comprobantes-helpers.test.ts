@@ -116,6 +116,41 @@ describe("datosTicketDeComprobante — el exento en la reimpresión", () => {
   });
 });
 
+/**
+ * El neto por línea en la reimpresión. Lo guardó el servidor al emitirse, así
+ * que el duplicado de una Factura A imprime los mismos renglones que el
+ * original — sin recalcular nada con la alícuota que el producto tenga hoy.
+ */
+describe("datosTicketDeComprobante — el neto por línea", () => {
+  const item = {
+    id: "i1",
+    cantidad: "2",
+    precioUnitario: "10000",
+    subtotal: "20000",
+    producto: { id: "p1", nombre: "Agua", codigo: "001" },
+  };
+
+  it("toma el neto guardado y deriva el unitario", () => {
+    const d = datosTicketDeComprobante(
+      comprobante({ tipoComprobante: "FacturaA", items: [{ ...item, neto: "16528.93" }] }),
+      CONFIG,
+    );
+    expect(d.lineas[0]?.neto?.aDecimalString(2)).toBe("16528.93");
+    // 16528.93 / 2, redondeado.
+    expect(d.lineas[0]?.netoUnitario?.aDecimalString(2)).toBe("8264.47");
+  });
+
+  /** Una venta anterior al campo: se reimprime como salió, con el precio final. */
+  it("sin neto guardado no inventa uno", () => {
+    const d = datosTicketDeComprobante(
+      comprobante({ tipoComprobante: "FacturaA", items: [item] }),
+      CONFIG,
+    );
+    expect(d.lineas[0]?.neto).toBeUndefined();
+    expect(d.lineas[0]?.importe.aDecimalString(2)).toBe("20000.00");
+  });
+});
+
 describe("etiquetaTipoComprobante", () => {
   it("traduce los tipos conocidos", () => {
     expect(etiquetaTipoComprobante("FacturaB")).toBe("Factura B");

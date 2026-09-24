@@ -23,6 +23,20 @@ export interface LineaTicket {
   readonly cantidad: Cantidad;
   readonly precioUnitario: Money;
   readonly importe: Money;
+  /**
+   * El precio unitario y el importe de la línea **sin IVA**.
+   *
+   * Los pide la Factura A: la norma exige precios unitarios netos de impuestos
+   * y el precio neto de la línea como cantidad × precio unitario neto. Hasta el
+   * 23/9/2026 la A salía con el precio final por renglón y el IVA recién
+   * discriminado al pie, así que los renglones no ataban con los totales.
+   *
+   * Ausentes en los comprobantes emitidos antes de que se empezara a guardar:
+   * ésos se reimprimen como salieron, con el precio final. No se reconstruyen —
+   * dividir por la alícuota de hoy puede dar otra cosa que la que se emitió.
+   */
+  readonly neto?: Money;
+  readonly netoUnitario?: Money;
 }
 
 export interface SubtotalIva {
@@ -172,6 +186,30 @@ export function llevaDatosDelReceptor(datos: DatosTicket): boolean {
   if (l === "A") return true;
   if (l === "B" && datos.receptor !== undefined) return true;
   return false;
+}
+
+/**
+ * ¿Los renglones de este comprobante van sin IVA?
+ *
+ * **Sólo la Factura A**, y sólo si el neto viajó. La B y la C llevan el precio
+ * final por renglón, que es lo que paga el cliente y lo que corresponde: no
+ * discriminan. Un comprobante viejo, de antes de que se guardara el neto, se
+ * reimprime como salió.
+ */
+export function lineasSinIva(datos: DatosTicket): boolean {
+  return letraFiscal(datos) === "A" && datos.lineas.every((l) => l.neto !== undefined);
+}
+
+/** El precio unitario que se imprime: neto en una A, final en el resto. */
+export function precioUnitarioImpreso(datos: DatosTicket, linea: LineaTicket): Money {
+  return lineasSinIva(datos) && linea.netoUnitario !== undefined
+    ? linea.netoUnitario
+    : linea.precioUnitario;
+}
+
+/** El importe de la línea que se imprime: neto en una A, final en el resto. */
+export function importeImpreso(datos: DatosTicket, linea: LineaTicket): Money {
+  return lineasSinIva(datos) && linea.neto !== undefined ? linea.neto : linea.importe;
 }
 
 /**

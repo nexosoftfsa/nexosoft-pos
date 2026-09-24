@@ -313,12 +313,27 @@ function lineasDe(c: Comprobante): DatosTicket["lineas"] {
       },
     ];
   }
-  return c.items.map((it) => ({
-    descripcion: it.producto?.nombre ?? it.producto?.codigo ?? "Ítem",
-    cantidad: Cantidad.de(it.cantidad),
-    precioUnitario: Money.desde(it.precioUnitario),
-    importe: Money.desde(it.subtotal),
-  }));
+  return c.items.map((it) => {
+    const cantidad = Cantidad.de(it.cantidad);
+    // El neto que se imprimió en el original, congelado por el servidor. El
+    // unitario se deriva acá porque es una división de presentación sobre un
+    // dato ya fijo: no depende del catálogo de hoy.
+    const neto = it.neto == null ? null : Money.desde(it.neto);
+    return {
+      descripcion: it.producto?.nombre ?? it.producto?.codigo ?? "Ítem",
+      cantidad,
+      precioUnitario: Money.desde(it.precioUnitario),
+      importe: Money.desde(it.subtotal),
+      ...(neto !== null
+        ? { neto, netoUnitario: netoUnitarioDe(neto, it.cantidad) }
+        : {}),
+    };
+  });
+}
+
+/** El neto unitario de una línea reimpresa. Con cantidad cero, el neto entero. */
+function netoUnitarioDe(neto: Money, cantidad: string): Money {
+  return Number(cantidad) === 0 ? neto : neto.dividirPor(cantidad).redondear(2);
 }
 
 /**

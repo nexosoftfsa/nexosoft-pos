@@ -10,8 +10,11 @@ import {
   ACLARACION_IMPUESTOS_NACIONALES,
   fechaHoraTicket,
   identificacionComprobanteAsociado,
+  importeImpreso,
   letraFiscal,
   LEYENDA_TRANSPARENCIA_FISCAL,
+  lineasSinIva,
+  precioUnitarioImpreso,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
   montoDelSubtotal,
@@ -37,6 +40,7 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
   const conReceptor = llevaDatosDelReceptor(datos);
   const neto = subtotalNeto(datos);
   const transparencia = transparenciaFiscal(datos);
+  const sinIva = lineasSinIva(datos);
 
   return (
     <div className="hoja-a4">
@@ -97,13 +101,16 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
         </div>
       )}
 
+      {/* En una Factura A las columnas van SIN IVA —la norma pide precios
+          unitarios netos de impuestos— y se dice en el encabezado para que no
+          haya que deducirlo. En la B y la C va el precio final. */}
       <table className="a4-items">
         <thead>
           <tr>
             <th>Descripción</th>
             <th>Cantidad</th>
-            <th>P. Unitario</th>
-            <th>Importe</th>
+            <th>{sinIva ? "P. Unitario neto" : "P. Unitario"}</th>
+            <th>{sinIva ? "Importe neto" : "Importe"}</th>
           </tr>
         </thead>
         <tbody>
@@ -111,8 +118,8 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
             <tr key={i}>
               <td>{linea.descripcion}</td>
               <td>{cantidadFormateada(linea.cantidad)}</td>
-              <td>{pesos(linea.precioUnitario)}</td>
-              <td>{pesos(linea.importe)}</td>
+              <td>{pesos(precioUnitarioImpreso(datos, linea))}</td>
+              <td>{pesos(importeImpreso(datos, linea))}</td>
             </tr>
           ))}
         </tbody>

@@ -557,16 +557,28 @@ export function PantallaPos({
   }
 
   /**
-   * Atajo F12 ("cobro rápido"): cobra el saldo pendiente exacto en efectivo y
-   * confirma la venta en un solo paso — para cuando el cliente da la plata
-   * justa. Si ya está cubierta (saldo cero), confirma directo. No imprime
-   * solo: el ticket queda listo en el overlay de "Imprimir" (hoy la térmica
-   * es un mock, no hay hardware real conectado — ver `packages/hardware`).
+   * Atajo F12 ("cobro rápido"): carga el saldo exacto en efectivo y deja la
+   * venta **a un Enter de confirmarse**, en el resumen del asistente.
+   *
+   * Antes confirmaba la venta él solo, y eso estaba mal por tres motivos que
+   * encontró Sebastián el 22/9/2026: disparaba la venta sin preguntar el medio
+   * de pago —*"si se aprieta ese botón de manera accidental ya te genera la
+   * venta en un medio de pago que quizás no era"*—, no dejaba ver el vuelto, y
+   * dejaba abierto el panel de post-venta, del que había que salir apretando
+   * TAB cinco veces.
+   *
+   * Propuso sacarlo. Se conserva porque el atajo sirve —el cliente paga justo,
+   * que es la mitad de las ventas de un mostrador— pero deja de emitir solo.
+   * F12 + Enter es igual de rápido y no hay forma de facturar sin querer.
    */
   function cobroRapido() {
     if (!preview || carrito.length === 0) return;
+    if (faltaParaFacturar !== null) {
+      setError(faltaParaFacturar);
+      return;
+    }
     if (preview.cobro.cancelada) {
-      void confirmar();
+      irAlResumen();
       return;
     }
     if (formaPago !== FormaDePago.Efectivo) {
@@ -577,13 +589,23 @@ export function PantallaPos({
     setCobroRapidoPendiente(true);
   }
 
-  // Completa el cobro rápido apenas el preview confirma que ya está cancelada
-  // (el pago recién agregado por pagoExacto() se refleja async, vía el
-  // useEffect de arriba que recalcula `preview`).
+  /** Abre el asistente directamente en el resumen, listo para confirmar. */
+  function irAlResumen() {
+    aperturaAsistenteRef.current = performance.now();
+    pasoAsistenteRef.current = "resumen";
+    setPasoAsistente("resumen");
+    setCursorAsistente(0);
+    setHistorialAsistente([]);
+    buscadorRef.current?.blur();
+  }
+
+  // Lleva el cobro rápido al resumen apenas el preview confirma que ya está
+  // cancelada (el pago recién agregado por pagoExacto() se refleja async, vía
+  // el useEffect de arriba que recalcula `preview`).
   useEffect(() => {
     if (cobroRapidoPendiente && preview?.cobro.cancelada) {
       setCobroRapidoPendiente(false);
-      void confirmar();
+      irAlResumen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cobroRapidoPendiente, preview]);
@@ -897,6 +919,26 @@ export function PantallaPos({
     itemBusquedaRef.current?.scrollIntoView({ block: "nearest" });
   }, [cursorBusqueda, busquedaProducto]);
 
+  /**
+   * Esc cierra el panel de post-venta.
+   *
+   * Ese panel no tenía ningún manejo de teclado: para llegar a un botón había
+   * que apretar TAB cinco veces, en una pantalla que se opera entera con el
+   * teclado. Lo encontró Sebastián saliendo de un cobro con F12.
+   */
+  useEffect(() => {
+    if (ultimaVenta === null) return;
+    function alTeclear(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      setUltimaVenta(null);
+      setError(null);
+      refocarBuscador();
+    }
+    window.addEventListener("keydown", alTeclear);
+    return () => window.removeEventListener("keydown", alTeclear);
+  }, [ultimaVenta]);
+
   // Salir de la pantalla de venta apaga el polling del cobro electrónico. Sin
   // esto queda corriendo contra un componente desmontado, emitiendo ventas que
   // ya nadie pidió: es el mismo daño de ADR-0075 por otra puerta.
@@ -1181,17 +1223,23 @@ export function PantallaPos({
       // Encolar la venta para sincronizar con el servidor de sucursal.
       // No rompe la venta (ya confirmada localmente) si el encolado falla.
       try {
-        const itemsSync = carrito.map((c) => {
+        const itemsSync = carrito.map((c, i) => {
           const promo = promoDeItem(c);
           const desc = promo
             ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
             : Money.cero();
+          // El neto de la línea viaja **congelado**, igual que el desglose de
+          // IVA (ADR-0073): así el duplicado imprime exactamente los mismos
+          // renglones que el original, sin recalcular nada con la alícuota que
+          // el producto tenga el día de la reimpresión.
+          const neto = venta.resultado.lineas[i]?.neto;
           return {
             productoId: c.producto.articulo.id,
             cantidad: c.cantidad,
             precioUnitario: c.producto.precioFinal.aDecimalString(2),
             ...(desc.esPositivo() ? { descuento: desc.aDecimalString(2) } : {}),
             costoUnitario: c.producto.articulo.costoNeto.aDecimalString(2),
+            ...(neto !== undefined ? { neto: neto.aDecimalString(2) } : {}),
           };
         });
         // Pago combinado: viaja el desglose (un pago por medio) y el resumen.
@@ -1496,7 +1544,7 @@ export function PantallaPos({
               <kbd>F4</kbd> cancela la venta
             </span>
             <span>
-              <kbd>F12</kbd> cobro exacto y confirma
+              <kbd>F12</kbd> cobro exacto en efectivo
             </span>
           </div>
           {faltaParaFacturar !== null && <div className="error">{faltaParaFacturar}</div>}
@@ -1886,12 +1934,14 @@ export function PantallaPos({
               </button>
               <button
                 className="primario"
+                autoFocus
                 onClick={() => {
                   setUltimaVenta(null);
                   setError(null);
+                  refocarBuscador();
                 }}
               >
-                Cerrar
+                Cerrar (Esc)
               </button>
             </div>
           </div>
@@ -1998,12 +2048,22 @@ export function construirDatosTicket(
     fecha: venta.fecha,
     condicionIvaReceptor: etiquetaCondicionIva(venta.condicionIvaReceptor),
     esFiscal: tipo !== TipoComprobante.TicketNoFiscal,
-    lineas: venta.items.map((it, i) => ({
-      descripcion: it.descripcion,
-      cantidad: it.cantidad,
-      precioUnitario: it.precioUnitario,
-      importe: venta.resultado.lineas[i]?.importe ?? it.precioUnitario,
-    })),
+    lineas: venta.items.map((it, i) => {
+      const calculada = venta.resultado.lineas[i];
+      return {
+        descripcion: it.descripcion,
+        cantidad: it.cantidad,
+        precioUnitario: it.precioUnitario,
+        importe: calculada?.importe ?? it.precioUnitario,
+        // El neto por línea: lo que imprime una Factura A. Va condicional
+        // porque el cálculo empezó a devolverlo el 23/9/2026 y una venta vieja
+        // releída de la base local no lo trae.
+        ...(calculada?.neto !== undefined ? { neto: calculada.neto } : {}),
+        ...(calculada?.netoUnitario !== undefined
+          ? { netoUnitario: calculada.netoUnitario }
+          : {}),
+      };
+    }),
     subtotalesIva: venta.resultado.subtotalesPorAlicuota.map((s) => ({
       etiqueta: etiquetaSubtotal(s.alicuota),
       base: s.neto,

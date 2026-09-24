@@ -11,7 +11,10 @@ import {
   ACLARACION_IMPUESTOS_NACIONALES,
   fechaHoraTicket,
   identificacionComprobanteAsociado,
+  importeImpreso,
   LEYENDA_TRANSPARENCIA_FISCAL,
+  lineasSinIva,
+  precioUnitarioImpreso,
   leyendaNumeroProvisional,
   llevaDatosDelReceptor,
   montoDelSubtotal,
@@ -88,14 +91,17 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
 
       <div className="ticket-print-sep" />
 
+      {/* En una Factura A el renglón va sin IVA (la norma pide precios
+          unitarios netos); en la B y la C, el precio final. */}
+      {lineasSinIva(datos) && <div className="ticket-print-centro">Precios sin IVA</div>}
       {datos.lineas.map((linea, i) => (
         <div className="ticket-print-linea" key={i}>
           <div>{linea.descripcion}</div>
           <div className="ticket-print-fila">
             <span>
-              {cantidadFormateada(linea.cantidad)} x {pesos(linea.precioUnitario)}
+              {cantidadFormateada(linea.cantidad)} x {pesos(precioUnitarioImpreso(datos, linea))}
             </span>
-            <span>{pesos(linea.importe)}</span>
+            <span>{pesos(importeImpreso(datos, linea))}</span>
           </div>
         </div>
       ))}
