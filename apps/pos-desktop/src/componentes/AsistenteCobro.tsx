@@ -290,7 +290,11 @@ function tituloDePaso(paso: Exclude<PasoAsistente, "cerrado">): string {
     case "resumen":
       return "Finalizar Venta";
     case "imprimir":
-      return "Ticket";
+      // No dice "Ticket" sino que la venta YA ESTÁ: es el momento en que deja
+      // de poder volverse atrás, y el cajero tiene que poder reconocerlo de un
+      // vistazo. Lo pidió Sebastián, y tiene razón: la pregunta que viene abajo
+      // ya habla del comprobante, así que el título estaba de más.
+      return "Venta registrada ✓";
     case "monto":
       return "Confirmar Monto";
   }

@@ -89,6 +89,7 @@ export function Shell({
   usuario,
   clienteCatalogo,
   onCatalogoCambiado,
+  onRecargarCatalogo,
   clienteStock,
   clienteCaja,
   clienteCtaCte,
@@ -123,6 +124,12 @@ export function Shell({
    * implementa es `App`, que es el dueño del `entorno`.
    */
   onCatalogoCambiado?: () => void;
+  /**
+   * Baja el catálogo del servidor y devuelve cuántos productos quedaron.
+   * **Lanza si no pudo**: lo llama el botón Sincronizar, que tiene que poder
+   * decirle al cajero si funcionó o no.
+   */
+  onRecargarCatalogo?: () => Promise<number>;
   /** Cliente de stock (HTTP en Tauri, simulado en el navegador). */
   clienteStock?: ClienteStock;
   /** Cliente de caja (HTTP en Tauri, simulado en el navegador). */
@@ -408,8 +415,8 @@ export function Shell({
             <IndicadorSync
               estado={sync}
               esperandoCae={esperandoCae}
-              {...(onCatalogoCambiado !== undefined
-                ? { onSincronizacionManual: onCatalogoCambiado }
+              {...(onRecargarCatalogo !== undefined
+                ? { onSincronizacionManual: onRecargarCatalogo }
                 : {})}
             />
             {terminalNombre !== undefined && (

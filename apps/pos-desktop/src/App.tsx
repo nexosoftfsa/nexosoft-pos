@@ -439,28 +439,33 @@ function AppTauri() {
   );
 
   /**
-   * El catálogo cambió en el ABM: se vuelve a traer para que la caja lo vea.
+   * Vuelve a traer el catálogo del servidor para que la caja lo vea.
    *
    * Se actualiza SÓLO el catálogo dentro del entorno, no se reconstruye el
    * entorno entero: reconstruirlo pasa por la pantalla de "cargando" y tira
    * abajo todo lo que esté en pantalla.
    *
-   * Si falla —sin red, servidor caído— no se avisa ni se rompe nada: queda la
-   * foto anterior, que es exactamente lo que había antes de este arreglo.
+   * **Si falla, lanza.** Antes se lo tragaba en silencio, con el argumento de
+   * que quedarse con la foto vieja no era una regresión. Y es cierto que no
+   * rompe nada — pero deja al comercio operando con un catálogo viejo sin que
+   * nadie lo sepa, y eso costó tres pruebas de campo enteras: un producto
+   * corregido en el panel no llegaba a la caja, y desde afuera era imposible
+   * distinguir "falló" de "no pasó nada". Quien aprieta el botón se entera.
    */
-  const onCatalogoCambiado = useCallback(() => {
-    void (async () => {
-      try {
-        const recargar = entorno?.recargarCatalogo;
-        if (recargar === undefined) return;
-        const catalogo = await recargar();
-        setEntorno((previo) => (previo === null ? previo : { ...previo, catalogo }));
-      } catch {
-        // Ver el comentario de arriba: quedarse con la foto vieja es el
-        // comportamiento de siempre, no una regresión.
-      }
-    })();
+  const recargarCatalogo = useCallback(async () => {
+    const recargar = entorno?.recargarCatalogo;
+    if (recargar === undefined) return 0;
+    const catalogo = await recargar();
+    setEntorno((previo) => (previo === null ? previo : { ...previo, catalogo }));
+    return catalogo.length;
   }, [entorno]);
+
+  /** Para el ABM, que no necesita saber el resultado. */
+  const onCatalogoCambiado = useCallback(() => {
+    void recargarCatalogo().catch((e: unknown) => {
+      console.error("No se pudo refrescar el catálogo:", e);
+    });
+  }, [recargarCatalogo]);
 
   const onCerrarSesion = useCallback(async () => {
     const sesion = sesionRef.current;
@@ -679,6 +684,7 @@ function AppTauri() {
           ? { clienteCatalogo: clienteCatalogoRef.current }
           : {})}
         onCatalogoCambiado={onCatalogoCambiado}
+        onRecargarCatalogo={recargarCatalogo}
         {...(clienteStockRef.current !== null ? { clienteStock: clienteStockRef.current } : {})}
         {...(clienteCajaRef.current !== null ? { clienteCaja: clienteCajaRef.current } : {})}
         {...(clienteCtaCteRef.current !== null ? { clienteCtaCte: clienteCtaCteRef.current } : {})}

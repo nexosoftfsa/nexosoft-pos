@@ -18,7 +18,7 @@ import { Cantidad, crearExistencia } from "@nexosoft/domain";
 import type { ConfiguracionComercio, RepositoriosSqlite } from "@nexosoft/app";
 
 import type { ClienteCatalogo } from "../sync/cliente-catalogo-http";
-import { mapearProducto } from "../sync/mapeo-catalogo";
+import { mapearProducto, type ProductoRemoto, type SaldoRemoto } from "../sync/mapeo-catalogo";
 
 export interface OpcionesPull {
   /** Si es true, pisa el stock local con el saldo del servidor (aprovisionamiento). */
@@ -32,17 +32,41 @@ export interface ResultadoPull {
   readonly dadosDeBaja: number;
 }
 
-/** Descarga el catálogo del servidor y lo vuelca en los repos locales. */
-export async function sincronizarCatalogo(
-  repos: RepositoriosSqlite,
-  cliente: ClienteCatalogo,
-  config: ConfiguracionComercio,
-  opciones: OpcionesPull = {},
-): Promise<ResultadoPull> {
+/** Lo que el servidor contestó, ya descargado. */
+export interface CatalogoDescargado {
+  readonly productos: readonly ProductoRemoto[];
+  readonly saldos: readonly SaldoRemoto[];
+}
+
+/**
+ * Trae el catálogo del servidor. **Va por separado del volcado a propósito.**
+ *
+ * Antes la descarga corría adentro de la transacción SQLite, y eso tenía dos
+ * problemas. El grande: el ejecutor serializa todo en una cola, así que
+ * mientras se esperaban las dos respuestas HTTP la base entera quedaba tomada
+ * —una venta en ese momento se frenaba hasta que el servidor contestara—. Y el
+ * feo: cualquier error de red hacía `ROLLBACK` de una transacción que nunca
+ * había escrito nada, y el fallo se confundía con un fallo de escritura.
+ *
+ * Primero se baja, después se escribe. La transacción dura lo que tarda el
+ * disco, no lo que tarda la red.
+ */
+export async function descargarCatalogo(cliente: ClienteCatalogo): Promise<CatalogoDescargado> {
   const [productos, saldos] = await Promise.all([
     cliente.descargarProductos(),
     cliente.descargarStock(),
   ]);
+  return { productos, saldos };
+}
+
+/** Vuelca en los repos locales un catálogo ya descargado. */
+export async function volcarCatalogo(
+  repos: RepositoriosSqlite,
+  descargado: CatalogoDescargado,
+  config: ConfiguracionComercio,
+  opciones: OpcionesPull = {},
+): Promise<ResultadoPull> {
+  const { productos, saldos } = descargado;
   const saldoPorId = new Map(saldos.map((s) => [s.producto.id, s.saldo]));
   const deposito = config.depositoPorDefectoId;
 

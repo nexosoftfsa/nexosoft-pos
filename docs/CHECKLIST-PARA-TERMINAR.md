@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-21 · Publicado: POS **0.1.68** · Servidor **0.19.0**
+Actualizado: 2026-09-23 · Publicado: POS **0.1.69** · Servidor **0.19.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,65 +15,51 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Novena vuelta — POS 0.1.68
+## 1 · Décima vuelta — POS 0.1.69
 
-### Lo que la octava vuelta (18/9) dejó cerrado
+### Lo que la novena vuelta (22/9) dejó cerrado
 
-Fue la mejor corrida hasta ahora: **los cuatro defectos graves quedaron
-confirmados en campo.**
+- **Los pagos ya no sobreviven a un cambio de carrito** (ADR-0081). Era lo más
+  grave de la octava.
+- **Se puede corregir el medio de pago** sin perder el carrito: Esc deshace el
+  último pago y vuelve a elegir.
+- **El cartel de cobro quedó claro.** Seba: *"SI, SUPER"*.
+- **El lector sigue andando después de elegir cliente o receptor.**
+- **La reimpresión de una B de puros exentos lleva el bloque** de transparencia
+  fiscal, con IVA Contenido $ 0,00 (corrección en ADR-0079).
 
-- **La venta duplicada con Billetera QR no vuelve.** Tres intentos, una sola
-  venta cada uno (ADR-0077).
-- **Las dos ventas trabadas subieron solas** al abrir el POS. La píldora dice
-  "Sincronizado" por primera vez en cinco pruebas (ADR-0078).
-- **El asistente en $0,00 no aparece más**, probado con las cuatro formas de
-  pago.
-- **El bloque de Transparencia Fiscal sale bien en la Factura B**, con el
-  vuelto en el A4. El IVA contenido está verificado contra el comprobante:
-  $ 286,36 sobre un aceite de $ 1.650 al 21%, con los otros cinco productos
-  exentos.
-- **La Factura A no lleva el bloque**, como corresponde.
+### Lo que la novena vuelta destapó
 
-### Lo que la octava vuelta destapó
+- [ ] **Correr `docs/PRUEBA-DECIMA-VUELTA.txt`.** 15 minutos.
 
-- [ ] **Correr `docs/PRUEBA-NOVENA-VUELTA.txt`.** 15 minutos.
+- [ ] **EL EXENTO: TERCERA VUELTA SIN PODER PROBARSE.** El botón estaba, Seba
+      lo tocó, y el catálogo siguió viejo. Revisé la cadena entera —el endpoint
+      devuelve `tipoIva`, el mapeo manda `EXENTO` a `null`, el `UPSERT` escribe
+      `NULL`, la lectura distingue `NULL` de `"0"`— y está bien de punta a
+      punta. **Sigo sin saber por qué.**
+      *Lo que se arregló en 0.1.69 no es el exento: es no poder ver qué pasa.
+      El botón ahora dice "Catálogo al día (N productos)" o el motivo del
+      fallo, y la descarga salió de adentro de la transacción SQLite
+      (ADR-0082). La próxima vuelta lo resuelve en una, no en tres.*
 
-- [ ] **Confirmar que los pagos no sobrevivan a un cambio de carrito.** Lo más
-      grave de esta vuelta: Seba cerró el asistente con Esc, sacó el producto,
-      cargó otro más barato y el primer Enter lo llevó a "Cobro completo" con
-      un vuelto de $ 50 — **la plata de la venta anterior seguía cargada**. Una
-      venta a punto de emitirse con el cobro de otra (ADR-0081).
-      *Bloquea vender.*
+- [ ] **F4 y "Descartar" no preguntaban nada.** Dentro de Tauri
+      `window.confirm` devuelve una **promesa**, y el código la daba por un sí:
+      F4 vaciaba la caja sin preguntar, y el botón Descartar —que saca
+      operaciones de la cola para siempre— tampoco preguntaba. Eso último no lo
+      vio nadie porque nunca se usó.
+      *Se arregla esperando la respuesta. Va con test de los dos entornos.*
 
-- [ ] **Confirmar que Esc en el resumen deje corregir el medio de pago.** No
-      había forma de volver atrás: Esc cerraba, el siguiente Enter reabría en
-      el resumen y la única salida era vaciar el carrito y escanear todo de
-      nuevo. *"La gente de la fila se va a otro comercio."*
-
-- [ ] **Verificar en campo un producto exento.** Sigue sin poder probarse: el
-      catálogo nunca bajó, porque **el botón Sincronizar desaparecía cuando no
-      había nada en la cola** — o sea justo en el caso normal. Error mío al
-      colgar el pull del catálogo de ese botón (0.1.64). Ahora está siempre.
-      *El original del 18/9 sigue diciendo "IVA 0%" y su duplicado no: el POS
-      todavía tiene el arroz al 0%.*
-
-- [ ] **Verificar la reimpresión de una B de puros exentos.** Salía **sin el
-      bloque de transparencia fiscal**: se derivaba de los renglones por
-      alícuota, y una venta totalmente exenta no tiene ninguno. El original
-      cumplía y su duplicado no (corrección en ADR-0079).
-
-- [ ] **Verificar que el lector siga andando después de elegir cliente.** El
-      foco se quedaba en el desplegable y había que ir con el mouse al
-      buscador. Un cajero no tiene por qué darse cuenta de eso.
-
-- [ ] **Verificar F4 (cancelar venta) y el cartel de cobro.** Las dos
-      sugerencias de Seba: no había forma de abandonar una venta sin sacar los
-      productos de a uno, y el tilde verde de "Cobro completo" hacía creer que
-      la venta ya se había emitido.
+- [ ] **Decidir qué hacer con F12.** Seba propone sacarlo: dispara la venta sin
+      preguntar el medio de pago, sin dejar cargar el efectivo y sin mostrar el
+      vuelto, y para salir del panel hay que apretar TAB cinco veces. Su
+      argumento: *"si se aprieta ese botón de manera accidental ya te genera la
+      venta en un medio de pago que quizás no era"*, y el flujo con Enter quedó
+      rápido igual. **Es decisión de Rodrigo.**
 
 - [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
       6/9, el 8/9 y el 9/9. Se cierra junto con el exento: los dos papeles
-      tienen que decir lo mismo.
+      tienen que decir lo mismo. *Falta también que el duplicado muestre el
+      renglón "Exento", que se agregó en 0.1.69.*
 
 - [ ] **El duplicado no muestra el vuelto.** El servidor no lo guarda, así que
       la reimpresión lo pone en cero. El original sí lo muestra, y difieren.

@@ -1019,6 +1019,27 @@ body {
 .sync-boton:hover {
   background: var(--acento-fuerte);
 }
+/* Cómo salió el último Sincronizar apretado a mano. Cuelga de la píldora, que
+   vive en la barra superior: va en `position: fixed` para no empujar nada. */
+.sync-aviso {
+  position: fixed;
+  top: 52px;
+  right: 16px;
+  z-index: 50;
+  max-width: 340px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+.sync-aviso--ok {
+  background: var(--ok-fuerte, #15803d);
+}
+.sync-aviso--mal {
+  background: var(--peligro, #b91c1c);
+}
 @keyframes sync-pulso {
   0%,
   100% {
@@ -1308,6 +1329,15 @@ body {
 .ticket-print-fila {
   display: flex;
   justify-content: space-between;
+  gap: 6px;
+}
+/* El importe NUNCA se parte. Con una etiqueta larga, el flex le quitaba ancho
+   al importe y el "$ 0,00" salía con el signo en un renglón y el número en el
+   otro. Lo que cede es la etiqueta, que se puede leer cortada; un importe
+   partido al medio, no. */
+.ticket-print-fila > span:last-child {
+  white-space: nowrap;
+  flex: none;
 }
 
 /* Credencial física de empleado (oculta en pantalla; ver regla @media print de arriba). */

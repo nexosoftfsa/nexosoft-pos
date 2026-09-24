@@ -21,8 +21,9 @@ import type { ComprobanteResuelto } from "@nexosoft/sync";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { estaEnTauri } from "../datos/ejecutor-sql-tauri";
+import { pedirTexto, preguntarSiNo } from "../dialogos";
 import { ErrorImpresoraVirtual } from "../datos/impresora-escpos";
-import { etiquetaComprobante, pesos } from "../formato";
+import { etiquetaComprobante, importeParaEditar, importeTecleado, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
 import type { EstadoSync } from "../sync/useSync";
 import type { ClienteMediosPago, Tarjeta } from "../sync/cliente-medios-pago";
@@ -508,10 +509,12 @@ export function PantallaPos({
   }
 
   /** Atajo F8: cambia la cantidad del último ítem agregado a un valor exacto. */
-  function cambiarCantidadUltimoItem() {
+  async function cambiarCantidadUltimoItem() {
     const ultimo = ultimoItemCarrito(carrito);
     if (!ultimo) return;
-    const respuesta = window.prompt(
+    // Mismo motivo que en `cancelarVenta`: dentro de Tauri esto devuelve una
+    // promesa, y sin esperarla lo que llegaba no era el texto tecleado.
+    const respuesta = await pedirTexto(
       `Nueva cantidad para "${ultimo.producto.articulo.descripcion}":`,
       String(ultimo.cantidad),
     );
@@ -532,14 +535,17 @@ export function PantallaPos({
    * uno. Pregunta antes, porque con quince productos cargados un F4 sin querer
    * cuesta escanearlos todos de nuevo.
    */
-  function cancelarVenta() {
+  async function cancelarVenta() {
     if (carrito.length === 0 && pagos.length === 0) return;
     const cuantos = carrito.length;
     const aviso =
       `Cancelar esta venta y vaciar la caja.\n\n` +
       `Se descartan ${cuantos} producto${cuantos === 1 ? "" : "s"} y los pagos cargados. ` +
       `No se emite ningún comprobante ni se registra nada.\n\n¿Cancelar la venta?`;
-    if (!window.confirm(aviso)) return;
+    // `await`: dentro de Tauri `window.confirm` devuelve una promesa, y sin
+    // esperarla el `if` la daba por verdadera y vaciaba el carrito sin haber
+    // preguntado nada. Lo vio Sebastián el 22/9/2026.
+    if (!(await preguntarSiNo(aviso))) return;
     limpiarParaLaProxima();
     refocarBuscador();
   }
@@ -584,7 +590,7 @@ export function PantallaPos({
 
   function agregarPago() {
     try {
-      const montoBase = Money.desde(montoPago.replace(",", "."));
+      const montoBase = Money.desde(importeTecleado(montoPago));
       if (!montoBase.esPositivo()) {
         setError("El monto del pago debe ser mayor a cero.");
         return;
@@ -664,7 +670,7 @@ export function PantallaPos({
     setError(null);
     const siguiente = pasoTrasElegirMedio(forma, tarjetas.length, clientes.length, clienteId !== "");
     if (siguiente === "monto") {
-      setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
+      setMontoPago(importeParaEditar(preview.cobro.saldoPendiente));
     }
     avanzarPaso(siguiente);
   }
@@ -676,7 +682,7 @@ export function PantallaPos({
     setCuotasSeleccionadas("");
     const siguiente = pasoTrasElegirTarjeta(tarjeta.tasas.length);
     if (siguiente === "monto") {
-      setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
+      setMontoPago(importeParaEditar(preview.cobro.saldoPendiente));
     }
     avanzarPaso(siguiente);
   }
@@ -686,12 +692,14 @@ export function PantallaPos({
     if (!tasa || !preview || !tarjetaActual) return;
     setCuotasSeleccionadas(String(tasa.cantidadCuotas));
     setMontoPago(
-      montoBaseParaSaldoExacto(
-        preview.cobro.saldoPendiente,
-        // Misma regla que `recargoActual`: en un débito no hay recargo que
-        // descontar del saldo, por más que la tasa guardada diga otra cosa.
-        recargoQueCorresponde(tarjetaActual.tipo, tasa.recargoPorcentaje),
-      ).aDecimalString(2),
+      importeParaEditar(
+        montoBaseParaSaldoExacto(
+          preview.cobro.saldoPendiente,
+          // Misma regla que `recargoActual`: en un débito no hay recargo que
+          // descontar del saldo, por más que la tasa guardada diga otra cosa.
+          recargoQueCorresponde(tarjetaActual.tipo, tasa.recargoPorcentaje),
+        ),
+      ),
     );
     avanzarPaso("monto");
   }
@@ -700,7 +708,7 @@ export function PantallaPos({
     const cliente = clientes[indice];
     if (!cliente || !preview) return;
     setClienteId(cliente.id);
-    setMontoPago(preview.cobro.saldoPendiente.aDecimalString(2));
+    setMontoPago(importeParaEditar(preview.cobro.saldoPendiente));
     avanzarPaso("monto");
   }
 
@@ -708,7 +716,7 @@ export function PantallaPos({
   function confirmarMontoAsistente() {
     if (!preview) return;
     try {
-      const montoBase = Money.desde(montoPago.replace(",", "."));
+      const montoBase = Money.desde(importeTecleado(montoPago));
       if (!montoBase.esPositivo()) {
         setError("El monto del pago debe ser mayor a cero.");
         return;
@@ -1387,7 +1395,7 @@ export function PantallaPos({
   );
   const montoBaseVivo = (() => {
     try {
-      const m = Money.desde(montoPago.replace(",", "."));
+      const m = Money.desde(importeTecleado(montoPago));
       return m.esPositivo() ? m : null;
     } catch {
       return null;
@@ -1464,13 +1472,13 @@ export function PantallaPos({
                 quitarUltimoItem();
               } else if (e.key === "F8") {
                 e.preventDefault();
-                cambiarCantidadUltimoItem();
+                void cambiarCantidadUltimoItem();
               } else if (e.key === "F12") {
                 e.preventDefault();
                 cobroRapido();
               } else if (e.key === "F4") {
                 e.preventDefault();
-                cancelarVenta();
+                void cancelarVenta();
               }
             }}
           />
@@ -1713,7 +1721,7 @@ export function PantallaPos({
               los productos de a uno. Va discreto y al lado del botón grande:
               tiene que estar, no tiene que competir. */}
           {(carrito.length > 0 || pagos.length > 0) && !autorizando && (
-            <button type="button" className="cancelar-venta" onClick={cancelarVenta}>
+            <button type="button" className="cancelar-venta" onClick={() => void cancelarVenta()}>
               Cancelar venta (F4)
             </button>
           )}

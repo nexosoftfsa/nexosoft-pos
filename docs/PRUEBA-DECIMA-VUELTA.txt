@@ -1,0 +1,212 @@
+===========================================================================
+  NEXOSOFT - DECIMA VUELTA
+  Para: Sebastian
+  Tiempo: 15 minutos
+===========================================================================
+
+LO QUE CERRASTE
+----------------
+- Los pagos ya no quedan pegados. Era lo mas grave de la vuelta pasada.
+- Se puede corregir el medio de pago sin perder el carrito.
+- El cartel quedo claro ("SI, SUPER", dijiste).
+- El lector sigue andando despues de elegir cliente.
+- La Factura B de puros exentos lleva el bloque de la ley, tambien en el
+  duplicado.
+
+Y ademas te hice caso en todo lo que pediste:
+
+- El paso de impresion ahora dice "Venta registrada" en vez de "Ticket".
+  Tenias razon: ese es el momento en que ya no se vuelve atras y el cajero
+  tiene que poder reconocerlo de un vistazo.
+- El monto a cobrar sale con separadores de miles: 11.450,00 en vez de
+  11450.00. Lo de contar ceros era un accidente esperando.
+- El "$" que quedaba colgado arriba del 0,00 en el ticket: arreglado.
+
+
+LO DE F4: TENIAS RAZON VOS Y ESTABA MAL YO
+--------------------------------------------
+Dijiste "no me lo preguntó, solo limpió el carrito, creo que esta bien asi".
+
+No estaba bien: SI tenia que preguntar, y no preguntaba. Y el motivo es feo.
+
+Adentro de Tauri —que es el programa que envuelve al POS— la funcion que
+muestra un "¿estas seguro?" no devuelve la respuesta al instante: devuelve
+una promesa de la respuesta. Mi codigo la tomaba como un "si" sin esperar
+nada. O sea que no es que decidi no preguntar: preguntaba y se contestaba
+solo que si.
+
+Lo peor es donde mas estaba pasando lo mismo sin que nadie lo viera: el
+boton "Descartar" de la lista de ventas sin subir, que saca operaciones de
+la cola PARA SIEMPRE. Tampoco preguntaba. Nunca lo usaste, por suerte.
+
+
+EL EXENTO: TERCERA VUELTA, Y TE DEBO UNA EXPLICACION
+------------------------------------------------------
+El boton estaba, lo tocaste, y el catalogo siguio viejo. Van tres.
+
+Te lo digo derecho: NO SE POR QUE. Revise toda la cadena —el servidor manda
+el producto como exento, la traduccion lo entiende, la base lo guarda bien,
+la lectura lo distingue— y esta bien de punta a punta.
+
+Lo que arregle esta vez NO es el exento. Es que no se podia ver que pasaba.
+Tres vueltas tocando un boton que no decia nada, y desde afuera "fallo" y
+"no paso nada" se ven igual.
+
+Ahora el boton contesta. Si funciona te dice "Catalogo al dia (N
+productos)". Si falla te dice por que, con el error. Con eso, sea lo que
+sea, lo resolvemos en una vuelta en vez de tres.
+
+El paso 2 es exactamente eso, y es lo mas importante de esta prueba.
+
+
+Lo de tu 5.4: tu razonamiento era correcto para un producto al 0%, pero el
+arroz es EXENTO, y un exento queda AFUERA del subtotal neto. Por eso el
+duplicado te daba 8.264,46. El duplicado esta bien; el original esta mal
+porque el POS todavia cree que el arroz es 0%.
+
+
+Versiones de esta prueba:  POS 0.1.69  -  Servidor 0.19.0 (NO CAMBIA)
+Punto seguro anterior: POS 0.1.68 + Servidor 0.19.0.
+
+
+PASO 1 - ACTUALIZAR
+--------------------
+1.1 Actualiza SOLO el POS, a 0.1.69.
+
+    [ ] POS 0.1.69
+
+
+PASO 2 - QUE DICE EL BOTON SINCRONIZAR (lo mas importante)
+------------------------------------------------------------
+2.1 Fijate primero que el arroz siga como EXENTO en el panel de productos.
+
+    [ ] Dice Exento (no "0%").
+
+    <- Miralo bien, por favor. Si dijera 0%, todo lo demas se explica solo y
+       me ahorras otra vuelta.
+
+2.2 En el POS, tocá "Sincronizar" y NO HAGAS NADA MAS. Miralo.
+
+    Abajo del boton tiene que aparecer un cartel por unos segundos.
+
+    QUE DICE, PALABRA POR PALABRA: ____________________________________
+
+    ____________________________________________________________________
+
+    MANDAME UNA CAPTURA DEL CARTEL. Es lo unico que necesito de esta
+    prueba.
+
+    [ ] Es verde y dice "Catálogo al día (N productos)"
+    [ ] Es rojo y dice que el catalogo no bajo
+
+    Si es verde, cuantos productos dice: ______
+
+2.3 Si el cartel fue VERDE, hace una FACTURA A con el arroz y el agua.
+
+    [ ] Dice "Exento", NO "IVA 0%".
+    [ ] El "Subtotal neto" dice 8.264,46.
+
+    MANDAME EL PDF.
+
+2.4 Y reimprimila desde Comprobantes.
+
+    [ ] El duplicado dice lo mismo, incluido el renglon "Exento".
+
+    MANDAME EL PDF.
+
+    <- Este renglon es nuevo: antes el duplicado dejaba el exento afuera del
+       neto (bien) pero no lo mostraba por ningun lado (mal).
+
+2.5 Si el cartel fue ROJO, frena aca y mandame la captura. Con el texto del
+    error ya se que mirar.
+
+
+PASO 3 - F4 Y DESCARTAR, AHORA PREGUNTAN
+------------------------------------------
+3.1 Carga 3 o 4 productos y apreta F4.
+
+    [ ] AHORA SI pregunta, y dice cuantos productos se descartan.
+    [ ] Si decis que NO, el carrito queda como estaba.
+    [ ] Si decis que SI, se vacia.
+
+    <- La vez pasada vaciaba sin preguntar.
+
+3.2 Lo mismo con el boton "Cancelar venta (F4)" de abajo.
+
+    [ ] Pregunta igual.
+
+
+PASO 4 - EL MONTO CON SEPARADORES
+-----------------------------------
+4.1 Carga un producto de mas de $10.000 y andá a cobrar.
+
+4.2 Elegi cualquier medio de pago y mira el campo del monto.
+
+    [ ] Dice 11.450,00 (con punto de miles y coma), no 11450.00.
+    [ ] Se lee de un vistazo, sin contar ceros.
+
+4.3 Escribi un monto a mano, con coma: por ejemplo 5.000,50
+
+    [ ] Lo toma bien y el vuelto sale correcto.
+
+4.4 Y ahora uno sin puntos ni comas: 5000
+
+    [ ] Tambien lo toma bien.
+
+    <- Los dos tienen que andar: el cajero va a escribir de las dos formas.
+
+
+PASO 5 - "VENTA REGISTRADA"
+-----------------------------
+5.1 Termina una venta por el asistente.
+
+5.2 Cuando llega el paso de "¿imprimir el comprobante?", mira el titulo.
+
+    [ ] Dice "Venta registrada ✓" en vez de "Ticket".
+
+    Te sirve asi? ____________________________________
+
+
+PASO 6 - EL TICKET CHICO
+--------------------------
+6.1 Hace una Factura B e imprimi el TICKET (no el A4).
+
+    [ ] En el bloque de la ley, el renglon de impuestos internos dice
+        "Imp. internos" y el importe entra entero en un solo renglon.
+    [ ] Ya no queda el "$" arriba y el "0,00" abajo.
+
+    MANDAME EL PDF.
+
+
+PASO 7 - QUE NO SE HAYA ROTO NADA
+-----------------------------------
+7.1 Una venta con efectivo y vuelto.
+
+    [ ] Bien en pantalla y en el papel.
+
+7.2 Una venta con pago mixto.
+
+    [ ] Los dos pagos entran y la venta cierra.
+
+7.3 Esc en el resumen sigue deshaciendo el ultimo pago.
+
+    [ ] Si.
+
+7.4 Una Nota de Credito.
+
+    [ ] Sale con CAE.
+
+
+===========================================================================
+  QUE MANDARME
+===========================================================================
+  1. LA CAPTURA DEL CARTEL DEL PASO 2.2  <- lo unico imprescindible
+  2. Si el arroz esta como Exento o como 0% en el panel (paso 2.1)
+  3. Los PDF del paso 2.3 y 2.4, si el cartel fue verde
+  4. Si F4 ahora pregunta (paso 3)
+  5. PDF del ticket chico (paso 6)
+
+Y decime que opinas de sacar el F12. Tu argumento me parece bueno —un F12
+accidental te genera una venta con un medio de pago que quizas no era— pero
+la decision es de Rodri, asi que se la paso a el.
+===========================================================================

@@ -79,6 +79,43 @@ describe("datosTicketDeComprobante — IVA contenido para transparencia fiscal",
   });
 });
 
+/**
+ * Lo exento no tiene renglón en el detalle de IVA de ARCA: viaja en `ImpOpEx`.
+ * Sin esto, el duplicado de una venta con productos exentos no los mostraba por
+ * ningún lado, mientras el original decía "Exento $ 1.450,00". Lo marcó
+ * Sebastián el 22/9/2026: el duplicado "no exactamente" igual al original.
+ */
+describe("datosTicketDeComprobante — el exento en la reimpresión", () => {
+  const conIva = [{ codigoArca: 5, base: "8264.46", importe: "1735.54" }];
+
+  it("agrega el renglón de exento con el importe de ImpOpEx", () => {
+    const d = datosTicketDeComprobante(
+      comprobante({ tipoComprobante: "FacturaA", ivaPorAlicuota: conIva, impOpEx: "1450.00" }),
+      CONFIG,
+    );
+    const exento = d.subtotalesIva.find((s) => s.esExento === true);
+    expect(exento?.base.aDecimalString(2)).toBe("1450.00");
+    expect(exento?.etiqueta).toBe("Exento");
+  });
+
+  it("sin exento no agrega ningún renglón de más", () => {
+    const d = datosTicketDeComprobante(
+      comprobante({ tipoComprobante: "FacturaA", ivaPorAlicuota: conIva, impOpEx: "0.00" }),
+      CONFIG,
+    );
+    expect(d.subtotalesIva).toHaveLength(1);
+  });
+
+  /** Un comprobante viejo, sin importes guardados: no se inventa nada. */
+  it("sin ImpOpEx guardado tampoco", () => {
+    const d = datosTicketDeComprobante(
+      comprobante({ tipoComprobante: "FacturaA", ivaPorAlicuota: conIva }),
+      CONFIG,
+    );
+    expect(d.subtotalesIva).toHaveLength(1);
+  });
+});
+
 describe("etiquetaTipoComprobante", () => {
   it("traduce los tipos conocidos", () => {
     expect(etiquetaTipoComprobante("FacturaB")).toBe("Factura B");

@@ -277,13 +277,21 @@ function ivaContenidoDe(c: Comprobante): Money | null {
 }
 
 function subtotalesIvaDe(c: Comprobante): DatosTicket["subtotalesIva"] {
-  const renglones = c.ivaPorAlicuota;
-  if (renglones === undefined || renglones === null || renglones.length === 0) return [];
-  return renglones.map((r) => ({
+  const renglones = c.ivaPorAlicuota ?? [];
+  const porAlicuota = renglones.map((r) => ({
     etiqueta: ETIQUETA_POR_CODIGO_ARCA[r.codigoArca] ?? `IVA (${r.codigoArca})`,
     base: Money.desde(r.base),
     iva: Money.desde(r.importe),
   }));
+
+  // Lo exento no tiene renglón en el detalle de IVA de ARCA: viaja en
+  // `ImpOpEx`. Sin esto, el duplicado de una venta con productos exentos no los
+  // mostraba por ningún lado — el original decía "Exento $ 1.450,00" y su
+  // reimpresión no decía nada, aunque el subtotal neto sí los dejaba afuera.
+  // Lo marcó Sebastián el 22/9/2026: "no exactamente" igual al original.
+  const exento = c.impOpEx == null ? null : Money.desde(c.impOpEx);
+  if (exento === null || !exento.esPositivo()) return porAlicuota;
+  return [...porAlicuota, { etiqueta: "Exento", base: exento, iva: Money.cero(), esExento: true }];
 }
 
 /**

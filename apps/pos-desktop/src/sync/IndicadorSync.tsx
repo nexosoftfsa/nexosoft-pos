@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { EsperandoCae } from "./cliente-ventas";
+import { preguntarSiNo } from "../dialogos";
 import { confirmacionDescartar, estadoDeLaPildora } from "./indicador-sync-helpers";
 import type { EstadoSync } from "./useSync";
+
+function mensaje(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
 
 /** Píldora de estado de sincronización para la barra superior. */
 export function IndicadorSync({
@@ -30,7 +35,7 @@ export function IndicadorSync({
    * Sólo en el manual: la corrida automática cada 15 segundos no tiene por qué
    * pedir el catálogo entero.
    */
-  onSincronizacionManual?: () => void;
+  onSincronizacionManual?: () => Promise<number>;
 }) {
   const {
     online,
@@ -45,6 +50,16 @@ export function IndicadorSync({
   } = estado;
   const [verDetalle, setVerDetalle] = useState(false);
   const [descartando, setDescartando] = useState(false);
+  /** Cómo salió el último Sincronizar apretado a mano. Se limpia solo. */
+  const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
+
+  // El aviso no se queda para siempre: dice lo suyo y se va. Un error se deja
+  // más tiempo que un "salió bien", porque hay que leerlo.
+  useEffect(() => {
+    if (resultado === null) return;
+    const id = setTimeout(() => setResultado(null), resultado.ok ? 4000 : 12000);
+    return () => clearTimeout(id);
+  }, [resultado]);
 
   /**
    * Saca de la cola lo que no puede entrar nunca. Se pregunta antes, y la
@@ -52,7 +67,10 @@ export function IndicadorSync({
    * que se malinterpreta.
    */
   async function descartar() {
-    if (!window.confirm(confirmacionDescartar(detalleFallidas))) return;
+    // `await`: dentro de Tauri `window.confirm` devuelve una promesa, así que
+    // sin esperarla este `if` la daba por verdadera y descartaba operaciones
+    // de la cola SIN PREGUNTAR. Nadie lo vio porque nadie usó el botón todavía.
+    if (!(await preguntarSiNo(confirmacionDescartar(detalleFallidas)))) return;
     setDescartando(true);
     try {
       await descartarFallidas();
@@ -65,13 +83,25 @@ export function IndicadorSync({
   /**
    * Lo que hace el botón cuando lo aprieta una persona: sube la cola y además
    * baja el catálogo. Que el catálogo falle no puede tapar que la cola subió.
+   *
+   * **Y dice cómo salió.** Antes esto era mudo, y esa mudez costó tres vueltas
+   * de prueba: un producto corregido en el panel no llegaba a la caja y desde
+   * afuera no había forma de distinguir "falló" de "no pasó nada". Un botón
+   * que no contesta no se puede diagnosticar.
    */
   async function sincronizarAMano() {
+    setResultado(null);
     await (fallidas > 0 ? reintentarFallidasYSincronizar() : sincronizarAhora());
+    if (onSincronizacionManual === undefined) return;
     try {
-      onSincronizacionManual?.();
+      const cuantos = await onSincronizacionManual();
+      setResultado({ ok: true, texto: `Catálogo al día (${cuantos} productos)` });
     } catch (e) {
       console.error("No se pudo refrescar el catálogo al sincronizar:", e);
+      setResultado({
+        ok: false,
+        texto: `Las ventas se subieron, pero el catálogo no bajó: ${mensaje(e)}`,
+      });
     }
   }
 
@@ -126,6 +156,12 @@ export function IndicadorSync({
           </button>
         )}
       </div>
+
+      {resultado !== null && (
+        <div className={resultado.ok ? "sync-aviso sync-aviso--ok" : "sync-aviso sync-aviso--mal"}>
+          {resultado.texto}
+        </div>
+      )}
 
       {verDetalle && (
         <div className="overlay" onClick={() => setVerDetalle(false)}>

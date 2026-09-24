@@ -14,9 +14,26 @@ import {
 import { Cantidad, crearExistencia } from "@nexosoft/domain";
 
 import { asegurarMaestros, leerConfig } from "./bootstrap-tauri";
-import { sincronizarCatalogo } from "./catalogo-pull";
+import { descargarCatalogo, volcarCatalogo, type OpcionesPull } from "./catalogo-pull";
 import type { ClienteCatalogo } from "../sync/cliente-catalogo-http";
 import type { ProductoRemoto, SaldoRemoto } from "../sync/mapeo-catalogo";
+
+/**
+ * Bajar y volcar, que es lo que hace el pull completo.
+ *
+ * En producción son dos pasos separados a propósito —la descarga va afuera de
+ * la transacción SQLite, para no tener la base tomada mientras se espera al
+ * servidor— pero lo que estos tests ejercitan es el resultado de los dos
+ * juntos, así que se los junta acá.
+ */
+async function sincronizarCatalogo(
+  repos: RepositoriosSqlite,
+  cliente: ClienteCatalogo,
+  config: ConfiguracionComercio,
+  opciones: OpcionesPull = {},
+) {
+  return volcarCatalogo(repos, await descargarCatalogo(cliente), config, opciones);
+}
 
 const requerir = createRequire(import.meta.url);
 const { DatabaseSync } = requerir("node:sqlite") as typeof import("node:sqlite");

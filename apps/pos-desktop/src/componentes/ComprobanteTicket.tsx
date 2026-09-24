@@ -159,8 +159,12 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
             <span>IVA contenido</span>
             <span>{pesos(transparencia.ivaContenido)}</span>
           </div>
+          {/* "Imp. internos", como en la térmica y como en los tickets de
+              supermercado: el nombre completo de la norma no entra en un rollo
+              de 58mm. Con el largo, la fila partía el importe al medio y salía
+              el "$" en un renglón y "0,00" en el otro. */}
           <div className="ticket-print-fila">
-            <span>Otros imp. nacionales indirectos</span>
+            <span>Imp. internos</span>
             <span>{pesos(transparencia.otrosImpuestosNacionales)}</span>
           </div>
           <div className="ticket-print-nota">{ACLARACION_IMPUESTOS_NACIONALES}</div>

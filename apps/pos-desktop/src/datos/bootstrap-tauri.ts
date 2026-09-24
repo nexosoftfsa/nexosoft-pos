@@ -46,7 +46,7 @@ import { ClienteSyncHttp } from "../sync/cliente-sync-http";
 import { ClienteCatalogoHttp, type ClienteCatalogo } from "../sync/cliente-catalogo-http";
 import { MotorDeSincronizacion } from "@nexosoft/sync";
 import type { SyncPos } from "../sync/useSync";
-import { sincronizarCatalogo } from "./catalogo-pull";
+import { descargarCatalogo, volcarCatalogo, type ResultadoPull } from "./catalogo-pull";
 import { crearTablaSesion } from "./sesion-sqlite";
 import { crearTablaAjustes } from "./ajustes-sqlite";
 import {
@@ -249,18 +249,43 @@ export interface OpcionesEntornoTauri {
  * sesión o falla la red, NO rompe el arranque (devuelve false y se sigue con lo
  * que haya en local). En base vacía aprovisiona el stock desde el servidor.
  */
+async function pullCatalogo(
+  ejecutor: EjecutorSqlTauri,
+  config: ConfiguracionComercio,
+  cliente: ClienteCatalogo,
+): Promise<ResultadoPull> {
+  const reemplazarStock = await catalogoVacio(ejecutor);
+  // La descarga va AFUERA de la transacción: el ejecutor serializa todo en una
+  // cola, así que tener la transacción abierta durante dos llamadas HTTP dejaba
+  // la base entera tomada —una venta en ese momento esperaba al servidor— y
+  // además confundía un error de red con un error de escritura.
+  const descargado = await descargarCatalogo(cliente);
+  return ejecutor.transaccion((ej) =>
+    volcarCatalogo(crearRepositoriosSqlite(ej), descargado, config, { reemplazarStock }),
+  );
+}
+
+/**
+ * Pull que NO rompe el arranque: si no hay red o el servidor no contesta, el
+ * POS abre con lo que tenga en local. Devuelve si pudo.
+ *
+ * El error se registra. Estuvo tragado en silencio durante meses y eso costó
+ * tres pruebas de campo: "toqué Sincronizar y no pasó nada", sin forma de saber
+ * si el pull había corrido, había fallado, o ni siquiera se había llamado.
+ */
 async function intentarPullCatalogo(
   ejecutor: EjecutorSqlTauri,
   config: ConfiguracionComercio,
   cliente: ClienteCatalogo,
 ): Promise<boolean> {
   try {
-    const reemplazarStock = await catalogoVacio(ejecutor);
-    await ejecutor.transaccion((ej) =>
-      sincronizarCatalogo(crearRepositoriosSqlite(ej), cliente, config, { reemplazarStock }),
+    const r = await pullCatalogo(ejecutor, config, cliente);
+    console.info(
+      `Catálogo: ${r.productos} productos, ${r.stockInicializado} con stock inicializado, ${r.dadosDeBaja} dados de baja.`,
     );
     return true;
-  } catch {
+  } catch (e) {
+    console.error("No se pudo bajar el catálogo del servidor:", e);
     return false;
   }
 }
@@ -324,9 +349,13 @@ export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}):
     // Mismo camino que al iniciar sesión: pull del servidor y relectura de
     // SQLite. Es lo que hacía falta hacer a mano —salir y volver a entrar—
     // para que un cambio de catálogo llegara a la caja.
+    // A diferencia del arranque, acá el error NO se traga: lo pide una persona
+    // que apretó un botón y tiene derecho a saber si funcionó. Que se lo
+    // comiera en silencio es lo que dejó tres vueltas sin poder probar un
+    // producto exento, con el catálogo viejo y nadie enterado.
     recargarCatalogo: async () => {
       if (obtenerToken() !== null) {
-        await intentarPullCatalogo(ejecutor, config, clienteCatalogo);
+        await pullCatalogo(ejecutor, config, clienteCatalogo);
       }
       return leerCatalogo(ejecutor, repos, config);
     },
