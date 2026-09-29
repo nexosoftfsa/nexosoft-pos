@@ -48,12 +48,12 @@ devolvía `comprobanteAsociadoId` (un UUID) pero no el tipo ni el número.
 ## Consecuencias
 
 - Las notas de crédito salen con `Comprobante asociado / Factura C
-  0002-00000003` en el ticket, el A4 y la térmica.
+0002-00000003` en el ticket, el A4 y la térmica.
 - **También las emitidas antes de este cambio**, al reimprimirlas: el vínculo ya
   se guardaba (`comprobanteAsociadoId`) desde que existe la anulación; lo único
   que faltaba era devolverlo resuelto. No hay que migrar nada.
 - `registrarEnLibro` pasó a tipar su parámetro con `Omit<…,
-  'comprobanteAsociado'>`: el libro de ventas no usa la relación, y exigirla
+'comprobanteAsociado'>`: el libro de ventas no usa la relación, y exigirla
   obligaría a traerla en el `create` de la venta, que nunca la tiene.
 
 ## Alternativas descartadas

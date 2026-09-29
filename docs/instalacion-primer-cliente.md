@@ -10,7 +10,7 @@ hace de servidor — ver [ADR-0019](adr/0019-topologia-servidor-de-sucursal-lan.
   muchísimo (casi una hora para "solo" 2GB la primera vez) y sus rutas
   superan el límite de Windows, lo que hace fallar la copia de subcarpetas
   a mitad de camino y deja una instalación a medio armar. **Siempre `git
-  clone`** (paso 1) — el código fuente son unos pocos MB, `node_modules` se
+clone`** (paso 1) — el código fuente son unos pocos MB, `node_modules` se
   reinstala fresco en cada máquina con `pnpm install`. El pendrive es solo
   para los instaladores de Node/Git/PostgreSQL/WebView2 y el `.exe` del
   POS ya compilado — nunca para el código.
@@ -104,6 +104,7 @@ hace falta Rust ni nada acá) e instalarlo. Repetir en Depósito y Oficina si
 corresponde hoy.
 
 En cada instalación, al loguearse por primera vez:
+
 - **Configuración del servidor**: `http://localhost:3000/api/v1` en la
   Caja, `http://<IP-de-la-caja>:3000/api/v1` en Depósito/Oficina.
 - Cargar razón social, CUIT, condición IVA, punto de venta, **logo**.

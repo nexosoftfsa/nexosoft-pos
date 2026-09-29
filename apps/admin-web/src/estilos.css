@@ -9,7 +9,12 @@
   --color-acento-fuerte: #0ea5e9;
   --color-error: #f87171;
   --radio: 10px;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 * {

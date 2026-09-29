@@ -16,6 +16,7 @@ Definir la interfaz **`ProveedorLLM`** y un adaptador **Gemini** (Google) + un
 OCR), escalable a un modelo `pro` para razonamiento más exigente.
 
 **Guardrails del text-to-SQL** (no negociable):
+
 - Generación de SQL **solo lectura** (sin `INSERT/UPDATE/DELETE/DDL`).
 - **Allowlist** de tablas/vistas expuestas (no acceso a credenciales/auditoría).
 - Validación/parseo del SQL antes de ejecutar y límites de filas/tiempo.
@@ -24,10 +25,12 @@ OCR), escalable a un modelo `pro` para razonamiento más exigente.
 ## Consecuencias
 
 ### Positivas
+
 - Capacidad multimodal fuerte para OCR; `flash` mantiene costos bajos.
 - Cambiar de proveedor (Anthropic, OpenAI) es cambiar un adaptador.
 
 ### Negativas / costos
+
 - Sale información a un tercero: cuidar **PII** y minimizar datos enviados.
 - Depende de cuota/conectividad; no testeable sin API key → `MockLLM`.
 

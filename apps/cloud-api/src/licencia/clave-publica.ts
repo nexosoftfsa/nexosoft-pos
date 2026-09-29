@@ -15,4 +15,4 @@
  * Por eso la privada se cuida como se cuida: perderla es caro.
  */
 export const CLAVE_PUBLICA_LICENCIAS =
-  'MCowBQYDK2VwAyEAcHOAPZ8IDo4PLb6SXnmmfNsKSRafXavF7e4AsVcbxzA=';
+  "MCowBQYDK2VwAyEAcHOAPZ8IDo4PLb6SXnmmfNsKSRafXavF7e4AsVcbxzA=";

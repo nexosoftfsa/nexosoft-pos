@@ -17,10 +17,12 @@ reconciliación la maneja `@nexosoft/sync`.
 ## Consecuencias
 
 ### Positivas
+
 - Embebida, transaccional (ACID), sin servicio aparte; ideal para mostrador.
 - Excelente para lecturas/escrituras locales rápidas del flujo de venta.
 
 ### Negativas / costos
+
 - **Sin tipo decimal nativo**: el dinero se guarda en enteros (centavos) o texto;
   el cálculo vive en `@nexosoft/domain` (ver ADR-0007).
 - Hay dos motores (SQLite/PostgreSQL): el esquema y las migraciones deben

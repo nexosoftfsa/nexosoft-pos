@@ -26,7 +26,13 @@ function fecha(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
     ? iso
-    : d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+    : d.toLocaleString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 }
 
 export function CredencialEmpleado({
@@ -72,7 +78,9 @@ export function CredencialEmpleado({
     setAvisoNuevaCredencial(false);
     try {
       const { payload } = await clienteCredenciales.regenerar(usuario.id);
-      const foto = await clienteUsuarios.obtenerFoto(usuario.id).catch(() => ({ fotoBase64: null }));
+      const foto = await clienteUsuarios
+        .obtenerFoto(usuario.id)
+        .catch(() => ({ fotoBase64: null }));
       const razonSocial = comercio?.razonSocial.trim();
       imprimirCredencial({
         nombreDisplay: usuario.nombreDisplay,
@@ -92,7 +100,11 @@ export function CredencialEmpleado({
   }
 
   async function revocar() {
-    if (!(await preguntarSiNo(`¿Seguro que querés revocar la credencial de "${usuario.nombreDisplay}"? Ya no va a poder loguearse escaneándola.`))) {
+    if (
+      !(await preguntarSiNo(
+        `¿Seguro que querés revocar la credencial de "${usuario.nombreDisplay}"? Ya no va a poder loguearse escaneándola.`,
+      ))
+    ) {
       return;
     }
     setProcesando(true);
@@ -123,7 +135,9 @@ export function CredencialEmpleado({
             {!cargando && (
               <>
                 {estado === null ? (
-                  <div className="muted">Este usuario todavía no tiene una credencial generada.</div>
+                  <div className="muted">
+                    Este usuario todavía no tiene una credencial generada.
+                  </div>
                 ) : (
                   <div className="field" style={{ gap: "0.3rem" }}>
                     <div>
@@ -134,7 +148,9 @@ export function CredencialEmpleado({
                         <span className="badge badge--warn">Revocada</span>
                       )}
                     </div>
-                    <div className="muted">Versión {estado.version} · emitida {fecha(estado.creadaEn)}</div>
+                    <div className="muted">
+                      Versión {estado.version} · emitida {fecha(estado.creadaEn)}
+                    </div>
                     {estado.ultimoUsoEn !== null && (
                       <div className="muted">Último uso: {fecha(estado.ultimoUsoEn)}</div>
                     )}
@@ -143,9 +159,9 @@ export function CredencialEmpleado({
 
                 {avisoNuevaCredencial && (
                   <div className="aviso-ok" style={{ marginTop: "0.6rem" }}>
-                    Credencial generada e impresa. Guardala en un lugar seguro — por seguridad no
-                    se puede volver a ver ni reimprimir el mismo código; si se pierde, generá una
-                    nueva (invalida la anterior).
+                    Credencial generada e impresa. Guardala en un lugar seguro — por seguridad no se
+                    puede volver a ver ni reimprimir el mismo código; si se pierde, generá una nueva
+                    (invalida la anterior).
                   </div>
                 )}
               </>
@@ -155,7 +171,12 @@ export function CredencialEmpleado({
           </div>
           <div className="modal__foot">
             {estado !== null && estado.activa && (
-              <button type="button" className="pill-btn pill-btn--danger" onClick={() => void revocar()} disabled={procesando}>
+              <button
+                type="button"
+                className="pill-btn pill-btn--danger"
+                onClick={() => void revocar()}
+                disabled={procesando}
+              >
                 Revocar
               </button>
             )}
@@ -165,7 +186,11 @@ export function CredencialEmpleado({
               onClick={() => void generar()}
               disabled={procesando || cargando}
             >
-              {procesando ? "Generando…" : estado !== null ? "Regenerar e imprimir" : "Generar e imprimir"}
+              {procesando
+                ? "Generando…"
+                : estado !== null
+                  ? "Regenerar e imprimir"
+                  : "Generar e imprimir"}
             </button>
           </div>
         </div>

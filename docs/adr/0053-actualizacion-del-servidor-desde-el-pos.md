@@ -54,6 +54,7 @@ Al tocarlo:
 ## Consecuencias
 
 ### Positivas
+
 - Cierra el hueco real: hoy no alcanza con actualizar el POS si la versión
   nueva depende de endpoints que el servidor viejo no tiene (como pasó con
   Fase 15.A: `/usuarios/:id/foto` y `/usuarios/:id/credencial`).
@@ -67,6 +68,7 @@ Al tocarlo:
   se acuerde de correrlo a mano.
 
 ### Negativas / costos
+
 - Asume la convención de instalación `C:\NexoSoft` (documentada en
   `instalacion-primer-cliente.md`) — el path del script está fijo en el
   scope de la capability. Si algún día se instala en otro lado, este botón

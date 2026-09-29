@@ -46,8 +46,8 @@ export function porVencerLaVentanaArca(fecha: Date, ahora: Date): boolean {
 export function motivoVentanaVencida(fecha: Date, ahora: Date): string {
   const dias = diasDeAntiguedad(fecha, ahora);
   return (
-    `La venta es del ${fecha.toLocaleDateString('es-AR')} (hace ${dias} días) y ARCA sólo autoriza ` +
+    `La venta es del ${fecha.toLocaleDateString("es-AR")} (hace ${dias} días) y ARCA sólo autoriza ` +
     `comprobantes con fecha de hasta ${DIAS_VENTANA_ARCA} días. Ya no se puede autorizar automáticamente: ` +
-    'hay que regularizarla con el contador.'
+    "hay que regularizarla con el contador."
   );
 }

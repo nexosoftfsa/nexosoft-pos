@@ -125,7 +125,7 @@ async function apiPanel(pedido: Request, env: Env, ruta: string): Promise<Respon
       return json({ error: "Plan inválido" }, 400);
     }
     if (cuerpo.precioMensual != null && !esPrecioValido(cuerpo.precioMensual)) {
-      return json({ error: "Precio inválido: se espera { moneda: \"USD\", importe: \"50\" }" }, 400);
+      return json({ error: 'Precio inválido: se espera { moneda: "USD", importe: "50" }' }, 400);
     }
     const existente = await leerCliente(env.CLIENTES, comercioId);
     const cliente: Cliente = {

@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { cuitEsValido, normalizarCuit } from '@nexosoft/domain';
+import { Injectable, Logger } from "@nestjs/common";
+import { cuitEsValido, normalizarCuit } from "@nexosoft/domain";
 
-import { PrismaService } from '../prisma/prisma.service';
-import type { EntornoArca } from './arca/wsaa';
+import { PrismaService } from "../prisma/prisma.service";
+import type { EntornoArca } from "./arca/wsaa";
 
 export interface ConfiguracionFiscal {
   readonly cuit: string;
@@ -38,17 +38,17 @@ export class ConfiguracionFiscalService {
   async obtener(): Promise<ConfiguracionFiscal | null> {
     const fila = await this.prisma.configuracionSistema.findUnique({ where: { id: 1 } });
     if (fila === null) return null;
-    const cuit = fila.cuit === null ? '' : normalizarCuit(fila.cuit);
+    const cuit = fila.cuit === null ? "" : normalizarCuit(fila.cuit);
     if (!cuitEsValido(cuit) || fila.puntoDeVenta === null || fila.puntoDeVenta <= 0) {
       return null;
     }
     return {
       cuit,
-      razonSocial: fila.razonSocial ?? '',
+      razonSocial: fila.razonSocial ?? "",
       puntoDeVenta: fila.puntoDeVenta,
       // Monotributo emite comprobantes C, que no discriminan IVA.
-      discriminaIva: fila.condicionIvaEmisor === 'ResponsableInscripto',
-      entorno: fila.arcaEntorno === 'produccion' ? 'produccion' : 'homologacion',
+      discriminaIva: fila.condicionIvaEmisor === "ResponsableInscripto",
+      entorno: fila.arcaEntorno === "produccion" ? "produccion" : "homologacion",
     };
   }
 
@@ -62,7 +62,7 @@ export class ConfiguracionFiscalService {
         : {}),
       // El entorno NO se cambia desde el POS junto con el resto: pasar a
       // producción es emitir comprobantes reales y tiene que ser deliberado.
-      ...(cambios.arcaEntorno === 'produccion' || cambios.arcaEntorno === 'homologacion'
+      ...(cambios.arcaEntorno === "produccion" || cambios.arcaEntorno === "homologacion"
         ? { arcaEntorno: cambios.arcaEntorno }
         : {}),
     };
@@ -73,7 +73,7 @@ export class ConfiguracionFiscalService {
     });
     const config = await this.obtener();
     if (config === null) {
-      this.log.warn('Datos fiscales guardados pero incompletos: todavía no se puede facturar.');
+      this.log.warn("Datos fiscales guardados pero incompletos: todavía no se puede facturar.");
     }
     return config;
   }

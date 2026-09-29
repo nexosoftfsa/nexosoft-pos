@@ -102,9 +102,7 @@ describe("subtotalNeto", () => {
   ];
 
   it("en Factura A suma las bases de todas las alícuotas", () => {
-    const neto = subtotalNeto(
-      base({ tipoComprobante: "Factura A", subtotalesIva: conDesglose }),
-    );
+    const neto = subtotalNeto(base({ tipoComprobante: "Factura A", subtotalesIva: conDesglose }));
     expect(neto?.aDecimalString(2)).toBe("1200.00");
   });
 
@@ -304,9 +302,7 @@ describe("transparenciaFiscal", () => {
   });
 
   it("si el comercio SÍ los liquida, se imprime lo que informó", () => {
-    const t = transparenciaFiscal(
-      facturaB({ otrosImpuestosNacionales: Money.desde("143.58") }),
-    );
+    const t = transparenciaFiscal(facturaB({ otrosImpuestosNacionales: Money.desde("143.58") }));
     expect(t?.otrosImpuestosNacionales.aDecimalString(2)).toBe("143.58");
   });
 
@@ -317,8 +313,12 @@ describe("transparenciaFiscal", () => {
    * discriminar.
    */
   it("no va en la A ni en la C", () => {
-    expect(transparenciaFiscal(base({ tipoComprobante: "Factura A", subtotalesIva: desglose }))).toBeNull();
-    expect(transparenciaFiscal(base({ tipoComprobante: "Factura C", subtotalesIva: desglose }))).toBeNull();
+    expect(
+      transparenciaFiscal(base({ tipoComprobante: "Factura A", subtotalesIva: desglose })),
+    ).toBeNull();
+    expect(
+      transparenciaFiscal(base({ tipoComprobante: "Factura C", subtotalesIva: desglose })),
+    ).toBeNull();
   });
 
   it("una Nota de Crédito B sí lo lleva: la regla es la letra", () => {
@@ -330,7 +330,9 @@ describe("transparenciaFiscal", () => {
 
   it("un ticket interno no lo lleva: no es un comprobante fiscal", () => {
     expect(
-      transparenciaFiscal(base({ tipoComprobante: "Ticket", esFiscal: false, subtotalesIva: desglose })),
+      transparenciaFiscal(
+        base({ tipoComprobante: "Ticket", esFiscal: false, subtotalesIva: desglose }),
+      ),
     ).toBeNull();
   });
 
@@ -402,9 +404,7 @@ describe("referenciaInterna", () => {
 
 describe("numeroEsProvisional", () => {
   it("un ticket interno con número confirmado NO es provisional", () => {
-    expect(
-      numeroEsProvisional(base({ esFiscal: false, numeroConfirmado: true })),
-    ).toBe(false);
+    expect(numeroEsProvisional(base({ esFiscal: false, numeroConfirmado: true }))).toBe(false);
   });
 
   it("un fiscal con número del servidor pero sin CAE SIGUE siendo provisional (ADR-0068)", () => {

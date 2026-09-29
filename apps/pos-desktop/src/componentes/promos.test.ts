@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Money, TipoPromocion, type Promocion } from "@nexosoft/domain";
 
-import {
-  descuentoDeLinea,
-  descuentoPorcentajeLinea,
-  PROMOS_DEMO,
-  promoAplicable,
-} from "./promos";
+import { descuentoDeLinea, descuentoPorcentajeLinea, PROMOS_DEMO, promoAplicable } from "./promos";
 
 const ahora = new Date();
 

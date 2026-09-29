@@ -13,8 +13,8 @@
  * vez de una vez por línea, y el neto se obtiene restando (nunca dividiendo),
  * así la suma cierra por construcción.
  */
-import { Money } from '../dinero/money.js';
-import type { AlicuotaIva } from './alicuota-iva.js';
+import { Money } from "../dinero/money.js";
+import type { AlicuotaIva } from "./alicuota-iva.js";
 
 /** Una línea del comprobante, con su importe final (IVA incluido). */
 export interface LineaParaDesglose {
@@ -80,7 +80,10 @@ export function desglosarIvaIncluido(lineas: readonly LineaParaDesglose[]): Desg
     const ivaDelGrupo =
       tasa === 0
         ? Money.cero()
-        : grupo.importe.multiplicarPor(tasa).dividirPor(100 + tasa).redondear(2);
+        : grupo.importe
+            .multiplicarPor(tasa)
+            .dividirPor(100 + tasa)
+            .redondear(2);
     // El neto sale de restar, no de dividir: así base + iva da exactamente el
     // importe del grupo y la suma total cierra sin arrastrar centavos.
     const baseDelGrupo = grupo.importe.restar(ivaDelGrupo);

@@ -1,10 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { motivosDeTasasInvalidas } from '@nexosoft/domain';
-import { PrismaService } from '../prisma/prisma.service';
-import type { CrearTarjetaDto } from './dto/crear-tarjeta.dto';
-import type { ActualizarTarjetaDto } from './dto/actualizar-tarjeta.dto';
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { motivosDeTasasInvalidas } from "@nexosoft/domain";
+import { PrismaService } from "../prisma/prisma.service";
+import type { CrearTarjetaDto } from "./dto/crear-tarjeta.dto";
+import type { ActualizarTarjetaDto } from "./dto/actualizar-tarjeta.dto";
 
-const INCLUDE_TASAS = { tasas: { orderBy: { cantidadCuotas: 'asc' as const } } };
+const INCLUDE_TASAS = { tasas: { orderBy: { cantidadCuotas: "asc" as const } } };
 
 /**
  * Medios de pago (Fase 12.E): tarjetas por banco con su tasa de recargo
@@ -19,7 +19,7 @@ export class MediosPagoService {
   async listarTarjetas(sucursalId: string, soloActivas = true) {
     return this.prisma.tarjetaConfig.findMany({
       where: { sucursalId, ...(soloActivas ? { activo: true } : {}) },
-      orderBy: { banco: 'asc' },
+      orderBy: { banco: "asc" },
       include: INCLUDE_TASAS,
     });
   }
@@ -43,7 +43,7 @@ export class MediosPagoService {
     tasas: ReadonlyArray<{ cantidadCuotas: number; recargoPorcentaje: number }>,
   ): void {
     const motivos = motivosDeTasasInvalidas(tipo, tasas);
-    if (motivos.length > 0) throw new BadRequestException(motivos.join(' '));
+    if (motivos.length > 0) throw new BadRequestException(motivos.join(" "));
   }
 
   async crearTarjeta(sucursalId: string, dto: CrearTarjetaDto) {

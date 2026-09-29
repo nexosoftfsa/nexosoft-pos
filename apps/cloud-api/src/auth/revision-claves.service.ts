@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { evaluarFortaleza, type ContextoPassword } from './fortaleza-password';
+import { Injectable } from "@nestjs/common";
+import { evaluarFortaleza, type ContextoPassword } from "./fortaleza-password";
 
 export interface ClaveDebil {
   readonly usuarioId: string;

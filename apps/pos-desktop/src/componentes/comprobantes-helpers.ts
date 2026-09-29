@@ -324,9 +324,7 @@ function lineasDe(c: Comprobante): DatosTicket["lineas"] {
       cantidad,
       precioUnitario: Money.desde(it.precioUnitario),
       importe: Money.desde(it.subtotal),
-      ...(neto !== null
-        ? { neto, netoUnitario: netoUnitarioDe(neto, it.cantidad) }
-        : {}),
+      ...(neto !== null ? { neto, netoUnitario: netoUnitarioDe(neto, it.cantidad) } : {}),
     };
   });
 }
@@ -352,9 +350,7 @@ function receptorDe(c: Comprobante): {
   return {
     razonSocial: cli.nombre,
     documento: cli.documento,
-    ...(cli.direccion !== null && cli.direccion.trim() !== ""
-      ? { domicilio: cli.direccion }
-      : {}),
+    ...(cli.direccion !== null && cli.direccion.trim() !== "" ? { domicilio: cli.direccion } : {}),
   };
 }
 

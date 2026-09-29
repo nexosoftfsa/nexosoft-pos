@@ -4,11 +4,11 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-} from '@nestjs/common';
-import { ETIQUETA_PLAN, planQueLoHabilita } from '@nexosoft/licencias';
-import { LicenciaService } from './licencia.service';
-import { bloqueadaPorSuscripcion } from './operaciones-bloqueadas';
-import { fueraDelPlan, moduloDeRuta } from './operaciones-por-plan';
+} from "@nestjs/common";
+import { ETIQUETA_PLAN, planQueLoHabilita } from "@nexosoft/licencias";
+import { LicenciaService } from "./licencia.service";
+import { bloqueadaPorSuscripcion } from "./operaciones-bloqueadas";
+import { fueraDelPlan, moduloDeRuta } from "./operaciones-por-plan";
 
 interface PedidoHttp {
   readonly method: string;
@@ -34,20 +34,20 @@ export class LicenciaGuard implements CanActivate {
   constructor(private readonly licencia: LicenciaService) {}
 
   canActivate(contexto: ExecutionContext): boolean {
-    if (contexto.getType() !== 'http') return true;
+    if (contexto.getType() !== "http") return true;
 
     const estado = this.licencia.estado();
     const pedido = contexto.switchToHttp().getRequest<PedidoHttp>();
-    const ruta = pedido.originalUrl ?? pedido.url ?? '/';
+    const ruta = pedido.originalUrl ?? pedido.url ?? "/";
 
     if (!estado.puedeVender && bloqueadaPorSuscripcion(pedido.method, ruta)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.PAYMENT_REQUIRED,
-          error: 'SuscripcionBloqueada',
+          error: "SuscripcionBloqueada",
           message:
             estado.aviso ??
-            'El sistema está bloqueado por falta de pago. Comunicate con NexoSoft para reactivarlo.',
+            "El sistema está bloqueado por falta de pago. Comunicate con NexoSoft para reactivarlo.",
         },
         HttpStatus.PAYMENT_REQUIRED,
       );
@@ -59,9 +59,9 @@ export class LicenciaGuard implements CanActivate {
       throw new HttpException(
         {
           statusCode: HttpStatus.PAYMENT_REQUIRED,
-          error: 'FueraDelPlan',
+          error: "FueraDelPlan",
           message: `Esta función no está incluida en tu plan ${ETIQUETA_PLAN[estado.plan]}${
-            necesario === null ? '' : `. Está disponible en ${necesario}`
+            necesario === null ? "" : `. Está disponible en ${necesario}`
           }. Comunicate con NexoSoft para ampliarlo.`,
         },
         HttpStatus.PAYMENT_REQUIRED,

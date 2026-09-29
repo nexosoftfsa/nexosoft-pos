@@ -62,9 +62,7 @@ export function porVencer(lote: Lote, fecha: Date, dias: number): boolean {
 
 /** Ordena por vencimiento ascendente (FEFO). Devuelve una copia. */
 export function ordenarFEFO(lotes: readonly Lote[]): Lote[] {
-  return [...lotes].sort(
-    (a, b) => a.vencimiento.getTime() - b.vencimiento.getTime(),
-  );
+  return [...lotes].sort((a, b) => a.vencimiento.getTime() - b.vencimiento.getTime());
 }
 
 /** Suma las cantidades de varios lotes. */
@@ -83,10 +81,7 @@ export interface ResultadoDescuentoFEFO {
  * Descuenta una cantidad de los lotes con criterio FEFO. No filtra vencidos: si
  * la política lo exige, el llamador debe excluirlos antes.
  */
-export function descontarFEFO(
-  lotes: readonly Lote[],
-  cantidad: Cantidad,
-): ResultadoDescuentoFEFO {
+export function descontarFEFO(lotes: readonly Lote[], cantidad: Cantidad): ResultadoDescuentoFEFO {
   let restante = cantidad;
   const resultado = ordenarFEFO(lotes).map((lote) => {
     if (!restante.esPositiva()) return lote;

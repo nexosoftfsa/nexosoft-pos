@@ -16,11 +16,11 @@ el gate de rol es el mismo para todos). Scopeados por la `sucursalId` del
 token — un usuario de otra sucursal responde 404, igual que
 `UsuariosController`.
 
-| Método y ruta | Devuelve |
-| -------------- | -------- |
-| `GET /usuarios/:id/credencial` | `{ activa, version, creadaEn, ultimoUsoEn } \| null`. Sin body (200, no `"null"`) si el usuario nunca tuvo credencial. |
+| Método y ruta                             | Devuelve                                                                                                                                                          |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /usuarios/:id/credencial`            | `{ activa, version, creadaEn, ultimoUsoEn } \| null`. Sin body (200, no `"null"`) si el usuario nunca tuvo credencial.                                            |
 | `POST /usuarios/:id/credencial/regenerar` | `{ payload, version }`. El `payload` en claro **solo se devuelve esta vez** — no se puede volver a consultar. Invalida cualquier credencial anterior del usuario. |
-| `DELETE /usuarios/:id/credencial` | `{ ok: true }`. Revoca la credencial (no la borra: queda el registro con `activa:false`). |
+| `DELETE /usuarios/:id/credencial`         | `{ ok: true }`. Revoca la credencial (no la borra: queda el registro con `activa:false`).                                                                         |
 
 Login por credencial (endpoint separado, público — mismo criterio que
 `POST /auth/login`): `POST /auth/login-credencial` con `{ credencial:
@@ -50,16 +50,16 @@ sin DB).
 
 ## Seguridad
 
-| Aspecto | Decisión |
-| ------- | -------- |
-| Storage del secreto | `argon2.hash(tokenPlano)` — nunca en claro, mismo criterio que `Usuario.passwordHash`. `validar()` solo devuelve el usuario si `argon2.verify` matchea. |
-| Revocación por pérdida | `DELETE .../credencial`, solo ADMIN, inmediata. |
-| Regeneración | Invalida la anterior automáticamente (mismo registro, `version` incrementa). |
-| Expiración temporal automática | No implementada en 15.A (no pedida); evolución futura si se necesita. |
-| RBAC | Solo ADMIN gestiona credenciales (generar/revocar/ver estado) de cualquier usuario. |
-| Enumeración | `validar()` lanza siempre el mismo mensaje genérico (`"Credencial inválida"`) sin distinguir la causa (formato inválido, usuario inexistente, credencial revocada, hash que no matchea, usuario inactivo). |
-| Auditoría | Cada intento (éxito/fallo) y cada regeneración/revocación queda en `RegistroAuditoria` (`LOGIN_CREDENCIAL`, `LOGIN_CREDENCIAL_FALLIDO`, `CREDENCIAL_REGENERADA`, `CREDENCIAL_REVOCADA`). |
-| Rate-limiting de intentos | **No en 15.A** — aceptable porque `cloud-api` corre solo en la LAN del comercio (ADR-0019). Es un prerrequisito explícito de la Fase 15.B antes de exponer `admin-web`/el login a internet. |
+| Aspecto                        | Decisión                                                                                                                                                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Storage del secreto            | `argon2.hash(tokenPlano)` — nunca en claro, mismo criterio que `Usuario.passwordHash`. `validar()` solo devuelve el usuario si `argon2.verify` matchea.                                                    |
+| Revocación por pérdida         | `DELETE .../credencial`, solo ADMIN, inmediata.                                                                                                                                                            |
+| Regeneración                   | Invalida la anterior automáticamente (mismo registro, `version` incrementa).                                                                                                                               |
+| Expiración temporal automática | No implementada en 15.A (no pedida); evolución futura si se necesita.                                                                                                                                      |
+| RBAC                           | Solo ADMIN gestiona credenciales (generar/revocar/ver estado) de cualquier usuario.                                                                                                                        |
+| Enumeración                    | `validar()` lanza siempre el mismo mensaje genérico (`"Credencial inválida"`) sin distinguir la causa (formato inválido, usuario inexistente, credencial revocada, hash que no matchea, usuario inactivo). |
+| Auditoría                      | Cada intento (éxito/fallo) y cada regeneración/revocación queda en `RegistroAuditoria` (`LOGIN_CREDENCIAL`, `LOGIN_CREDENCIAL_FALLIDO`, `CREDENCIAL_REGENERADA`, `CREDENCIAL_REVOCADA`).                   |
+| Rate-limiting de intentos      | **No en 15.A** — aceptable porque `cloud-api` corre solo en la LAN del comercio (ADR-0019). Es un prerrequisito explícito de la Fase 15.B antes de exponer `admin-web`/el login a internet.                |
 
 ## Diseño
 

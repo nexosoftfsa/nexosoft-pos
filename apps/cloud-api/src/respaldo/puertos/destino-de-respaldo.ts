@@ -33,4 +33,4 @@ export interface DestinoDeRespaldo {
 }
 
 /** Token de inyección para el destino activo (resuelto por configuración). */
-export const DESTINO_DE_RESPALDO = Symbol('DESTINO_DE_RESPALDO');
+export const DESTINO_DE_RESPALDO = Symbol("DESTINO_DE_RESPALDO");

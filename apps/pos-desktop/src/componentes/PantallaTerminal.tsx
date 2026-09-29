@@ -79,7 +79,13 @@ export function PantallaTerminal({
         )}
 
         {terminales?.map((t) => (
-          <button key={t.id} type="button" style={opcion} disabled={eligiendo} onClick={() => void elegir(t)}>
+          <button
+            key={t.id}
+            type="button"
+            style={opcion}
+            disabled={eligiendo}
+            onClick={() => void elegir(t)}
+          >
             {t.nombre}
           </button>
         ))}
@@ -126,7 +132,12 @@ const tarjeta: CSSProperties = {
   borderRadius: "12px",
   boxShadow: "0 10px 30px rgba(15, 23, 42, 0.12)",
 };
-const titulo: CSSProperties = { fontSize: "1.2rem", fontWeight: 700, color: "#0f172a", marginBottom: "0.3rem" };
+const titulo: CSSProperties = {
+  fontSize: "1.2rem",
+  fontWeight: 700,
+  color: "#0f172a",
+  marginBottom: "0.3rem",
+};
 const texto: CSSProperties = { margin: 0, color: "#64748b", fontSize: "0.9rem" };
 const opcion: CSSProperties = {
   padding: "0.8rem",

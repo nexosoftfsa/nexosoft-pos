@@ -1,16 +1,10 @@
-import {
-  Injectable,
-  Inject,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { randomUUID } from 'node:crypto';
-import { Decimal } from '@prisma/client/runtime/library';
-import { EstadoFiscal, MedioPago, Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { MotorDeRespaldo } from '../respaldo/motor-de-respaldo';
+import { Injectable, Inject, Logger, NotFoundException, BadRequestException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { randomUUID } from "node:crypto";
+import { Decimal } from "@prisma/client/runtime/library";
+import { EstadoFiscal, MedioPago, Prisma } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import { MotorDeRespaldo } from "../respaldo/motor-de-respaldo";
 import {
   ALICUOTAS_IVA,
   codigoComprobanteArcaOpcional,
@@ -20,8 +14,8 @@ import {
   Money,
   type DesgloseIva,
   type TipoComprobante,
-} from '@nexosoft/domain';
-import type { ReceptorArca } from './cae/receptor-arca';
+} from "@nexosoft/domain";
+import type { ReceptorArca } from "./cae/receptor-arca";
 import {
   ErrorCaeNoDisponible,
   ErrorCaeRechazado,
@@ -29,23 +23,23 @@ import {
   type ComprobanteAsociadoSolicitud,
   type ResultadoCae,
   type ServicioCae,
-} from './cae/servicio-cae';
-import { comprobanteAsociadoDe } from './cae/comprobante-asociado';
-import { aDesglosePersistido } from './cae/desglose-persistido';
-import { fueraDeVentanaArca, motivoVentanaVencida } from './cae/ventana-de-fecha';
-import { fechaDeVenta } from './fecha-de-venta';
+} from "./cae/servicio-cae";
+import { comprobanteAsociadoDe } from "./cae/comprobante-asociado";
+import { aDesglosePersistido } from "./cae/desglose-persistido";
+import { fueraDeVentanaArca, motivoVentanaVencida } from "./cae/ventana-de-fecha";
+import { fechaDeVenta } from "./fecha-de-venta";
 import {
   cuentaParaElTope,
   esRafagaAnormal,
   motivoRafaga,
   VENTANA_RAFAGA_MS,
-} from './rafaga-de-ventas';
-import { DesgloseDeVentaService, type LineaDeVenta } from './cae/desglose-de-venta.service';
-import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
-import type { CrearVentaDto } from './dto/crear-venta.dto';
-import type { EmitirNotaDebitoDto } from './dto/emitir-nota-debito.dto';
-import { expandirStockDeVenta, type ComponenteCombo } from './combo';
-import { asignarFefo, type LoteConSaldo } from '../stock/fefo';
+} from "./rafaga-de-ventas";
+import { DesgloseDeVentaService, type LineaDeVenta } from "./cae/desglose-de-venta.service";
+import { LIBRO_DE_VENTAS, type LibroDeVentas } from "./libro/libro-de-ventas";
+import type { CrearVentaDto } from "./dto/crear-venta.dto";
+import type { EmitirNotaDebitoDto } from "./dto/emitir-nota-debito.dto";
+import { expandirStockDeVenta, type ComponenteCombo } from "./combo";
+import { asignarFefo, type LoteConSaldo } from "../stock/fefo";
 
 /** Un tramo de salida de stock: cantidad y (para perecederos) el lote imputado. */
 interface TramoStock {
@@ -78,7 +72,7 @@ export class VentasService {
   historial(sucursalId: string) {
     return this.prisma.venta.findMany({
       where: { sucursalId },
-      orderBy: { creadaEn: 'desc' },
+      orderBy: { creadaEn: "desc" },
       include: {
         items: { include: { producto: { select: { id: true, nombre: true, codigo: true } } } },
         pagos: true,
@@ -114,9 +108,9 @@ export class VentasService {
     // Se traen las fechas y se cuenta acá: una pendiente es una excepción, y si
     // alguna vez hubiera miles, ese número ES la alarma.
     const pendientes = await this.prisma.venta.findMany({
-      where: { sucursalId, estadoFiscal: 'PENDIENTE' },
+      where: { sucursalId, estadoFiscal: "PENDIENTE" },
       select: { creadaEn: true },
-      orderBy: { creadaEn: 'asc' },
+      orderBy: { creadaEn: "asc" },
     });
     const ahora = new Date();
     return {
@@ -155,13 +149,13 @@ export class VentasService {
    */
   async anular(sucursalId: string, id: string) {
     const original = await this.obtener(sucursalId, id);
-    if (original.estado === 'ANULADA') {
-      throw new BadRequestException('El comprobante ya está anulado');
+    if (original.estado === "ANULADA") {
+      throw new BadRequestException("El comprobante ya está anulado");
     }
     // Ninguna nota se anula. Anular una NC sería emitir una NC de una NC, y
     // anular una ND es exactamente lo que hace una NC sobre la factura.
-    if (original.tipoComprobante?.startsWith('Nota')) {
-      throw new BadRequestException('No se puede anular una nota de crédito ni de débito');
+    if (original.tipoComprobante?.startsWith("Nota")) {
+      throw new BadRequestException("No se puede anular una nota de crédito ni de débito");
     }
 
     const tipoNc = notaCreditoDe(original.tipoComprobante);
@@ -203,7 +197,7 @@ export class VentasService {
         const nc = await tx.venta.create({
           data: {
             operacionId: `${original.operacionId}-NC`,
-            estado: 'COMPLETADA',
+            estado: "COMPLETADA",
             subtotal: original.subtotal,
             descuento: original.descuento,
             total: original.total,
@@ -238,13 +232,14 @@ export class VentasService {
         // componentes exactamente como se descontó, sin depender de la composición
         // actual del combo (ADR-0033).
         const movimientosVenta = await tx.movimientoStock.findMany({
-          where: { ventaId: original.id, tipo: 'VENTA' },
+          where: { ventaId: original.id, tipo: "VENTA" },
         });
-        const motivo = `Anulación ${original.tipoComprobante ?? ''} ${original.numeroComprobante ?? ''}`.trim();
+        const motivo =
+          `Anulación ${original.tipoComprobante ?? ""} ${original.numeroComprobante ?? ""}`.trim();
         for (const m of movimientosVenta) {
           await tx.movimientoStock.create({
             data: {
-              tipo: 'ENTRADA',
+              tipo: "ENTRADA",
               cantidad: m.cantidad,
               motivo,
               productoId: m.productoId,
@@ -256,7 +251,7 @@ export class VentasService {
           });
         }
 
-        await tx.venta.update({ where: { id: original.id }, data: { estado: 'ANULADA' } });
+        await tx.venta.update({ where: { id: original.id }, data: { estado: "ANULADA" } });
         return nc;
       }),
     );
@@ -283,24 +278,24 @@ export class VentasService {
    */
   async emitirNotaDebito(sucursalId: string, id: string, dto: EmitirNotaDebitoDto) {
     const original = await this.obtener(sucursalId, id);
-    if (!esComprobanteFiscal(original.tipoComprobante ?? 'TicketNoFiscal')) {
+    if (!esComprobanteFiscal(original.tipoComprobante ?? "TicketNoFiscal")) {
       throw new BadRequestException(
-        'Un ticket no fiscal no admite Nota de Débito: no es un comprobante ante ARCA.',
+        "Un ticket no fiscal no admite Nota de Débito: no es un comprobante ante ARCA.",
       );
     }
-    if (original.tipoComprobante?.startsWith('Nota')) {
-      throw new BadRequestException('No se puede emitir una Nota de Débito sobre otra nota.');
+    if (original.tipoComprobante?.startsWith("Nota")) {
+      throw new BadRequestException("No se puede emitir una Nota de Débito sobre otra nota.");
     }
     // Debitarle algo a un comprobante anulado no tiene sentido: lo que se
     // estaría cobrando pertenece a una operación que se dio de baja.
-    if (original.estado === 'ANULADA') {
+    if (original.estado === "ANULADA") {
       throw new BadRequestException(
-        'No se puede emitir una Nota de Débito sobre un comprobante anulado.',
+        "No se puede emitir una Nota de Débito sobre un comprobante anulado.",
       );
     }
     const monto = new Decimal(dto.monto);
     if (monto.lte(0)) {
-      throw new BadRequestException('El monto de la Nota de Débito debe ser mayor a cero.');
+      throw new BadRequestException("El monto de la Nota de Débito debe ser mayor a cero.");
     }
 
     const tipoNd = notaDebitoDe(original.tipoComprobante);
@@ -340,7 +335,7 @@ export class VentasService {
             // reintento automático que deduplicar. Lo que evita la nota doble
             // es el botón deshabilitado mientras se emite.
             operacionId: `${original.operacionId}-ND-${randomUUID()}`,
-            estado: 'COMPLETADA',
+            estado: "COMPLETADA",
             subtotal: monto,
             descuento: new Decimal(0),
             total: monto,
@@ -366,10 +361,10 @@ export class VentasService {
 
         // Fiado: si el original fue a cuenta corriente, el débito también. El
         // cliente ahora debe más.
-        if (original.medioPago === 'CUENTA_CORRIENTE' && original.clienteId) {
+        if (original.medioPago === "CUENTA_CORRIENTE" && original.clienteId) {
           await tx.movimientoCuentaCorriente.create({
             data: {
-              tipo: 'CARGO',
+              tipo: "CARGO",
               monto,
               concepto: `Nota de Débito: ${dto.concepto}`,
               clienteId: original.clienteId,
@@ -416,7 +411,7 @@ export class VentasService {
     comprobantesAsociados?: readonly ComprobanteAsociadoSolicitud[],
   ): Promise<{ cae: ResultadoCae | null; estadoFiscal: EstadoFiscal; motivo: string | null }> {
     if (!esComprobanteFiscal(tipoComprobante)) {
-      return { cae: null, estadoFiscal: 'NO_APLICA', motivo: null };
+      return { cae: null, estadoFiscal: "NO_APLICA", motivo: null };
     }
     // Una venta que estuvo offline más de la ventana de ARCA ya no se puede
     // autorizar con su fecha real, y mandarla es un rechazo seguro. Se registra
@@ -424,7 +419,7 @@ export class VentasService {
     if (fueraDeVentanaArca(fecha, new Date())) {
       const motivo = motivoVentanaVencida(fecha, new Date());
       this.logger.warn(`Venta fuera de la ventana de ARCA: ${motivo}`);
-      return { cae: null, estadoFiscal: 'PENDIENTE', motivo };
+      return { cae: null, estadoFiscal: "PENDIENTE", motivo };
     }
     try {
       const cae = await this.cae.autorizar({
@@ -450,15 +445,15 @@ export class VentasService {
           ? { comprobantesAsociados }
           : {}),
       });
-      return { cae, estadoFiscal: 'AUTORIZADA', motivo: null };
+      return { cae, estadoFiscal: "AUTORIZADA", motivo: null };
     } catch (e) {
       if (e instanceof ErrorCaeNoDisponible) {
         this.logger.warn(`Venta registrada SIN CAE (se reintenta): ${e.message}`);
-        return { cae: null, estadoFiscal: 'PENDIENTE', motivo: e.message };
+        return { cae: null, estadoFiscal: "PENDIENTE", motivo: e.message };
       }
       if (e instanceof ErrorCaeRechazado) {
         this.logger.error(`ARCA rechazó el comprobante: ${e.message}`);
-        return { cae: null, estadoFiscal: 'RECHAZADA', motivo: e.message };
+        return { cae: null, estadoFiscal: "RECHAZADA", motivo: e.message };
       }
       throw e;
     }
@@ -483,7 +478,7 @@ export class VentasService {
     const itemsData = dto.items.map((it) => {
       const cantidad = new Decimal(it.cantidad);
       const precioUnitario = new Decimal(it.precioUnitario);
-      const descuento = new Decimal(it.descuento ?? '0');
+      const descuento = new Decimal(it.descuento ?? "0");
       const subItem = cantidad.mul(precioUnitario).sub(descuento);
       subtotal = subtotal.add(subItem);
       lineasDesglose.push({
@@ -504,10 +499,10 @@ export class VentasService {
       };
     });
 
-    const descuentoGlobal = new Decimal(dto.descuento ?? '0');
-    const recargoGlobal = new Decimal(dto.recargo ?? '0');
+    const descuentoGlobal = new Decimal(dto.descuento ?? "0");
+    const recargoGlobal = new Decimal(dto.recargo ?? "0");
     const total = subtotal.sub(descuentoGlobal).add(recargoGlobal);
-    const tipoComprobante = dto.tipoComprobante ?? 'FacturaB';
+    const tipoComprobante = dto.tipoComprobante ?? "FacturaB";
     // Cuándo ocurrió la venta, no cuándo llegó. Una venta offline puede entrar
     // horas después: con la hora del servidor caía en el turno de caja
     // equivocado y con un `CbteFch` distinto al del ticket (`fecha-de-venta.ts`).
@@ -539,9 +534,9 @@ export class VentasService {
     const montoCuentaCorriente =
       pagos.length > 0
         ? pagos
-            .filter((p) => p.medioPago === 'CUENTA_CORRIENTE')
+            .filter((p) => p.medioPago === "CUENTA_CORRIENTE")
             .reduce((a, p) => a.add(new Decimal(p.monto)), new Decimal(0))
-        : dto.medioPago === 'CUENTA_CORRIENTE'
+        : dto.medioPago === "CUENTA_CORRIENTE"
           ? total
           : new Decimal(0);
 
@@ -567,7 +562,7 @@ export class VentasService {
         const v = await tx.venta.create({
           data: {
             operacionId: dto.operacionId,
-            estado: 'COMPLETADA',
+            estado: "COMPLETADA",
             creadaEn: fechaVenta,
             subtotal,
             descuento: descuentoGlobal,
@@ -615,7 +610,7 @@ export class VentasService {
         for (const t of tramosStock) {
           await tx.movimientoStock.create({
             data: {
-              tipo: 'VENTA',
+              tipo: "VENTA",
               cantidad: t.cantidad,
               motivo: `Venta ${dto.operacionId}`,
               productoId: t.productoId,
@@ -631,7 +626,7 @@ export class VentasService {
         if (montoCuentaCorriente.gt(0) && dto.clienteId) {
           await tx.movimientoCuentaCorriente.create({
             data: {
-              tipo: 'CARGO',
+              tipo: "CARGO",
               monto: montoCuentaCorriente,
               concepto: `Venta ${dto.operacionId}`,
               clienteId: dto.clienteId,
@@ -708,7 +703,7 @@ export class VentasService {
       if (cur === undefined) continue;
       saldo.set(
         mv.loteId,
-        mv.tipo === 'ENTRADA' || mv.tipo === 'AJUSTE' ? cur.add(mv.cantidad) : cur.sub(mv.cantidad),
+        mv.tipo === "ENTRADA" || mv.tipo === "AJUSTE" ? cur.add(mv.cantidad) : cur.sub(mv.cantidad),
       );
     }
     return lotes.map((l) => ({
@@ -740,8 +735,8 @@ export class VentasService {
     // obligaría a traer las relaciones en el `create` de la venta, que no las
     // tiene.
     venta: Omit<
-      Awaited<ReturnType<VentasService['historial']>>[number],
-      'comprobanteAsociado' | 'cliente'
+      Awaited<ReturnType<VentasService["historial"]>>[number],
+      "comprobanteAsociado" | "cliente"
     >,
     usuarioEmail: string,
   ): Promise<void> {
@@ -749,7 +744,7 @@ export class VentasService {
       await this.libro.registrar({
         fecha: venta.creadaEn,
         operacionId: venta.operacionId,
-        comprobante: `${venta.tipoComprobante ?? ''} ${venta.numeroComprobante ?? ''}`.trim(),
+        comprobante: `${venta.tipoComprobante ?? ""} ${venta.numeroComprobante ?? ""}`.trim(),
         sucursalId: venta.sucursalId,
         usuario: usuarioEmail,
         medioPago: venta.medioPago,
@@ -757,7 +752,7 @@ export class VentasService {
         subtotal: venta.subtotal.toString(),
         descuento: venta.descuento.toString(),
         total: venta.total.toString(),
-        cae: venta.cae ?? '',
+        cae: venta.cae ?? "",
       });
     } catch (error) {
       this.logger.error(`No se pudo actualizar el libro de ventas: ${(error as Error).message}`);
@@ -790,7 +785,7 @@ export class VentasService {
 
     const motivo = motivoRafaga(recientes);
     this.logger.error(
-      `RÁFAGA FRENADA en la terminal ${terminalId ?? '(sin terminal)'} de la sucursal ${sucursalId}: ${motivo}`,
+      `RÁFAGA FRENADA en la terminal ${terminalId ?? "(sin terminal)"} de la sucursal ${sucursalId}: ${motivo}`,
     );
     throw new BadRequestException(motivo);
   }
@@ -867,14 +862,14 @@ export class VentasService {
         return await fn();
       } catch (error) {
         const esColisionDeNumero =
-          error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+          error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
         if (!esColisionDeNumero) throw error;
         if (cae !== null) throw this.discrepanciaFiscal(cae);
         if (intento === intentosMax) throw error;
       }
     }
     // Inalcanzable: el for siempre retorna o lanza en su última iteración.
-    throw new Error('No se pudo asignar el número de comprobante');
+    throw new Error("No se pudo asignar el número de comprobante");
   }
 
   /**
@@ -895,7 +890,7 @@ export class VentasService {
   }
 
   private async respaldarSiCorresponde(): Promise<void> {
-    if (this.config.get<string>('RESPALDO_EN_CADA_VENTA') !== 'true') return;
+    if (this.config.get<string>("RESPALDO_EN_CADA_VENTA") !== "true") return;
     try {
       await this.motor.crearRespaldo();
     } catch (error) {
@@ -918,11 +913,11 @@ export function resumenMedioPago(
 export function notaCreditoDe(tipoComprobante: string | null): string {
   // Fase 10.1: un ticket sin valor fiscal no tiene Nota de Crédito — anular
   // refleja el mismo tipo (ver `esComprobanteFiscal`).
-  if (tipoComprobante === 'TicketNoFiscal') return 'TicketNoFiscal';
-  if (tipoComprobante?.startsWith('Factura')) {
-    return tipoComprobante.replace('Factura', 'NotaCredito');
+  if (tipoComprobante === "TicketNoFiscal") return "TicketNoFiscal";
+  if (tipoComprobante?.startsWith("Factura")) {
+    return tipoComprobante.replace("Factura", "NotaCredito");
   }
-  return 'NotaCreditoB';
+  return "NotaCreditoB";
 }
 
 /**
@@ -932,10 +927,10 @@ export function notaCreditoDe(tipoComprobante: string | null): string {
  * interno no admite Nota de Débito y el llamador lo rechaza antes.
  */
 export function notaDebitoDe(tipoComprobante: string | null): string {
-  if (tipoComprobante?.startsWith('Factura')) {
-    return tipoComprobante.replace('Factura', 'NotaDebito');
+  if (tipoComprobante?.startsWith("Factura")) {
+    return tipoComprobante.replace("Factura", "NotaDebito");
   }
-  return 'NotaDebitoB';
+  return "NotaDebitoB";
 }
 
 /**
@@ -950,7 +945,7 @@ export function notaDebitoDe(tipoComprobante: string | null): string {
  */
 export function desgloseDeMontoUnico(monto: Decimal, tipoComprobante: string): DesgloseIva {
   const total = Money.desde(monto.toFixed(2));
-  if (letraDe(tipoComprobante as TipoComprobante) === 'C') {
+  if (letraDe(tipoComprobante as TipoComprobante) === "C") {
     return desgloseSinDiscriminar(total);
   }
   return desglosarIvaIncluido([{ importe: total, alicuota: ALICUOTAS_IVA.VEINTIUNO }]);
@@ -958,5 +953,5 @@ export function desgloseDeMontoUnico(monto: Decimal, tipoComprobante: string): D
 
 /** ¿El tipo de comprobante requiere CAE de ARCA? (Fase 10.1: TicketNoFiscal no.) */
 export function esComprobanteFiscal(tipoComprobante: string): boolean {
-  return tipoComprobante !== 'TicketNoFiscal';
+  return tipoComprobante !== "TicketNoFiscal";
 }

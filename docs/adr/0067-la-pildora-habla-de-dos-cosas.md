@@ -5,20 +5,20 @@ Estado: aceptado
 
 ## Contexto
 
-ADR-0066 arregló un error de fondo: el POS confundía *"hay internet"* con
-*"llego a mi servidor"*. Al separarlos, quedó un hueco que antes estaba tapado
+ADR-0066 arregló un error de fondo: el POS confundía _"hay internet"_ con
+_"llego a mi servidor"_. Al separarlos, quedó un hueco que antes estaba tapado
 por casualidad.
 
 En el POS hay **dos caminos que pueden fallar por separado**:
 
-| Camino | Necesita | Se ve en |
-|---|---|---|
-| Subir la venta al servidor de la sucursal | la LAN | la cola de sync (`pendientes`, `fallidas`) |
-| Conseguir el CAE de ARCA | internet | nada |
+| Camino                                    | Necesita | Se ve en                                   |
+| ----------------------------------------- | -------- | ------------------------------------------ |
+| Subir la venta al servidor de la sucursal | la LAN   | la cola de sync (`pendientes`, `fallidas`) |
+| Conseguir el CAE de ARCA                  | internet | nada                                       |
 
 Una venta puede estar perfectamente subida y sin CAE. Mientras el POS miraba
 `navigator.onLine`, un corte de internet ponía la píldora en "Sin conexión" y
-eso *parecía* cubrir el segundo caso — por el motivo equivocado, pero cubría.
+eso _parecía_ cubrir el segundo caso — por el motivo equivocado, pero cubría.
 
 Con el arreglo, la píldora pasó a decir **"Sincronizado"** con internet caído: es
 literalmente cierto —no hay nada esperando subir— y a la vez engañoso, porque
@@ -28,7 +28,7 @@ enteraría en la inspección.
 ## Decisión
 
 La píldora informa **los dos caminos**, con un orden de prioridad que sigue
-*qué tiene que hacer el cajero*, no la gravedad abstracta:
+_qué tiene que hacer el cajero_, no la gravedad abstracta:
 
 1. **Ventas con error** — no pudieron registrarse. Alguien tiene que mirarlas.
 2. **Comprobantes sin CAE fuera de plazo** — ARCA ya no los autoriza por fecha
@@ -38,7 +38,7 @@ La píldora informa **los dos caminos**, con un orden de prioridad que sigue
 4. **Sincronizando** — transitorio.
 5. **Ventas sin subir** — están acá y todavía no llegaron.
 6. **Comprobantes sin CAE** — subidos, esperando a ARCA. **Se resuelve solo**, y
-   el texto lo dice: *"no hay que hacer nada"*.
+   el texto lo dice: _"no hay que hacer nada"_.
 7. **Sincronizado**.
 
 Los estados 5 y 6 van en colores distintos a propósito: son dos problemas
@@ -56,8 +56,8 @@ parte de la historia que importa.
 
 ## Consecuencias
 
-- Un corte largo de internet ahora se ve como lo que es: *"N comprobantes sin
-  CAE"*, con la aclaración de que se arregla solo.
+- Un corte largo de internet ahora se ve como lo que es: _"N comprobantes sin
+  CAE"_, con la aclaración de que se arregla solo.
 - Cuando alguno pasa los 5 días que acepta ARCA, la píldora se pone en rojo y
   dice que hay que ir al contador. Ese aviso antes no existía en ningún lado
   visible para el comercio: sólo quedaba en el log del servidor.

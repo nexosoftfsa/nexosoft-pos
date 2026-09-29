@@ -110,9 +110,7 @@ export function construirOperacionVenta(args: {
         productoId: i.productoId,
         cantidad: String(i.cantidad),
         precioUnitario: i.precioUnitario,
-        ...(i.descuento !== undefined && i.descuento !== "0.00"
-          ? { descuento: i.descuento }
-          : {}),
+        ...(i.descuento !== undefined && i.descuento !== "0.00" ? { descuento: i.descuento } : {}),
         ...(i.costoUnitario !== undefined ? { costoUnitario: i.costoUnitario } : {}),
         ...(i.neto !== undefined ? { neto: i.neto } : {}),
         ...(i.alicuotaIva !== undefined ? { alicuotaIva: i.alicuotaIva } : {}),
@@ -128,9 +126,7 @@ export function construirOperacionVenta(args: {
             })),
           }
         : {}),
-      ...(args.recargo !== undefined && args.recargo !== "0.00"
-        ? { recargo: args.recargo }
-        : {}),
+      ...(args.recargo !== undefined && args.recargo !== "0.00" ? { recargo: args.recargo } : {}),
       ...(args.clienteId !== undefined ? { clienteId: args.clienteId } : {}),
       ...(args.tipoComprobante !== undefined ? { tipoComprobante: args.tipoComprobante } : {}),
     },

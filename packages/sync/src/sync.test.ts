@@ -90,7 +90,13 @@ describe("MotorDeSincronizacion", () => {
 
   it("sin pendientes devuelve un resumen vacío", async () => {
     const resumen = await motor.sincronizar();
-    expect(resumen).toEqual({ enviadas: 0, completadas: 0, fallidas: 0, pendientes: 0, resultados: {} });
+    expect(resumen).toEqual({
+      enviadas: 0,
+      completadas: 0,
+      fallidas: 0,
+      pendientes: 0,
+      resultados: {},
+    });
     expect(cliente.enviar).not.toHaveBeenCalled();
   });
 
@@ -111,7 +117,7 @@ describe("MotorDeSincronizacion", () => {
       pendientes: 0,
       // Se devuelven para que quien encolo pueda imprimir el ticket con el CAE
       // y el numero que asigno ARCA.
-      resultados: { 'op-1': { ok: true }, 'op-2': { ok: true, idRemoto: 'v-99' } },
+      resultados: { "op-1": { ok: true }, "op-2": { ok: true, idRemoto: "v-99" } },
     });
     expect((await almacen.obtener("op-1"))?.estado).toBe("completada");
     expect(await almacen.pendientes()).toHaveLength(0);
@@ -130,7 +136,10 @@ describe("MotorDeSincronizacion", () => {
     expect(cliente.enviar).not.toHaveBeenCalled();
 
     await almacen.recuperarEnviando();
-    cliente.enviar.mockResolvedValue({ "op-1": { ok: true } } satisfies Record<string, ResultadoEnvio>);
+    cliente.enviar.mockResolvedValue({ "op-1": { ok: true } } satisfies Record<
+      string,
+      ResultadoEnvio
+    >);
 
     expect(await motor.sincronizar()).toMatchObject({ enviadas: 1, completadas: 1 });
     expect((await almacen.obtener("op-1"))?.estado).toBe("completada");

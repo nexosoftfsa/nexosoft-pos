@@ -93,7 +93,11 @@ export async function volcarCatalogo(
     if (existente === undefined || opciones.reemplazarStock === true) {
       const saldo = saldoPorId.get(p.id) ?? "0";
       await repos.existencias.guardar(
-        crearExistencia({ articuloId: articulo.id, depositoId: deposito, cantidad: Cantidad.de(saldo) }),
+        crearExistencia({
+          articuloId: articulo.id,
+          depositoId: deposito,
+          cantidad: Cantidad.de(saldo),
+        }),
       );
       stockInicializado++;
     }

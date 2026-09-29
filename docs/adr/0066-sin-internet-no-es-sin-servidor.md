@@ -18,16 +18,16 @@ lo que se había arreglado andaba:
 
 Pero el paso 4 falló, y su explicación destapó algo peor:
 
-> *"Sin reconectar, andá a Comprobantes. → **La venta NO aparece.** No hay
-> cartel de sin conexión."*
+> _"Sin reconectar, andá a Comprobantes. → **La venta NO aparece.** No hay
+> cartel de sin conexión."_
 
 La pantalla **sí** cargó y mostró los comprobantes viejos. O sea `historial()`
 no falló: el servidor contestó perfectamente. **Porque el servidor está en la
 misma PC.**
 
 Ahí está el error de fondo: el POS usaba `navigator.onLine` para decidir si
-sincronizar. Esa propiedad responde *"¿hay internet?"*, y el POS necesitaba
-responder *"¿llego a mi servidor?"*. **Son preguntas distintas**: el servidor de
+sincronizar. Esa propiedad responde _"¿hay internet?"_, y el POS necesitaba
+responder _"¿llego a mi servidor?"_. **Son preguntas distintas**: el servidor de
 sucursal vive en la LAN, muchas veces en la misma máquina, y un corte de
 internet no lo toca.
 
@@ -39,9 +39,9 @@ siendo correcto pero se apoyaba sobre una decisión equivocada tomada antes.
 
 Sebastián lo describió sin ver el código:
 
-> *"Si hay un período grande sin conexión y el cajero necesita cerrar la caja le
+> _"Si hay un período grande sin conexión y el cajero necesita cerrar la caja le
 > va a sobrar dinero y no tiene cómo cotejarlo hasta que vuelva el internet. Lo
-> mismo si quiere controlar una venta o atender un reclamo."*
+> mismo si quiere controlar una venta o atender un reclamo."_
 
 ## Decisión
 
@@ -50,8 +50,8 @@ siempre; si el servidor no está, el intento falla solo y la operación queda en
 la cola.
 
 El estado que ve el cajero pasa a significar **"llego a mi servidor"**, y se
-deduce del intento, no del navegador (`llego-al-servidor.ts`): *llegamos si
-alguna operación del lote quedó resuelta*. Una aceptada, o una rechazada de
+deduce del intento, no del navegador (`llego-al-servidor.ts`): _llegamos si
+alguna operación del lote quedó resuelta_. Una aceptada, o una rechazada de
 forma definitiva, sólo puede venir de una respuesta. Si todas quedaron
 reintentables, no hubo nadie del otro lado — es exactamente lo que hace
 `MotorDeSincronizacion` ante un fallo de transporte, que no lanza.
@@ -91,7 +91,7 @@ tope existe justamente para esto:
   instante. Lo único que espera a que vuelva internet es el CAE, que es lo único
   que de verdad lo necesita.
 - El indicador de la barra pasa a decir algo útil: "Sin conexión" ahora
-  significa *hay ventas sin subir y no puedo subirlas*, no *no hay internet*.
+  significa _hay ventas sin subir y no puedo subirlas_, no _no hay internet_.
 - El respaldo local de Comprobantes (ADR-0064) queda para lo que de verdad es:
   el servidor apagado o inalcanzable, no un corte de internet.
 - Con el servidor en otra PC apagada, la primera venta puede esperar el tope

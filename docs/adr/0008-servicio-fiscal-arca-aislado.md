@@ -14,6 +14,7 @@ offline-first.
 
 Toda la lógica fiscal vive en `@nexosoft/fiscal`, detrás de la interfaz
 **`ServicioFiscal`** (patrón puerto/adaptador):
+
 - `ArcaServicioFiscal`: **WSAA** (firma y cacheo del Ticket de Acceso) +
   **WSFEv1** (solicitud de CAE para Facturas A/B/C, NC/ND).
 - `MockServicioFiscal`: simula CAE/errores para desarrollo y tests sin red.
@@ -25,11 +26,13 @@ Toda la lógica fiscal vive en `@nexosoft/fiscal`, detrás de la interfaz
 ## Consecuencias
 
 ### Positivas
+
 - El POS y el backend dependen del **contrato**, no de SOAP/WSFEv1.
 - Se desarrolla y testea todo el flujo con el mock; ARCA se enchufa después.
 - Aislamiento de seguridad del manejo de certificados.
 
 ### Negativas / costos
+
 - El mock debe reflejar fielmente reglas de ARCA (numeración, validaciones) para
   que el cambio a real sea de bajo riesgo.
 - Falta validación contra **homologación** real antes de producción (documentado

@@ -38,7 +38,9 @@ describe("ClienteAsistenteConfigHttp", () => {
   });
 
   it("actualizar() omite el modelo si no se pasa", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ configurada: true, modelo: "x" }) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ configurada: true, modelo: "x" }) });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteAsistenteConfigHttp("http://server", () => "tok");
@@ -52,7 +54,11 @@ describe("ClienteAsistenteConfigHttp", () => {
   it("lanza ErrorAsistenteConfig con el mensaje del servidor si falla", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, status: 403, json: async () => ({ message: "No tenés permisos" }) }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({ message: "No tenés permisos" }),
+      }),
     );
     const cliente = new ClienteAsistenteConfigHttp("http://server", () => "tok");
     await expect(cliente.obtener()).rejects.toThrow(ErrorAsistenteConfig);

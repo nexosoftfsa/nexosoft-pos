@@ -32,6 +32,7 @@ la instalación.
 ## Consecuencias
 
 ### Positivas
+
 - Cierra la brecha sin romper el flujo de instalación (el primer ADMIN se
   sigue dando de alta con un simple `POST /auth/register`, sin credenciales
   previas).
@@ -39,6 +40,7 @@ la instalación.
   puede crear cuentas nuevas.
 
 ### Negativas / costos
+
 - Si alguna vez se borra manualmente a todos los usuarios de una sucursal
   (no hay flujo para eso hoy), el registro se reabre sin auth hasta que se
   cree el primero de nuevo — riesgo aceptado porque no existe ese camino en

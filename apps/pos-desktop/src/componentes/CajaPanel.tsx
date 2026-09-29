@@ -129,9 +129,9 @@ export function CajaPanel({
                 No se pudo consultar la caja
               </div>
               <p className="muted">
-                Sin servidor no se puede saber si hay un turno abierto en esta terminal, así que
-                no se muestra nada: si hay uno abierto sigue estando, y abrir otro encima sería
-                un problema. Podés seguir vendiendo; la caja se ve cuando vuelva la conexión.
+                Sin servidor no se puede saber si hay un turno abierto en esta terminal, así que no
+                se muestra nada: si hay uno abierto sigue estando, y abrir otro encima sería un
+                problema. Podés seguir vendiendo; la caja se ve cuando vuelva la conexión.
               </p>
               <button
                 type="button"
@@ -506,10 +506,13 @@ function ModalArqueo({
           {ventasSinSincronizar > 0 && (
             <div className="aviso">
               Hay {ventasSinSincronizar}{" "}
-              {ventasSinSincronizar === 1 ? "venta que todavía no subió" : "ventas que todavía no subieron"}{" "}
-              al servidor. Esa plata está en el cajón pero <b>no</b> está sumada en el saldo teórico,
-              así que el arqueo va a dar un sobrante que no es real. Si podés, esperá a que vuelva la
-              conexión y cerrá después. Si tenés que cerrar igual, queda registrado por qué.
+              {ventasSinSincronizar === 1
+                ? "venta que todavía no subió"
+                : "ventas que todavía no subieron"}{" "}
+              al servidor. Esa plata está en el cajón pero <b>no</b> está sumada en el saldo
+              teórico, así que el arqueo va a dar un sobrante que no es real. Si podés, esperá a que
+              vuelva la conexión y cerrá después. Si tenés que cerrar igual, queda registrado por
+              qué.
             </div>
           )}
           <div className="kv">
@@ -607,10 +610,8 @@ function ResumenCierre({ turno, onCerrar }: { turno: TurnoCaja; onCerrar: () => 
           {r.ventasSinSincronizarAlCerrar === 1 ? "venta sin subir" : "ventas sin subir"} al
           servidor, así que el saldo teórico de ese momento estaba corto. Ya subieron: con todo
           cargado, la diferencia real es{" "}
-          <b>
-            {r.diferenciaRecalculada != null ? money(r.diferenciaRecalculada) : "—"}
-          </b>
-          . No fue un error del arqueo.
+          <b>{r.diferenciaRecalculada != null ? money(r.diferenciaRecalculada) : "—"}</b>. No fue un
+          error del arqueo.
         </div>
       )}
       <button

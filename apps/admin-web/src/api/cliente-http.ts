@@ -15,10 +15,7 @@ export class ErrorApi extends Error {
   }
 }
 
-export type ParametrosQuery = Record<
-  string,
-  string | number | boolean | undefined
->;
+export type ParametrosQuery = Record<string, string | number | boolean | undefined>;
 
 export class ClienteApi {
   constructor(

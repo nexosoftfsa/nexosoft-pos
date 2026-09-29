@@ -117,8 +117,8 @@ export function ImpresoraTickets() {
           {aviso !== null && <div className="error config-error">{aviso}</div>}
 
           <div className="config-ayuda">
-            Tiene que ser la impresora térmica de la caja. Las impresoras virtuales (Microsoft
-            Print to PDF, XPS, OneNote, fax) guardan el ticket en un archivo en vez de imprimirlo.
+            Tiene que ser la impresora térmica de la caja. Las impresoras virtuales (Microsoft Print
+            to PDF, XPS, OneNote, fax) guardan el ticket en un archivo en vez de imprimirlo.
           </div>
 
           <button

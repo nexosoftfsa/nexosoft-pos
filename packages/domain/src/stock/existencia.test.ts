@@ -2,11 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { Cantidad } from "../comun/cantidad.js";
 import { crearDeposito } from "./deposito.js";
-import {
-  bajoStockMinimo,
-  crearExistencia,
-  hayStockSuficiente,
-} from "./existencia.js";
+import { bajoStockMinimo, crearExistencia, hayStockSuficiente } from "./existencia.js";
 
 describe("crearDeposito", () => {
   it("crea con id y recorta el nombre", () => {

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsOptional, IsString, MinLength } from "class-validator";
 
 /** Mismo mínimo que el alta (`RegistroDto`): no se endurece por la ventana. */
 export const LARGO_MINIMO_PASSWORD = 8;

@@ -23,7 +23,12 @@
  *  - https://www.mercadopago.com.ar/developers/es/docs/qr-code/integration-configuration/qr-dynamic/
  */
 
-import { ErrorPasarela, type IntentoPago, type PasarelaDePago, type SolicitudPago } from "./pasarela.js";
+import {
+  ErrorPasarela,
+  type IntentoPago,
+  type PasarelaDePago,
+  type SolicitudPago,
+} from "./pasarela.js";
 
 export interface ConfigMercadoPago {
   readonly accessToken: string;

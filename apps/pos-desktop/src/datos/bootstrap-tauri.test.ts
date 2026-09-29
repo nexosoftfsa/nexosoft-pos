@@ -40,7 +40,9 @@ function crearBaseNodeSqlite(): BaseDatosSql {
 }
 
 async function montar(): Promise<{ ejecutor: EjecutorSqlTauri; repos: RepositoriosSqlite }> {
-  const ejecutor = await EjecutorSqlTauri.abrir("sqlite:test.db", async () => crearBaseNodeSqlite());
+  const ejecutor = await EjecutorSqlTauri.abrir("sqlite:test.db", async () =>
+    crearBaseNodeSqlite(),
+  );
   await inicializarBaseTauri(ejecutor);
   const repos = crearRepositoriosSqlite(ejecutor);
   await sembrarSiVacio(ejecutor, repos);

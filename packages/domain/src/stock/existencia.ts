@@ -39,9 +39,6 @@ export function bajoStockMinimo(existencia: Existencia): boolean {
 }
 
 /** ¿Hay stock disponible para vender la cantidad pedida? */
-export function hayStockSuficiente(
-  existencia: Existencia,
-  cantidad: Cantidad,
-): boolean {
+export function hayStockSuficiente(existencia: Existencia, cantidad: Cantidad): boolean {
   return existencia.cantidad.mayorOIgualQue(cantidad);
 }

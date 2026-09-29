@@ -16,13 +16,22 @@ describe("ClienteCredencialesHttp", () => {
     const [url, opciones] = fetchMock.mock.calls[0]!;
     expect(url).toBe("http://server/usuarios/u1/credencial");
     expect((opciones as { method: string }).method).toBe("GET");
-    expect((opciones as { headers: Record<string, string> }).headers["Authorization"]).toBe("Bearer tok");
+    expect((opciones as { headers: Record<string, string> }).headers["Authorization"]).toBe(
+      "Bearer tok",
+    );
     vi.unstubAllGlobals();
   });
 
   it("obtenerEstado() parsea el estado cuando sí hay credencial", async () => {
-    const cuerpo = { activa: true, version: 2, creadaEn: "2026-01-01T00:00:00.000Z", ultimoUsoEn: null };
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify(cuerpo) });
+    const cuerpo = {
+      activa: true,
+      version: 2,
+      creadaEn: "2026-01-01T00:00:00.000Z",
+      ultimoUsoEn: null,
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, text: async () => JSON.stringify(cuerpo) });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteCredencialesHttp("http://server", () => "tok");
@@ -33,9 +42,10 @@ describe("ClienteCredencialesHttp", () => {
   });
 
   it("regenerar() pega POST /usuarios/:id/credencial/regenerar", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: true, text: async () => JSON.stringify({ payload: "NXSCRED:u1:tok", version: 1 }) });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => JSON.stringify({ payload: "NXSCRED:u1:tok", version: 1 }),
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteCredencialesHttp("http://server", () => "tok");
@@ -49,7 +59,9 @@ describe("ClienteCredencialesHttp", () => {
   });
 
   it("revocar() pega DELETE /usuarios/:id/credencial", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ ok: true }) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, text: async () => JSON.stringify({ ok: true }) });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteCredencialesHttp("http://server", () => "tok");
@@ -64,7 +76,11 @@ describe("ClienteCredencialesHttp", () => {
   it("lanza ErrorCredenciales con el mensaje del servidor si falla", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, status: 404, json: async () => ({ message: "Usuario no encontrado" }) }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({ message: "Usuario no encontrado" }),
+      }),
     );
     const cliente = new ClienteCredencialesHttp("http://server", () => "tok");
     await expect(cliente.obtenerEstado("u1")).rejects.toThrow(ErrorCredenciales);

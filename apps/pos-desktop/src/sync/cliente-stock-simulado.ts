@@ -242,7 +242,10 @@ export class ClienteStockSimulado implements ClienteStock {
   }
 
   /** Fase 14.D (demo): mismas reglas esenciales que el backend (código debe existir, perecedero necesita fecha). */
-  async importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+  async importar(
+    filas: readonly Record<string, string>[],
+    dryRun: boolean,
+  ): Promise<FilaImportacion[]> {
     const movimientosOriginales = this.movimientos;
     const lotesOriginales = this.lotesInternos;
     const resultados: FilaImportacion[] = [];
@@ -251,18 +254,30 @@ export class ClienteStockSimulado implements ClienteStock {
       const fila = i + 2;
       const codigo = (cruda[COL.codigo] ?? "").trim();
       if (codigo === "") {
-        resultados.push({ fila, resultado: "error", mensaje: "Fila sin código: no se puede importar." });
+        resultados.push({
+          fila,
+          resultado: "error",
+          mensaje: "Fila sin código: no se puede importar.",
+        });
         return;
       }
       const cantidadTexto = (cruda[COL.cantidad] ?? "").trim();
       const cantidad = Number(cantidadTexto);
       if (!Number.isFinite(cantidad) || cantidad <= 0) {
-        resultados.push({ fila, resultado: "error", mensaje: `Cantidad inválida para el código ${codigo}: "${cantidadTexto}"` });
+        resultados.push({
+          fila,
+          resultado: "error",
+          mensaje: `Cantidad inválida para el código ${codigo}: "${cantidadTexto}"`,
+        });
         return;
       }
       const producto = this.productos.find((p) => p.codigo === codigo);
       if (!producto) {
-        resultados.push({ fila, resultado: "error", mensaje: `No existe ningún producto con código ${codigo}.` });
+        resultados.push({
+          fila,
+          resultado: "error",
+          mensaje: `No existe ningún producto con código ${codigo}.`,
+        });
         return;
       }
       const motivo = cruda[COL.motivo]?.trim() || "Importación de stock";
@@ -270,7 +285,11 @@ export class ClienteStockSimulado implements ClienteStock {
 
       if (producto.requiereLote) {
         if (!fechaTexto) {
-          resultados.push({ fila, resultado: "error", mensaje: `El producto ${codigo} es perecedero: necesita "Fecha de vencimiento".` });
+          resultados.push({
+            fila,
+            resultado: "error",
+            mensaje: `El producto ${codigo} es perecedero: necesita "Fecha de vencimiento".`,
+          });
           return;
         }
         const lote: LoteInterno = {

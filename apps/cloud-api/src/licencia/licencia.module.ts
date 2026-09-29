@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { LicenciaController } from './licencia.controller';
-import { LicenciaService } from './licencia.service';
-import { LicenciaGuard } from './licencia.guard';
+import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { LicenciaController } from "./licencia.controller";
+import { LicenciaService } from "./licencia.service";
+import { LicenciaGuard } from "./licencia.guard";
 
 @Module({
   controllers: [LicenciaController],

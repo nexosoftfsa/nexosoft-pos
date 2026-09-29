@@ -18,11 +18,13 @@ decimal.js) para dinero, coherente con ADR-0007.
 ## Consecuencias
 
 ### Positivas
+
 - Arquitectura modular (módulos por dominio), DI y testabilidad.
 - TypeScript end-to-end; comparte `@nexosoft/domain` con el POS.
 - `NUMERIC`/`Decimal` para montos exactos; migraciones versionadas.
 
 ### Negativas / costos
+
 - NestJS usa decoradores y `tsconfig` propio (CommonJS, `emitDecoratorMetadata`):
   difiere del `tsconfig.base.json` de bundler del resto; se aísla por paquete.
 - Prisma en monorepo requiere cuidar la generación del cliente.

@@ -38,27 +38,30 @@ usa el sistema en una **tablet o celular**, en cualquier orientación.
 ## Mostrarla a un cliente fuera de tu red
 
 ### A) Un solo archivo portable (sin internet)
+
 ```bash
 node build-standalone.js
 ```
+
 Genera **`nexosoft-maqueta.html`** con TODO adentro (CSS + JS + logo). Mandalo por
 WhatsApp / email / Drive y se abre en cualquier dispositivo, offline.
 
 ### B) Subirlo a un servidor (link público)
+
 - **tiiny.host** — subís `nexosoft-maqueta.html` → link al instante.
 - **Netlify Drop** (`app.netlify.com/drop`) — arrastrás la carpeta `prototipo/`.
 - **GitHub Pages / Vercel / Cloudflare** — para algo permanente.
 
 ## Estructura
 
-| Archivo | Qué es |
-| --- | --- |
-| `index.html` | Estructura (shell) de la interfaz |
-| `styles.css` | Estilos y diseño responsive |
-| `app.js` | Lógica de la demo (datos, POS, caja, etc.) |
-| `build-standalone.js` | Genera el archivo único portable |
-| `serve.js` | Servidor estático para ver desde otro dispositivo |
-| `assets/logo.png` | Tu logo (reemplazable) |
+| Archivo               | Qué es                                            |
+| --------------------- | ------------------------------------------------- |
+| `index.html`          | Estructura (shell) de la interfaz                 |
+| `styles.css`          | Estilos y diseño responsive                       |
+| `app.js`              | Lógica de la demo (datos, POS, caja, etc.)        |
+| `build-standalone.js` | Genera el archivo único portable                  |
+| `serve.js`            | Servidor estático para ver desde otro dispositivo |
+| `assets/logo.png`     | Tu logo (reemplazable)                            |
 
 ## Tu logo
 

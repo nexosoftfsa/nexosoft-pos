@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
-import { RolUsuario } from '@prisma/client';
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { ConfiguracionFiscalService } from './configuracion-fiscal.service';
+import { Body, Controller, Get, Put, UseGuards } from "@nestjs/common";
+import { RolUsuario } from "@prisma/client";
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
+import { ConfiguracionFiscalService } from "./configuracion-fiscal.service";
 
 export class GuardarConfiguracionFiscalDto {
   @IsString()
@@ -24,17 +24,11 @@ export class GuardarConfiguracionFiscalDto {
 
   // Las condiciones del dominio (`CondicionIva`). Se listan acá y no se
   // importan porque el DTO se valida en runtime con class-validator.
-  @IsIn([
-    'ResponsableInscripto',
-    'Monotributo',
-    'ConsumidorFinal',
-    'Exento',
-    'NoCategorizado',
-  ])
+  @IsIn(["ResponsableInscripto", "Monotributo", "ConsumidorFinal", "Exento", "NoCategorizado"])
   @IsOptional()
   condicionIvaEmisor?: string;
 
-  @IsIn(['homologacion', 'produccion'])
+  @IsIn(["homologacion", "produccion"])
   @IsOptional()
   arcaEntorno?: string;
 }
@@ -49,7 +43,7 @@ export class GuardarConfiguracionFiscalDto {
  */
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RolUsuario.ADMIN)
-@Controller('fiscal/configuracion')
+@Controller("fiscal/configuracion")
 export class ConfiguracionFiscalController {
   constructor(private readonly config: ConfiguracionFiscalService) {}
 

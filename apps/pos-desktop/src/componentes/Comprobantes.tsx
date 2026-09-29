@@ -55,7 +55,12 @@ function fechaHora(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
     ? iso
-    : d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    : d.toLocaleString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 }
 
 function esDeHoy(iso: string): boolean {
@@ -340,7 +345,11 @@ export function Comprobantes({
                   <tr key={c.id}>
                     <td className="strong">
                       {etiquetaTipoComprobante(c.tipoComprobante)}
-                      {esNotaCredito(c.tipoComprobante) && <span className="badge badge--info" style={{ marginLeft: 8 }}>NC</span>}
+                      {esNotaCredito(c.tipoComprobante) && (
+                        <span className="badge badge--info" style={{ marginLeft: 8 }}>
+                          NC
+                        </span>
+                      )}
                     </td>
                     <td>{numeroComprobante(c.numeroComprobante)}</td>
                     <td>{fechaHora(c.creadaEn)}</td>
@@ -369,7 +378,9 @@ export function Comprobantes({
                             className={`badge badge--${aviso.tono} badge--boton`}
                             style={{ marginLeft: 6 }}
                             title="Ver el motivo"
-                            onClick={() => setMotivo({ titulo: aviso.etiqueta, texto: aviso.detalle })}
+                            onClick={() =>
+                              setMotivo({ titulo: aviso.etiqueta, texto: aviso.detalle })
+                            }
                           >
                             {aviso.etiqueta}
                           </button>
@@ -391,16 +402,18 @@ export function Comprobantes({
                           de conseguir. */}
                       {/* Sin servidor, las dos acciones que hablan con él se
                           esconden en vez de fallar al tocarlas. */}
-                      {!sinServidor && esFiscal(c.tipoComprobante) && c.numeroComprobante !== null && (
-                        <button
-                          type="button"
-                          className="linkbtn"
-                          onClick={() => void verificar(c)}
-                          disabled={verificando === c.id}
-                        >
-                          {verificando === c.id ? "Consultando…" : "Verificar en ARCA"}
-                        </button>
-                      )}
+                      {!sinServidor &&
+                        esFiscal(c.tipoComprobante) &&
+                        c.numeroComprobante !== null && (
+                          <button
+                            type="button"
+                            className="linkbtn"
+                            onClick={() => void verificar(c)}
+                            disabled={verificando === c.id}
+                          >
+                            {verificando === c.id ? "Consultando…" : "Verificar en ARCA"}
+                          </button>
+                        )}
                       {!sinServidor && admiteNotaDebito(c) && (
                         <button
                           type="button"
@@ -454,10 +467,7 @@ export function Comprobantes({
       )}
 
       {verificacion !== null && (
-        <ResultadoVerificacion
-          verificacion={verificacion}
-          onCerrar={() => setVerificacion(null)}
-        />
+        <ResultadoVerificacion verificacion={verificacion} onCerrar={() => setVerificacion(null)} />
       )}
 
       {motivo !== null && (

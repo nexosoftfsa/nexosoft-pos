@@ -109,7 +109,11 @@ export function PantallaLogin({
 
         {error !== null && <div style={aviso}>{error}</div>}
 
-        <button type="submit" style={{ ...boton, opacity: deshabilitado ? 0.6 : 1 }} disabled={deshabilitado}>
+        <button
+          type="submit"
+          style={{ ...boton, opacity: deshabilitado ? 0.6 : 1 }}
+          disabled={deshabilitado}
+        >
           {cargando ? "Ingresando…" : "Ingresar"}
         </button>
 
@@ -147,7 +151,12 @@ const tarjeta: CSSProperties = {
   boxShadow: "0 10px 30px rgba(15, 23, 42, 0.12)",
 };
 const marca: CSSProperties = { fontSize: "1.6rem", fontWeight: 700, color: "#0f172a" };
-const logoImg: CSSProperties = { maxHeight: 64, maxWidth: "100%", objectFit: "contain", alignSelf: "center" };
+const logoImg: CSSProperties = {
+  maxHeight: 64,
+  maxWidth: "100%",
+  objectFit: "contain",
+  alignSelf: "center",
+};
 const subtitulo: CSSProperties = { margin: 0, color: "#64748b", fontSize: "0.9rem" };
 const etiqueta: CSSProperties = {
   display: "flex",

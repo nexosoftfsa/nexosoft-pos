@@ -1,22 +1,22 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { codigoComprobanteArcaOpcional } from '@nexosoft/domain';
-import { PrismaService } from '../../prisma/prisma.service';
-import { comprobanteAsociadoDe } from './comprobante-asociado';
-import { aImportesParaArca, importesGuardados } from './desglose-persistido';
-import { DesgloseDeVentaService } from './desglose-de-venta.service';
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { codigoComprobanteArcaOpcional } from "@nexosoft/domain";
+import { PrismaService } from "../../prisma/prisma.service";
+import { comprobanteAsociadoDe } from "./comprobante-asociado";
+import { aImportesParaArca, importesGuardados } from "./desglose-persistido";
+import { DesgloseDeVentaService } from "./desglose-de-venta.service";
 import {
   ErrorCaeNoDisponible,
   ErrorCaeRechazado,
   SERVICIO_CAE,
   type ComprobanteAsociadoSolicitud,
   type ServicioCae,
-} from './servicio-cae';
+} from "./servicio-cae";
 import {
   fueraDeVentanaArca,
   motivoVentanaVencida,
   porVencerLaVentanaArca,
-} from './ventana-de-fecha';
+} from "./ventana-de-fecha";
 
 /**
  * Consigue el CAE de las ventas que se registraron sin él (ADR-0008, Fase 18).
@@ -66,8 +66,8 @@ export class CaePendientesService {
   /** Cuántas ventas están esperando el CAE, por sucursal. */
   async pendientes(sucursalId: string) {
     return this.prisma.venta.findMany({
-      where: { sucursalId, estadoFiscal: { in: ['PENDIENTE', 'RECHAZADA'] } },
-      orderBy: { creadaEn: 'asc' },
+      where: { sucursalId, estadoFiscal: { in: ["PENDIENTE", "RECHAZADA"] } },
+      orderBy: { creadaEn: "asc" },
       select: {
         id: true,
         creadaEn: true,
@@ -84,9 +84,9 @@ export class CaePendientesService {
 
   private async procesar() {
     const pendientes = await this.prisma.venta.findMany({
-      where: { estadoFiscal: 'PENDIENTE' },
+      where: { estadoFiscal: "PENDIENTE" },
       // En orden de emisión: la correlatividad de ARCA lo exige.
-      orderBy: { creadaEn: 'asc' },
+      orderBy: { creadaEn: "asc" },
       take: this.TOPE_POR_CORRIDA,
     });
     if (pendientes.length === 0) return { autorizadas: 0, pendientes: 0, rechazadas: 0 };
@@ -97,13 +97,13 @@ export class CaePendientesService {
 
     const ahora = new Date();
     for (const venta of pendientes) {
-      const tipoComprobante = venta.tipoComprobante ?? 'FacturaB';
+      const tipoComprobante = venta.tipoComprobante ?? "FacturaB";
 
       // ARCA no autoriza un comprobante con fecha de más de 5 días. Mandarlo
       // igual sería un rechazo seguro, y encima uno que no explica nada.
       if (fueraDeVentanaArca(venta.creadaEn, ahora)) {
         const motivo = motivoVentanaVencida(venta.creadaEn, ahora);
-        await this.marcar(venta.id, 'RECHAZADA', motivo);
+        await this.marcar(venta.id, "RECHAZADA", motivo);
         this.log.error(`Venta ${venta.id} sin CAE y fuera de plazo: ${motivo}`);
         rechazadas += 1;
         continue;
@@ -111,7 +111,7 @@ export class CaePendientesService {
       if (porVencerLaVentanaArca(venta.creadaEn, ahora)) {
         this.log.warn(
           `La venta ${venta.id} lleva días esperando el CAE y se acerca al plazo que acepta ARCA. ` +
-            'Si sigue sin autorizarse, va a haber que regularizarla a mano.',
+            "Si sigue sin autorizarse, va a haber que regularizarla a mano.",
         );
       }
 
@@ -168,7 +168,7 @@ export class CaePendientesService {
             // Dejarlo sin actualizar dejaba el comprobante con un número y el
             // CAE correspondiendo a otro: un comprobante mal emitido.
             numeroComprobante: cae.numeroComprobante,
-            estadoFiscal: 'AUTORIZADA',
+            estadoFiscal: "AUTORIZADA",
             motivoFiscal: null,
             intentosCae: { increment: 1 },
             ultimoIntentoCae: new Date(),
@@ -179,14 +179,14 @@ export class CaePendientesService {
         if (e instanceof ErrorCaeRechazado) {
           // No se reintenta, pero se sigue con las demás: un comprobante mal
           // armado no tiene por qué frenar a los que vienen atrás.
-          await this.marcar(venta.id, 'RECHAZADA', e.message);
+          await this.marcar(venta.id, "RECHAZADA", e.message);
           rechazadas += 1;
           continue;
         }
         if (e instanceof ErrorCaeNoDisponible) {
           // ARCA sigue sin responder. Se corta acá: intentar con la siguiente
           // rompería la correlatividad si esta después se autoriza.
-          await this.marcar(venta.id, 'PENDIENTE', e.message);
+          await this.marcar(venta.id, "PENDIENTE", e.message);
           this.log.warn(`ARCA sigue sin responder (${e.message}). Se reintenta en la próxima.`);
           break;
         }
@@ -194,7 +194,7 @@ export class CaePendientesService {
       }
     }
 
-    const quedan = await this.prisma.venta.count({ where: { estadoFiscal: 'PENDIENTE' } });
+    const quedan = await this.prisma.venta.count({ where: { estadoFiscal: "PENDIENTE" } });
     if (autorizadas > 0) this.log.log(`${autorizadas} venta(s) autorizadas por ARCA.`);
     if (rechazadas > 0) this.log.error(`${rechazadas} venta(s) RECHAZADAS: hay que corregirlas.`);
     return { autorizadas, pendientes: quedan, rechazadas };
@@ -212,7 +212,7 @@ export class CaePendientesService {
     return original === null ? [] : comprobanteAsociadoDe(original);
   }
 
-  private async marcar(id: string, estadoFiscal: 'PENDIENTE' | 'RECHAZADA', motivo: string) {
+  private async marcar(id: string, estadoFiscal: "PENDIENTE" | "RECHAZADA", motivo: string) {
     await this.prisma.venta.update({
       where: { id },
       data: {

@@ -16,7 +16,10 @@ export interface ArchivoLeido {
 }
 
 /** Abre el selector de archivos (nativo en Tauri, `<input type="file">` en el navegador/demo) y devuelve los bytes elegidos, o `null` si se canceló. */
-export async function elegirArchivoExcel(): Promise<{ nombreArchivo: string; bytes: Uint8Array } | null> {
+export async function elegirArchivoExcel(): Promise<{
+  nombreArchivo: string;
+  bytes: Uint8Array;
+} | null> {
   if (estaEnTauri()) {
     const { open } = await import("@tauri-apps/plugin-dialog");
     const { readFile } = await import("@tauri-apps/plugin-fs");
@@ -48,7 +51,10 @@ export async function elegirArchivoExcel(): Promise<{ nombreArchivo: string; byt
 }
 
 /** Parsea los bytes de un `.xlsx` ya leído: primera hoja, primera fila = encabezados. */
-export async function leerFilasExcel(nombreArchivo: string, bytes: Uint8Array): Promise<ArchivoLeido> {
+export async function leerFilasExcel(
+  nombreArchivo: string,
+  bytes: Uint8Array,
+): Promise<ArchivoLeido> {
   const workbook = new Workbook();
   // Los tipos de exceljs piden `Buffer` (Node); en el navegador/Tauri no hay
   // Buffer, pero exceljs acepta cualquier ArrayBufferView en tiempo de

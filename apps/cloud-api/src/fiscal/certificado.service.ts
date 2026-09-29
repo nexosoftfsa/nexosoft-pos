@@ -1,8 +1,8 @@
-import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { normalizarCuit } from '@nexosoft/domain';
+import { BadRequestException, ConflictException, Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { normalizarCuit } from "@nexosoft/domain";
 
 import {
   ErrorCsr,
@@ -11,8 +11,8 @@ import {
   normalizarAlias,
   pareceDeHomologacion,
   type DatosCertificado,
-} from './csr';
-import type { EntornoArca } from './arca/wsaa';
+} from "./csr";
+import type { EntornoArca } from "./arca/wsaa";
 
 export interface EstadoCertificado {
   readonly tieneClave: boolean;
@@ -36,8 +36,8 @@ export interface EstadoCertificado {
 }
 
 const OTRO: Record<EntornoArca, EntornoArca> = {
-  produccion: 'homologacion',
-  homologacion: 'produccion',
+  produccion: "homologacion",
+  homologacion: "produccion",
 };
 
 export interface CsrParaSubir {
@@ -65,12 +65,13 @@ export class CertificadoService {
 
   private get raiz(): string {
     return (
-      this.config.get<string>('FISCAL_SECRETS_DIR') ?? join('C:', 'ProgramData', 'NexoSoft', 'secrets')
+      this.config.get<string>("FISCAL_SECRETS_DIR") ??
+      join("C:", "ProgramData", "NexoSoft", "secrets")
     );
   }
 
   private carpetaDe(cuit: string): string {
-    return join(this.raiz, 'arca', normalizarCuit(cuit));
+    return join(this.raiz, "arca", normalizarCuit(cuit));
   }
 
   /**
@@ -91,16 +92,16 @@ export class CertificadoService {
     const carpeta = this.carpetaDe(cuit);
     return {
       carpeta,
-      clave: join(carpeta, 'privada.key'),
-      csr: join(carpeta, 'pedido.csr'),
-      alias: join(carpeta, 'alias.txt'),
+      clave: join(carpeta, "privada.key"),
+      csr: join(carpeta, "pedido.csr"),
+      alias: join(carpeta, "alias.txt"),
     };
   }
 
   private rutaCertificado(cuit: string, entorno: EntornoArca): string {
     return join(
       this.carpetaDe(cuit),
-      entorno === 'produccion' ? 'certificado.crt' : 'certificado-homologacion.crt',
+      entorno === "produccion" ? "certificado.crt" : "certificado-homologacion.crt",
     );
   }
 
@@ -126,8 +127,8 @@ export class CertificadoService {
     const r = this.rutas(cuit, entorno);
     if (!existsSync(r.clave) || !existsSync(r.certificado)) return null;
     return {
-      certificadoPem: readFileSync(r.certificado, 'utf8'),
-      clavePrivadaPem: readFileSync(r.clave, 'utf8'),
+      certificadoPem: readFileSync(r.certificado, "utf8"),
+      clavePrivadaPem: readFileSync(r.clave, "utf8"),
     };
   }
 
@@ -139,8 +140,8 @@ export class CertificadoService {
     if (tieneClave && tieneCertificado) {
       try {
         certificado = leerCertificado(
-          readFileSync(r.certificado, 'utf8'),
-          readFileSync(r.clave, 'utf8'),
+          readFileSync(r.certificado, "utf8"),
+          readFileSync(r.clave, "utf8"),
         );
       } catch (e) {
         // Un certificado ilegible no puede tumbar la pantalla de configuración:
@@ -157,7 +158,7 @@ export class CertificadoService {
     return {
       tieneClave,
       tieneCertificado: certificado !== null,
-      alias: existsSync(r.alias) ? readFileSync(r.alias, 'utf8').trim() : null,
+      alias: existsSync(r.alias) ? readFileSync(r.alias, "utf8").trim() : null,
       certificado,
       diasParaVencer,
       carpeta: r.carpeta,
@@ -179,7 +180,7 @@ export class CertificadoService {
     const r = this.comunes(datos.cuit);
     if (existsSync(r.clave) && !forzar) {
       throw new ConflictException(
-        'Este comercio ya tiene una clave generada. Si pedís una nueva, el certificado que ARCA haya emitido para la anterior deja de servir y hay que hacer el trámite otra vez.',
+        "Este comercio ya tiene una clave generada. Si pedís una nueva, el certificado que ARCA haya emitido para la anterior deja de servir y hay que hacer el trámite otra vez.",
       );
     }
 
@@ -192,9 +193,9 @@ export class CertificadoService {
     }
 
     mkdirSync(r.carpeta, { recursive: true });
-    writeFileSync(r.clave, generado.clavePrivadaPem, { encoding: 'utf8', mode: 0o600 });
-    writeFileSync(r.csr, generado.csrPem, 'utf8');
-    writeFileSync(r.alias, normalizarAlias(datos.alias), 'utf8');
+    writeFileSync(r.clave, generado.clavePrivadaPem, { encoding: "utf8", mode: 0o600 });
+    writeFileSync(r.csr, generado.csrPem, "utf8");
+    writeFileSync(r.alias, normalizarAlias(datos.alias), "utf8");
     this.log.log(`Pedido de certificado generado para el CUIT ${normalizarCuit(datos.cuit)}`);
 
     return { csrPem: generado.csrPem, subject: generado.subject, archivo: r.csr };
@@ -208,20 +209,16 @@ export class CertificadoService {
    * producción: al volver a producción el comercio quedaba sin poder facturar
    * y el error de ARCA no decía por qué.
    */
-  guardarCertificado(
-    cuit: string,
-    certificadoPem: string,
-    entorno: EntornoArca,
-  ): DatosCertificado {
+  guardarCertificado(cuit: string, certificadoPem: string, entorno: EntornoArca): DatosCertificado {
     const r = this.rutas(cuit, entorno);
     if (!existsSync(r.clave)) {
       throw new BadRequestException(
-        'Todavía no se generó el pedido de certificado en esta PC. Generalo primero y con ESE pedido sacá el certificado en ARCA.',
+        "Todavía no se generó el pedido de certificado en esta PC. Generalo primero y con ESE pedido sacá el certificado en ARCA.",
       );
     }
     let datos: DatosCertificado;
     try {
-      datos = leerCertificado(certificadoPem, readFileSync(r.clave, 'utf8'));
+      datos = leerCertificado(certificadoPem, readFileSync(r.clave, "utf8"));
     } catch (e) {
       if (e instanceof ErrorCsr) throw new BadRequestException(e.message);
       throw e;
@@ -234,15 +231,13 @@ export class CertificadoService {
     // Sólo se frena la dirección que se puede detectar sin adivinar: el emisor
     // de un certificado de prueba dice "homologación". Al revés no hay una
     // marca confiable, y un aviso falso acá haría dudar del archivo correcto.
-    if (entorno === 'produccion' && pareceDeHomologacion(datos.emisor)) {
+    if (entorno === "produccion" && pareceDeHomologacion(datos.emisor)) {
       throw new BadRequestException(
-        'Ese certificado es de HOMOLOGACIÓN (así lo dice quien lo emitió) y el comercio está en producción. Con ese certificado ARCA rechaza todo. Sacá el de producción, o pasá primero el entorno a homologación si lo que querías era probar.',
+        "Ese certificado es de HOMOLOGACIÓN (así lo dice quien lo emitió) y el comercio está en producción. Con ese certificado ARCA rechaza todo. Sacá el de producción, o pasá primero el entorno a homologación si lo que querías era probar.",
       );
     }
-    writeFileSync(r.certificado, certificadoPem, 'utf8');
-    this.log.log(
-      `Certificado de ARCA (${entorno}) guardado, vence el ${datos.validoHasta}`,
-    );
+    writeFileSync(r.certificado, certificadoPem, "utf8");
+    this.log.log(`Certificado de ARCA (${entorno}) guardado, vence el ${datos.validoHasta}`);
     return datos;
   }
 }

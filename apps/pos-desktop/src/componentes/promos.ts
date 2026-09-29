@@ -50,11 +50,7 @@ export function promoAplicable(
 }
 
 /** Descuento (monto) que una promo aplica a una línea de `cantidad` unidades. */
-export function descuentoDeLinea(
-  promo: Promocion,
-  cantidad: number,
-  precioUnitario: Money,
-): Money {
+export function descuentoDeLinea(promo: Promocion, cantidad: number, precioUnitario: Money): Money {
   return calcularDescuentoPromocion(promo, { cantidad, precioUnitario });
 }
 

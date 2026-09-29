@@ -82,10 +82,7 @@ export async function logoARaster(
  * CAE) o si falla la generación: un ticket sin QR es mucho mejor que una venta
  * que no se imprime.
  */
-async function qrFiscalRaster(
-  datos: DatosTicket,
-  anchoPuntos: number,
-): Promise<LogoRaster | null> {
+async function qrFiscalRaster(datos: DatosTicket, anchoPuntos: number): Promise<LogoRaster | null> {
   // El número es parte de lo que se firma en el QR: sin número no hay QR. Con
   // CAE siempre lo hay; el chequeo es porque el tipo lo admite (ADR-0072).
   if (

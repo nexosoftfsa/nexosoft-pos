@@ -14,7 +14,11 @@ async function abrir(blob: Blob, nombreHoja: string) {
 describe("exportarExcel", () => {
   it("la primera fila es el encabezado con los títulos de columna", async () => {
     const blob = await exportarExcel([
-      { nombre: "Proveedores", columnas: [{ titulo: "Proveedor" }, { titulo: "CUIT" }], filas: [["Distribuidora SA", "30-12345678-9"]] },
+      {
+        nombre: "Proveedores",
+        columnas: [{ titulo: "Proveedor" }, { titulo: "CUIT" }],
+        filas: [["Distribuidora SA", "30-12345678-9"]],
+      },
     ]);
     const hoja = await abrir(blob, "Proveedores");
 
@@ -23,7 +27,9 @@ describe("exportarExcel", () => {
   });
 
   it("el encabezado está en negrita", async () => {
-    const blob = await exportarExcel([{ nombre: "Proveedores", columnas: [{ titulo: "Proveedor" }], filas: [] }]);
+    const blob = await exportarExcel([
+      { nombre: "Proveedores", columnas: [{ titulo: "Proveedor" }], filas: [] },
+    ]);
     const hoja = await abrir(blob, "Proveedores");
     expect(hoja.getRow(1).getCell(1).font?.bold).toBe(true);
   });
@@ -72,8 +78,16 @@ describe("exportarExcel", () => {
 
   it("varias hojas quedan en el mismo archivo, cada una independiente", async () => {
     const blob = await exportarExcel([
-      { nombre: "Resumen", columnas: [{ titulo: "Métrica" }, { titulo: "Valor" }], filas: [["Total vendido", 1000]] },
-      { nombre: "Top productos", columnas: [{ titulo: "Producto" }], filas: [["3D Queso"], ["7UP"]] },
+      {
+        nombre: "Resumen",
+        columnas: [{ titulo: "Métrica" }, { titulo: "Valor" }],
+        filas: [["Total vendido", 1000]],
+      },
+      {
+        nombre: "Top productos",
+        columnas: [{ titulo: "Producto" }],
+        filas: [["3D Queso"], ["7UP"]],
+      },
     ]);
     const resumen = await abrir(blob, "Resumen");
     const top = await abrir(blob, "Top productos");

@@ -6,8 +6,8 @@ import {
   IsObject,
   ArrayMinSize,
   ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from "class-validator";
+import { Type } from "class-transformer";
 
 export class OperacionEntranteDto {
   /** UUID generado en el POS; idempotencia. */

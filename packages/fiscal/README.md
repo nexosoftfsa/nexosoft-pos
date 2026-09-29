@@ -11,7 +11,7 @@ nunca contra SOAP/WSFEv1.
 | `servicio-fiscal.ts`      | `ServicioFiscal` (puerto), `SolicitudCae`, `ResultadoCae`, `DocTipo`, `MensajeArca`, `ComprobanteAsociado`. |
 | `solicitud.ts`            | `construirSolicitudCae(resultado, comprobante, receptor)`: mapea el cálculo del dominio a la solicitud.     |
 | `mock-servicio-fiscal.ts` | `MockServicioFiscal`: simula ARCA **respetando sus reglas** (numeración, total=neto+IVA, C sin IVA).        |
-| `arca-servicio-fiscal.ts` | Re-exporta `codigoComprobanteArca` y apunta a dónde vive la integración real. |
+| `arca-servicio-fiscal.ts` | Re-exporta `codigoComprobanteArca` y apunta a dónde vive la integración real.                               |
 
 ## Dónde está la integración real (ARCA)
 

@@ -13,7 +13,7 @@
  */
 
 /** Prefijo global de la API (ver `setGlobalPrefix` en main.ts). */
-const PREFIJO = '/api/v1';
+const PREFIJO = "/api/v1";
 
 /**
  * Escrituras que siguen permitidas con la suscripción bloqueada.
@@ -21,21 +21,21 @@ const PREFIJO = '/api/v1';
  */
 const ESCRITURAS_PERMITIDAS: ReadonlyArray<{ metodo: string; patron: RegExp }> = [
   // Entrar al sistema: si no, no se puede ni ver el aviso de bloqueo.
-  { metodo: 'POST', patron: /^\/auth\// },
+  { metodo: "POST", patron: /^\/auth\// },
   // Cerrar el turno de caja que quedó abierto. Bloquear esto dejaría una caja
   // abierta e inconsistente que después hay que arreglar a mano.
-  { metodo: 'POST', patron: /^\/caja\/turnos\/[^/]+\/cerrar$/ },
-  { metodo: 'POST', patron: /^\/caja\/cerrar/ },
+  { metodo: "POST", patron: /^\/caja\/turnos\/[^/]+\/cerrar$/ },
+  { metodo: "POST", patron: /^\/caja\/cerrar/ },
   // Configuración del comercio: hace falta para poder reactivar.
-  { metodo: 'PUT', patron: /^\/comercio\// },
+  { metodo: "PUT", patron: /^\/comercio\// },
 ];
 
 /** Deja la ruta comparable: sin prefijo, sin query y sin barra final. */
 export function normalizar(ruta: string): string {
-  const sinQuery = ruta.split('?')[0] ?? '';
+  const sinQuery = ruta.split("?")[0] ?? "";
   const sinPrefijo = sinQuery.startsWith(PREFIJO) ? sinQuery.slice(PREFIJO.length) : sinQuery;
-  const limpia = sinPrefijo.replace(/\/+$/, '');
-  return limpia === '' ? '/' : limpia;
+  const limpia = sinPrefijo.replace(/\/+$/, "");
+  return limpia === "" ? "/" : limpia;
 }
 
 /**
@@ -44,7 +44,7 @@ export function normalizar(ruta: string): string {
  */
 export function bloqueadaPorSuscripcion(metodo: string, ruta: string): boolean {
   const m = metodo.toUpperCase();
-  if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return false;
+  if (m === "GET" || m === "HEAD" || m === "OPTIONS") return false;
   const normalizada = normalizar(ruta);
   return !ESCRITURAS_PERMITIDAS.some((p) => p.metodo === m && p.patron.test(normalizada));
 }

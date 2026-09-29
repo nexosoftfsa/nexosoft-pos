@@ -1,4 +1,4 @@
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from "@prisma/client/runtime/library";
 
 /** Un movimiento de stock a nivel de producto físico. */
 export interface MovimientoStockPlan {

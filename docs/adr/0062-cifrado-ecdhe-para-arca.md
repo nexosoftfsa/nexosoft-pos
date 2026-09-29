@@ -40,12 +40,12 @@ Dos cosas lo hacían difícil de ver:
 
 Se midió contra el servidor real de producción:
 
-| Alternativa | Resultado |
-|---|---|
-| Sin tocar nada | falla |
-| `@SECLEVEL=1` | anda, pero negocia la clave DH de 1024 bits |
+| Alternativa    | Resultado                                            |
+| -------------- | ---------------------------------------------------- |
+| Sin tocar nada | falla                                                |
+| `@SECLEVEL=1`  | anda, pero negocia la clave DH de 1024 bits          |
 | `DEFAULT:!DHE` | anda, pero cae en `TLS_RSA`: **sin forward secrecy** |
-| **`ECDHE`** | anda con `ECDHE-RSA-AES256-GCM-SHA384` |
+| **`ECDHE`**    | anda con `ECDHE-RSA-AES256-GCM-SHA384`               |
 
 Se eligió `ECDHE` porque es el único que resuelve el problema **sin bajar la
 seguridad**. Bajar el nivel de OpenSSL habría sido más corto de escribir y peor:

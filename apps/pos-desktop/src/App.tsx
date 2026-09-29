@@ -325,7 +325,10 @@ function AppTauri() {
         await asegurarMaestros(ejecutor);
         baseUrlRef.current = await leerServidorUrl(ejecutor);
         setLogoDataUrl((await leerConfig(ejecutor)).logoDataUrl);
-        const sesion = await SesionManager.cargar(ejecutor, new ClienteAuthHttp(baseUrlRef.current));
+        const sesion = await SesionManager.cargar(
+          ejecutor,
+          new ClienteAuthHttp(baseUrlRef.current),
+        );
         sesionRef.current = sesion;
         // La sesión igual se carga: guarda la terminal elegida (que es de la
         // máquina) y el refresh token. Lo que no se hace es entrar con ella
@@ -480,27 +483,30 @@ function AppTauri() {
   // esto, cancelar en el login dejaba pasar sin credenciales.
   const volverDeConfigRef = useRef<"login" | "listo">("listo");
 
-  const onAbrirConfig = useCallback(async (volverA: "login" | "listo") => {
-    volverDeConfigRef.current = volverA;
-    const ejecutor = ejecutorRef.current;
-    if (ejecutor === null) return;
-    try {
-      const config = await leerConfig(ejecutor);
-      setValoresConfig({
-        servidorUrl: baseUrlRef.current,
-        razonSocial: config.razonSocial,
-        cuit: config.cuit,
-        condicionIvaEmisor: config.condicionIvaEmisor,
-        puntoDeVenta: config.puntoDeVenta,
-        emiteComprobantesFiscales: config.emiteComprobantesFiscales ?? true,
-        permitirStockNegativo: config.permitirStockNegativo,
-        ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
-      });
-      setFase("config");
-    } catch (e) {
-      fallar(e);
-    }
-  }, [fallar]);
+  const onAbrirConfig = useCallback(
+    async (volverA: "login" | "listo") => {
+      volverDeConfigRef.current = volverA;
+      const ejecutor = ejecutorRef.current;
+      if (ejecutor === null) return;
+      try {
+        const config = await leerConfig(ejecutor);
+        setValoresConfig({
+          servidorUrl: baseUrlRef.current,
+          razonSocial: config.razonSocial,
+          cuit: config.cuit,
+          condicionIvaEmisor: config.condicionIvaEmisor,
+          puntoDeVenta: config.puntoDeVenta,
+          emiteComprobantesFiscales: config.emiteComprobantesFiscales ?? true,
+          permitirStockNegativo: config.permitirStockNegativo,
+          ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
+        });
+        setFase("config");
+      } catch (e) {
+        fallar(e);
+      }
+    },
+    [fallar],
+  );
 
   const onGuardarConfig = useCallback(
     async (v: ValoresConfig) => {

@@ -15,11 +15,11 @@ que lo habríamos descrito nosotros:
 >    comercio con muchos clientes (**no es culpa del cajero**), el cliente se
 >    lleva un ticket a medias, con los datos del receptor pero sin QR ni CAE.
 
-| | Nº fiscal, CAE, QR | Datos del receptor |
-|---|---|---|
-| Cajero tranquilo (`0002-00000007`, `0002-00000009`) | **sí** | no |
-| Cajero apurado (`Ref. interna 9`, `Ref. interna 11`) | no | **sí** |
-| Reimpresión desde Comprobantes | sí | sí |
+|                                                      | Nº fiscal, CAE, QR | Datos del receptor |
+| ---------------------------------------------------- | ------------------ | ------------------ |
+| Cajero tranquilo (`0002-00000007`, `0002-00000009`)  | **sí**             | no                 |
+| Cajero apurado (`Ref. interna 9`, `Ref. interna 11`) | no                 | **sí**             |
+| Reimpresión desde Comprobantes                       | sí                 | sí                 |
 
 El IVA discriminado salía bien en los cuatro, y la reimpresión salía perfecta.
 
@@ -97,8 +97,8 @@ nadie lea "hay tests" y suponga que este escenario está atado.
 
 La pantalla de venta acumula estado que se limpia al confirmar, y la impresión
 ocurre después de esa limpieza. Eso ya se sabía: el comentario de
-`ventaAsistente` dice, textualmente, que guarda los pagos *"porque `pagos` se
-limpia al confirmar y el ticket los necesita"*.
+`ventaAsistente` dice, textualmente, que guarda los pagos _"porque `pagos` se
+limpia al confirmar y el ticket los necesita"_.
 
 Se detectó el problema, se resolvió para los pagos, y no se preguntó qué más
 necesitaba el ticket. La regla que faltaba: **si algo se limpia al confirmar y

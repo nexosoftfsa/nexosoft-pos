@@ -276,10 +276,7 @@ export class RepositorioVentasSqlite implements RepositorioVentas {
    * por delante del fiscal, así que el número de ARCA suele estar ya ocupado
    * por otra venta vieja de la terminal.
    */
-  async aplicarResueltoPorElServidor(
-    operacionId: string,
-    r: ResueltoPorElServidor,
-  ): Promise<void> {
+  async aplicarResueltoPorElServidor(operacionId: string, r: ResueltoPorElServidor): Promise<void> {
     await this.db.ejecutar(
       `UPDATE venta
           SET numero_fiscal = COALESCE(?, numero_fiscal),

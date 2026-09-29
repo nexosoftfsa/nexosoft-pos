@@ -22,7 +22,10 @@ class EjecutorNodeSqlite implements EjecutorSql {
     if (params.length === 0) this.db.exec(sql);
     else this.db.prepare(sql).run(...params);
   }
-  async consultar<T extends Fila = Fila>(sql: string, params: readonly ValorSql[] = []): Promise<T[]> {
+  async consultar<T extends Fila = Fila>(
+    sql: string,
+    params: readonly ValorSql[] = [],
+  ): Promise<T[]> {
     return this.db.prepare(sql).all(...params) as unknown as T[];
   }
 }

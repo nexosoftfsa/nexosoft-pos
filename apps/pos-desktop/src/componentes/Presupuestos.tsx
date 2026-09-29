@@ -44,11 +44,14 @@ function money(v: string): string {
 }
 function fecha(d: string | Date): string {
   const x = typeof d === "string" ? new Date(d) : d;
-  return Number.isNaN(x.getTime()) ? String(d) : x.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+  return Number.isNaN(x.getTime())
+    ? String(d)
+    : x.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
 function etiquetaEstadoPresupuesto(p: Presupuesto): string {
-  if (p.estado === "VIGENTE") return estaVencido(p.creadoEn, p.validezDias, p.estado) ? "Vencido" : "Vigente";
+  if (p.estado === "VIGENTE")
+    return estaVencido(p.creadoEn, p.validezDias, p.estado) ? "Vencido" : "Vigente";
   return ETIQUETA_ESTADO[p.estado];
 }
 
@@ -162,12 +165,16 @@ export function Presupuestos({
             <tbody>
               {cargando && (
                 <tr>
-                  <td colSpan={7} className="td-vacio">Cargando presupuestos…</td>
+                  <td colSpan={7} className="td-vacio">
+                    Cargando presupuestos…
+                  </td>
                 </tr>
               )}
               {!cargando && items.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="td-vacio">No hay presupuestos.</td>
+                  <td colSpan={7} className="td-vacio">
+                    No hay presupuestos.
+                  </td>
                 </tr>
               )}
               {!cargando &&
@@ -181,10 +188,18 @@ export function Presupuestos({
                       <td>{fecha(fechaVencimiento(p.creadoEn, p.validezDias))}</td>
                       <td className="num strong">{money(p.total)}</td>
                       <td>
-                        {p.estado === "VIGENTE" && !vencido && <span className="badge badge--ok">Vigente</span>}
-                        {p.estado === "VIGENTE" && vencido && <span className="badge badge--warn">Vencido</span>}
-                        {p.estado === "CONVERTIDO" && <span className="badge badge--info">Convertido</span>}
-                        {p.estado === "ANULADO" && <span className="badge badge--danger">Anulado</span>}
+                        {p.estado === "VIGENTE" && !vencido && (
+                          <span className="badge badge--ok">Vigente</span>
+                        )}
+                        {p.estado === "VIGENTE" && vencido && (
+                          <span className="badge badge--warn">Vencido</span>
+                        )}
+                        {p.estado === "CONVERTIDO" && (
+                          <span className="badge badge--info">Convertido</span>
+                        )}
+                        {p.estado === "ANULADO" && (
+                          <span className="badge badge--danger">Anulado</span>
+                        )}
                       </td>
                       <td className="acciones">
                         <button type="button" className="linkbtn" onClick={() => setVer(p)}>
@@ -192,10 +207,18 @@ export function Presupuestos({
                         </button>
                         {p.estado === "VIGENTE" && (
                           <>
-                            <button type="button" className="linkbtn" onClick={() => void accion(p, "convertir")}>
+                            <button
+                              type="button"
+                              className="linkbtn"
+                              onClick={() => void accion(p, "convertir")}
+                            >
                               Convertir
                             </button>
-                            <button type="button" className="linkbtn linkbtn--danger" onClick={() => void accion(p, "anular")}>
+                            <button
+                              type="button"
+                              className="linkbtn linkbtn--danger"
+                              onClick={() => void accion(p, "anular")}
+                            >
                               Anular
                             </button>
                           </>
@@ -270,7 +293,13 @@ function ModalNuevo({
     const subtotal = (Number(cant) * Number(pu)).toFixed(2);
     setLineas((l) => [
       ...l,
-      { descripcion: descripcion.trim(), cantidad: cant, precioUnitario: pu, subtotal, ...(sel !== "" ? { productoId: sel } : {}) },
+      {
+        descripcion: descripcion.trim(),
+        cantidad: cant,
+        precioUnitario: pu,
+        subtotal,
+        ...(sel !== "" ? { productoId: sel } : {}),
+      },
     ]);
     setSel("");
     setDescripcion("");
@@ -279,7 +308,10 @@ function ModalNuevo({
     setError(null);
   }
 
-  const total = useMemo(() => lineas.reduce((a, l) => a + Number(l.subtotal), 0).toFixed(2), [lineas]);
+  const total = useMemo(
+    () => lineas.reduce((a, l) => a + Number(l.subtotal), 0).toFixed(2),
+    [lineas],
+  );
 
   async function guardar() {
     if (lineas.length === 0) {
@@ -312,17 +344,28 @@ function ModalNuevo({
       <div className="modal__box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
         <div className="modal__head">
           <h3>Nuevo presupuesto</h3>
-          <button type="button" className="modal__x" onClick={onCerrar} aria-label="Cerrar">×</button>
+          <button type="button" className="modal__x" onClick={onCerrar} aria-label="Cerrar">
+            ×
+          </button>
         </div>
         <div className="modal__body">
           <div className="modal__row">
             <div className="field">
               <label>Cliente (opcional)</label>
-              <input className="input" value={clienteNombre} onChange={(e) => setClienteNombre(e.target.value)} />
+              <input
+                className="input"
+                value={clienteNombre}
+                onChange={(e) => setClienteNombre(e.target.value)}
+              />
             </div>
             <div className="field">
               <label>Validez (días)</label>
-              <input className="input" inputMode="numeric" value={validez} onChange={(e) => setValidez(e.target.value)} />
+              <input
+                className="input"
+                inputMode="numeric"
+                value={validez}
+                onChange={(e) => setValidez(e.target.value)}
+              />
             </div>
           </div>
 
@@ -331,27 +374,45 @@ function ModalNuevo({
             <select className="input" value={sel} onChange={(e) => elegirProducto(e.target.value)}>
               <option value="">— Elegí un producto o escribí abajo —</option>
               {catalogo.map((c) => (
-                <option key={c.id} value={c.id}>{c.descripcion}</option>
+                <option key={c.id} value={c.id}>
+                  {c.descripcion}
+                </option>
               ))}
             </select>
           </div>
           <div className="modal__row">
             <div className="field">
               <label>Descripción</label>
-              <input className="input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+              <input
+                className="input"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+              />
             </div>
             <div className="field">
               <label>Cantidad</label>
-              <input className="input" inputMode="decimal" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
+              <input
+                className="input"
+                inputMode="decimal"
+                value={cantidad}
+                onChange={(e) => setCantidad(e.target.value)}
+              />
             </div>
           </div>
           <div className="modal__row">
             <div className="field">
               <label>Precio unitario</label>
-              <input className="input" inputMode="decimal" value={precio} onChange={(e) => setPrecio(e.target.value)} />
+              <input
+                className="input"
+                inputMode="decimal"
+                value={precio}
+                onChange={(e) => setPrecio(e.target.value)}
+              />
             </div>
             <div className="field" style={{ justifyContent: "flex-end" }}>
-              <button type="button" className="pill-btn" onClick={agregarLinea}>+ Agregar ítem</button>
+              <button type="button" className="pill-btn" onClick={agregarLinea}>
+                + Agregar ítem
+              </button>
             </div>
           </div>
 
@@ -375,7 +436,11 @@ function ModalNuevo({
                       <td className="num">{money(l.precioUnitario)}</td>
                       <td className="num strong">{money(l.subtotal)}</td>
                       <td className="acciones">
-                        <button type="button" className="linkbtn linkbtn--danger" onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}>
+                        <button
+                          type="button"
+                          className="linkbtn linkbtn--danger"
+                          onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}
+                        >
                           Quitar
                         </button>
                       </td>
@@ -392,8 +457,15 @@ function ModalNuevo({
           {error !== null && <div className="error">{error}</div>}
         </div>
         <div className="modal__foot">
-          <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>Cancelar</button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar presupuesto"}
           </button>
         </div>
@@ -413,7 +485,9 @@ function ModalVer({ presupuesto, onCerrar }: { presupuesto: Presupuesto; onCerra
         <ul className="ticket-items">
           {presupuesto.items.map((it) => (
             <li key={it.id}>
-              <span>{it.cantidad} × {it.descripcion}</span>
+              <span>
+                {it.cantidad} × {it.descripcion}
+              </span>
               <span>{money(it.subtotal)}</span>
             </li>
           ))}
@@ -428,7 +502,9 @@ function ModalVer({ presupuesto, onCerrar }: { presupuesto: Presupuesto; onCerra
         </div>
         <div className="ticket-acciones">
           <button onClick={() => window.print()}>Imprimir</button>
-          <button className="primario" onClick={onCerrar}>Cerrar</button>
+          <button className="primario" onClick={onCerrar}>
+            Cerrar
+          </button>
         </div>
       </div>
     </div>

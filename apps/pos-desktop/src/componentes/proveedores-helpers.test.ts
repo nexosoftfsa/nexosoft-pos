@@ -77,8 +77,26 @@ describe("formDesdeProveedor", () => {
 
 describe("filtrarProveedores", () => {
   const proveedores: Proveedor[] = [
-    { id: "p1", nombre: "Distribuidora Sur", cuit: "30-1", contacto: "Marcelo", email: null, telefono: null, direccion: null, activo: true },
-    { id: "p2", nombre: "Lácteos del Valle", cuit: "30-2", contacto: null, email: null, telefono: null, direccion: null, activo: true },
+    {
+      id: "p1",
+      nombre: "Distribuidora Sur",
+      cuit: "30-1",
+      contacto: "Marcelo",
+      email: null,
+      telefono: null,
+      direccion: null,
+      activo: true,
+    },
+    {
+      id: "p2",
+      nombre: "Lácteos del Valle",
+      cuit: "30-2",
+      contacto: null,
+      email: null,
+      telefono: null,
+      direccion: null,
+      activo: true,
+    },
   ];
 
   it("sin búsqueda devuelve todo", () => {

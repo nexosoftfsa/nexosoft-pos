@@ -51,12 +51,7 @@ import {
   ultimoItemCarrito,
   type ItemCarrito,
 } from "./pos-helpers";
-import {
-  descuentoDeLinea,
-  descuentoPorcentajeLinea,
-  PROMOS_DEMO,
-  promoAplicable,
-} from "./promos";
+import { descuentoDeLinea, descuentoPorcentajeLinea, PROMOS_DEMO, promoAplicable } from "./promos";
 import { motivoNoFacturable } from "./venta-facturable";
 import { puedeAbrirAsistente, puedeArrancarVenta } from "./venta-en-curso";
 import { useImpresionA4 } from "./usar-impresion-a4";
@@ -161,9 +156,7 @@ function armarComando(
   return {
     items: carrito.map((c) => {
       const promo = promoDeItem(c);
-      const pct = promo
-        ? descuentoPorcentajeLinea(promo, c.cantidad, c.producto.precioFinal)
-        : 0;
+      const pct = promo ? descuentoPorcentajeLinea(promo, c.cantidad, c.producto.precioFinal) : 0;
       return {
         articuloId: c.producto.articulo.id,
         cantidad: Cantidad.de(String(c.cantidad)),
@@ -214,9 +207,7 @@ export function PantallaPos({
    * número que asignó ARCA. Es lo que hace que el ticket del cliente sea el
    * comprobante de verdad y no una copia con numeración local.
    */
-  const [comprobanteServidor, setComprobanteServidor] = useState<ComprobanteResuelto | null>(
-    null,
-  );
+  const [comprobanteServidor, setComprobanteServidor] = useState<ComprobanteResuelto | null>(null);
   /** Se está esperando el CAE para poder imprimir el ticket definitivo. */
   const [autorizando, setAutorizando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -389,7 +380,9 @@ export function PantallaPos({
   }, [clienteMediosPago]);
 
   const tarjetaActual = tarjetas.find((t) => t.id === tarjetaSeleccionada);
-  const tasaActual = tarjetaActual?.tasas.find((t) => t.cantidadCuotas === Number(cuotasSeleccionadas));
+  const tasaActual = tarjetaActual?.tasas.find(
+    (t) => t.cantidadCuotas === Number(cuotasSeleccionadas),
+  );
   /**
    * El recargo que de verdad corresponde cobrar con esta tarjeta.
    *
@@ -658,7 +651,12 @@ export function PantallaPos({
     setTarjetaSeleccionada("");
     setCuotasSeleccionadas("");
     setError(null);
-    const siguiente = pasoTrasElegirMedio(forma, tarjetas.length, clientes.length, clienteId !== "");
+    const siguiente = pasoTrasElegirMedio(
+      forma,
+      tarjetas.length,
+      clientes.length,
+      clienteId !== "",
+    );
     if (siguiente === "monto") {
       setMontoPago(importeParaEditar(preview.cobro.saldoPendiente));
     }
@@ -714,7 +712,9 @@ export function PantallaPos({
       const pagoUi = armarPagoUi(montoBase);
       if (superaSaldoSinVuelto(formaPago, pagoUi.monto, preview.cobro.saldoPendiente)) {
         const etiquetaForma = FORMAS.find((f) => f.valor === formaPago)?.etiqueta ?? formaPago;
-        setError(`No se puede dar vuelto con ${etiquetaForma}: el monto no puede superar el saldo pendiente.`);
+        setError(
+          `No se puede dar vuelto con ${etiquetaForma}: el monto no puede superar el saldo pendiente.`,
+        );
         return;
       }
       agregarPago();
@@ -969,7 +969,9 @@ export function PantallaPos({
     return {
       forma: formaPago,
       monto: montoBase,
-      ...(tarjetaActual ? { tarjetaConfigId: tarjetaActual.id, cuotas: Number(cuotasSeleccionadas) } : {}),
+      ...(tarjetaActual
+        ? { tarjetaConfigId: tarjetaActual.id, cuotas: Number(cuotasSeleccionadas) }
+        : {}),
     };
   }
 
@@ -1000,13 +1002,11 @@ export function PantallaPos({
     ventaEnCursoRef.current = true;
 
     // Si hay un pago electrónico pendiente, iniciarlo antes de confirmar la venta
-    const pagoElec = pagos.find((p) =>
-      FORMAS.find((f) => f.valor === p.forma)?.electronico,
-    );
+    const pagoElec = pagos.find((p) => FORMAS.find((f) => f.valor === p.forma)?.electronico);
     if (pagoElec && preview) {
       try {
         const intencionId = crypto.randomUUID();
-        const medio = pagoElec.forma === FormaDePago.Billetera ? "qr" : "point" as const;
+        const medio = pagoElec.forma === FormaDePago.Billetera ? "qr" : ("point" as const);
         const intento = await pasarela.iniciarPago({
           intencionPagoId: intencionId,
           monto: pagoElec.monto,
@@ -1198,11 +1198,16 @@ export function PantallaPos({
         });
         // Pago combinado: viaja el desglose (un pago por medio) y el resumen.
         const pagosSync = pagos.map((p) => ({
-          medioPago: mapearMedioPago(p.forma, tarjetas.find((t) => t.id === p.tarjetaConfigId)?.tipo),
+          medioPago: mapearMedioPago(
+            p.forma,
+            tarjetas.find((t) => t.id === p.tarjetaConfigId)?.tipo,
+          ),
           monto: p.monto.aDecimalString(2),
           ...(p.tarjetaConfigId !== undefined ? { tarjetaConfigId: p.tarjetaConfigId } : {}),
           ...(p.cuotas !== undefined ? { cuotas: p.cuotas } : {}),
-          ...(p.recargoAplicado !== undefined ? { recargo: p.recargoAplicado.aDecimalString(2) } : {}),
+          ...(p.recargoAplicado !== undefined
+            ? { recargo: p.recargoAplicado.aDecimalString(2) }
+            : {}),
         }));
         const medioPago = resumenMedioPago(
           pagosSync,
@@ -1545,182 +1550,183 @@ export function PantallaPos({
           {/* Los fichados ya NO se ocultan al buscar: los resultados van al
               panel derecho, así el cajero nunca pierde de vista la venta. */}
           <div className="venta-actual">
-              <ul className="items-lista">
-                {carrito.length === 0 && <li className="vacio-grande">Agregá productos…</li>}
-                {carrito.length > 0 && (
-                  <li className="items-lista-encabezado">
-                    <span>Descripción</span>
-                    <span>Cant.</span>
-                    <span>Unitario</span>
-                    <span>Importe</span>
-                    <span />
-                  </li>
-                )}
-                {carrito.map((c) => {
-                  const promo = promoDeItem(c);
-                  const descPromo = promo
-                    ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
-                    : Money.cero();
-                  return (
-                    <li key={c.producto.articulo.id} className="item-linea">
-                      <span className="item-desc">
-                        {c.producto.articulo.descripcion}
-                        {promo && descPromo.esPositivo() && (
-                          <span className="item-promo">
-                            🏷 {promo.nombre} −{pesos(descPromo)}
-                          </span>
-                        )}
-                      </span>
-                      <div className="item-cant">
-                        <button onClick={() => cambiarCantidad(c.producto.articulo.id, -1)}>−</button>
-                        <span>{c.cantidad}</span>
-                        <button onClick={() => cambiarCantidad(c.producto.articulo.id, 1)}>+</button>
-                      </div>
-                      <span className="item-unitario">{pesos(c.producto.precioFinal)}</span>
-                      <span className="item-importe">
-                        {pesos(c.producto.precioFinal.multiplicarPor(c.cantidad))}
-                      </span>
-                      <button
-                        className="item-quitar"
-                        onClick={() => quitar(c.producto.articulo.id)}
-                        aria-label="Quitar"
-                      >
-                        ×
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {preview && (
-                <div className="total-centro">
-                  <span className="total-centro-items">
-                    {carrito.length} {carrito.length === 1 ? "ítem" : "ítems"}
-                  </span>
-                  <span className="total-centro-etiqueta">TOTAL</span>
-                  <span className="total-centro-valor">
-                    {pesos(preview.resultado.total.sumar(recargoTarjetasTotal))}
-                  </span>
-                </div>
+            <ul className="items-lista">
+              {carrito.length === 0 && <li className="vacio-grande">Agregá productos…</li>}
+              {carrito.length > 0 && (
+                <li className="items-lista-encabezado">
+                  <span>Descripción</span>
+                  <span>Cant.</span>
+                  <span>Unitario</span>
+                  <span>Importe</span>
+                  <span />
+                </li>
               )}
-          </div>
-
-          <div className="venta-pie">
-          {preview && (
-            <div className="totales">
-              {preview.resultado.discriminaIva && (
-                <>
-                  <Fila etiqueta="Neto gravado" valor={pesos(preview.resultado.netoGravado)} />
-                  {preview.resultado.subtotalesPorAlicuota.map((s) => (
-                    <Fila
-                      key={s.alicuota?.porcentaje ?? "exento"}
-                      etiqueta={etiquetaSubtotal(s.alicuota)}
-                      // De un exento importa la base: su IVA es cero.
-                      valor={pesos(s.alicuota === null ? s.neto : s.iva)}
-                    />
-                  ))}
-                </>
-              )}
-              {preview.resultado.descuento.esPositivo() && (
-                <Fila etiqueta="Descuento" valor={`-${pesos(preview.resultado.descuento)}`} />
-              )}
-              <div className="fila recargo-ctrl">
-                <span>Recargo</span>
-                <span className="recargo-botones">
-                  {[0, 10, 15].map((p) => (
+              {carrito.map((c) => {
+                const promo = promoDeItem(c);
+                const descPromo = promo
+                  ? descuentoDeLinea(promo, c.cantidad, c.producto.precioFinal)
+                  : Money.cero();
+                return (
+                  <li key={c.producto.articulo.id} className="item-linea">
+                    <span className="item-desc">
+                      {c.producto.articulo.descripcion}
+                      {promo && descPromo.esPositivo() && (
+                        <span className="item-promo">
+                          🏷 {promo.nombre} −{pesos(descPromo)}
+                        </span>
+                      )}
+                    </span>
+                    <div className="item-cant">
+                      <button onClick={() => cambiarCantidad(c.producto.articulo.id, -1)}>−</button>
+                      <span>{c.cantidad}</span>
+                      <button onClick={() => cambiarCantidad(c.producto.articulo.id, 1)}>+</button>
+                    </div>
+                    <span className="item-unitario">{pesos(c.producto.precioFinal)}</span>
+                    <span className="item-importe">
+                      {pesos(c.producto.precioFinal.multiplicarPor(c.cantidad))}
+                    </span>
                     <button
-                      key={p}
-                      type="button"
-                      className={recargoPorc === p ? "on" : ""}
-                      onClick={() => setRecargoPorc(p)}
+                      className="item-quitar"
+                      onClick={() => quitar(c.producto.articulo.id)}
+                      aria-label="Quitar"
                     >
-                      {p === 0 ? "Sin" : `${p}%`}
+                      ×
                     </button>
-                  ))}
-                </span>
-              </div>
-              {preview.resultado.recargo.esPositivo() && (
-                <Fila etiqueta={`Recargo ${recargoPorc}%`} valor={`+${pesos(preview.resultado.recargo)}`} />
-              )}
-              {/* Fase 17: el TOTAL vive en el panel central (`.total-centro`),
-                  donde el cajero ya está mirando la lista de productos. Acá
-                  solo queda el desglose fiscal y los recargos. */}
-              {recargoTarjetasTotal.esPositivo() && (
-                <Fila etiqueta="Recargo tarjeta" valor={`+${pesos(recargoTarjetasTotal)}`} />
-              )}
-            </div>
-          )}
+                  </li>
+                );
+              })}
+            </ul>
 
-          <div className="pagos">
-            <div className="pagos-lista">
-              {pagos.map((p, i) => (
-                <div key={i} className="pago">
-                  <span>
-                    {FORMAS.find((f) => f.valor === p.forma)?.etiqueta ?? p.forma}
-                    {p.tarjetaConfigId !== undefined && (
-                      <>
-                        {" "}
-                        — {tarjetas.find((t) => t.id === p.tarjetaConfigId)?.banco ?? ""} ({p.cuotas}{" "}
-                        cuota{p.cuotas === 1 ? "" : "s"})
-                      </>
-                    )}
-                  </span>
-                  <span>{pesos(p.monto)}</span>
-                  <button onClick={() => quitarPago(i)} aria-label="Quitar pago">
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            {/* Apagado también cuando la venta no se puede facturar: el
-                asistente no abre en ese caso, y un botón que se puede tocar y
-                no hace nada parece la pantalla colgada. Lo pidió Sebastián con
-                esas palabras después de probarlo. */}
-            <button
-              type="button"
-              className="cobrar-boton"
-              onClick={() => abrirAsistente()}
-              disabled={carrito.length === 0 || !preview || faltaParaFacturar !== null}
-            >
-              Cobrar (Enter)
-            </button>
             {preview && (
-              <div className="cobro">
-                <Fila etiqueta="Pagado" valor={pesos(preview.cobro.pagado)} />
-                {preview.cobro.vuelto.esPositivo() && (
-                  <Fila etiqueta="Vuelto" valor={pesos(preview.cobro.vuelto)} destacado />
-                )}
-                {!preview.cobro.cancelada && (
-                  <Fila etiqueta="Falta" valor={pesos(preview.cobro.saldoPendiente)} />
-                )}
+              <div className="total-centro">
+                <span className="total-centro-items">
+                  {carrito.length} {carrito.length === 1 ? "ítem" : "ítems"}
+                </span>
+                <span className="total-centro-etiqueta">TOTAL</span>
+                <span className="total-centro-valor">
+                  {pesos(preview.resultado.total.sumar(recargoTarjetasTotal))}
+                </span>
               </div>
             )}
           </div>
 
-          {error && <div className="error">{error}</div>}
+          <div className="venta-pie">
+            {preview && (
+              <div className="totales">
+                {preview.resultado.discriminaIva && (
+                  <>
+                    <Fila etiqueta="Neto gravado" valor={pesos(preview.resultado.netoGravado)} />
+                    {preview.resultado.subtotalesPorAlicuota.map((s) => (
+                      <Fila
+                        key={s.alicuota?.porcentaje ?? "exento"}
+                        etiqueta={etiquetaSubtotal(s.alicuota)}
+                        // De un exento importa la base: su IVA es cero.
+                        valor={pesos(s.alicuota === null ? s.neto : s.iva)}
+                      />
+                    ))}
+                  </>
+                )}
+                {preview.resultado.descuento.esPositivo() && (
+                  <Fila etiqueta="Descuento" valor={`-${pesos(preview.resultado.descuento)}`} />
+                )}
+                <div className="fila recargo-ctrl">
+                  <span>Recargo</span>
+                  <span className="recargo-botones">
+                    {[0, 10, 15].map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className={recargoPorc === p ? "on" : ""}
+                        onClick={() => setRecargoPorc(p)}
+                      >
+                        {p === 0 ? "Sin" : `${p}%`}
+                      </button>
+                    ))}
+                  </span>
+                </div>
+                {preview.resultado.recargo.esPositivo() && (
+                  <Fila
+                    etiqueta={`Recargo ${recargoPorc}%`}
+                    valor={`+${pesos(preview.resultado.recargo)}`}
+                  />
+                )}
+                {/* Fase 17: el TOTAL vive en el panel central (`.total-centro`),
+                  donde el cajero ya está mirando la lista de productos. Acá
+                  solo queda el desglose fiscal y los recargos. */}
+                {recargoTarjetasTotal.esPositivo() && (
+                  <Fila etiqueta="Recargo tarjeta" valor={`+${pesos(recargoTarjetasTotal)}`} />
+                )}
+              </div>
+            )}
 
-          {/* Sin esto la pantalla se quedaba quieta uno o dos segundos y
+            <div className="pagos">
+              <div className="pagos-lista">
+                {pagos.map((p, i) => (
+                  <div key={i} className="pago">
+                    <span>
+                      {FORMAS.find((f) => f.valor === p.forma)?.etiqueta ?? p.forma}
+                      {p.tarjetaConfigId !== undefined && (
+                        <>
+                          {" "}
+                          — {tarjetas.find((t) => t.id === p.tarjetaConfigId)?.banco ?? ""} (
+                          {p.cuotas} cuota{p.cuotas === 1 ? "" : "s"})
+                        </>
+                      )}
+                    </span>
+                    <span>{pesos(p.monto)}</span>
+                    <button onClick={() => quitarPago(i)} aria-label="Quitar pago">
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {/* Apagado también cuando la venta no se puede facturar: el
+                asistente no abre en ese caso, y un botón que se puede tocar y
+                no hace nada parece la pantalla colgada. Lo pidió Sebastián con
+                esas palabras después de probarlo. */}
+              <button
+                type="button"
+                className="cobrar-boton"
+                onClick={() => abrirAsistente()}
+                disabled={carrito.length === 0 || !preview || faltaParaFacturar !== null}
+              >
+                Cobrar (Enter)
+              </button>
+              {preview && (
+                <div className="cobro">
+                  <Fila etiqueta="Pagado" valor={pesos(preview.cobro.pagado)} />
+                  {preview.cobro.vuelto.esPositivo() && (
+                    <Fila etiqueta="Vuelto" valor={pesos(preview.cobro.vuelto)} destacado />
+                  )}
+                  {!preview.cobro.cancelada && (
+                    <Fila etiqueta="Falta" valor={pesos(preview.cobro.saldoPendiente)} />
+                  )}
+                </div>
+              )}
+            </div>
+
+            {error && <div className="error">{error}</div>}
+
+            {/* Sin esto la pantalla se quedaba quieta uno o dos segundos y
               parecía colgada. El cajero tiene que ver que está pasando algo, y
               qué. */}
-          {autorizando && (
-            <div className="aviso-trabajando">Autorizando en ARCA…</div>
-          )}
+            {autorizando && <div className="aviso-trabajando">Autorizando en ARCA…</div>}
 
-          <button
-            className="confirmar"
-            onClick={() => void confirmar()}
-            disabled={!puedeConfirmar || autorizando || faltaParaFacturar !== null}
-          >
-            {autorizando ? "Autorizando…" : "Confirmar venta"}
-          </button>
-          {/* La salida de emergencia. Sin esto, abandonar una venta era sacar
+            <button
+              className="confirmar"
+              onClick={() => void confirmar()}
+              disabled={!puedeConfirmar || autorizando || faltaParaFacturar !== null}
+            >
+              {autorizando ? "Autorizando…" : "Confirmar venta"}
+            </button>
+            {/* La salida de emergencia. Sin esto, abandonar una venta era sacar
               los productos de a uno. Va discreto y al lado del botón grande:
               tiene que estar, no tiene que competir. */}
-          {(carrito.length > 0 || pagos.length > 0) && !autorizando && (
-            <button type="button" className="cancelar-venta" onClick={() => void cancelarVenta()}>
-              Cancelar venta (F4)
-            </button>
-          )}
+            {(carrito.length > 0 || pagos.length > 0) && !autorizando && (
+              <button type="button" className="cancelar-venta" onClick={() => void cancelarVenta()}>
+                Cancelar venta (F4)
+              </button>
+            )}
           </div>
         </section>
 
@@ -1764,7 +1770,9 @@ export function PantallaPos({
                     e.stopPropagation();
                     alternarGrillaRapida(p);
                   }}
-                  aria-label={esGrillaRapida(p) ? "Sacar de grilla rápida" : "Agregar a grilla rápida"}
+                  aria-label={
+                    esGrillaRapida(p) ? "Sacar de grilla rápida" : "Agregar a grilla rápida"
+                  }
                 >
                   {esGrillaRapida(p) ? "★" : "☆"}
                 </button>
@@ -1874,9 +1882,7 @@ export function PantallaPos({
                   y los pagos antes de que alguien tocara el botón, así que el
                   A4 de la venta salía sin receptor (ADR-0073). */}
               <button
-                onClick={() =>
-                  void datosDeLaVenta(ultimaVenta).then((datos) => imprimirA4(datos))
-                }
+                onClick={() => void datosDeLaVenta(ultimaVenta).then((datos) => imprimirA4(datos))}
               >
                 Imprimir A4
               </button>
@@ -2007,9 +2013,7 @@ export function construirDatosTicket(
         // porque el cálculo empezó a devolverlo el 23/9/2026 y una venta vieja
         // releída de la base local no lo trae.
         ...(calculada?.neto !== undefined ? { neto: calculada.neto } : {}),
-        ...(calculada?.netoUnitario !== undefined
-          ? { netoUnitario: calculada.netoUnitario }
-          : {}),
+        ...(calculada?.netoUnitario !== undefined ? { netoUnitario: calculada.netoUnitario } : {}),
       };
     }),
     subtotalesIva: venta.resultado.subtotalesPorAlicuota.map((s) => ({

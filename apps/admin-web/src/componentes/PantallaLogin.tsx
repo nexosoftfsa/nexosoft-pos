@@ -77,8 +77,8 @@ export function SinAcceso() {
       <div className="login__caja">
         <h1 className="login__marca">Sin acceso</h1>
         <p className="login__subtitulo">
-          El usuario <strong>{sesion?.email}</strong> ({sesion?.rol}) no tiene
-          permisos para ver reportes.
+          El usuario <strong>{sesion?.email}</strong> ({sesion?.rol}) no tiene permisos para ver
+          reportes.
         </p>
         <button className="boton" onClick={logout}>
           Cerrar sesión

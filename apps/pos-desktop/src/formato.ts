@@ -76,7 +76,13 @@ export function formatearImporteTecleado(texto: string): string {
   const limpio = texto.replace(/[^\d,]/g, "");
   const coma = limpio.indexOf(",");
   const enteroCrudo = (coma < 0 ? limpio : limpio.slice(0, coma)).replace(/,/g, "");
-  const decimales = coma < 0 ? null : limpio.slice(coma + 1).replace(/,/g, "").slice(0, 2);
+  const decimales =
+    coma < 0
+      ? null
+      : limpio
+          .slice(coma + 1)
+          .replace(/,/g, "")
+          .slice(0, 2);
 
   // Sin dígitos enteros no hay nada que agrupar: "" o ",50" mientras se teclea.
   const entero = enteroCrudo.replace(/^0+(?=\d)/, "");

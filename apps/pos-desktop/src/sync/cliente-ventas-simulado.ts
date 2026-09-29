@@ -50,7 +50,13 @@ export class ClienteVentasSimulado implements ClienteVentas {
         creadaEn: new Date(base - 2 * 3600000).toISOString(),
         comprobanteAsociadoId: null,
         items: [
-          { id: "it1", cantidad: "2", precioUnitario: "3400.00", subtotal: "6800.00", producto: { id: "yerba", nombre: "Yerba mate 1 kg", codigo: "7790007" } },
+          {
+            id: "it1",
+            cantidad: "2",
+            precioUnitario: "3400.00",
+            subtotal: "6800.00",
+            producto: { id: "yerba", nombre: "Yerba mate 1 kg", codigo: "7790007" },
+          },
         ],
       },
       {
@@ -67,7 +73,13 @@ export class ClienteVentasSimulado implements ClienteVentas {
         creadaEn: new Date(base - 3600000).toISOString(),
         comprobanteAsociadoId: null,
         items: [
-          { id: "it2", cantidad: "1", precioUnitario: "12000.00", subtotal: "12000.00", producto: { id: "cafe", nombre: "Café molido 250 g", codigo: "7790004" } },
+          {
+            id: "it2",
+            cantidad: "1",
+            precioUnitario: "12000.00",
+            subtotal: "12000.00",
+            producto: { id: "cafe", nombre: "Café molido 250 g", codigo: "7790004" },
+          },
         ],
         pagos: [
           { id: "pg1", medioPago: "EFECTIVO", monto: "5000.00" },
@@ -87,7 +99,9 @@ export class ClienteVentasSimulado implements ClienteVentas {
       descuento: v.descuento.toFixed(2),
       total: v.total.toFixed(2),
       medioPago: v.medioPago,
-      cae: String(base + indice).padStart(14, "0").slice(-14),
+      cae: String(base + indice)
+        .padStart(14, "0")
+        .slice(-14),
       caeFechaVto: new Date(base + 10 * 86400000).toISOString(),
       numeroComprobante: v.numeroTicket,
       tipoComprobante: "FacturaB",

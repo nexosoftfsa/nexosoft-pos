@@ -27,7 +27,7 @@ archivos del servidor.
    clave desde la UI, esa gana; si no cargó ninguna, se sigue usando
    `GEMINI_API_KEY`/`GEMINI_MODEL` del `.env` (retrocompatible con ADR-0039).
 3. **Endpoints nuevos, restringidos a ADMIN** (`RolesGuard`): `GET
-   /asistente/configuracion` (¿hay clave cargada? con qué modelo — **nunca
+/asistente/configuracion` (¿hay clave cargada? con qué modelo — **nunca
    devuelve la clave real**, solo un booleano) y `PUT /asistente/configuracion`
    (`{ apiKey, modelo? }`) para cargarla o reemplazarla.
 4. **Pantalla en el POS**: desde "Asistente IA", el ADMIN ve un botón

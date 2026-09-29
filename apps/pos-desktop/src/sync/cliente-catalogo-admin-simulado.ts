@@ -179,7 +179,10 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
    * del bundle del POS). Suficiente para probar la pantalla en el navegador
    * sin servidor; la validación real la hace siempre el cloud-api.
    */
-  async importarProductos(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+  async importarProductos(
+    filas: readonly Record<string, string>[],
+    dryRun: boolean,
+  ): Promise<FilaImportacion[]> {
     const productos = [...this.productos];
     const categorias = [...this.categorias];
     const resultados: FilaImportacion[] = [];
@@ -189,15 +192,27 @@ export class ClienteCatalogoAdminSimulado implements ClienteCatalogoAdmin {
       const codigo = (cruda[COL.codigo] ?? "").trim();
       const nombre = (cruda[COL.descripcion] ?? "").trim();
       if (codigo === "") {
-        resultados.push({ fila, resultado: "error", mensaje: "Fila sin código: no se puede importar." });
+        resultados.push({
+          fila,
+          resultado: "error",
+          mensaje: "Fila sin código: no se puede importar.",
+        });
         return;
       }
       if (nombre === "") {
-        resultados.push({ fila, resultado: "error", mensaje: `Artículo ${codigo} sin descripción.` });
+        resultados.push({
+          fila,
+          resultado: "error",
+          mensaje: `Artículo ${codigo} sin descripción.`,
+        });
         return;
       }
       if (productos.some((p) => p.codigo === codigo)) {
-        resultados.push({ fila, resultado: "omitida", mensaje: `Ya existe un producto con código ${codigo}` });
+        resultados.push({
+          fila,
+          resultado: "omitida",
+          mensaje: `Ya existe un producto con código ${codigo}`,
+        });
         return;
       }
 

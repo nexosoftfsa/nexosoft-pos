@@ -4,10 +4,10 @@ import {
   Money,
   type AlicuotaIva,
   type DesgloseIva,
-} from '@nexosoft/domain';
+} from "@nexosoft/domain";
 
 /** Lo que manda el POS por una línea exenta. Un "0" sería otra cosa. */
-export const ALICUOTA_EXENTA = 'EXENTO';
+export const ALICUOTA_EXENTA = "EXENTO";
 
 /**
  * La alícuota que el POS **imprimió** en esa línea, como viene en el payload:
@@ -38,13 +38,13 @@ export function etiquetaAlicuota(a: AlicuotaIva | null): string {
  */
 export function alicuotaDeTipoIva(tipoIva: string | undefined): AlicuotaIva | null {
   switch (tipoIva) {
-    case 'IVA_10_5':
+    case "IVA_10_5":
       return ALICUOTAS_IVA.DIEZ_CON_CINCO;
-    case 'IVA_27':
+    case "IVA_27":
       return ALICUOTAS_IVA.VEINTISIETE;
-    case 'EXENTO':
+    case "EXENTO":
       return null;
-    case 'IVA_21':
+    case "IVA_21":
     default:
       // Sin dato, la alícuota general: es la del 99% del comercio minorista y
       // es la que menos sorprende si un producto quedó sin configurar.
@@ -71,7 +71,7 @@ export function ajustarAlTotal(desglose: DesgloseIva, total: Money): DesgloseIva
 
   const mayor = [...desglose.porAlicuota].sort((a, b) =>
     b.base.mayorQue(a.base) ? 1 : b.base.menorQue(a.base) ? -1 : 0,
-  )[0] as DesgloseIva['porAlicuota'][number];
+  )[0] as DesgloseIva["porAlicuota"][number];
 
   const porAlicuota = desglose.porAlicuota.map((r) =>
     r.codigoArca === mayor.codigoArca ? { ...r, base: r.base.sumar(diferencia) } : r,

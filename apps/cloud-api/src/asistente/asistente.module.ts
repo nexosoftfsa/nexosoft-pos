@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import { AsistenteController } from './asistente.controller';
-import { AsistenteService } from './asistente.service';
+import { Module } from "@nestjs/common";
+import { AsistenteController } from "./asistente.controller";
+import { AsistenteService } from "./asistente.service";
 
 @Module({
   controllers: [AsistenteController],

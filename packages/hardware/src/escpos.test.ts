@@ -212,9 +212,7 @@ describe("construirEscPos", () => {
      */
     it("un ticket interno sin confirmar tampoco afirma su número", () => {
       const t = frases(
-        texto(
-          construirEscPos(ticket({ numero: 33, esFiscal: false, numeroConfirmado: false })),
-        ),
+        texto(construirEscPos(ticket({ numero: 33, esFiscal: false, numeroConfirmado: false }))),
       );
       expect(t).toContain("Referencia interna 00000033");
       expect(t).toContain("el definitivo se asigna al subir la venta al servidor");
@@ -272,9 +270,7 @@ describe("construirEscPos", () => {
 
     it("imprime la leyenda ORIGINAL/DUPLICADO", () => {
       expect(texto(construirEscPos(facturaA()))).toContain("ORIGINAL");
-      const dup = texto(
-        construirEscPos({ ...facturaA(), leyenda: "DUPLICADO" }),
-      );
+      const dup = texto(construirEscPos({ ...facturaA(), leyenda: "DUPLICADO" }));
       expect(dup).toContain("DUPLICADO");
       expect(dup).not.toContain("ORIGINAL");
     });
@@ -391,14 +387,21 @@ describe("construirEscPos", () => {
   it("imprime el vuelto solo si es positivo", () => {
     expect(texto(construirEscPos(ticket()))).not.toContain("VUELTO");
     const conVuelto = texto(
-      construirEscPos(ticket({ formasDePago: [{ etiqueta: "Efectivo", monto: Money.desde("5000") }], vuelto: Money.desde("2500") })),
+      construirEscPos(
+        ticket({
+          formasDePago: [{ etiqueta: "Efectivo", monto: Money.desde("5000") }],
+          vuelto: Money.desde("2500"),
+        }),
+      ),
     );
     expect(conVuelto).toContain("VUELTO");
   });
 
   it("imprime el CAE cuando el comprobante está autorizado", () => {
     const t = texto(
-      construirEscPos(ticket({ esFiscal: true, cae: "75123456789012", vencimientoCae: new Date(2026, 8, 1) })),
+      construirEscPos(
+        ticket({ esFiscal: true, cae: "75123456789012", vencimientoCae: new Date(2026, 8, 1) }),
+      ),
     );
     expect(t).toContain("CAE 75123456789012");
   });
@@ -409,7 +412,9 @@ describe("construirEscPos", () => {
    */
   it("el vencimiento del CAE va sin hora", () => {
     const t = texto(
-      construirEscPos(ticket({ esFiscal: true, cae: "75123456789012", vencimientoCae: new Date(2026, 8, 1) })),
+      construirEscPos(
+        ticket({ esFiscal: true, cae: "75123456789012", vencimientoCae: new Date(2026, 8, 1) }),
+      ),
     );
     expect(t).toContain("Vto. 01/09/2026");
     expect(t).not.toContain("Vto. 01/09/2026 00:00");
@@ -569,9 +574,7 @@ describe("comandoImagenRaster (logo del comercio)", () => {
   it("el ticket incluye la imagen antes de la razón social", () => {
     const bytes = construirEscPos(ticket(), COLUMNAS_58MM, logo);
     const marca = [0x1d, 0x76, 0x30];
-    const pos = Array.from(bytes).findIndex(
-      (_, i) => marca.every((m, j) => bytes[i + j] === m),
-    );
+    const pos = Array.from(bytes).findIndex((_, i) => marca.every((m, j) => bytes[i + j] === m));
     expect(pos).toBeGreaterThan(-1);
     const textoDespues = Array.from(bytes.slice(pos))
       .map((b) => String.fromCharCode(b))

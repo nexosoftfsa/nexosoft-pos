@@ -36,12 +36,12 @@ export function Antivirus() {
 
       <div className="config-ayuda">
         Algunos antivirus confunden al POS con un programa peligroso y lo borran, y entonces la
-        terminal deja de abrir. Esto le avisa a Windows Defender que las carpetas de NexoSoft son
-        de confianza, y recupera lo que ya se haya llevado.
+        terminal deja de abrir. Esto le avisa a Windows Defender que las carpetas de NexoSoft son de
+        confianza, y recupera lo que ya se haya llevado.
         <br />
         <br />
-        Va a pedir permiso de administrador. Sólo se excluyen las dos carpetas de NexoSoft: el
-        resto de la PC sigue protegido igual.
+        Va a pedir permiso de administrador. Sólo se excluyen las dos carpetas de NexoSoft: el resto
+        de la PC sigue protegido igual.
       </div>
 
       <button

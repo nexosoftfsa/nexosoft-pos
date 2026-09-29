@@ -46,7 +46,9 @@ export function buscarProductoPorCodigo(
   catalogo: readonly ProductoCatalogo[],
   codigo: string,
 ): ProductoCatalogo | undefined {
-  return catalogo.find((p) => p.articulo.codigoInterno === codigo || p.articulo.codigoBarras === codigo);
+  return catalogo.find(
+    (p) => p.articulo.codigoInterno === codigo || p.articulo.codigoBarras === codigo,
+  );
 }
 
 /**

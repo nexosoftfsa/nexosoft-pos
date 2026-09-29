@@ -26,7 +26,11 @@ export async function leerAjuste(ejecutor: EjecutorSql, clave: string): Promise<
   return filas[0]?.valor ?? null;
 }
 
-export async function guardarAjuste(ejecutor: EjecutorSql, clave: string, valor: string): Promise<void> {
+export async function guardarAjuste(
+  ejecutor: EjecutorSql,
+  clave: string,
+  valor: string,
+): Promise<void> {
   await ejecutor.ejecutar(
     `INSERT INTO ajuste (clave, valor) VALUES (?, ?)
      ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor`,

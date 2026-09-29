@@ -20,9 +20,9 @@ si dos procesos lo tocan, el resultado es una base inconsistente.
 
 Por lo tanto hay que distinguir dos mecanismos distintos:
 
-| Mecanismo | Para qué | Dónde |
-| --- | --- | --- |
-| **Respaldo de datos** (snapshot consistente) | Recuperación ante desastre | este ADR |
+| Mecanismo                                              | Para qué                         | Dónde                                            |
+| ------------------------------------------------------ | -------------------------------- | ------------------------------------------------ |
+| **Respaldo de datos** (snapshot consistente)           | Recuperación ante desastre       | este ADR                                         |
 | **Sincronización transaccional** (cola de operaciones) | Compartir datos entre terminales | [ADR-0005](0005-sincronizacion-offline-first.md) |
 
 ## Decisión

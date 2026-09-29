@@ -413,7 +413,9 @@
   box-shadow: var(--shadow);
   cursor: pointer;
   text-align: left;
-  transition: transform 0.08s, border-color 0.08s;
+  transition:
+    transform 0.08s,
+    border-color 0.08s;
 }
 .acceso:hover {
   transform: translateY(-2px);

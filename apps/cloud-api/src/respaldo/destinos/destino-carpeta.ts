@@ -1,10 +1,7 @@
-import { promises as fs } from 'node:fs';
-import { join } from 'node:path';
-import { NotFoundException } from '@nestjs/common';
-import type {
-  DestinoDeRespaldo,
-  MetadatosRespaldo,
-} from '../puertos/destino-de-respaldo';
+import { promises as fs } from "node:fs";
+import { join } from "node:path";
+import { NotFoundException } from "@nestjs/common";
+import type { DestinoDeRespaldo, MetadatosRespaldo } from "../puertos/destino-de-respaldo";
 
 /**
  * Destino de respaldo sobre el filesystem (ADR-0020).
@@ -17,8 +14,8 @@ import type {
  * para no tocar otros archivos que el cliente tenga en la misma carpeta.
  */
 export class DestinoCarpeta implements DestinoDeRespaldo {
-  private static readonly PREFIJO = 'nexosoft-';
-  private static readonly SUFIJO = '.json.gz';
+  private static readonly PREFIJO = "nexosoft-";
+  private static readonly SUFIJO = ".json.gz";
 
   constructor(private readonly rutaCarpeta: string) {}
 

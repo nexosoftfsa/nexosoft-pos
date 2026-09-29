@@ -44,8 +44,9 @@ describe("motivoNoFacturable", () => {
   });
 
   it("acepta el CUIT con guiones, como se tipea", () => {
-    expect(motivoNoFacturable(TipoComprobante.FacturaA, { ...RI, documento: "30-71234567-1" }))
-      .toBeNull();
+    expect(
+      motivoNoFacturable(TipoComprobante.FacturaA, { ...RI, documento: "30-71234567-1" }),
+    ).toBeNull();
   });
 
   /** La B es al mostrador: identificar al comprador es opcional. */

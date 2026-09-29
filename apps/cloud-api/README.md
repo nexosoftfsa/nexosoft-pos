@@ -33,16 +33,16 @@ sincronizan al recuperar la red (Fase 4.5).
 
 ## Módulos
 
-| Módulo      | Endpoints (prefijo `/api/v1`)                                        |
-| ----------- | ------------------------------------------------------------------- |
-| `auth`      | `POST /auth/register · /auth/login · /auth/refresh · /auth/logout`   |
-| `catalogo`  | `GET/POST /categorias`, `GET/POST/PATCH/DELETE /productos`           |
-| `stock`     | `GET /stock`, `GET /stock/:id`, `POST /stock/movimientos`            |
-| `ventas`    | `POST /ventas` (registrar, idempotente), `GET /ventas` (historial)   |
-| `sync`      | `POST /sync/operaciones` (ingesta de la cola de las terminales)      |
-| `respaldo`  | `POST /respaldo` (crear), `GET /respaldo` (listar) — ver más abajo   |
-| `asistente` | `POST /asistente/preguntar` — Asistente IA (Gemini, ver más abajo)   |
-| `health`    | `GET /health` (estado + chequeo de DB)                              |
+| Módulo      | Endpoints (prefijo `/api/v1`)                                      |
+| ----------- | ------------------------------------------------------------------ |
+| `auth`      | `POST /auth/register · /auth/login · /auth/refresh · /auth/logout` |
+| `catalogo`  | `GET/POST /categorias`, `GET/POST/PATCH/DELETE /productos`         |
+| `stock`     | `GET /stock`, `GET /stock/:id`, `POST /stock/movimientos`          |
+| `ventas`    | `POST /ventas` (registrar, idempotente), `GET /ventas` (historial) |
+| `sync`      | `POST /sync/operaciones` (ingesta de la cola de las terminales)    |
+| `respaldo`  | `POST /respaldo` (crear), `GET /respaldo` (listar) — ver más abajo |
+| `asistente` | `POST /asistente/preguntar` — Asistente IA (Gemini, ver más abajo) |
+| `health`    | `GET /health` (estado + chequeo de DB)                             |
 
 Todos los endpoints (salvo `auth` y `health`) requieren **JWT** y quedan
 automáticamente acotados a la **sucursal** del token.
@@ -100,17 +100,17 @@ completo tras cada venta (default `false`: en alto volumen es caro). Ver
 
 ## Scripts
 
-| Comando                  | Descripción                          |
-| ------------------------ | ------------------------------------ |
-| `pnpm dev`               | API en modo watch                    |
-| `pnpm build`             | Build de producción                  |
-| `pnpm prisma:generate`   | Genera el cliente Prisma             |
-| `pnpm prisma:migrate`    | Migraciones de base de datos         |
-| `pnpm typecheck`         | Chequeo de tipos                     |
-| `pnpm test`              | Tests (Vitest)                       |
-| `pnpm verify:e2e`        | E2E real de sync con PostgreSQL embebido (sin Docker) |
-| `pnpm verify:e2e:features` | E2E real de **combos + lotes/vencimientos** contra Postgres |
-| `pnpm seed:demo`         | Puebla una demo realista (almacén, combos, lotes, clientes, ventas) |
+| Comando                                                                                  | Descripción                                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm dev`                                                                               | API en modo watch                                                                                                                                                                                                                    |
+| `pnpm build`                                                                             | Build de producción                                                                                                                                                                                                                  |
+| `pnpm prisma:generate`                                                                   | Genera el cliente Prisma                                                                                                                                                                                                             |
+| `pnpm prisma:migrate`                                                                    | Migraciones de base de datos                                                                                                                                                                                                         |
+| `pnpm typecheck`                                                                         | Chequeo de tipos                                                                                                                                                                                                                     |
+| `pnpm test`                                                                              | Tests (Vitest)                                                                                                                                                                                                                       |
+| `pnpm verify:e2e`                                                                        | E2E real de sync con PostgreSQL embebido (sin Docker)                                                                                                                                                                                |
+| `pnpm verify:e2e:features`                                                               | E2E real de **combos + lotes/vencimientos** contra Postgres                                                                                                                                                                          |
+| `pnpm seed:demo`                                                                         | Puebla una demo realista (almacén, combos, lotes, clientes, ventas)                                                                                                                                                                  |
 | `pnpm importar:catalogo -- --email E --password P [--archivo X] [--api URL] [--dry-run]` | Importa un catálogo (Excel) del sistema anterior de un comercio contra un servidor real, vía `/categorias`+`/productos`+`/stock/movimientos`. Idempotente por código. Ver [ADR-0042](../../docs/adr/0042-importador-de-catalogo.md). |
 
 ### Demo en vivo para mostrar al cliente

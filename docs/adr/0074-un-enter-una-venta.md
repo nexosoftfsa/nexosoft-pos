@@ -64,7 +64,7 @@ estructural —un `ref` que no puede leerse viejo— más la prueba de campo.
 
 Tampoco cubre el otro lado: dos ventas idénticas a propósito, en dos momentos
 distintos, son dos ventas legítimas y así tienen que seguir siendo. Lo que se
-corta es la reentrada *durante* una confirmación en curso, no el duplicado.
+corta es la reentrada _durante_ una confirmación en curso, no el duplicado.
 
 ## Lo que se hizo mal
 

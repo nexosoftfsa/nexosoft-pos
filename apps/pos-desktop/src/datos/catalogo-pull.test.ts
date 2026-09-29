@@ -44,7 +44,10 @@ class EjecutorNodeSqlite implements EjecutorSql {
     if (params.length === 0) this.db.exec(sql);
     else this.db.prepare(sql).run(...params);
   }
-  async consultar<T extends Fila = Fila>(sql: string, params: readonly ValorSql[] = []): Promise<T[]> {
+  async consultar<T extends Fila = Fila>(
+    sql: string,
+    params: readonly ValorSql[] = [],
+  ): Promise<T[]> {
     return this.db.prepare(sql).all(...params) as unknown as T[];
   }
 }
@@ -121,12 +124,21 @@ describe("sincronizarCatalogo", () => {
 
   it("sin reemplazarStock: respeta el stock local (ventas offline no sincronizadas)", async () => {
     // Aprovisionamiento inicial: stock 15 del servidor.
-    await sincronizarCatalogo(repos, clienteFalso([PROD], [{ producto: { id: "p1" }, saldo: "15" }]), config, {
-      reemplazarStock: true,
-    });
+    await sincronizarCatalogo(
+      repos,
+      clienteFalso([PROD], [{ producto: { id: "p1" }, saldo: "15" }]),
+      config,
+      {
+        reemplazarStock: true,
+      },
+    );
     // Venta offline local: baja a 10.
     await repos.existencias.guardar(
-      crearExistencia({ articuloId: "p1", depositoId: config.depositoPorDefectoId, cantidad: Cantidad.de("10") }),
+      crearExistencia({
+        articuloId: "p1",
+        depositoId: config.depositoPorDefectoId,
+        cantidad: Cantidad.de("10"),
+      }),
     );
 
     // Pull de refresco con saldo del servidor 99: NO debe pisar el local.
@@ -181,7 +193,11 @@ describe("sincronizarCatalogo", () => {
       // Se desactiva, no se borra: hay ventas locales y operaciones en la cola
       // que todavía lo referencian.
       await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
-      await sincronizarCatalogo(repos, clienteFalso([{ ...PROD, id: "otro", codigo: "002" }], []), config);
+      await sincronizarCatalogo(
+        repos,
+        clienteFalso([{ ...PROD, id: "otro", codigo: "002" }], []),
+        config,
+      );
 
       expect(await repos.articulos.obtener("p1")).toBeDefined();
       expect((await repos.articulos.obtener("p1"))?.activo).toBe(false);
@@ -189,7 +205,11 @@ describe("sincronizarCatalogo", () => {
 
     it("un artículo que vuelve al servidor vuelve a venderse", async () => {
       await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);
-      await sincronizarCatalogo(repos, clienteFalso([{ ...PROD, id: "otro", codigo: "002" }], []), config);
+      await sincronizarCatalogo(
+        repos,
+        clienteFalso([{ ...PROD, id: "otro", codigo: "002" }], []),
+        config,
+      );
       expect((await repos.articulos.obtener("p1"))?.activo).toBe(false);
 
       await sincronizarCatalogo(repos, clienteFalso([PROD], []), config);

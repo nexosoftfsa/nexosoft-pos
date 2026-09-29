@@ -8,10 +8,7 @@
 import { Cantidad } from "../comun/cantidad.js";
 import { ErrorStock } from "../comun/errores.js";
 import { nuevoId } from "../comun/id.js";
-import {
-  crearExistencia,
-  type Existencia,
-} from "./existencia.js";
+import { crearExistencia, type Existencia } from "./existencia.js";
 
 export const TipoMovimiento = {
   /** Ingreso por compra a proveedor. */
@@ -28,8 +25,7 @@ export const TipoMovimiento = {
   AjusteNegativo: "ajuste_negativo",
 } as const;
 
-export type TipoMovimiento =
-  (typeof TipoMovimiento)[keyof typeof TipoMovimiento];
+export type TipoMovimiento = (typeof TipoMovimiento)[keyof typeof TipoMovimiento];
 
 const INGRESOS = new Set<TipoMovimiento>([
   TipoMovimiento.Compra,
@@ -112,9 +108,7 @@ export function aplicarMovimiento(
     );
   }
 
-  const delta = esIngreso(movimiento.tipo)
-    ? movimiento.cantidad
-    : movimiento.cantidad.negada();
+  const delta = esIngreso(movimiento.tipo) ? movimiento.cantidad : movimiento.cantidad.negada();
   const nuevaCantidad = existencia.cantidad.sumar(delta);
 
   if (nuevaCantidad.esNegativa() && opciones.permitirNegativo !== true) {

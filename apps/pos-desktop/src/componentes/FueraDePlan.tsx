@@ -31,8 +31,8 @@ export function PantallaFueraDePlan({
         <div style={etiqueta}>Disponible en el plan {ETIQUETA_PLAN[planNecesario]}</div>
         <div style={ayuda}>
           Tu plan actual es <b>{ETIQUETA_PLAN[planActual]}</b>. Para activar esta función,
-          comunicate con NexoSoft: se habilita a distancia, sin reinstalar nada y sin perder
-          ninguno de tus datos.
+          comunicate con NexoSoft: se habilita a distancia, sin reinstalar nada y sin perder ninguno
+          de tus datos.
         </div>
       </div>
     </div>

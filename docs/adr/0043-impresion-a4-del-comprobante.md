@@ -47,7 +47,7 @@ imprimía un ticket chico en el borde de una hoja A4, no una factura.
    algo renderiza `DatosTicket` de verdad: `condicionIvaEmisor`/
    `condicionIvaReceptor` viajaban como el valor crudo del enum
    (`"ResponsableInscripto"`) en vez de la etiqueta (`"Responsable
-   Inscripto"`) — se usa `etiquetaCondicionIva()` del dominio. Mismo caso con
+Inscripto"`) — se usa `etiquetaCondicionIva()` del dominio. Mismo caso con
    `tipoComprobante` (ya corregido en la Fase 10.1).
 
 ## Consecuencias

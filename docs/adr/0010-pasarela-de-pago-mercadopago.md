@@ -15,6 +15,7 @@ offline-first ni dispersarse por el código.
 Crear `@nexosoft/pagos` con la interfaz **`PasarelaDePago`** (puerto):
 `crearIntencionDePago`, `consultarEstado`, `cancelar`, `reembolsar`.
 Implementaciones:
+
 - `MercadoPagoPasarela`: Point (terminal) + QR.
 - `MockPasarela`: aprueba/rechaza/simula demoras para desarrollo y tests sin red.
 
@@ -26,10 +27,12 @@ recuperar conexión se confirma contra MercadoPago. Idempotencia por
 ## Consecuencias
 
 ### Positivas
+
 - El POS depende del contrato, no de MercadoPago; swap de pasarela sin tocar venta.
 - Desarrollo/tests con `MockPasarela`, sin credenciales ni hardware.
 
 ### Negativas / costos
+
 - **Point** requiere el SDK/integración propia de MercadoPago y, según modelo,
   hardware específico; no se puede probar en este entorno.
 - Hay que manejar estados intermedios (pendiente, aprobado, rechazado, reverso) y

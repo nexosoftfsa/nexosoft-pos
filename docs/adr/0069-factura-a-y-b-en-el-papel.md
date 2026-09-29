@@ -22,11 +22,11 @@ por más que ARCA la haya autorizado.
 
 ### Qué se imprime, según la letra
 
-| | Datos del receptor | IVA discriminado | Letra grande (A4) |
-|---|---|---|---|
-| **A** | siempre | sí | sí |
-| **B** | sólo si hay cliente identificado | no | sí |
-| **C** | nunca | no | no |
+|       | Datos del receptor               | IVA discriminado | Letra grande (A4) |
+| ----- | -------------------------------- | ---------------- | ----------------- |
+| **A** | siempre                          | sí               | sí                |
+| **B** | sólo si hay cliente identificado | no               | sí                |
+| **C** | nunca                            | no               | no                |
 
 **La C no se toca.** Es la que está funcionando en producción y cualquier
 cambio ahí es riesgo puro sin ganancia. La regla se aplicó como condición

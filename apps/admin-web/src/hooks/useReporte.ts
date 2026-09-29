@@ -11,10 +11,7 @@ export interface EstadoReporte<T> {
  * cambian las `deps` (típicamente el rango de fechas). Cancela resultados
  * obsoletos si el componente se desmonta o las deps cambian a mitad.
  */
-export function useReporte<T>(
-  cargar: () => Promise<T>,
-  deps: DependencyList,
-): EstadoReporte<T> {
+export function useReporte<T>(cargar: () => Promise<T>, deps: DependencyList): EstadoReporte<T> {
   const [estado, setEstado] = useState<EstadoReporte<T>>({
     datos: null,
     cargando: true,

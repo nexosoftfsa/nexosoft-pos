@@ -44,7 +44,7 @@ mantiene ADR-0019/0020 intactos).
      directamente) y se **desactiva** con `DELETE /productos/:id` a
      continuación.
    - `Proveedor` (100% vacío en el archivo real) y `Stock mínimo`/`Stock
-     máximo` (casi siempre 0, sin campo equivalente hoy en `Producto`) **no se
+máximo` (casi siempre 0, sin campo equivalente hoy en `Producto`) **no se
      importan** — no hay dónde persistirlos sin inventar alcance nuevo.
 4. **Idempotente por `codigo`**: un producto que ya existe (409 del backend)
    se cuenta como "ya existía" y se omite (no se pisa, no se duplica el

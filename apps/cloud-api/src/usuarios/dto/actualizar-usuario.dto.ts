@@ -1,5 +1,5 @@
-import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
-import { RolUsuario } from '@prisma/client';
+import { IsBoolean, IsEnum, IsOptional } from "class-validator";
+import { RolUsuario } from "@prisma/client";
 
 export class ActualizarUsuarioDto {
   @IsEnum(RolUsuario)

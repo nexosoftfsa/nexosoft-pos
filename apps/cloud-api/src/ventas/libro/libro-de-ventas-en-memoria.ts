@@ -1,4 +1,4 @@
-import type { LibroDeVentas, FilaVenta } from './libro-de-ventas';
+import type { LibroDeVentas, FilaVenta } from "./libro-de-ventas";
 
 /** Mock del libro de ventas para tests: acumula filas en memoria. */
 export class LibroDeVentasEnMemoria implements LibroDeVentas {

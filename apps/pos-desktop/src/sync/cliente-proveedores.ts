@@ -42,7 +42,10 @@ export interface DatosProveedor {
 export interface ClienteProveedores {
   listar(incluirInactivos: boolean): Promise<Proveedor[]>;
   crear(datos: DatosProveedor): Promise<Proveedor>;
-  actualizar(id: string, cambios: Partial<DatosProveedor> & { activo?: boolean }): Promise<Proveedor>;
+  actualizar(
+    id: string,
+    cambios: Partial<DatosProveedor> & { activo?: boolean },
+  ): Promise<Proveedor>;
   desactivar(id: string): Promise<void>;
   /** Fase 14.C: alta masiva desde Excel. `dryRun: true` no persiste nada, solo valida. */
   importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]>;

@@ -149,7 +149,11 @@ export function CuentasCorrientes({ cliente: api }: { cliente: ClienteCtaCte }) 
         <button type="button" className="pill-btn" onClick={() => void exportar()}>
           Exportar
         </button>
-        <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nuevo")}>
+        <button
+          type="button"
+          className="pill-btn pill-btn--primary"
+          onClick={() => setEditando("nuevo")}
+        >
           + Nuevo cliente
         </button>
       </div>
@@ -195,17 +199,29 @@ export function CuentasCorrientes({ cliente: api }: { cliente: ClienteCtaCte }) 
                       <td>{c.documento ?? <span className="muted">—</span>}</td>
                       <td>{etiquetaCondicion(c.condicionIva)}</td>
                       <td className="num strong">{money(c.saldo)}</td>
-                      <td className="num">{sinLimite ? <span className="muted">—</span> : money(c.limiteCredito)}</td>
+                      <td className="num">
+                        {sinLimite ? <span className="muted">—</span> : money(c.limiteCredito)}
+                      </td>
                       <td>
                         {s.estado === "debe" && <span className="badge badge--warn">Debe</span>}
                         {s.estado === "aldia" && <span className="badge badge--ok">Al día</span>}
-                        {s.estado === "afavor" && <span className="badge badge--info">A favor</span>}
+                        {s.estado === "afavor" && (
+                          <span className="badge badge--info">A favor</span>
+                        )}
                       </td>
                       <td className="acciones">
-                        <button type="button" className="linkbtn" onClick={() => setMovimiento({ cliente: c, tipo: "PAGO" })}>
+                        <button
+                          type="button"
+                          className="linkbtn"
+                          onClick={() => setMovimiento({ cliente: c, tipo: "PAGO" })}
+                        >
                           Cobrar
                         </button>
-                        <button type="button" className="linkbtn" onClick={() => setMovimiento({ cliente: c, tipo: "CARGO" })}>
+                        <button
+                          type="button"
+                          className="linkbtn"
+                          onClick={() => setMovimiento({ cliente: c, tipo: "CARGO" })}
+                        >
                           Cargo
                         </button>
                         <button type="button" className="linkbtn" onClick={() => setEstadoDe(c)}>
@@ -215,7 +231,11 @@ export function CuentasCorrientes({ cliente: api }: { cliente: ClienteCtaCte }) 
                           Editar
                         </button>
                         {c.activo && (
-                          <button type="button" className="linkbtn linkbtn--danger" onClick={() => void desactivar(c)}>
+                          <button
+                            type="button"
+                            className="linkbtn linkbtn--danger"
+                            onClick={() => void desactivar(c)}
+                          >
                             Baja
                           </button>
                         )}
@@ -312,19 +332,29 @@ function ModalCliente({
         <div className="modal__body">
           <div className="field">
             <label>Nombre / Razón social</label>
-            <input className="input" value={form.nombre} onChange={(e) => campo("nombre", e.target.value)} />
+            <input
+              className="input"
+              value={form.nombre}
+              onChange={(e) => campo("nombre", e.target.value)}
+            />
           </div>
           <div className="modal__row">
             <div className="field">
               <label>CUIT / DNI</label>
-              <input className="input" value={form.documento} onChange={(e) => campo("documento", e.target.value)} />
+              <input
+                className="input"
+                value={form.documento}
+                onChange={(e) => campo("documento", e.target.value)}
+              />
             </div>
             <div className="field">
               <label>Condición IVA</label>
               <select
                 className="input"
                 value={form.condicionIva}
-                onChange={(e) => campo("condicionIva", e.target.value as FormCliente["condicionIva"])}
+                onChange={(e) =>
+                  campo("condicionIva", e.target.value as FormCliente["condicionIva"])
+                }
               >
                 {CONDICIONES_IVA.map((c) => (
                   <option key={c.valor} value={c.valor}>
@@ -337,7 +367,11 @@ function ModalCliente({
           <div className="modal__row">
             <div className="field">
               <label>Teléfono</label>
-              <input className="input" value={form.telefono} onChange={(e) => campo("telefono", e.target.value)} />
+              <input
+                className="input"
+                value={form.telefono}
+                onChange={(e) => campo("telefono", e.target.value)}
+              />
             </div>
             <div className="field">
               <label>Límite de crédito (vacío = sin límite)</label>
@@ -351,11 +385,19 @@ function ModalCliente({
           </div>
           <div className="field">
             <label>Email</label>
-            <input className="input" value={form.email} onChange={(e) => campo("email", e.target.value)} />
+            <input
+              className="input"
+              value={form.email}
+              onChange={(e) => campo("email", e.target.value)}
+            />
           </div>
           <div className="field">
             <label>Dirección</label>
-            <input className="input" value={form.direccion} onChange={(e) => campo("direccion", e.target.value)} />
+            <input
+              className="input"
+              value={form.direccion}
+              onChange={(e) => campo("direccion", e.target.value)}
+            />
           </div>
           {errores.length > 0 && (
             <div className="error">
@@ -369,7 +411,12 @@ function ModalCliente({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar"}
           </button>
         </div>
@@ -458,7 +505,12 @@ function ModalMovimiento({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : esCobro ? "Registrar cobro" : "Registrar cargo"}
           </button>
         </div>
@@ -509,7 +561,11 @@ function ModalEstadoCuenta({
               {money(saldo)}{" "}
               <span
                 className={
-                  s.estado === "debe" ? "badge badge--warn" : s.estado === "afavor" ? "badge badge--info" : "badge badge--ok"
+                  s.estado === "debe"
+                    ? "badge badge--warn"
+                    : s.estado === "afavor"
+                      ? "badge badge--info"
+                      : "badge badge--ok"
                 }
               >
                 {s.etiqueta}
@@ -540,7 +596,10 @@ function ModalEstadoCuenta({
                       <td>{m.tipo === "CARGO" ? "Cargo" : "Pago"}</td>
                       <td
                         className="num strong"
-                        style={{ color: m.tipo === "CARGO" ? "var(--peligro, #e5484d)" : "var(--ok-fuerte)" }}
+                        style={{
+                          color:
+                            m.tipo === "CARGO" ? "var(--peligro, #e5484d)" : "var(--ok-fuerte)",
+                        }}
                       >
                         {m.tipo === "CARGO" ? "+" : "−"}
                         {money(m.monto)}

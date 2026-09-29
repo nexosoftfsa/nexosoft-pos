@@ -18,11 +18,13 @@ la capa nativa de Tauri (Rust) y se inyectan en el POS.
 ## Consecuencias
 
 ### Positivas
+
 - El POS no depende de un modelo concreto; agregar un driver no toca la UI.
 - Desarrollo y tests sin hardware presente (mocks).
 - Aísla el código nativo/serial del resto de la app.
 
 ### Negativas / costos
+
 - Hay que implementar un adaptador por familia de protocolo (p. ej. ESC/POS, o
   el protocolo serial de cada balanza).
 - Los detalles finos (corte de papel, cajón de dinero, formato de etiqueta)

@@ -16,8 +16,8 @@
  * que uno que no arranca: puede haber pendiente una migración que no toque nada
  * de lo que ese comercio usa, y dejarlo sin vender sería peor que el problema.
  */
-import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 /** Las que están en disco y no en la base, en orden cronológico. */
 export function migracionesPendientes(
@@ -50,12 +50,12 @@ export function avisoDeMigracionesPendientes(pendientes: readonly string[]): str
   return [
     `La base de datos está atrás del código: hay ${pendientes.length} migración(es) sin aplicar.`,
     'Mientras tanto, las pantallas que usen lo nuevo van a fallar con "Internal server error"',
-    'y las ventas pueden no llegar a los reportes.',
-    '',
+    "y las ventas pueden no llegar a los reportes.",
+    "",
     ...pendientes.map((m) => `  - ${m}`),
-    '',
-    'Se aplican con:  pnpm --filter @nexosoft/cloud-api exec prisma migrate deploy',
-  ].join('\n');
+    "",
+    "Se aplican con:  pnpm --filter @nexosoft/cloud-api exec prisma migrate deploy",
+  ].join("\n");
 }
 
 interface ConsultaCruda {

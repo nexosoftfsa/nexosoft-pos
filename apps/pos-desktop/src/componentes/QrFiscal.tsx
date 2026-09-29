@@ -14,13 +14,7 @@
  */
 import type { DatosImpresion } from "./qr-fiscal-datos";
 
-export function QrFiscal({
-  qr,
-  tamanio = 110,
-}: {
-  qr: DatosImpresion["qr"];
-  tamanio?: number;
-}) {
+export function QrFiscal({ qr, tamanio = 110 }: { qr: DatosImpresion["qr"]; tamanio?: number }) {
   if (qr === undefined) return null;
 
   return (

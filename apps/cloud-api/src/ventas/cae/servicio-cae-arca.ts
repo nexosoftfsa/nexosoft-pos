@@ -1,24 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-import { CertificadoService } from '../../fiscal/certificado.service';
-import { ClienteWsaa, ErrorWsaa, rutaCacheTicket, type EntornoArca } from '../../fiscal/arca/wsaa';
+import { CertificadoService } from "../../fiscal/certificado.service";
+import { ClienteWsaa, ErrorWsaa, rutaCacheTicket, type EntornoArca } from "../../fiscal/arca/wsaa";
 import {
   ClienteWsfev1,
   ErrorWsfe,
   ErrorWsfeNoSoportado,
   type DatosComprobante,
   type ResultadoAutorizacion,
-} from '../../fiscal/arca/wsfev1';
-import { ConfiguracionFiscalService } from '../../fiscal/configuracion-fiscal.service';
-import { ColaPorClave } from './cola-por-clave';
-import { solicitarConRecuperacion } from './solicitar-con-recuperacion';
+} from "../../fiscal/arca/wsfev1";
+import { ConfiguracionFiscalService } from "../../fiscal/configuracion-fiscal.service";
+import { ColaPorClave } from "./cola-por-clave";
+import { solicitarConRecuperacion } from "./solicitar-con-recuperacion";
 import {
   ErrorCaeNoDisponible,
   ErrorCaeRechazado,
   type ResultadoCae,
   type ServicioCae,
   type SolicitudCae,
-} from './servicio-cae';
+} from "./servicio-cae";
 
 /**
  * Autorización fiscal REAL contra ARCA (WSAA + WSFEv1).
@@ -64,14 +64,14 @@ export class ServicioCaeArca implements ServicioCae {
    * reintentando la llamada.
    */
   private async clientes(): Promise<{
-    fiscal: NonNullable<Awaited<ReturnType<ConfiguracionFiscalService['obtener']>>>;
+    fiscal: NonNullable<Awaited<ReturnType<ConfiguracionFiscalService["obtener"]>>>;
     wsaa: ClienteWsaa;
     wsfe: ClienteWsfev1;
   }> {
     const fiscal = await this.config.obtener();
     if (fiscal === null) {
       throw new ErrorCaeNoDisponible(
-        'Faltan los datos fiscales del comercio (CUIT, punto de venta o condición frente al IVA). Completalos en Configuración.',
+        "Faltan los datos fiscales del comercio (CUIT, punto de venta o condición frente al IVA). Completalos en Configuración.",
       );
     }
 
@@ -111,10 +111,14 @@ export class ServicioCaeArca implements ServicioCae {
   async consultar(
     codigoComprobante: number,
     numero: number,
-  ): Promise<{ resultado: ResultadoAutorizacion | null; entorno: EntornoArca; puntoDeVenta: number }> {
+  ): Promise<{
+    resultado: ResultadoAutorizacion | null;
+    entorno: EntornoArca;
+    puntoDeVenta: number;
+  }> {
     const { fiscal, wsaa, wsfe } = await this.clientes();
     try {
-      const ticket = await wsaa.obtenerTicket('wsfe');
+      const ticket = await wsaa.obtenerTicket("wsfe");
       const resultado = await wsfe.consultarComprobante(
         ticket,
         fiscal.puntoDeVenta,
@@ -141,7 +145,7 @@ export class ServicioCaeArca implements ServicioCae {
     }
 
     try {
-      const ticket = await wsaa.obtenerTicket('wsfe');
+      const ticket = await wsaa.obtenerTicket("wsfe");
 
       // Desde acá hasta que ARCA conteste, nadie más puede estar pidiendo un
       // número para este mismo punto de venta y tipo de comprobante.
@@ -150,11 +154,7 @@ export class ServicioCaeArca implements ServicioCae {
         // El número lo propone el sistema, pero tiene que seguir al último que
         // ARCA autorizó: es la fuente de verdad de la numeración y valida que
         // sea correlativa.
-        const ultimo = await wsfe.ultimoAutorizado(
-          ticket,
-          fiscal.puntoDeVenta,
-          codigoComprobante,
-        );
+        const ultimo = await wsfe.ultimoAutorizado(ticket, fiscal.puntoDeVenta, codigoComprobante);
 
         const datos: DatosComprobante = {
           puntoDeVenta: fiscal.puntoDeVenta,
@@ -163,8 +163,8 @@ export class ServicioCaeArca implements ServicioCae {
           total: solicitud.total,
           fecha: solicitud.fecha ?? new Date(),
           neto: solicitud.neto ?? solicitud.total,
-          iva: solicitud.iva ?? '0.00',
-          exento: solicitud.exento ?? '0.00',
+          iva: solicitud.iva ?? "0.00",
+          exento: solicitud.exento ?? "0.00",
           renglonesIva: solicitud.renglonesIva ?? [],
           ...(solicitud.tipoDocReceptor !== undefined
             ? { tipoDocReceptor: solicitud.tipoDocReceptor }
@@ -202,7 +202,7 @@ export class ServicioCaeArca implements ServicioCae {
       });
 
       if (r.observaciones.length > 0) {
-        this.log.warn(`ARCA autorizó con observaciones: ${r.observaciones.join(' | ')}`);
+        this.log.warn(`ARCA autorizó con observaciones: ${r.observaciones.join(" | ")}`);
       }
       return {
         cae: r.cae,
@@ -222,9 +222,7 @@ export class ServicioCaeArca implements ServicioCae {
       return new ErrorCaeRechazado(e.message);
     }
     if (e instanceof ErrorWsaa) {
-      return e.transitorio
-        ? new ErrorCaeNoDisponible(e.message)
-        : new ErrorCaeRechazado(e.message);
+      return e.transitorio ? new ErrorCaeNoDisponible(e.message) : new ErrorCaeRechazado(e.message);
     }
     if (e instanceof ErrorWsfe) {
       return e.transitorio

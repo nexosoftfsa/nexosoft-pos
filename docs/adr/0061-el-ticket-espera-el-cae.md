@@ -18,11 +18,11 @@ nunca se enteraba de lo que ARCA había contestado.
 Consecuencia visible en la prueba: el mismo comprobante tenía **tres números
 distintos**.
 
-| Dónde | Número | De dónde salía |
-|---|---|---|
-| Ticket impreso | 0002-00000031 | contador local del POS |
-| Comprobantes / reimpresión | 0002-00000103 | contador local del servidor |
-| ARCA | el que asignara | no se guardaba (corregido aparte) |
+| Dónde                      | Número          | De dónde salía                    |
+| -------------------------- | --------------- | --------------------------------- |
+| Ticket impreso             | 0002-00000031   | contador local del POS            |
+| Comprobantes / reimpresión | 0002-00000103   | contador local del servidor       |
+| ARCA                       | el que asignara | no se guardaba (corregido aparte) |
 
 Y el ticket decía "Pendiente de autorización de ARCA" **siempre**, aun con ARCA
 respondiendo bien. Los QR y CAE que se vieron funcionar durante las pruebas

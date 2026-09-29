@@ -23,4 +23,4 @@ export interface LibroDeVentas {
   registrar(fila: FilaVenta): Promise<void>;
 }
 
-export const LIBRO_DE_VENTAS = Symbol('LIBRO_DE_VENTAS');
+export const LIBRO_DE_VENTAS = Symbol("LIBRO_DE_VENTAS");

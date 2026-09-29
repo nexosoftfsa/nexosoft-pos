@@ -114,9 +114,7 @@ export function numeroEsProvisional(datos: DatosTicket): boolean {
   //
   // Para un comprobante fiscal, la ÚNICA prueba es el CAE. `numeroConfirmado`
   // sólo decide en los internos, que no esperan ningún CAE.
-  return (datos.esFiscal ?? true)
-    ? datos.cae === undefined
-    : datos.numeroConfirmado !== true;
+  return (datos.esFiscal ?? true) ? datos.cae === undefined : datos.numeroConfirmado !== true;
 }
 
 /** Por qué el número todavía no es el definitivo, según quién lo asigna. */

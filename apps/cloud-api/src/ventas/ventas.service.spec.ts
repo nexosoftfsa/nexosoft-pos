@@ -1,45 +1,45 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Decimal } from '@prisma/client/runtime/library';
-import { Prisma } from '@prisma/client';
-import { VentasService } from './ventas.service';
-import { LibroDeVentasEnMemoria } from './libro/libro-de-ventas-en-memoria';
-import { ErrorCaeNoDisponible, ErrorCaeRechazado } from './cae/servicio-cae';
-import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
+import { VentasService } from "./ventas.service";
+import { LibroDeVentasEnMemoria } from "./libro/libro-de-ventas-en-memoria";
+import { ErrorCaeNoDisponible, ErrorCaeRechazado } from "./cae/servicio-cae";
+import { DesgloseDeVentaService } from "./cae/desglose-de-venta.service";
 
-const USUARIO = { id: 'u1', email: 'cajero@nexo.com', sucursalId: 's1' };
+const USUARIO = { id: "u1", email: "cajero@nexo.com", sucursalId: "s1" };
 
 function ventaDevuelta(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'v1',
-    operacionId: 'op-1',
-    estado: 'COMPLETADA',
-    subtotal: new Decimal('240'),
-    descuento: new Decimal('0'),
-    total: new Decimal('240'),
-    medioPago: 'EFECTIVO',
-    cae: '12345678901234',
-    caeFechaVto: new Date('2026-07-06'),
+    id: "v1",
+    operacionId: "op-1",
+    estado: "COMPLETADA",
+    subtotal: new Decimal("240"),
+    descuento: new Decimal("0"),
+    total: new Decimal("240"),
+    medioPago: "EFECTIVO",
+    cae: "12345678901234",
+    caeFechaVto: new Date("2026-07-06"),
     numeroComprobante: 1,
-    tipoComprobante: 'FacturaB',
-    creadaEn: new Date('2026-06-26'),
+    tipoComprobante: "FacturaB",
+    creadaEn: new Date("2026-06-26"),
     sincronizadaEn: null,
-    sucursalId: 's1',
-    usuarioId: 'u1',
-    items: [{ id: 'i1' }, { id: 'i2' }],
+    sucursalId: "s1",
+    usuarioId: "u1",
+    items: [{ id: "i1" }, { id: "i2" }],
     ...overrides,
   };
 }
 
 const DTO = {
-  operacionId: 'op-1',
-  medioPago: 'EFECTIVO' as const,
+  operacionId: "op-1",
+  medioPago: "EFECTIVO" as const,
   items: [
-    { productoId: 'p1', cantidad: '2', precioUnitario: '100' },
-    { productoId: 'p2', cantidad: '1', precioUnitario: '50', descuento: '10' },
+    { productoId: "p1", cantidad: "2", precioUnitario: "100" },
+    { productoId: "p2", cantidad: "1", precioUnitario: "50", descuento: "10" },
   ],
 };
 
-describe('VentasService', () => {
+describe("VentasService", () => {
   let prisma: {
     venta: {
       findUnique: ReturnType<typeof vi.fn>;
@@ -92,15 +92,15 @@ describe('VentasService', () => {
     };
     cae = {
       autorizar: vi.fn().mockResolvedValue({
-        cae: '12345678901234',
-        caeFechaVto: new Date('2026-07-06'),
+        cae: "12345678901234",
+        caeFechaVto: new Date("2026-07-06"),
         numeroComprobante: 1,
-        tipoComprobante: 'FacturaB',
+        tipoComprobante: "FacturaB",
       }),
     };
     libro = new LibroDeVentasEnMemoria();
     motor = { crearRespaldo: vi.fn().mockResolvedValue({}) };
-    config = { get: vi.fn().mockReturnValue('false') };
+    config = { get: vi.fn().mockReturnValue("false") };
 
     service = new VentasService(
       prisma as never,
@@ -112,39 +112,39 @@ describe('VentasService', () => {
     );
   });
 
-  describe('idempotencia', () => {
-    it('devuelve la venta existente sin re-procesar si el operacionId ya existe', async () => {
+  describe("idempotencia", () => {
+    it("devuelve la venta existente sin re-procesar si el operacionId ya existe", async () => {
       prisma.venta.findUnique.mockResolvedValue(ventaDevuelta());
 
       const result = await service.registrar(USUARIO, DTO);
 
-      expect(result.id).toBe('v1');
+      expect(result.id).toBe("v1");
       expect(prisma.$transaction).not.toHaveBeenCalled();
       expect(cae.autorizar).not.toHaveBeenCalled();
     });
   });
 
-  describe('registrar venta nueva', () => {
-    it('recalcula los totales con Decimal a partir de los ítems', async () => {
+  describe("registrar venta nueva", () => {
+    it("recalcula los totales con Decimal a partir de los ítems", async () => {
       await service.registrar(USUARIO, DTO);
 
       const data = tx.venta.create.mock.calls[0]![0].data;
       // 2*100 + (1*50 - 10) = 200 + 40 = 240
-      expect(data.subtotal.toString()).toBe('240');
-      expect(data.total.toString()).toBe('240');
+      expect(data.subtotal.toString()).toBe("240");
+      expect(data.total.toString()).toBe("240");
     });
 
-    it('snapshotea el costoUnitario de cada ítem cuando viene del POS (ADR-0048)', async () => {
+    it("snapshotea el costoUnitario de cada ítem cuando viene del POS (ADR-0048)", async () => {
       await service.registrar(USUARIO, {
         ...DTO,
         items: [
-          { productoId: 'p1', cantidad: '2', precioUnitario: '100', costoUnitario: '60' },
-          { productoId: 'p2', cantidad: '1', precioUnitario: '50', descuento: '10' },
+          { productoId: "p1", cantidad: "2", precioUnitario: "100", costoUnitario: "60" },
+          { productoId: "p2", cantidad: "1", precioUnitario: "50", descuento: "10" },
         ],
       });
 
       const items = tx.venta.create.mock.calls[0]![0].data.items.create;
-      expect(items[0].costoUnitario.toString()).toBe('60');
+      expect(items[0].costoUnitario.toString()).toBe("60");
       expect(items[1].costoUnitario).toBeNull();
     });
 
@@ -154,80 +154,80 @@ describe('VentasService', () => {
      * tiene que decir lo mismo. Recalcularlo daría otra cosa si el producto
      * cambió de alícuota entre la venta y la reimpresión (ADR-0083).
      */
-    it('guarda el neto por línea tal como vino, sin recalcularlo', async () => {
+    it("guarda el neto por línea tal como vino, sin recalcularlo", async () => {
       await service.registrar(USUARIO, {
         ...DTO,
         items: [
-          { productoId: 'p1', cantidad: '1', precioUnitario: '10000', neto: '8264.46' },
-          { productoId: 'p2', cantidad: '1', precioUnitario: '50' },
+          { productoId: "p1", cantidad: "1", precioUnitario: "10000", neto: "8264.46" },
+          { productoId: "p2", cantidad: "1", precioUnitario: "50" },
         ],
       });
 
       const items = tx.venta.create.mock.calls[0]![0].data.items.create;
-      expect(items[0].neto.toString()).toBe('8264.46');
+      expect(items[0].neto.toString()).toBe("8264.46");
       // Una venta vieja, o un POS sin actualizar: se guarda null y se reimprime
       // con el precio final, como salió.
       expect(items[1].neto).toBeNull();
     });
 
-    it('persiste tarjetaConfigId/cuotas/recargo por pago cuando vienen del POS (ADR-0050)', async () => {
+    it("persiste tarjetaConfigId/cuotas/recargo por pago cuando vienen del POS (ADR-0050)", async () => {
       await service.registrar(USUARIO, {
         ...DTO,
         pagos: [
           {
-            medioPago: 'TARJETA_CREDITO',
-            monto: '110',
-            tarjetaConfigId: 'tar-1',
+            medioPago: "TARJETA_CREDITO",
+            monto: "110",
+            tarjetaConfigId: "tar-1",
             cuotas: 6,
-            recargo: '10',
+            recargo: "10",
           },
-          { medioPago: 'EFECTIVO', monto: '130' },
+          { medioPago: "EFECTIVO", monto: "130" },
         ],
       });
 
       const pagos = tx.venta.create.mock.calls[0]![0].data.pagos.create;
-      expect(pagos[0].tarjetaConfigId).toBe('tar-1');
+      expect(pagos[0].tarjetaConfigId).toBe("tar-1");
       expect(pagos[0].cuotas).toBe(6);
-      expect(pagos[0].recargo.toString()).toBe('10');
+      expect(pagos[0].recargo.toString()).toBe("10");
       expect(pagos[1].tarjetaConfigId).toBeUndefined();
       expect(pagos[1].cuotas).toBeUndefined();
       expect(pagos[1].recargo).toBeUndefined();
     });
 
-    it('pide CAE con el total calculado', async () => {
+    it("pide CAE con el total calculado", async () => {
       await service.registrar(USUARIO, DTO);
       expect(cae.autorizar).toHaveBeenCalledWith(
         // Con dos decimales: es el formato que pide ARCA.
-        expect.objectContaining({ total: '240.00', sucursalId: 's1' }),
+        expect.objectContaining({ total: "240.00", sucursalId: "s1" }),
       );
     });
 
-    it('registra un movimiento de stock VENTA por cada ítem', async () => {
+    it("registra un movimiento de stock VENTA por cada ítem", async () => {
       await service.registrar(USUARIO, DTO);
 
       expect(tx.movimientoStock.create).toHaveBeenCalledTimes(2);
       const primero = tx.movimientoStock.create.mock.calls[0]![0].data;
-      expect(primero.tipo).toBe('VENTA');
-      expect(primero.productoId).toBe('p1');
-      expect(primero.ventaId).toBe('v1');
+      expect(primero.tipo).toBe("VENTA");
+      expect(primero.productoId).toBe("p1");
+      expect(primero.ventaId).toBe("v1");
     });
 
-    it('agrega una fila al libro de ventas', async () => {
+    it("agrega una fila al libro de ventas", async () => {
       await service.registrar(USUARIO, DTO);
 
       expect(libro.filas).toHaveLength(1);
-      expect(libro.filas[0]?.operacionId).toBe('op-1');
-      expect(libro.filas[0]?.total).toBe('240');
-      expect(libro.filas[0]?.usuario).toBe('cajero@nexo.com');
+      expect(libro.filas[0]?.operacionId).toBe("op-1");
+      expect(libro.filas[0]?.total).toBe("240");
+      expect(libro.filas[0]?.usuario).toBe("cajero@nexo.com");
     });
 
-    it('NO dispara respaldo completo si el flag está en false', async () => {
+    it("NO dispara respaldo completo si el flag está en false", async () => {
       await service.registrar(USUARIO, DTO);
       expect(motor.crearRespaldo).not.toHaveBeenCalled();
     });
 
-    it('dispara respaldo completo si RESPALDO_EN_CADA_VENTA=true', async () => {
-      config.get.mockReturnValue('true');
+    it("dispara respaldo completo si RESPALDO_EN_CADA_VENTA=true", async () => {
+      config.get.mockReturnValue("true");
       await service.registrar(USUARIO, DTO);
       expect(motor.crearRespaldo).toHaveBeenCalledOnce();
     });
@@ -238,26 +238,26 @@ describe('VentasService', () => {
    * y eso la metía en el turno de caja equivocado y le ponía a ARCA una fecha
    * distinta a la del ticket que ya tenía el cliente.
    */
-  describe('fecha de la venta (offline)', () => {
+  describe("fecha de la venta (offline)", () => {
     function haceHoras(n: number): Date {
       return new Date(Date.now() - n * 60 * 60 * 1000);
     }
 
-    it('registra la venta con la fecha en que ocurrió, no con la de llegada', async () => {
+    it("registra la venta con la fecha en que ocurrió, no con la de llegada", async () => {
       const vendida = haceHoras(4);
       await service.registrar(USUARIO, { ...DTO, fecha: vendida.toISOString() });
 
       expect(tx.venta.create.mock.calls[0]![0].data.creadaEn.getTime()).toBe(vendida.getTime());
     });
 
-    it('le manda a ARCA esa misma fecha, que es la que salió impresa', async () => {
+    it("le manda a ARCA esa misma fecha, que es la que salió impresa", async () => {
       const vendida = haceHoras(4);
       await service.registrar(USUARIO, { ...DTO, fecha: vendida.toISOString() });
 
       expect(cae.autorizar.mock.calls[0]![0].fecha.getTime()).toBe(vendida.getTime());
     });
 
-    it('sin fecha (POS viejo) se registra con la del servidor', async () => {
+    it("sin fecha (POS viejo) se registra con la del servidor", async () => {
       const antes = Date.now();
       await service.registrar(USUARIO, DTO);
 
@@ -266,7 +266,7 @@ describe('VentasService', () => {
       expect(creadaEn).toBeLessThanOrEqual(Date.now());
     });
 
-    it('una venta más vieja que la ventana de ARCA queda PENDIENTE sin molestar a ARCA', async () => {
+    it("una venta más vieja que la ventana de ARCA queda PENDIENTE sin molestar a ARCA", async () => {
       const vieja = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
       const result = await service.registrar(USUARIO, { ...DTO, fecha: vieja.toISOString() });
 
@@ -274,8 +274,8 @@ describe('VentasService', () => {
       expect(cae.autorizar).not.toHaveBeenCalled();
       expect(result).toBeDefined();
       const data = tx.venta.create.mock.calls[0]![0].data;
-      expect(data.estadoFiscal).toBe('PENDIENTE');
-      expect(data.motivoFiscal).toContain('5 días');
+      expect(data.estadoFiscal).toBe("PENDIENTE");
+      expect(data.motivoFiscal).toContain("5 días");
       // Y se guarda con su fecha real igual: la caja y los reportes la necesitan.
       expect(data.creadaEn.getTime()).toBe(vieja.getTime());
     });
@@ -285,92 +285,89 @@ describe('VentasService', () => {
    * Lo mira el indicador del POS: desde que sincronizar dejó de depender de
    * internet, la píldora diría "Sincronizado" con ARCA caída (ADR-0066).
    */
-  describe('esperandoCae', () => {
+  describe("esperandoCae", () => {
     function haceDias(n: number): Date {
       const f = new Date();
       f.setDate(f.getDate() - n);
       return f;
     }
 
-    it('sin pendientes devuelve cero y sin fecha', async () => {
+    it("sin pendientes devuelve cero y sin fecha", async () => {
       prisma.venta.findMany.mockResolvedValue([]);
-      expect(await service.esperandoCae('s1')).toEqual({
+      expect(await service.esperandoCae("s1")).toEqual({
         cantidad: 0,
         masAntigua: null,
         vencidas: 0,
       });
     });
 
-    it('cuenta las pendientes y devuelve la más vieja', async () => {
+    it("cuenta las pendientes y devuelve la más vieja", async () => {
       const vieja = haceDias(2);
-      prisma.venta.findMany.mockResolvedValue([
-        { creadaEn: vieja },
-        { creadaEn: haceDias(1) },
-      ]);
+      prisma.venta.findMany.mockResolvedValue([{ creadaEn: vieja }, { creadaEn: haceDias(1) }]);
 
-      const r = await service.esperandoCae('s1');
+      const r = await service.esperandoCae("s1");
       expect(r.cantidad).toBe(2);
       expect(r.masAntigua).toBe(vieja.toISOString());
       expect(r.vencidas).toBe(0);
     });
 
-    it('separa las que ARCA ya no autoriza por fecha', async () => {
+    it("separa las que ARCA ya no autoriza por fecha", async () => {
       prisma.venta.findMany.mockResolvedValue([
         { creadaEn: haceDias(20) },
         { creadaEn: haceDias(9) },
         { creadaEn: haceDias(1) },
       ]);
 
-      const r = await service.esperandoCae('s1');
+      const r = await service.esperandoCae("s1");
       expect(r.cantidad).toBe(3);
       expect(r.vencidas).toBe(2);
     });
 
-    it('sólo mira las de esta sucursal y las PENDIENTE', async () => {
+    it("sólo mira las de esta sucursal y las PENDIENTE", async () => {
       prisma.venta.findMany.mockResolvedValue([]);
-      await service.esperandoCae('s1');
+      await service.esperandoCae("s1");
       expect(prisma.venta.findMany.mock.calls[0]![0].where).toEqual({
-        sucursalId: 's1',
-        estadoFiscal: 'PENDIENTE',
+        sucursalId: "s1",
+        estadoFiscal: "PENDIENTE",
       });
     });
   });
 
-  describe('venta con tipoComprobante=TicketNoFiscal (Fase 10.1 — sin alta en ARCA)', () => {
-    it('NO pide CAE y persiste cae en null, pero SÍ numera el ticket (Fase 12.J)', async () => {
-      await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
+  describe("venta con tipoComprobante=TicketNoFiscal (Fase 10.1 — sin alta en ARCA)", () => {
+    it("NO pide CAE y persiste cae en null, pero SÍ numera el ticket (Fase 12.J)", async () => {
+      await service.registrar(USUARIO, { ...DTO, tipoComprobante: "TicketNoFiscal" });
 
       expect(cae.autorizar).not.toHaveBeenCalled();
       const data = tx.venta.create.mock.calls[0]![0].data;
-      expect(data.tipoComprobante).toBe('TicketNoFiscal');
+      expect(data.tipoComprobante).toBe("TicketNoFiscal");
       expect(data.cae).toBeNull();
       expect(data.caeFechaVto).toBeNull();
       expect(data.numeroComprobante).toBe(1);
     });
 
-    it('igual descuenta stock y registra en el libro de ventas', async () => {
-      await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
+    it("igual descuenta stock y registra en el libro de ventas", async () => {
+      await service.registrar(USUARIO, { ...DTO, tipoComprobante: "TicketNoFiscal" });
 
       expect(tx.movimientoStock.create).toHaveBeenCalledTimes(2);
       expect(libro.filas).toHaveLength(1);
     });
   });
 
-  describe('numeración de comprobantes sin CAE (Fase 12.J)', () => {
-    it('sigue el correlativo por sucursal+tipo a partir del último número existente', async () => {
+  describe("numeración de comprobantes sin CAE (Fase 12.J)", () => {
+    it("sigue el correlativo por sucursal+tipo a partir del último número existente", async () => {
       tx.venta.aggregate.mockResolvedValue({ _max: { numeroComprobante: 41 } });
 
-      await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
+      await service.registrar(USUARIO, { ...DTO, tipoComprobante: "TicketNoFiscal" });
 
       expect(tx.venta.aggregate).toHaveBeenCalledWith({
-        where: { sucursalId: 's1', tipoComprobante: 'TicketNoFiscal' },
+        where: { sucursalId: "s1", tipoComprobante: "TicketNoFiscal" },
         _max: { numeroComprobante: true },
       });
       const data = tx.venta.create.mock.calls[0]![0].data;
       expect(data.numeroComprobante).toBe(42);
     });
 
-    it('no numera acá un comprobante fiscal: usa el número que devuelve el CAE', async () => {
+    it("no numera acá un comprobante fiscal: usa el número que devuelve el CAE", async () => {
       await service.registrar(USUARIO, DTO); // tipo por defecto: FacturaB (fiscal)
 
       expect(tx.venta.aggregate).not.toHaveBeenCalled();
@@ -378,18 +375,21 @@ describe('VentasService', () => {
       expect(data.numeroComprobante).toBe(1); // viene del mock de cae.autorizar
     });
 
-    it('reintenta toda la transacción si dos ventas chocan en el mismo número (P2002)', async () => {
-      const colision = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: '6.19.3',
+    it("reintenta toda la transacción si dos ventas chocan en el mismo número (P2002)", async () => {
+      const colision = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "6.19.3",
       });
       prisma.$transaction
         .mockImplementationOnce(() => Promise.reject(colision))
         .mockImplementationOnce((cb: (t: typeof tx) => unknown) => cb(tx));
 
-      const result = await service.registrar(USUARIO, { ...DTO, tipoComprobante: 'TicketNoFiscal' });
+      const result = await service.registrar(USUARIO, {
+        ...DTO,
+        tipoComprobante: "TicketNoFiscal",
+      });
 
-      expect(result.id).toBe('v1');
+      expect(result.id).toBe("v1");
       expect(prisma.$transaction).toHaveBeenCalledTimes(2);
     });
 
@@ -400,29 +400,29 @@ describe('VentasService', () => {
      * que importa contar — que hay un comprobante con CAE en ARCA que no está
      * en la base.
      */
-    it('con un número de ARCA no reintenta: avisa que quedó un CAE sin guardar', async () => {
-      const colision = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: '6.19.3',
+    it("con un número de ARCA no reintenta: avisa que quedó un CAE sin guardar", async () => {
+      const colision = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "6.19.3",
       });
       prisma.$transaction.mockRejectedValue(colision);
 
       const error = await service.registrar(USUARIO, DTO).catch((e: unknown) => e);
 
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-      expect((error as Error).message).toContain('CAE');
+      expect((error as Error).message).toContain("CAE");
       // El número y el CAE tienen que estar en el mensaje: es lo que se anota
       // para regularizarlo con el contador.
-      expect((error as Error).message).toContain('12345678901234');
+      expect((error as Error).message).toContain("12345678901234");
     });
   });
 
-  describe('venta de combo (Fase 8.1)', () => {
-    it('expande el combo: descuenta stock de sus componentes, no del combo', async () => {
+  describe("venta de combo (Fase 8.1)", () => {
+    it("expande el combo: descuenta stock de sus componentes, no del combo", async () => {
       // p1 es un combo de 2×gaseosa + 1×alfajor; p2 es simple.
       prisma.comboComponente.findMany.mockResolvedValue([
-        { comboId: 'p1', componenteId: 'gaseosa', cantidad: new Decimal('2') },
-        { comboId: 'p1', componenteId: 'alfajor', cantidad: new Decimal('1') },
+        { comboId: "p1", componenteId: "gaseosa", cantidad: new Decimal("2") },
+        { comboId: "p1", componenteId: "alfajor", cantidad: new Decimal("1") },
       ]);
 
       await service.registrar(USUARIO, DTO);
@@ -431,29 +431,29 @@ describe('VentasService', () => {
       expect(tx.movimientoStock.create).toHaveBeenCalledTimes(3);
       const movs = tx.movimientoStock.create.mock.calls.map((c) => c[0].data);
       expect(movs.map((m) => [m.productoId, m.cantidad.toString()])).toEqual([
-        ['gaseosa', '4'], // 2 (cantidad del ítem) × 2 (por combo)
-        ['alfajor', '2'], // 2 × 1
-        ['p2', '1'],
+        ["gaseosa", "4"], // 2 (cantidad del ítem) × 2 (por combo)
+        ["alfajor", "2"], // 2 × 1
+        ["p2", "1"],
       ]);
       // El combo mismo no genera movimiento de stock.
-      expect(movs.some((m) => m.productoId === 'p1')).toBe(false);
+      expect(movs.some((m) => m.productoId === "p1")).toBe(false);
     });
   });
 
-  describe('venta de perecedero con lotes (Fase 8.2)', () => {
-    it('imputa la salida de stock a los lotes por FEFO (vence antes primero)', async () => {
+  describe("venta de perecedero con lotes (Fase 8.2)", () => {
+    it("imputa la salida de stock a los lotes por FEFO (vence antes primero)", async () => {
       // p1 perecedero con 2 lotes; p2 simple. DTO vende 2×p1 + 1×p2.
       prisma.producto.findMany.mockResolvedValue([
-        { id: 'p1', requiereLote: true },
-        { id: 'p2', requiereLote: false },
+        { id: "p1", requiereLote: true },
+        { id: "p2", requiereLote: false },
       ]);
       prisma.lote.findMany.mockResolvedValue([
-        { id: 'viejo', fechaVencimiento: new Date('2026-08-01') },
-        { id: 'nuevo', fechaVencimiento: new Date('2026-12-01') },
+        { id: "viejo", fechaVencimiento: new Date("2026-08-01") },
+        { id: "nuevo", fechaVencimiento: new Date("2026-12-01") },
       ]);
       prisma.movimientoStock.findMany.mockResolvedValue([
-        { loteId: 'viejo', tipo: 'ENTRADA', cantidad: new Decimal('1') },
-        { loteId: 'nuevo', tipo: 'ENTRADA', cantidad: new Decimal('10') },
+        { loteId: "viejo", tipo: "ENTRADA", cantidad: new Decimal("1") },
+        { loteId: "nuevo", tipo: "ENTRADA", cantidad: new Decimal("10") },
       ]);
 
       await service.registrar(USUARIO, DTO);
@@ -462,76 +462,76 @@ describe('VentasService', () => {
       expect(tx.movimientoStock.create).toHaveBeenCalledTimes(3);
       const movs = tx.movimientoStock.create.mock.calls.map((c) => c[0].data);
       expect(movs.map((m) => [m.productoId, m.cantidad.toString(), m.loteId])).toEqual([
-        ['p1', '1', 'viejo'],
-        ['p1', '1', 'nuevo'],
-        ['p2', '1', null],
+        ["p1", "1", "viejo"],
+        ["p1", "1", "nuevo"],
+        ["p2", "1", null],
       ]);
     });
   });
 
-  describe('venta a cuenta corriente / fiado (ADR-0037)', () => {
-    it('carga la deuda del cliente por lo pagado con cuenta corriente', async () => {
+  describe("venta a cuenta corriente / fiado (ADR-0037)", () => {
+    it("carga la deuda del cliente por lo pagado con cuenta corriente", async () => {
       await service.registrar(USUARIO, {
         ...DTO,
-        clienteId: 'cli1',
-        pagos: [{ medioPago: 'CUENTA_CORRIENTE', monto: '240' }],
+        clienteId: "cli1",
+        pagos: [{ medioPago: "CUENTA_CORRIENTE", monto: "240" }],
       } as never);
 
       expect(tx.movimientoCuentaCorriente.create).toHaveBeenCalledOnce();
       const data = tx.movimientoCuentaCorriente.create.mock.calls[0]![0].data;
-      expect(data.tipo).toBe('CARGO');
-      expect(data.clienteId).toBe('cli1');
-      expect(data.monto.toString()).toBe('240');
+      expect(data.tipo).toBe("CARGO");
+      expect(data.clienteId).toBe("cli1");
+      expect(data.monto.toString()).toBe("240");
     });
 
-    it('carga solo la porción CC en un pago combinado (efectivo + cuenta corriente)', async () => {
+    it("carga solo la porción CC en un pago combinado (efectivo + cuenta corriente)", async () => {
       await service.registrar(USUARIO, {
         ...DTO,
-        clienteId: 'cli1',
+        clienteId: "cli1",
         pagos: [
-          { medioPago: 'EFECTIVO', monto: '100' },
-          { medioPago: 'CUENTA_CORRIENTE', monto: '140' },
+          { medioPago: "EFECTIVO", monto: "100" },
+          { medioPago: "CUENTA_CORRIENTE", monto: "140" },
         ],
       } as never);
 
       const data = tx.movimientoCuentaCorriente.create.mock.calls[0]![0].data;
-      expect(data.monto.toString()).toBe('140');
-      expect(tx.venta.create.mock.calls[0]![0].data.clienteId).toBe('cli1');
+      expect(data.monto.toString()).toBe("140");
+      expect(tx.venta.create.mock.calls[0]![0].data.clienteId).toBe("cli1");
     });
 
-    it('no genera cargo si no hay cuenta corriente', async () => {
+    it("no genera cargo si no hay cuenta corriente", async () => {
       await service.registrar(USUARIO, DTO);
       expect(tx.movimientoCuentaCorriente.create).not.toHaveBeenCalled();
     });
   });
 
-  describe('pago combinado', () => {
-    it('con varios medios: persiste el desglose y el medioPago resumen queda COMBINADO', async () => {
+  describe("pago combinado", () => {
+    it("con varios medios: persiste el desglose y el medioPago resumen queda COMBINADO", async () => {
       await service.registrar(USUARIO, {
         ...DTO,
         pagos: [
-          { medioPago: 'EFECTIVO', monto: '140' },
-          { medioPago: 'TARJETA_CREDITO', monto: '100' },
+          { medioPago: "EFECTIVO", monto: "140" },
+          { medioPago: "TARJETA_CREDITO", monto: "100" },
         ],
       } as never);
 
       const data = tx.venta.create.mock.calls[0]![0].data;
-      expect(data.medioPago).toBe('COMBINADO');
+      expect(data.medioPago).toBe("COMBINADO");
       expect(data.pagos.create).toHaveLength(2);
-      expect(data.pagos.create[0].medioPago).toBe('EFECTIVO');
+      expect(data.pagos.create[0].medioPago).toBe("EFECTIVO");
     });
 
-    it('sin desglose: usa el medioPago del DTO y no crea pagos', async () => {
+    it("sin desglose: usa el medioPago del DTO y no crea pagos", async () => {
       await service.registrar(USUARIO, DTO);
       const data = tx.venta.create.mock.calls[0]![0].data;
-      expect(data.medioPago).toBe('EFECTIVO');
+      expect(data.medioPago).toBe("EFECTIVO");
       expect(data.pagos).toBeUndefined();
     });
   });
 
-  describe('robustez de efectos posteriores', () => {
-    it('no tumba la venta si el libro de ventas falla', async () => {
-      const libroRoto = { registrar: vi.fn().mockRejectedValue(new Error('disco lleno')) };
+  describe("robustez de efectos posteriores", () => {
+    it("no tumba la venta si el libro de ventas falla", async () => {
+      const libroRoto = { registrar: vi.fn().mockRejectedValue(new Error("disco lleno")) };
       service = new VentasService(
         prisma as never,
         cae as never,
@@ -542,7 +542,7 @@ describe('VentasService', () => {
       );
 
       const result = await service.registrar(USUARIO, DTO);
-      expect(result.id).toBe('v1'); // la venta se devolvió igual
+      expect(result.id).toBe("v1"); // la venta se devolvió igual
     });
   });
 
@@ -556,19 +556,19 @@ describe('VentasService', () => {
    * minutos y el servidor los aceptó todos: cada uno traía su `operacionId`, así
    * que la idempotencia no tenía nada que deduplicar.
    */
-  describe('freno de ráfaga', () => {
-    it('a ritmo de caja real no frena nada', async () => {
+  describe("freno de ráfaga", () => {
+    it("a ritmo de caja real no frena nada", async () => {
       prisma.venta.count.mockResolvedValue(10);
       await expect(service.registrar(USUARIO, DTO)).resolves.toBeDefined();
     });
 
-    it('a ritmo de bucle frena, y dice que lo emitido está bien', async () => {
+    it("a ritmo de bucle frena, y dice que lo emitido está bien", async () => {
       prisma.venta.count.mockResolvedValue(42);
 
       const error = await service.registrar(USUARIO, DTO).catch((e: unknown) => e);
 
-      expect((error as Error).message).toContain('42');
-      expect((error as Error).message).toContain('ya emitidas están bien');
+      expect((error as Error).message).toContain("42");
+      expect((error as Error).message).toContain("ya emitidas están bien");
       // Lo importante: no se creó la venta.
       expect(tx.venta.create).not.toHaveBeenCalled();
     });
@@ -577,7 +577,7 @@ describe('VentasService', () => {
      * Una terminal que estuvo offline sube su cola de golpe, y pueden ser
      * cincuenta ventas en dos segundos. Son legítimas: ocurrieron hace rato.
      */
-    it('la cola de una terminal offline NO cuenta para el tope', async () => {
+    it("la cola de una terminal offline NO cuenta para el tope", async () => {
       prisma.venta.count.mockResolvedValue(42);
       const hace2Horas = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
 
@@ -589,18 +589,18 @@ describe('VentasService', () => {
     });
   });
 
-  describe('cuando ARCA no está disponible', () => {
-    it('registra la venta igual, sin CAE y marcada como PENDIENTE', async () => {
-      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin respuesta de AFIP'));
+  describe("cuando ARCA no está disponible", () => {
+    it("registra la venta igual, sin CAE y marcada como PENDIENTE", async () => {
+      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible("sin respuesta de AFIP"));
 
       const result = await service.registrar(USUARIO, DTO);
 
-      expect(result.id).toBe('v1');
+      expect(result.id).toBe("v1");
       const data = tx.venta.create.mock.calls[0]?.[0]?.data;
-      expect(data.estado).toBe('COMPLETADA'); // comercialmente, la venta se hizo
-      expect(data.estadoFiscal).toBe('PENDIENTE');
+      expect(data.estado).toBe("COMPLETADA"); // comercialmente, la venta se hizo
+      expect(data.estadoFiscal).toBe("PENDIENTE");
       expect(data.cae).toBeNull();
-      expect(data.motivoFiscal).toContain('sin respuesta de AFIP');
+      expect(data.motivoFiscal).toContain("sin respuesta de AFIP");
     });
 
     /**
@@ -613,8 +613,8 @@ describe('VentasService', () => {
      * querer usar más adelante. Cuando llega, el INSERT falla — después de que
      * ARCA ya autorizó. Ver ADR-0072.
      */
-    it('NO le inventa número: el de la serie fiscal lo asigna ARCA', async () => {
-      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin red'));
+    it("NO le inventa número: el de la serie fiscal lo asigna ARCA", async () => {
+      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible("sin red"));
       tx.venta.aggregate.mockResolvedValue({ _max: { numeroComprobante: 41 } });
 
       await service.registrar(USUARIO, DTO);
@@ -624,46 +624,46 @@ describe('VentasService', () => {
       expect(tx.venta.aggregate).not.toHaveBeenCalled();
     });
 
-    it('descuenta el stock igual: la mercadería salió del local', async () => {
-      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin red'));
+    it("descuenta el stock igual: la mercadería salió del local", async () => {
+      cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible("sin red"));
       await service.registrar(USUARIO, DTO);
       expect(tx.movimientoStock.create).toHaveBeenCalled();
     });
   });
 
-  describe('cuando ARCA rechaza el comprobante', () => {
-    it('registra la venta y la marca RECHAZADA con el motivo', async () => {
+  describe("cuando ARCA rechaza el comprobante", () => {
+    it("registra la venta y la marca RECHAZADA con el motivo", async () => {
       // Tampoco se deshace: el cliente ya se fue con la mercadería. Queda
       // marcada para corregirla.
-      cae.autorizar.mockRejectedValue(new ErrorCaeRechazado('CUIT inválido', '10015'));
+      cae.autorizar.mockRejectedValue(new ErrorCaeRechazado("CUIT inválido", "10015"));
 
       const result = await service.registrar(USUARIO, DTO);
 
-      expect(result.id).toBe('v1');
+      expect(result.id).toBe("v1");
       const data = tx.venta.create.mock.calls[0]?.[0]?.data;
-      expect(data.estadoFiscal).toBe('RECHAZADA');
-      expect(data.motivoFiscal).toContain('CUIT inválido');
+      expect(data.estadoFiscal).toBe("RECHAZADA");
+      expect(data.motivoFiscal).toContain("CUIT inválido");
       expect(data.cae).toBeNull();
     });
   });
 
-  describe('estado fiscal cuando todo anda', () => {
-    it('una venta autorizada queda AUTORIZADA con su CAE', async () => {
+  describe("estado fiscal cuando todo anda", () => {
+    it("una venta autorizada queda AUTORIZADA con su CAE", async () => {
       const result = await service.registrar(USUARIO, DTO);
-      expect(result.id).toBe('v1');
+      expect(result.id).toBe("v1");
       const data = tx.venta.create.mock.calls[0]?.[0]?.data;
-      expect(data.estadoFiscal).toBe('AUTORIZADA');
-      expect(data.cae).toBe('12345678901234');
+      expect(data.estadoFiscal).toBe("AUTORIZADA");
+      expect(data.cae).toBe("12345678901234");
     });
 
-    it('un comprobante no fiscal queda NO_APLICA y no molesta a ARCA', async () => {
+    it("un comprobante no fiscal queda NO_APLICA y no molesta a ARCA", async () => {
       const result = await service.registrar(USUARIO, {
         ...DTO,
-        tipoComprobante: 'TicketNoFiscal',
+        tipoComprobante: "TicketNoFiscal",
       });
-      expect(result.id).toBe('v1');
+      expect(result.id).toBe("v1");
       expect(cae.autorizar).not.toHaveBeenCalled();
-      expect(tx.venta.create.mock.calls[0]?.[0]?.data.estadoFiscal).toBe('NO_APLICA');
+      expect(tx.venta.create.mock.calls[0]?.[0]?.data.estadoFiscal).toBe("NO_APLICA");
     });
   });
 });

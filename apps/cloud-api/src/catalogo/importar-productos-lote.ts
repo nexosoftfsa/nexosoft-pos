@@ -6,18 +6,18 @@
  * tiene la forma correcta?" de "¿esto ya existe en la base?" (que resuelve
  * `CatalogoService.importarProductos`).
  */
-import { mapearArticulo, type ArticuloAImportar, type FilaCatalogo } from './importar-articulos';
+import { mapearArticulo, type ArticuloAImportar, type FilaCatalogo } from "./importar-articulos";
 
 /** Mismas columnas que `COLUMNAS` en scripts/importar-catalogo.mjs — una sola fuente de verdad de nombres. */
 export const COLUMNAS_IMPORTAR_PRODUCTOS = {
-  codigo: 'Código de barras',
-  descripcion: 'Descripción',
-  rubro: 'Rubro',
-  precioCosto: 'Precio Costo',
-  porcentajeIva: '% IVA',
-  precioVenta: 'Precio Venta',
-  stock: 'Stock',
-  activo: 'Activo',
+  codigo: "Código de barras",
+  descripcion: "Descripción",
+  rubro: "Rubro",
+  precioCosto: "Precio Costo",
+  porcentajeIva: "% IVA",
+  precioVenta: "Precio Venta",
+  stock: "Stock",
+  activo: "Activo",
 } as const;
 
 export type FilaProductoCruda = Record<string, string>;
@@ -26,8 +26,8 @@ export type FilaProductoCruda = Record<string, string>;
 function filaCrudaAFilaCatalogo(cruda: FilaProductoCruda): FilaCatalogo {
   const col = COLUMNAS_IMPORTAR_PRODUCTOS;
   return {
-    codigo: (cruda[col.codigo] ?? '').trim(),
-    descripcion: (cruda[col.descripcion] ?? '').trim(),
+    codigo: (cruda[col.codigo] ?? "").trim(),
+    descripcion: (cruda[col.descripcion] ?? "").trim(),
     rubro: cruda[col.rubro]?.trim() || null,
     precioCosto: Number(cruda[col.precioCosto] ?? 0),
     porcentajeIva: Number(cruda[col.porcentajeIva] ?? 0),

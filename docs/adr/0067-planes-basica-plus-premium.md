@@ -35,7 +35,7 @@ llega.
   "plan": "BASICA | PLUS | PREMIUM",
   "vencePagoEl": "2026-10-10",
   "validaHasta": "2026-09-10T00:00Z",
-  "emitidaEn": "2026-09-03T00:00Z"
+  "emitidaEn": "2026-09-03T00:00Z",
 }
 ```
 
@@ -102,11 +102,11 @@ Retenerlos nos expone y no agrega presión de cobro real.
 
 ### 7. Qué entra en cada plan
 
-| Plan | Módulos | La idea |
-| --- | --- | --- |
-| **Básica** | Inicio, Punto de Venta, Caja y Tesorería, Comprobantes (ARCA, notas de crédito y débito), Catálogo y Precios, **Stock e Inventario**, Usuarios, Configuración | *Vendo, facturo y sé lo que tengo.* |
-| **Plus** | todo lo anterior + Cuentas Corrientes, Presupuestos, Remitos, Proveedores, Medios de pago con tasas, Etiquetas de góndola, Reportes y Estadísticas | *Además gestiono clientes, deuda y papeles.* |
-| **Premium** | todo lo anterior + Asistente IA, acceso remoto al panel web, respaldo en nube propia, y el módulo contable cuando exista | *Miro el negocio desde afuera.* |
+| Plan        | Módulos                                                                                                                                                       | La idea                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| **Básica**  | Inicio, Punto de Venta, Caja y Tesorería, Comprobantes (ARCA, notas de crédito y débito), Catálogo y Precios, **Stock e Inventario**, Usuarios, Configuración | _Vendo, facturo y sé lo que tengo._          |
+| **Plus**    | todo lo anterior + Cuentas Corrientes, Presupuestos, Remitos, Proveedores, Medios de pago con tasas, Etiquetas de góndola, Reportes y Estadísticas            | _Además gestiono clientes, deuda y papeles._ |
+| **Premium** | todo lo anterior + Asistente IA, acceso remoto al panel web, respaldo en nube propia, y el módulo contable cuando exista                                      | _Miro el negocio desde afuera._              |
 
 Notas sobre los bordes:
 
@@ -126,6 +126,7 @@ Notas sobre los bordes:
 ## Consecuencias
 
 ### Positivas
+
 - Un eje comercial real, sin infraestructura nueva ni un segundo canal que
   mantener: el plan usa el mismo token, la misma firma y el mismo caché offline
   que el estado de suscripción.
@@ -135,6 +136,7 @@ Notas sobre los bordes:
   nunca es una decisión irreversible para el comercio.
 
 ### Negativas / costos
+
 - **Aparece una lista blanca más que mantener.** Igual que la de ADR-0057 y la
   del bloqueo: un módulo nuevo que no se agregue a la tabla queda accesible
   para todos los planes. Se mitiga con un test que recorre `MODULOS` y exige

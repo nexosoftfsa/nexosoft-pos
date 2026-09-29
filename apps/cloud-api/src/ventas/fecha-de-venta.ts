@@ -48,7 +48,7 @@ export const TOLERANCIA_ATRASO_MS = 31 * 24 * 60 * 60 * 1000;
  * @param ahora Hora del servidor.
  */
 export function fechaDeVenta(iso: string | undefined, ahora: Date): Date {
-  if (iso === undefined || iso === '') return ahora;
+  if (iso === undefined || iso === "") return ahora;
   const fecha = new Date(iso);
   if (Number.isNaN(fecha.getTime())) return ahora;
   const desfase = fecha.getTime() - ahora.getTime();

@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Decimal } from '@prisma/client/runtime/library';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Decimal } from "@prisma/client/runtime/library";
 
-import { CaePendientesService } from './cae-pendientes.service';
-import { ErrorCaeNoDisponible, ErrorCaeRechazado } from './servicio-cae';
-import { DesgloseDeVentaService } from './desglose-de-venta.service';
+import { CaePendientesService } from "./cae-pendientes.service";
+import { ErrorCaeNoDisponible, ErrorCaeRechazado } from "./servicio-cae";
+import { DesgloseDeVentaService } from "./desglose-de-venta.service";
 
 /**
  * Fechas RELATIVAS a hoy, no fijas.
@@ -23,15 +23,15 @@ function venta(id: string, creadaEn: Date = haceDias(1), extra: Record<string, u
   return {
     id,
     creadaEn,
-    tipoComprobante: 'FacturaB',
-    total: new Decimal('1000'),
-    sucursalId: 's1',
+    tipoComprobante: "FacturaB",
+    total: new Decimal("1000"),
+    sucursalId: "s1",
     comprobanteAsociadoId: null,
     ...extra,
   };
 }
 
-describe('CaePendientesService', () => {
+describe("CaePendientesService", () => {
   const prisma = {
     venta: { findMany: vi.fn(), update: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
     // El reintento reconstruye el desglose de IVA desde los ítems guardados.
@@ -47,9 +47,9 @@ describe('CaePendientesService', () => {
     prisma.venta.update.mockResolvedValue({});
     prisma.venta.findUnique.mockResolvedValue(null);
     prisma.itemVenta.findMany.mockResolvedValue([
-      { productoId: 'p1', subtotal: new Decimal('1000') },
+      { productoId: "p1", subtotal: new Decimal("1000") },
     ]);
-    prisma.producto.findMany.mockResolvedValue([{ id: 'p1', tipoIva: 'IVA_21' }]);
+    prisma.producto.findMany.mockResolvedValue([{ id: "p1", tipoIva: "IVA_21" }]);
     service = new CaePendientesService(
       prisma as never,
       cae as never,
@@ -57,42 +57,42 @@ describe('CaePendientesService', () => {
     );
   });
 
-  it('sin pendientes no hace nada', async () => {
+  it("sin pendientes no hace nada", async () => {
     prisma.venta.findMany.mockResolvedValue([]);
     const r = await service.reintentar();
     expect(r.autorizadas).toBe(0);
     expect(cae.autorizar).not.toHaveBeenCalled();
   });
 
-  it('autoriza las pendientes y les guarda el CAE', async () => {
-    prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(3))]);
+  it("autoriza las pendientes y les guarda el CAE", async () => {
+    prisma.venta.findMany.mockResolvedValue([venta("v1", haceDias(3))]);
     cae.autorizar.mockResolvedValue({
-      cae: '75123456789012',
-      caeFechaVto: new Date('2026-09-10'),
+      cae: "75123456789012",
+      caeFechaVto: new Date("2026-09-10"),
       numeroComprobante: 5,
-      tipoComprobante: 'FacturaB',
+      tipoComprobante: "FacturaB",
     });
 
     const r = await service.reintentar();
 
     expect(r.autorizadas).toBe(1);
     const data = prisma.venta.update.mock.calls[0]?.[0]?.data;
-    expect(data.cae).toBe('75123456789012');
-    expect(data.estadoFiscal).toBe('AUTORIZADA');
+    expect(data.cae).toBe("75123456789012");
+    expect(data.estadoFiscal).toBe("AUTORIZADA");
     expect(data.motivoFiscal).toBeNull();
   });
 
-  it('guarda el numero que asigno ARCA, no el provisorio', async () => {
+  it("guarda el numero que asigno ARCA, no el provisorio", async () => {
     // Mientras estuvo pendiente, la venta llevo un numero provisorio del
     // servidor. El definitivo lo pone ARCA al autorizar, y puede ser otro:
     // dejar el viejo deja el comprobante con un numero y el CAE
     // correspondiendo a otro.
-    prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(1))]);
+    prisma.venta.findMany.mockResolvedValue([venta("v1", haceDias(1))]);
     cae.autorizar.mockResolvedValue({
-      cae: '75123456789012',
-      caeFechaVto: new Date('2026-09-10'),
+      cae: "75123456789012",
+      caeFechaVto: new Date("2026-09-10"),
       numeroComprobante: 7,
-      tipoComprobante: 'FacturaB',
+      tipoComprobante: "FacturaB",
     });
 
     await service.reintentar();
@@ -100,27 +100,25 @@ describe('CaePendientesService', () => {
     expect(prisma.venta.update.mock.calls[0]?.[0]?.data.numeroComprobante).toBe(7);
   });
 
-  it('manda el desglose de IVA reconstruido, no sólo el total', async () => {
+  it("manda el desglose de IVA reconstruido, no sólo el total", async () => {
     // Sin esto, una pendiente se reintentaría con IVA en cero: ARCA la
     // rechazaría, y si la aceptara sería una factura mal emitida.
     const emitida = haceDias(3);
-    prisma.venta.findMany.mockResolvedValue([venta('v1', emitida)]);
+    prisma.venta.findMany.mockResolvedValue([venta("v1", emitida)]);
     cae.autorizar.mockResolvedValue({
-      cae: '75123456789012',
-      caeFechaVto: new Date('2026-09-10'),
+      cae: "75123456789012",
+      caeFechaVto: new Date("2026-09-10"),
       numeroComprobante: 5,
-      tipoComprobante: 'FacturaB',
+      tipoComprobante: "FacturaB",
     });
 
     await service.reintentar();
 
     const solicitud = cae.autorizar.mock.calls[0]?.[0];
-    expect(solicitud.total).toBe('1000.00');
-    expect(solicitud.neto).toBe('826.45'); // 1000 - 173.55
-    expect(solicitud.iva).toBe('173.55'); // 1000 × 21 / 121
-    expect(solicitud.renglonesIva).toEqual([
-      { codigoArca: 5, base: '826.45', importe: '173.55' },
-    ]);
+    expect(solicitud.total).toBe("1000.00");
+    expect(solicitud.neto).toBe("826.45"); // 1000 - 173.55
+    expect(solicitud.iva).toBe("173.55"); // 1000 × 21 / 121
+    expect(solicitud.renglonesIva).toEqual([{ codigoArca: 5, base: "826.45", importe: "173.55" }]);
     expect(solicitud.codigoComprobante).toBe(6); // Factura B
     // La fecha es la de la venta, no la del reintento: es la que ya salió
     // impresa en el ticket del cliente.
@@ -136,55 +134,55 @@ describe('CaePendientesService', () => {
    * ningún renglón de IVA. Sólo se veía si el primer intento fallaba por red,
    * que es cuando entra este reintento.
    */
-  it('una Nota de Débito usa el desglose congelado, no lo recalcula desde ítems', async () => {
+  it("una Nota de Débito usa el desglose congelado, no lo recalcula desde ítems", async () => {
     prisma.venta.findMany.mockResolvedValue([
       {
-        ...venta('nd1', haceDias(1)),
-        tipoComprobante: 'NotaDebitoA',
-        total: new Decimal('50.00'),
+        ...venta("nd1", haceDias(1)),
+        tipoComprobante: "NotaDebitoA",
+        total: new Decimal("50.00"),
         // Lo que se le declaró a ARCA al emitirla, congelado.
-        impNeto: new Decimal('41.32'),
-        impIva: new Decimal('8.68'),
-        impOpEx: new Decimal('0.00'),
-        ivaPorAlicuota: [{ codigoArca: 5, base: '41.32', importe: '8.68' }],
+        impNeto: new Decimal("41.32"),
+        impIva: new Decimal("8.68"),
+        impOpEx: new Decimal("0.00"),
+        ivaPorAlicuota: [{ codigoArca: 5, base: "41.32", importe: "8.68" }],
       },
     ]);
     // Sin ítems, que es como es una Nota de Débito de verdad.
     prisma.itemVenta.findMany.mockResolvedValue([]);
     cae.autorizar.mockResolvedValue({
-      cae: '75123456789012',
-      caeFechaVto: new Date('2026-09-10'),
+      cae: "75123456789012",
+      caeFechaVto: new Date("2026-09-10"),
       numeroComprobante: 3,
-      tipoComprobante: 'NotaDebitoA',
+      tipoComprobante: "NotaDebitoA",
     });
 
     await service.reintentar();
 
     const solicitud = cae.autorizar.mock.calls[0]?.[0];
-    expect(solicitud.neto).toBe('41.32');
+    expect(solicitud.neto).toBe("41.32");
     // Lo que faltaba y ARCA exige cuando el neto es mayor a cero.
-    expect(solicitud.renglonesIva).toEqual([{ codigoArca: 5, base: '41.32', importe: '8.68' }]);
+    expect(solicitud.renglonesIva).toEqual([{ codigoArca: 5, base: "41.32", importe: "8.68" }]);
     // No hizo falta ir a buscar los ítems: el desglose ya estaba guardado.
     expect(prisma.itemVenta.findMany).not.toHaveBeenCalled();
   });
 
-  it('las pide EN ORDEN de emisión', async () => {
+  it("las pide EN ORDEN de emisión", async () => {
     // ARCA valida que la numeración sea correlativa: si se autoriza una
     // posterior antes que una anterior, la anterior ya no entra nunca.
     prisma.venta.findMany.mockResolvedValue([]);
     await service.reintentar();
     expect(prisma.venta.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: { creadaEn: 'asc' } }),
+      expect.objectContaining({ orderBy: { creadaEn: "asc" } }),
     );
   });
 
-  it('si ARCA sigue caída, FRENA y no sigue con las siguientes', async () => {
+  it("si ARCA sigue caída, FRENA y no sigue con las siguientes", async () => {
     prisma.venta.findMany.mockResolvedValue([
-      venta('v1', haceDias(3)),
-      venta('v2', haceDias(2)),
-      venta('v3', haceDias(1)),
+      venta("v1", haceDias(3)),
+      venta("v2", haceDias(2)),
+      venta("v3", haceDias(1)),
     ]);
-    cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin respuesta'));
+    cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible("sin respuesta"));
 
     const r = await service.reintentar();
 
@@ -193,20 +191,20 @@ describe('CaePendientesService', () => {
     expect(r.autorizadas).toBe(0);
   });
 
-  it('autoriza hasta que ARCA se cae, y ahí frena', async () => {
+  it("autoriza hasta que ARCA se cae, y ahí frena", async () => {
     prisma.venta.findMany.mockResolvedValue([
-      venta('v1', haceDias(3)),
-      venta('v2', haceDias(2)),
-      venta('v3', haceDias(1)),
+      venta("v1", haceDias(3)),
+      venta("v2", haceDias(2)),
+      venta("v3", haceDias(1)),
     ]);
     cae.autorizar
       .mockResolvedValueOnce({
-        cae: '1',
+        cae: "1",
         caeFechaVto: new Date(),
         numeroComprobante: 1,
-        tipoComprobante: 'FacturaB',
+        tipoComprobante: "FacturaB",
       })
-      .mockRejectedValueOnce(new ErrorCaeNoDisponible('se cayó'));
+      .mockRejectedValueOnce(new ErrorCaeNoDisponible("se cayó"));
 
     const r = await service.reintentar();
 
@@ -214,18 +212,15 @@ describe('CaePendientesService', () => {
     expect(cae.autorizar).toHaveBeenCalledTimes(2);
   });
 
-  it('un RECHAZO no frena a las que vienen atrás, pero no se reintenta', async () => {
-    prisma.venta.findMany.mockResolvedValue([
-      venta('v1', haceDias(3)),
-      venta('v2', haceDias(2)),
-    ]);
+  it("un RECHAZO no frena a las que vienen atrás, pero no se reintenta", async () => {
+    prisma.venta.findMany.mockResolvedValue([venta("v1", haceDias(3)), venta("v2", haceDias(2))]);
     cae.autorizar
-      .mockRejectedValueOnce(new ErrorCaeRechazado('CUIT del receptor inválido', '10015'))
+      .mockRejectedValueOnce(new ErrorCaeRechazado("CUIT del receptor inválido", "10015"))
       .mockResolvedValueOnce({
-        cae: '2',
+        cae: "2",
         caeFechaVto: new Date(),
         numeroComprobante: 2,
-        tipoComprobante: 'FacturaB',
+        tipoComprobante: "FacturaB",
       });
 
     const r = await service.reintentar();
@@ -233,13 +228,13 @@ describe('CaePendientesService', () => {
     expect(r.rechazadas).toBe(1);
     expect(r.autorizadas).toBe(1);
     const rechazo = prisma.venta.update.mock.calls[0]?.[0]?.data;
-    expect(rechazo.estadoFiscal).toBe('RECHAZADA');
-    expect(rechazo.motivoFiscal).toContain('CUIT del receptor inválido');
+    expect(rechazo.estadoFiscal).toBe("RECHAZADA");
+    expect(rechazo.motivoFiscal).toContain("CUIT del receptor inválido");
   });
 
-  it('cuenta los intentos, para poder ver las que se trabaron', async () => {
-    prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(3))]);
-    cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible('sin red'));
+  it("cuenta los intentos, para poder ver las que se trabaron", async () => {
+    prisma.venta.findMany.mockResolvedValue([venta("v1", haceDias(3))]);
+    cae.autorizar.mockRejectedValue(new ErrorCaeNoDisponible("sin red"));
 
     await service.reintentar();
 
@@ -248,10 +243,13 @@ describe('CaePendientesService', () => {
     expect(data.ultimoIntentoCae).toBeInstanceOf(Date);
   });
 
-  it('no se pisa consigo mismo si la corrida anterior sigue viva', async () => {
+  it("no se pisa consigo mismo si la corrida anterior sigue viva", async () => {
     let resolver: (() => void) | undefined;
     prisma.venta.findMany.mockImplementation(
-      () => new Promise((res) => { resolver = () => res([]); }),
+      () =>
+        new Promise((res) => {
+          resolver = () => res([]);
+        }),
     );
 
     const primera = service.reintentar();
@@ -263,34 +261,37 @@ describe('CaePendientesService', () => {
     await primera;
   });
 
-  it('un error inesperado se propaga, no se traga', async () => {
-    prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(3))]);
-    cae.autorizar.mockRejectedValue(new Error('bug de programación'));
+  it("un error inesperado se propaga, no se traga", async () => {
+    prisma.venta.findMany.mockResolvedValue([venta("v1", haceDias(3))]);
+    cae.autorizar.mockRejectedValue(new Error("bug de programación"));
 
-    await expect(service.reintentar()).rejects.toThrow('bug de programación');
+    await expect(service.reintentar()).rejects.toThrow("bug de programación");
   });
 
-  describe('pendientes que se pasaron del plazo de ARCA', () => {
-    it('una de más de 5 días no se manda: sería un rechazo seguro', async () => {
-      prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(9))]);
+  describe("pendientes que se pasaron del plazo de ARCA", () => {
+    it("una de más de 5 días no se manda: sería un rechazo seguro", async () => {
+      prisma.venta.findMany.mockResolvedValue([venta("v1", haceDias(9))]);
 
       const r = await service.reintentar();
 
       expect(cae.autorizar).not.toHaveBeenCalled();
       expect(r.rechazadas).toBe(1);
       const data = prisma.venta.update.mock.calls[0]?.[0]?.data;
-      expect(data.estadoFiscal).toBe('RECHAZADA');
-      expect(data.motivoFiscal).toContain('hace 9 días');
+      expect(data.estadoFiscal).toBe("RECHAZADA");
+      expect(data.motivoFiscal).toContain("hace 9 días");
     });
 
-    it('no frena a las que sí están en plazo', async () => {
+    it("no frena a las que sí están en plazo", async () => {
       // Una vieja sin arreglo no puede dejar sin autorizar a las de hoy.
-      prisma.venta.findMany.mockResolvedValue([venta('vieja', haceDias(9)), venta('nueva', haceDias(1))]);
+      prisma.venta.findMany.mockResolvedValue([
+        venta("vieja", haceDias(9)),
+        venta("nueva", haceDias(1)),
+      ]);
       cae.autorizar.mockResolvedValue({
-        cae: '1',
+        cae: "1",
         caeFechaVto: new Date(),
         numeroComprobante: 1,
-        tipoComprobante: 'FacturaB',
+        tipoComprobante: "FacturaB",
       });
 
       const r = await service.reintentar();
@@ -301,23 +302,23 @@ describe('CaePendientesService', () => {
     });
   });
 
-  describe('notas de crédito pendientes', () => {
-    it('mandan el comprobante que corrigen, que ARCA exige', async () => {
+  describe("notas de crédito pendientes", () => {
+    it("mandan el comprobante que corrigen, que ARCA exige", async () => {
       prisma.venta.findMany.mockResolvedValue([
-        venta('nc1', haceDias(1), {
-          tipoComprobante: 'NotaCreditoB',
-          comprobanteAsociadoId: 'v-original',
+        venta("nc1", haceDias(1), {
+          tipoComprobante: "NotaCreditoB",
+          comprobanteAsociadoId: "v-original",
         }),
       ]);
       prisma.venta.findUnique.mockResolvedValue({
-        tipoComprobante: 'FacturaB',
+        tipoComprobante: "FacturaB",
         numeroComprobante: 41,
       });
       cae.autorizar.mockResolvedValue({
-        cae: '1',
+        cae: "1",
         caeFechaVto: new Date(),
         numeroComprobante: 7,
-        tipoComprobante: 'NotaCreditoB',
+        tipoComprobante: "NotaCreditoB",
       });
 
       await service.reintentar();
@@ -326,18 +327,18 @@ describe('CaePendientesService', () => {
       expect(solicitud.comprobantesAsociados).toEqual([{ codigoComprobante: 6, numero: 41 }]);
     });
 
-    it('una factura común no manda nada de eso', async () => {
-      prisma.venta.findMany.mockResolvedValue([venta('v1', haceDias(1))]);
+    it("una factura común no manda nada de eso", async () => {
+      prisma.venta.findMany.mockResolvedValue([venta("v1", haceDias(1))]);
       cae.autorizar.mockResolvedValue({
-        cae: '1',
+        cae: "1",
         caeFechaVto: new Date(),
         numeroComprobante: 1,
-        tipoComprobante: 'FacturaB',
+        tipoComprobante: "FacturaB",
       });
 
       await service.reintentar();
 
-      expect(cae.autorizar.mock.calls[0]?.[0]).not.toHaveProperty('comprobantesAsociados');
+      expect(cae.autorizar.mock.calls[0]?.[0]).not.toHaveProperty("comprobantesAsociados");
     });
   });
 });

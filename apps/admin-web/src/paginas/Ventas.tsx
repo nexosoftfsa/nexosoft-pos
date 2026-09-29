@@ -23,9 +23,7 @@ export function Ventas() {
       const blob = await reportes.libroVentas(api);
       descargarBlob("ventas.xlsx", blob);
     } catch (err) {
-      setErrorLibro(
-        err instanceof ErrorApi ? err.message : "No se pudo descargar el libro",
-      );
+      setErrorLibro(err instanceof ErrorApi ? err.message : "No se pudo descargar el libro");
     }
   }
 
@@ -95,11 +93,7 @@ export function Ventas() {
               onClick={() =>
                 descargarCsv("ventas-por-terminal.csv", [
                   ["Terminal", "Ventas", "Total"],
-                  ...(terminales.datos ?? []).map((t) => [
-                    t.nombre,
-                    String(t.cantidad),
-                    t.total,
-                  ]),
+                  ...(terminales.datos ?? []).map((t) => [t.nombre, String(t.cantidad), t.total]),
                 ])
               }
             >

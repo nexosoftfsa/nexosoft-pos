@@ -6,7 +6,7 @@ Estado: aceptado
 ## Contexto
 
 La Ley 27.253 obliga a los comercios a aceptar tarjeta de débito y a hacerlo
-*"sin aplicar recargo alguno"*. Defensa del Consumidor multa el incumplimiento.
+_"sin aplicar recargo alguno"_. Defensa del Consumidor multa el incumplimiento.
 
 Nuestro ABM de Medios de pago aceptaba un `recargoPorcentaje` en una tarjeta de
 tipo `DEBITO` exactamente igual que en una de crédito: `validarTarjeta` sólo
@@ -47,13 +47,13 @@ cuotas no anuncie un porcentaje que no se va a cobrar.
 
 Son tres lugares distintos con la misma regla, y ninguno confía en el anterior:
 
-| Dónde | Qué hace |
-|---|---|
-| `MediosPagoService` | rechaza guardarlo, con `BadRequestException` |
-| `validarTarjeta` (formulario) | lo muestra antes de guardar, y avisa al elegir el tipo |
-| `recargoQueCorresponde` (cobro) | lo ignora aunque esté guardado |
+| Dónde                           | Qué hace                                               |
+| ------------------------------- | ------------------------------------------------------ |
+| `MediosPagoService`             | rechaza guardarlo, con `BadRequestException`           |
+| `validarTarjeta` (formulario)   | lo muestra antes de guardar, y avisa al elegir el tipo |
+| `recargoQueCorresponde` (cobro) | lo ignora aunque esté guardado                         |
 
-### El servidor valida la tarjeta *como va a quedar*
+### El servidor valida la tarjeta _como va a quedar_
 
 En `actualizarTarjeta` el tipo y las tasas son dos campos opcionales. Validar
 sólo lo que viene en el DTO dejaba un agujero: pasar a débito una tarjeta de

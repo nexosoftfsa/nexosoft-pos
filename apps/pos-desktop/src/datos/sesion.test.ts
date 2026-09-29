@@ -18,7 +18,10 @@ class EjecutorNodeSqlite implements EjecutorSql {
     if (params.length === 0) this.db.exec(sql);
     else this.db.prepare(sql).run(...params);
   }
-  async consultar<T extends Fila = Fila>(sql: string, params: readonly ValorSql[] = []): Promise<T[]> {
+  async consultar<T extends Fila = Fila>(
+    sql: string,
+    params: readonly ValorSql[] = [],
+  ): Promise<T[]> {
     return this.db.prepare(sql).all(...params) as unknown as T[];
   }
 }
@@ -190,7 +193,10 @@ describe("SesionManager", () => {
 
   it("asegurarTokenVigente refresca y persiste cuando el token venció", async () => {
     auth.login.mockResolvedValue(tokens(VENCIDO()));
-    auth.refresh.mockResolvedValue({ accessToken: tokenFalso({ exp: EN_1H() }), refreshToken: "refresh-nuevo" });
+    auth.refresh.mockResolvedValue({
+      accessToken: tokenFalso({ exp: EN_1H() }),
+      refreshToken: "refresh-nuevo",
+    });
     const sesion = await SesionManager.cargar(ejecutor, auth as unknown as ClienteAuth);
     await sesion.login({ email: "a@b.com", password: "x" });
 

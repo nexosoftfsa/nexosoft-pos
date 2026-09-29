@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { AccesoRemotoController } from './acceso-remoto.controller';
-import { AccesoRemotoService } from './acceso-remoto.service';
-import { RestriccionRemotaGuard } from './restriccion-remota.guard';
-import { AuthModule } from '../auth/auth.module';
+import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { AccesoRemotoController } from "./acceso-remoto.controller";
+import { AccesoRemotoService } from "./acceso-remoto.service";
+import { RestriccionRemotaGuard } from "./restriccion-remota.guard";
+import { AuthModule } from "../auth/auth.module";
 
 @Module({
   // Por RevisionClavesService: el aviso de contraseña débil antes de publicar

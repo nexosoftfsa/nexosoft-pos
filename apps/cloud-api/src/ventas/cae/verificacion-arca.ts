@@ -1,5 +1,5 @@
-import type { EntornoArca } from '../../fiscal/arca/wsaa';
-import type { ResultadoAutorizacion } from '../../fiscal/arca/wsfev1';
+import type { EntornoArca } from "../../fiscal/arca/wsaa";
+import type { ResultadoAutorizacion } from "../../fiscal/arca/wsfev1";
 
 /**
  * Qué contestó ARCA sobre un comprobante nuestro.
@@ -11,12 +11,7 @@ import type { ResultadoAutorizacion } from '../../fiscal/arca/wsfev1';
  *  - `NO_APLICA`: no es un comprobante fiscal (ticket interno).
  *  - `NO_SE_PUDO`: no se pudo consultar. **No dice nada del comprobante.**
  */
-export type EstadoVerificacion =
-  | 'AUTORIZADO'
-  | 'DIFIERE'
-  | 'NO_ESTA'
-  | 'NO_APLICA'
-  | 'NO_SE_PUDO';
+export type EstadoVerificacion = "AUTORIZADO" | "DIFIERE" | "NO_ESTA" | "NO_APLICA" | "NO_SE_PUDO";
 
 export interface VerificacionArca {
   readonly estado: EstadoVerificacion;
@@ -33,7 +28,7 @@ export interface VerificacionArca {
 
 /** Los importes de ARCA vienen como "1100.00" o "1100"; se comparan como número. */
 function mismoImporte(a: string, b: string): boolean {
-  const n = (s: string) => Number(s.replace(',', '.'));
+  const n = (s: string) => Number(s.replace(",", "."));
   return Number.isFinite(n(a)) && Number.isFinite(n(b)) && n(a) === n(b);
 }
 
@@ -53,17 +48,17 @@ export function compararConArca(args: {
   readonly numero: number;
 }): VerificacionArca {
   const { enArca, local, entorno, puntoDeVenta, numero } = args;
-  const dondeSeConsulto = entorno === 'homologacion' ? 'homologación (pruebas)' : 'producción';
-  const comprobante = `${String(puntoDeVenta).padStart(4, '0')}-${String(numero).padStart(8, '0')}`;
+  const dondeSeConsulto = entorno === "homologacion" ? "homologación (pruebas)" : "producción";
+  const comprobante = `${String(puntoDeVenta).padStart(4, "0")}-${String(numero).padStart(8, "0")}`;
 
   if (enArca === null) {
     return {
-      estado: 'NO_ESTA',
+      estado: "NO_ESTA",
       mensaje:
         `ARCA no tiene registrado el comprobante ${comprobante} en ${dondeSeConsulto}.` +
         (local.cae === null
-          ? ' Acá tampoco figura autorizado, así que es coherente: todavía no se emitió.'
-          : ' Pero acá figura con CAE, así que hay que revisarlo.'),
+          ? " Acá tampoco figura autorizado, así que es coherente: todavía no se emitió."
+          : " Pero acá figura con CAE, así que hay que revisarlo."),
       diferencias: [],
     };
   }
@@ -84,7 +79,7 @@ export function compararConArca(args: {
 
   if (diferencias.length > 0) {
     return {
-      estado: 'DIFIERE',
+      estado: "DIFIERE",
       mensaje: `ARCA tiene el comprobante ${comprobante} en ${dondeSeConsulto}, pero con datos distintos a los nuestros.`,
       diferencias,
       enArca: detalle,
@@ -92,12 +87,12 @@ export function compararConArca(args: {
   }
 
   return {
-    estado: 'AUTORIZADO',
+    estado: "AUTORIZADO",
     mensaje:
       `ARCA confirma el comprobante ${comprobante} en ${dondeSeConsulto}, con CAE ${enArca.cae}.` +
-      (entorno === 'homologacion'
-        ? ' Es un comprobante de prueba: no tiene validez fiscal y no aparece en las páginas públicas de ARCA.'
-        : ''),
+      (entorno === "homologacion"
+        ? " Es un comprobante de prueba: no tiene validez fiscal y no aparece en las páginas públicas de ARCA."
+        : ""),
     diferencias: [],
     enArca: detalle,
   };

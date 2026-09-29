@@ -1,7 +1,15 @@
-import { IsString, IsOptional, IsEnum, IsBoolean, IsArray, ValidateNested, MaxLength } from 'class-validator';
-import { Type } from 'class-transformer';
-import { TipoTarjeta } from '@prisma/client';
-import { TasaCuotaDto } from './tasa-cuota.dto';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsArray,
+  ValidateNested,
+  MaxLength,
+} from "class-validator";
+import { Type } from "class-transformer";
+import { TipoTarjeta } from "@prisma/client";
+import { TasaCuotaDto } from "./tasa-cuota.dto";
 
 export class ActualizarTarjetaDto {
   @IsString()

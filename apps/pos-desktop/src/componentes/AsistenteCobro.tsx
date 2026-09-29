@@ -233,9 +233,7 @@ export function AsistenteCobro({
                   <span className="asistente-confirmar-kbd">Enter</span>
                   <span>para confirmar la venta</span>
                 </div>
-                <div className="asistente-cierre-detalle">
-                  Todavía no se emitió el comprobante.
-                </div>
+                <div className="asistente-cierre-detalle">Todavía no se emitió el comprobante.</div>
                 {error && <div className="error">{error}</div>}
               </div>
             )}

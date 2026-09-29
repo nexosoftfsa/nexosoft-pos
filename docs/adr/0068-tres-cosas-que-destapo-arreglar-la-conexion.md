@@ -28,13 +28,13 @@ fiscal y cambia al autorizarse.
 El error estaba en el orden de la regla:
 
 ```ts
-if (datos.numeroConfirmado === true) return false;   // ← cortaba primero
+if (datos.numeroConfirmado === true) return false; // ← cortaba primero
 return (datos.esFiscal ?? true) ? datos.cae === undefined : true;
 ```
 
 `numeroConfirmado` se ponía en `true` con sólo tener respuesta del servidor, y
-pisaba la regla del CAE. ADR-0065 lo decía bien en palabras —*"fiscal: lo numera
-ARCA, y la prueba es el CAE"*— y estaba implementado al revés.
+pisaba la regla del CAE. ADR-0065 lo decía bien en palabras —_"fiscal: lo numera
+ARCA, y la prueba es el CAE"_— y estaba implementado al revés.
 
 **Decisión:** para un comprobante fiscal la única prueba es el CAE.
 `numeroConfirmado` sólo decide en los internos, que no esperan ninguna

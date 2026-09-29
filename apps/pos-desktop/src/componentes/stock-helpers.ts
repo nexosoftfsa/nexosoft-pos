@@ -3,11 +3,7 @@
  * umbral, KPIs del inventario, etiquetas de movimiento y validación del alta.
  * Separada de la UI para testear sin React.
  */
-import type {
-  DatosMovimiento,
-  SaldoStock,
-  TipoMovimiento,
-} from "../sync/cliente-stock";
+import type { DatosMovimiento, SaldoStock, TipoMovimiento } from "../sync/cliente-stock";
 
 export type EstadoStock = "ok" | "bajo" | "sin";
 

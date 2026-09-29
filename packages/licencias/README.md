@@ -11,12 +11,12 @@ tanto el `cloud-api` como el POS, y el POS corre en un navegador donde
 
 ## Los tres escalones
 
-| Estado | Puede vender | Qué ve el comercio |
-| --- | --- | --- |
-| `ACTIVA` | sí | nada |
-| `RECORDATORIO` | sí | "tu próximo pago vence el 10/09/2026" |
-| `ADVERTENCIA` | sí | "el pago venció; se va a bloquear en los próximos días" |
-| `BLOQUEADA` | **no** | pantalla de bloqueo con el contacto de NexoSoft |
+| Estado         | Puede vender | Qué ve el comercio                                      |
+| -------------- | ------------ | ------------------------------------------------------- |
+| `ACTIVA`       | sí           | nada                                                    |
+| `RECORDATORIO` | sí           | "tu próximo pago vence el 10/09/2026"                   |
+| `ADVERTENCIA`  | sí           | "el pago venció; se va a bloquear en los próximos días" |
+| `BLOQUEADA`    | **no**       | pantalla de bloqueo con el contacto de NexoSoft         |
 
 Estando `BLOQUEADA` el comercio **sí** puede cerrar la caja que quedó abierta
 y ver o exportar lo histórico (`PERMITIDO_BLOQUEADA`): son sus registros
@@ -27,11 +27,11 @@ fiscales, no nuestros.
 `plan.ts` es la **única tabla de verdad** sobre qué módulo entra en qué plan:
 la comparten el `cloud-api`, que la impone, y el POS, que la muestra.
 
-| Plan | Qué agrega |
-| --- | --- |
-| `BASICA` | Inicio, Punto de Venta, Caja, Comprobantes, Catálogo, Stock, Usuarios, Configuración |
-| `PLUS` | + Cuentas Corrientes, Presupuestos, Remitos, Proveedores, Medios de pago, Etiquetas, Reportes |
-| `PREMIUM` | + Asistente IA, acceso remoto, respaldo en nube, contable (cuando exista) |
+| Plan      | Qué agrega                                                                                    |
+| --------- | --------------------------------------------------------------------------------------------- |
+| `BASICA`  | Inicio, Punto de Venta, Caja, Comprobantes, Catálogo, Stock, Usuarios, Configuración          |
+| `PLUS`    | + Cuentas Corrientes, Presupuestos, Remitos, Proveedores, Medios de pago, Etiquetas, Reportes |
+| `PREMIUM` | + Asistente IA, acceso remoto, respaldo en nube, contable (cuando exista)                     |
 
 **Lo que no viene, o no se entiende, es Premium.** Una licencia vieja sin el
 campo `plan`, un valor desconocido o un SQLite corrupto caen en Premium — la

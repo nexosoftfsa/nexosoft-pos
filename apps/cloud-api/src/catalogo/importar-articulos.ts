@@ -11,7 +11,7 @@
  * (en el script), pero esta función y sus reglas de negocio no.
  */
 
-export type TipoIvaImportado = 'EXENTO' | 'IVA_10_5' | 'IVA_21' | 'IVA_27';
+export type TipoIvaImportado = "EXENTO" | "IVA_10_5" | "IVA_21" | "IVA_27";
 
 /** Una fila de catálogo ya normalizada a los campos que importan (agnóstica del formato de origen). */
 export interface FilaCatalogo {
@@ -40,15 +40,15 @@ export interface ArticuloAImportar {
   readonly advertencias: readonly string[];
 }
 
-const CATEGORIA_DEFECTO = 'Sin Clasificar';
+const CATEGORIA_DEFECTO = "Sin Clasificar";
 const LARGO_MAX_NOMBRE = 200;
 
 /** % IVA del sistema anterior → alícuota de NexoSoft. Lanza si no reconoce el valor (dato a revisar a mano). */
 export function mapearAlicuota(porcentajeIva: number): TipoIvaImportado {
-  if (porcentajeIva === 0) return 'EXENTO';
-  if (porcentajeIva === 10 || porcentajeIva === 10.5) return 'IVA_10_5';
-  if (porcentajeIva === 21) return 'IVA_21';
-  if (porcentajeIva === 27) return 'IVA_27';
+  if (porcentajeIva === 0) return "EXENTO";
+  if (porcentajeIva === 10 || porcentajeIva === 10.5) return "IVA_10_5";
+  if (porcentajeIva === 21) return "IVA_21";
+  if (porcentajeIva === 27) return "IVA_27";
   throw new Error(`% IVA no reconocido: ${porcentajeIva}`);
 }
 
@@ -57,12 +57,14 @@ export function mapearArticulo(fila: FilaCatalogo): ArticuloAImportar {
   const advertencias: string[] = [];
 
   const codigo = String(fila.codigo).trim();
-  if (codigo === '') {
-    throw new Error('Fila sin código: no se puede importar (el código es la clave de idempotencia).');
+  if (codigo === "") {
+    throw new Error(
+      "Fila sin código: no se puede importar (el código es la clave de idempotencia).",
+    );
   }
 
   let nombre = fila.descripcion.trim();
-  if (nombre === '') {
+  if (nombre === "") {
     throw new Error(`Artículo ${codigo} sin descripción.`);
   }
   if (nombre.length > LARGO_MAX_NOMBRE) {
@@ -71,15 +73,15 @@ export function mapearArticulo(fila: FilaCatalogo): ArticuloAImportar {
   }
 
   const rubroLimpio = fila.rubro?.trim();
-  const categoriaNombre = rubroLimpio && rubroLimpio !== '' ? rubroLimpio : CATEGORIA_DEFECTO;
+  const categoriaNombre = rubroLimpio && rubroLimpio !== "" ? rubroLimpio : CATEGORIA_DEFECTO;
 
   const tipoIva = mapearAlicuota(fila.porcentajeIva);
 
   if (fila.precioVenta === 0) {
-    advertencias.push('Precio de venta en $0 — revisar antes de vender.');
+    advertencias.push("Precio de venta en $0 — revisar antes de vender.");
   }
   if (fila.precioCosto === 0) {
-    advertencias.push('Precio de costo en $0.');
+    advertencias.push("Precio de costo en $0.");
   }
 
   let stockInicial: string | null = null;
@@ -89,7 +91,7 @@ export function mapearArticulo(fila: FilaCatalogo): ArticuloAImportar {
     advertencias.push(`Stock negativo en el archivo original (${fila.stock}) — se importa en 0.`);
   }
 
-  const activo = (fila.activo ?? 'S').trim().toUpperCase() !== 'N';
+  const activo = (fila.activo ?? "S").trim().toUpperCase() !== "N";
 
   return {
     codigo,

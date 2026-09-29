@@ -90,5 +90,5 @@ La Factura A se implementó mirando lo que ARCA exige **recibir** —`ImpNeto`,
 
 Es el mismo error que con la Transparencia Fiscal (ADR-0079) y con el exento
 (ADR-0076): tres veces el dato declarado estaba bien y el papel no. La pregunta
-que faltaba las tres veces es la misma, y ya está escrita: *¿qué tiene que
-decir el papel, además de estar autorizado?*
+que faltaba las tres veces es la misma, y ya está escrita: _¿qué tiene que
+decir el papel, además de estar autorizado?_

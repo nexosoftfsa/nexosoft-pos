@@ -31,7 +31,9 @@ async function guardarConDialogoNativo(nombre: string, blob: Blob): Promise<void
   const extension = punto === -1 ? undefined : nombre.slice(punto + 1);
   const destino = await save({
     defaultPath: nombre,
-    ...(extension !== undefined ? { filters: [{ name: extension.toUpperCase(), extensions: [extension] }] } : {}),
+    ...(extension !== undefined
+      ? { filters: [{ name: extension.toUpperCase(), extensions: [extension] }] }
+      : {}),
   });
   if (destino === null) return; // el usuario canceló el diálogo
   const bytes = new Uint8Array(await blob.arrayBuffer());

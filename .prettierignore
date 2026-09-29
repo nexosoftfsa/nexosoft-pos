@@ -1,0 +1,31 @@
+# Qué NO formatea Prettier.
+#
+# La regla es una sola: **no se formatea lo que no escribe una persona.** Un
+# archivo que genera una herramienta vuelve a salir sin formato la próxima vez
+# que la herramienta corra, y entonces `pnpm format` y esa herramienta se pisan
+# para siempre.
+
+# Dependencias y artefactos de compilación
+node_modules/
+dist/
+build/
+out/
+coverage/
+.turbo/
+target/
+
+# Paquete standalone del servidor y del instalador (Fase 13): artefactos.
+dist-servidor/
+instalador-servidor/
+# Panel compilado que el cloud-api sirve estático.
+apps/cloud-api/panel/
+
+# Lo escribe pnpm en cada install, y no se edita a mano.
+pnpm-lock.yaml
+
+# Lo reescribe ENTERO el script de publicación del POS
+# (`scripts/release/publicar-actualizacion.ps1` usa ConvertFrom-Json /
+# ConvertTo-Json, que reserializa el archivo con el formato de PowerShell).
+# Formatearlo acá significa que cada publicación lo deja "sin formatear" otra
+# vez.
+apps/pos-desktop/src-tauri/tauri.conf.json

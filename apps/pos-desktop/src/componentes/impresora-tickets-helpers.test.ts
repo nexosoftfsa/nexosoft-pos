@@ -63,10 +63,7 @@ describe("avisoDeImpresora", () => {
 
   it("no dice nada si la predeterminada es una térmica", () => {
     expect(
-      avisoDeImpresora(IMPRESORA_PREDETERMINADA, [
-        { ...impresora(), predeterminada: true },
-        PDF,
-      ]),
+      avisoDeImpresora(IMPRESORA_PREDETERMINADA, [{ ...impresora(), predeterminada: true }, PDF]),
     ).toBeNull();
   });
 

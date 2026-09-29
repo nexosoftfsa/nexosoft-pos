@@ -6,8 +6,8 @@ import {
   IsEmail,
   IsBoolean,
   MaxLength,
-} from 'class-validator';
-import { CondicionIva } from '@prisma/client';
+} from "class-validator";
+import { CondicionIva } from "@prisma/client";
 
 export class ActualizarClienteDto {
   @IsString()

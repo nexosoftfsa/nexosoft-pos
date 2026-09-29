@@ -9,12 +9,12 @@
  * la misma lógica de validación que la corrida real, sin duplicar código.
  */
 export type ResultadoFilaImportacion =
-  | { fila: number; resultado: 'creada'; advertencia?: string }
-  | { fila: number; resultado: 'omitida'; mensaje: string }
-  | { fila: number; resultado: 'error'; mensaje: string };
+  | { fila: number; resultado: "creada"; advertencia?: string }
+  | { fila: number; resultado: "omitida"; mensaje: string }
+  | { fila: number; resultado: "error"; mensaje: string };
 
 export class RevertirDryRun extends Error {
   constructor(readonly resultados: ResultadoFilaImportacion[]) {
-    super('dry-run: revertir');
+    super("dry-run: revertir");
   }
 }

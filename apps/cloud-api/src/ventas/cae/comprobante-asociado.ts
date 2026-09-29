@@ -1,6 +1,6 @@
-import { codigoComprobanteArcaOpcional } from '@nexosoft/domain';
+import { codigoComprobanteArcaOpcional } from "@nexosoft/domain";
 
-import type { ComprobanteAsociadoSolicitud } from './servicio-cae';
+import type { ComprobanteAsociadoSolicitud } from "./servicio-cae";
 
 /** Lo mínimo que hace falta del comprobante original para poder referenciarlo. */
 export interface ComprobanteOriginal {

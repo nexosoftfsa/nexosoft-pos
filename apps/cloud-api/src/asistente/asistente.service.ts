@@ -1,12 +1,12 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../prisma/prisma.service';
-import { PROMPT_SISTEMA } from './prompt-sistema';
+import { Injectable, Logger, ServiceUnavailableException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "../prisma/prisma.service";
+import { PROMPT_SISTEMA } from "./prompt-sistema";
 
 // OJO: "gemini-2.0-flash" tenía cuota 0 en el free tier del proyecto de prueba
 // (verificado 2026-07-06); "gemini-2.5-flash" respondió bien. Si en otro
 // proyecto/cliente da 429, probar cambiando el modelo desde la config.
-const MODELO_POR_DEFECTO = 'gemini-2.5-flash';
+const MODELO_POR_DEFECTO = "gemini-2.5-flash";
 /** Id fijo de la única fila de configuración (ADR-0040). */
 const ID_CONFIG = 1;
 
@@ -43,7 +43,7 @@ export class AsistenteService {
     const { apiKey, modelo } = await this.resolverCredenciales();
     if (!apiKey) {
       throw new ServiceUnavailableException(
-        'El asistente de IA todavía no está configurado en este servidor. Cargá la clave desde Configuración.',
+        "El asistente de IA todavía no está configurado en este servidor. Cargá la clave desde Configuración.",
       );
     }
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`;
@@ -51,35 +51,37 @@ export class AsistenteService {
     let res: Response;
     try {
       res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: PROMPT_SISTEMA }] },
-          contents: [{ role: 'user', parts: [{ text: pregunta }] }],
+          contents: [{ role: "user", parts: [{ text: pregunta }] }],
         }),
       });
     } catch (error) {
       this.logger.error(`No se pudo contactar a Gemini: ${(error as Error).message}`);
-      throw new ServiceUnavailableException('No se pudo conectar con el asistente de IA (sin internet?).');
+      throw new ServiceUnavailableException(
+        "No se pudo conectar con el asistente de IA (sin internet?).",
+      );
     }
 
     const data = (await res.json().catch(() => ({}))) as RespuestaGemini;
     if (!res.ok) {
       const detalle = data.error?.message;
-      this.logger.error(`Gemini respondió ${res.status}: ${detalle ?? ''}`);
+      this.logger.error(`Gemini respondió ${res.status}: ${detalle ?? ""}`);
       // Se expone el motivo real de Gemini (clave inválida, cuota agotada, modelo
       // inexistente, etc.) porque sin esto el ADMIN no tiene forma de diagnosticar
       // su propia clave: el mensaje genérico anterior escondía la causa, y los
       // logs del servidor no siempre están visibles (p.ej. el script de demo
       // corre con `logger: false`).
       throw new ServiceUnavailableException(
-        `El asistente de IA no pudo responder (Gemini ${res.status}${detalle ? `: ${detalle}` : ''}).`,
+        `El asistente de IA no pudo responder (Gemini ${res.status}${detalle ? `: ${detalle}` : ""}).`,
       );
     }
 
     const texto = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!texto) {
-      throw new ServiceUnavailableException('El asistente de IA no devolvió una respuesta.');
+      throw new ServiceUnavailableException("El asistente de IA no devolvió una respuesta.");
     }
     return texto.trim();
   }
@@ -91,7 +93,10 @@ export class AsistenteService {
   }
 
   /** Guarda (o reemplaza) la clave desde la UI. `modelo` es opcional (usa el default si no se manda). */
-  async actualizarConfiguracion(apiKey: string, modelo?: string): Promise<EstadoConfiguracionAsistente> {
+  async actualizarConfiguracion(
+    apiKey: string,
+    modelo?: string,
+  ): Promise<EstadoConfiguracionAsistente> {
     const fila = await this.prisma.configuracionSistema.upsert({
       where: { id: ID_CONFIG },
       create: { id: ID_CONFIG, geminiApiKey: apiKey, geminiModel: modelo ?? null },
@@ -103,8 +108,9 @@ export class AsistenteService {
   /** La fila en base (si existe) tiene prioridad sobre la variable de entorno. */
   private async resolverCredenciales(): Promise<{ apiKey: string | undefined; modelo: string }> {
     const fila = await this.prisma.configuracionSistema.findUnique({ where: { id: ID_CONFIG } });
-    const apiKey = fila?.geminiApiKey ?? this.config.get<string>('GEMINI_API_KEY');
-    const modelo = fila?.geminiModel ?? this.config.get<string>('GEMINI_MODEL') ?? MODELO_POR_DEFECTO;
+    const apiKey = fila?.geminiApiKey ?? this.config.get<string>("GEMINI_API_KEY");
+    const modelo =
+      fila?.geminiModel ?? this.config.get<string>("GEMINI_MODEL") ?? MODELO_POR_DEFECTO;
     return { apiKey: apiKey ?? undefined, modelo };
   }
 }

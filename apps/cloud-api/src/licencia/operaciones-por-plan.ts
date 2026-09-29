@@ -15,8 +15,8 @@
  *    que pagó. El costo es que hay que acordarse de agregarlo, y por eso el
  *    test recorre la tabla.
  */
-import { moduloDisponible, type ModuloId, type Plan } from '@nexosoft/licencias';
-import { normalizar } from './operaciones-bloqueadas';
+import { moduloDisponible, type ModuloId, type Plan } from "@nexosoft/licencias";
+import { normalizar } from "./operaciones-bloqueadas";
 
 /**
  * De qué módulo es cada familia de rutas. El orden importa: gana el primer
@@ -26,27 +26,27 @@ import { normalizar } from './operaciones-bloqueadas';
  * es infraestructura, no un módulo que se venda: nunca se gatea por plan.
  */
 const MODULO_DE_RUTA: ReadonlyArray<{ patron: RegExp; modulo: ModuloId }> = [
-  { patron: /^\/ventas/, modulo: 'pos' },
-  { patron: /^\/caja/, modulo: 'caja' },
-  { patron: /^\/fiscal/, modulo: 'comprobantes' },
-  { patron: /^\/catalogo/, modulo: 'catalogo' },
-  { patron: /^\/stock/, modulo: 'stock' },
-  { patron: /^\/comercio/, modulo: 'config' },
-  { patron: /^\/usuarios/, modulo: 'usuarios' },
-  { patron: /^\/credenciales/, modulo: 'usuarios' },
+  { patron: /^\/ventas/, modulo: "pos" },
+  { patron: /^\/caja/, modulo: "caja" },
+  { patron: /^\/fiscal/, modulo: "comprobantes" },
+  { patron: /^\/catalogo/, modulo: "catalogo" },
+  { patron: /^\/stock/, modulo: "stock" },
+  { patron: /^\/comercio/, modulo: "config" },
+  { patron: /^\/usuarios/, modulo: "usuarios" },
+  { patron: /^\/credenciales/, modulo: "usuarios" },
 
   // Plus
-  { patron: /^\/clientes/, modulo: 'ctacte' },
-  { patron: /^\/presupuestos/, modulo: 'presupuestos' },
-  { patron: /^\/remitos/, modulo: 'remitos' },
-  { patron: /^\/proveedores/, modulo: 'proveedores' },
-  { patron: /^\/medios-pago/, modulo: 'medios-pago' },
-  { patron: /^\/reportes/, modulo: 'reportes' },
+  { patron: /^\/clientes/, modulo: "ctacte" },
+  { patron: /^\/presupuestos/, modulo: "presupuestos" },
+  { patron: /^\/remitos/, modulo: "remitos" },
+  { patron: /^\/proveedores/, modulo: "proveedores" },
+  { patron: /^\/medios-pago/, modulo: "medios-pago" },
+  { patron: /^\/reportes/, modulo: "reportes" },
 
   // Premium
-  { patron: /^\/asistente/, modulo: 'ia' },
-  { patron: /^\/acceso-remoto/, modulo: 'acceso-remoto' },
-  { patron: /^\/respaldo/, modulo: 'respaldo-nube' },
+  { patron: /^\/asistente/, modulo: "ia" },
+  { patron: /^\/acceso-remoto/, modulo: "acceso-remoto" },
+  { patron: /^\/respaldo/, modulo: "respaldo-nube" },
 ];
 
 /** El módulo al que pertenece una ruta, o `null` si no se gatea por plan. */
@@ -61,7 +61,7 @@ export function moduloDeRuta(ruta: string): ModuloId | null {
  */
 export function fueraDelPlan(metodo: string, ruta: string, plan: Plan): boolean {
   const m = metodo.toUpperCase();
-  if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return false;
+  if (m === "GET" || m === "HEAD" || m === "OPTIONS") return false;
   const modulo = moduloDeRuta(ruta);
   if (modulo === null) return false;
   return !moduloDisponible(modulo, plan);

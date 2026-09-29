@@ -77,6 +77,7 @@ como urgente):
 ## Consecuencias
 
 ### Positivas
+
 - El cajero puede completar una venta común (escanear todo, cobrar exacto)
   sin tocar el mouse ni una sola vez.
 - El conflicto foco/lector se resuelve sin tocar `useLectorTeclado` (que
@@ -86,6 +87,7 @@ como urgente):
   futuro es más seguro.
 
 ### Negativas / costos
+
 - `Supr`/`F8`/`F12` solo se escuchan mientras el foco está en el buscador
   (no son atajos globales de `window`) — si el cajero está tipeando el
   monto del pago, no funcionan ahí. Deliberado: un listener global

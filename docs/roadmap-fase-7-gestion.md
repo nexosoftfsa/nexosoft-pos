@@ -26,17 +26,17 @@ Excel, sincronización y **panel web de reportes**.
 
 ## Plan de sub-fases (orden propuesto, ajustable)
 
-| # | Módulo | Estado backend | Trabajo principal |
-| - | ------ | -------------- | ----------------- |
-| **7.1** | **Shell + identidad visual** | — | Menú lateral de navegación en el POS (Ventas · Catálogo · Stock · Caja · Cuentas corrientes · Reportes · Config). Portar paleta/estilos/logo de la maqueta. Mover la pantalla de Ventas actual dentro del shell. **Base de todo lo demás.** |
-| **7.2** | **Catálogo (ABM)** | ✅ CRUD en cloud-api | Pantalla de alta/baja/edición de productos: precio, costo, IVA, código de barras/interno, categoría. Conectar al backend. |
-| **7.3** | **Stock** | ✅ Movimientos | Ver saldos, registrar entradas/ajustes, historial por producto. |
-| **7.4** | **Caja** | 🔴 Nuevo | Apertura/cierre de caja, arqueo, ingresos/retiros de efectivo, resumen del turno. Requiere modelo nuevo en Prisma. |
-| **7.5** | **Cuentas corrientes** | 🔴 Nuevo (medio `CUENTA_CORRIENTE` ya existe) | Entidad **Cliente** (no existe en el schema), venta a cuenta, registrar pagos, saldo y estado de cuenta. |
-| **7.6** | **Comprobantes y anulaciones** | 🟡 Parcial | Notas de Crédito/Débito reales, anulación que emite NC, reimpresión. (La maqueta solo lo simulaba.) |
-| **7.7** | **Reportes en el POS** | ✅ Endpoints `/reportes` (Fase 6) | Resumen de ventas/caja + export CSV dentro del POS, reusando los endpoints del cloud-api. |
-| **7.8** | **Funciones avanzadas** | 🔴 Nuevo | Pago combinado (varios medios en una venta), presupuestos, remitos, combos/promos, lotes/vencimientos, recargos. Cada una como su propia sub-fase. |
-| — | **CAE real ARCA** (WSAA/WSFEv1) | 🟡 Mock | **Diferido al primer cliente** (certificados + CUIT del comercio). No es Fase 7. |
+| #       | Módulo                          | Estado backend                                | Trabajo principal                                                                                                                                                                                                                           |
+| ------- | ------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **7.1** | **Shell + identidad visual**    | —                                             | Menú lateral de navegación en el POS (Ventas · Catálogo · Stock · Caja · Cuentas corrientes · Reportes · Config). Portar paleta/estilos/logo de la maqueta. Mover la pantalla de Ventas actual dentro del shell. **Base de todo lo demás.** |
+| **7.2** | **Catálogo (ABM)**              | ✅ CRUD en cloud-api                          | Pantalla de alta/baja/edición de productos: precio, costo, IVA, código de barras/interno, categoría. Conectar al backend.                                                                                                                   |
+| **7.3** | **Stock**                       | ✅ Movimientos                                | Ver saldos, registrar entradas/ajustes, historial por producto.                                                                                                                                                                             |
+| **7.4** | **Caja**                        | 🔴 Nuevo                                      | Apertura/cierre de caja, arqueo, ingresos/retiros de efectivo, resumen del turno. Requiere modelo nuevo en Prisma.                                                                                                                          |
+| **7.5** | **Cuentas corrientes**          | 🔴 Nuevo (medio `CUENTA_CORRIENTE` ya existe) | Entidad **Cliente** (no existe en el schema), venta a cuenta, registrar pagos, saldo y estado de cuenta.                                                                                                                                    |
+| **7.6** | **Comprobantes y anulaciones**  | 🟡 Parcial                                    | Notas de Crédito/Débito reales, anulación que emite NC, reimpresión. (La maqueta solo lo simulaba.)                                                                                                                                         |
+| **7.7** | **Reportes en el POS**          | ✅ Endpoints `/reportes` (Fase 6)             | Resumen de ventas/caja + export CSV dentro del POS, reusando los endpoints del cloud-api.                                                                                                                                                   |
+| **7.8** | **Funciones avanzadas**         | 🔴 Nuevo                                      | Pago combinado (varios medios en una venta), presupuestos, remitos, combos/promos, lotes/vencimientos, recargos. Cada una como su propia sub-fase.                                                                                          |
+| —       | **CAE real ARCA** (WSAA/WSFEv1) | 🟡 Mock                                       | **Diferido al primer cliente** (certificados + CUIT del comercio). No es Fase 7.                                                                                                                                                            |
 
 ## Decisiones a confirmar al arrancar (cambian la arquitectura)
 
@@ -58,7 +58,7 @@ Excel, sincronización y **panel web de reportes**.
 
 ## Cómo arrancar el chat nuevo
 
-Decir algo como *"seguimos con NexoSoft, Fase 7"*. El asistente debe leer ESTE
+Decir algo como _"seguimos con NexoSoft, Fase 7"_. El asistente debe leer ESTE
 documento y la memoria del proyecto primero. Empezar por **7.1 (shell + identidad
 visual)**, que es la base; frenar con OK entre sub-fases.
 

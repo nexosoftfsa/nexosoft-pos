@@ -1,10 +1,10 @@
-import { Injectable, Logger, HttpException } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
-import { VentasService } from '../ventas/ventas.service';
-import { CrearVentaDto } from '../ventas/dto/crear-venta.dto';
-import type { OperacionEntranteDto, SincronizarDto } from './dto/sincronizar.dto';
-import { mensajeDeReferenciaRota } from './referencia-rota';
+import { Injectable, Logger, HttpException } from "@nestjs/common";
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
+import { VentasService } from "../ventas/ventas.service";
+import { CrearVentaDto } from "../ventas/dto/crear-venta.dto";
+import type { OperacionEntranteDto, SincronizarDto } from "./dto/sincronizar.dto";
+import { mensajeDeReferenciaRota } from "./referencia-rota";
 
 /**
  * Resultado de aplicar UNA operación. Mismo contrato que `ResultadoEnvio` de
@@ -61,7 +61,7 @@ export class SyncService {
     usuario: UsuarioCtx,
     operacion: OperacionEntranteDto,
   ): Promise<ResultadoIngesta> {
-    if (operacion.tipo !== 'venta') {
+    if (operacion.tipo !== "venta") {
       return {
         ok: false,
         error: `Tipo de operación no soportado: ${operacion.tipo}`,
@@ -74,7 +74,7 @@ export class SyncService {
       ...operacion.payload,
       operacionId: operacion.operacionId,
     };
-    if (operacion.terminalId !== undefined) fuente['terminalId'] = operacion.terminalId;
+    if (operacion.terminalId !== undefined) fuente["terminalId"] = operacion.terminalId;
 
     const dtoVenta = plainToInstance(CrearVentaDto, fuente);
     const errores = await validate(dtoVenta, { whitelist: true });
@@ -83,7 +83,7 @@ export class SyncService {
       //
       // El mensaje nombra los campos: decir sólo "payload inválido" obligaba a
       // adivinar cuál, y encima esta rama no dejaba rastro en el log.
-      const campos = errores.map((e) => e.property).join(', ');
+      const campos = errores.map((e) => e.property).join(", ");
       this.logger.error(`Operación ${operacion.operacionId} con payload inválido: ${campos}`);
       return {
         ok: false,
@@ -120,9 +120,7 @@ export class SyncService {
 
       // 4xx = problema del dato (no reintentable); el resto (DB, 5xx) sí.
       const reintentable = !(error instanceof HttpException && error.getStatus() < 500);
-      this.logger.warn(
-        `Operación ${operacion.operacionId} falló: ${(error as Error).message}`,
-      );
+      this.logger.warn(`Operación ${operacion.operacionId} falló: ${(error as Error).message}`);
       return { ok: false, error: (error as Error).message, reintentable };
     }
   }

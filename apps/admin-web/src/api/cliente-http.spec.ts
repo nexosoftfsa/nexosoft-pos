@@ -29,9 +29,7 @@ describe("ClienteApi.get", () => {
 
     const [url, opciones] = fetchMock.mock.calls[0]!;
     expect(url).toBe(`${BASE}/reportes/ventas/resumen`);
-    expect((opciones.headers as Record<string, string>).Authorization).toBe(
-      "Bearer tok123",
-    );
+    expect((opciones.headers as Record<string, string>).Authorization).toBe("Bearer tok123");
   });
 
   it("omite Authorization cuando no hay token", async () => {

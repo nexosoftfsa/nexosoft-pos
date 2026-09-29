@@ -1,8 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
-import type {
-  DestinoDeRespaldo,
-  MetadatosRespaldo,
-} from '../puertos/destino-de-respaldo';
+import { NotFoundException } from "@nestjs/common";
+import type { DestinoDeRespaldo, MetadatosRespaldo } from "../puertos/destino-de-respaldo";
 
 /**
  * Mock funcional del destino de respaldo. Guarda los respaldos en memoria.

@@ -42,7 +42,10 @@ export function formDesdeTarjeta(t: Tarjeta): FormTarjeta {
     marca: t.marca ?? "",
     tasas:
       t.tasas.length > 0
-        ? t.tasas.map((r) => ({ cuotas: String(r.cantidadCuotas), porcentaje: String(r.recargoPorcentaje) }))
+        ? t.tasas.map((r) => ({
+            cuotas: String(r.cantidadCuotas),
+            porcentaje: String(r.recargoPorcentaje),
+          }))
         : [{ ...TASA_VACIA }],
   };
 }

@@ -349,7 +349,9 @@ export function construirEscPos(
   if (sinIva) b.linea("Precios sin IVA");
   for (const l of datos.lineas) {
     b.linea(l.descripcion);
-    const cant = l.cantidad.esEntera() ? l.cantidad.aDecimalString(0) : l.cantidad.aDecimalString(3);
+    const cant = l.cantidad.esEntera()
+      ? l.cantidad.aDecimalString(0)
+      : l.cantidad.aDecimalString(3);
     b.lineaCruda(
       filaIzquierdaDerecha(
         `${cant} x ${pesos(precioUnitarioImpreso(datos, l))}`,
@@ -405,13 +407,19 @@ export function construirEscPos(
   if (transparencia !== null) {
     b.separador();
     b.linea(LEYENDA_TRANSPARENCIA_FISCAL);
-    b.lineaCruda(filaIzquierdaDerecha("IVA contenido", pesos(transparencia.ivaContenido), columnas));
+    b.lineaCruda(
+      filaIzquierdaDerecha("IVA contenido", pesos(transparencia.ivaContenido), columnas),
+    );
     // "Otros Impuestos Nacionales Indirectos" no entra en 32 columnas ni
     // abreviado, asi que en papel angosto va el nombre del unico que le aplica
     // a un comercio — el mismo que imprimen los tickets de supermercado. En el
     // A4, donde hay lugar, va el nombre completo que usa la norma.
     b.lineaCruda(
-      filaIzquierdaDerecha("Imp. internos", pesos(transparencia.otrosImpuestosNacionales), columnas),
+      filaIzquierdaDerecha(
+        "Imp. internos",
+        pesos(transparencia.otrosImpuestosNacionales),
+        columnas,
+      ),
     );
     b.linea(ACLARACION_IMPUESTOS_NACIONALES);
   }

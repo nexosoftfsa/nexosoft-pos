@@ -228,7 +228,13 @@ export function Shell({
   // Factura A o B. Antes se descartaban al mapear y sólo se guardaban id +
   // nombre; sin esos datos una A no se puede identificar en el papel.
   const [clientesVenta, setClientesVenta] = useState<
-    { id: string; nombre: string; documento: string | null; condicionIva: string; direccion: string | null }[]
+    {
+      id: string;
+      nombre: string;
+      documento: string | null;
+      condicionIva: string;
+      direccion: string | null;
+    }[]
   >([]);
   useEffect(() => {
     if (!clienteCtaCte) return;

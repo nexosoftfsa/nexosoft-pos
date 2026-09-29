@@ -3,12 +3,12 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
-} from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/library';
-import { PrismaService } from '../prisma/prisma.service';
-import type { CrearClienteDto } from './dto/crear-cliente.dto';
-import type { ActualizarClienteDto } from './dto/actualizar-cliente.dto';
-import type { RegistrarMovimientoCtaCteDto } from './dto/registrar-movimiento-ctacte.dto';
+} from "@nestjs/common";
+import { Decimal } from "@prisma/client/runtime/library";
+import { PrismaService } from "../prisma/prisma.service";
+import type { CrearClienteDto } from "./dto/crear-cliente.dto";
+import type { ActualizarClienteDto } from "./dto/actualizar-cliente.dto";
+import type { RegistrarMovimientoCtaCteDto } from "./dto/registrar-movimiento-ctacte.dto";
 
 /**
  * Clientes y cuentas corrientes (Fase 7.5). La cuenta corriente es un ledger:
@@ -22,10 +22,13 @@ export class ClientesService {
   async listarClientes(sucursalId: string, soloActivos = true) {
     const clientes = await this.prisma.cliente.findMany({
       where: { sucursalId, ...(soloActivos ? { activo: true } : {}) },
-      orderBy: { nombre: 'asc' },
+      orderBy: { nombre: "asc" },
     });
     return Promise.all(
-      clientes.map(async (c) => ({ ...c, saldo: (await this.calcularSaldo(c.id, sucursalId)).toFixed(2) })),
+      clientes.map(async (c) => ({
+        ...c,
+        saldo: (await this.calcularSaldo(c.id, sucursalId)).toFixed(2),
+      })),
     );
   }
 
@@ -39,7 +42,7 @@ export class ClientesService {
     const cliente = await this.obtenerCliente(sucursalId, id);
     const movimientos = await this.prisma.movimientoCuentaCorriente.findMany({
       where: { clienteId: id, sucursalId },
-      orderBy: { creadoEn: 'desc' },
+      orderBy: { creadoEn: "desc" },
     });
     return { cliente, movimientos };
   }
@@ -49,11 +52,11 @@ export class ClientesService {
       data: {
         nombre: dto.nombre,
         documento: dto.documento ?? null,
-        condicionIva: dto.condicionIva ?? 'CONSUMIDOR_FINAL',
+        condicionIva: dto.condicionIva ?? "CONSUMIDOR_FINAL",
         email: dto.email ?? null,
         telefono: dto.telefono ?? null,
         direccion: dto.direccion ?? null,
-        limiteCredito: new Decimal(dto.limiteCredito ?? '0'),
+        limiteCredito: new Decimal(dto.limiteCredito ?? "0"),
         sucursalId,
       },
     });
@@ -87,7 +90,7 @@ export class ClientesService {
     if (!cliente) throw new NotFoundException(`Cliente ${id} no encontrado`);
 
     const monto = new Decimal(dto.monto);
-    if (monto.lte(0)) throw new BadRequestException('El monto debe ser mayor a cero');
+    if (monto.lte(0)) throw new BadRequestException("El monto debe ser mayor a cero");
 
     const limite = new Decimal(cliente.limiteCredito);
     if (limite.gt(0)) {
@@ -98,21 +101,21 @@ export class ClientesService {
         );
       }
     }
-    return this.crearMovimiento(sucursalId, id, 'CARGO', monto, dto.concepto);
+    return this.crearMovimiento(sucursalId, id, "CARGO", monto, dto.concepto);
   }
 
   /** Registra un PAGO (cobro). */
   async registrarPago(sucursalId: string, id: string, dto: RegistrarMovimientoCtaCteDto) {
     await this.obtenerCliente(sucursalId, id);
     const monto = new Decimal(dto.monto);
-    if (monto.lte(0)) throw new BadRequestException('El monto debe ser mayor a cero');
-    return this.crearMovimiento(sucursalId, id, 'PAGO', monto, dto.concepto);
+    if (monto.lte(0)) throw new BadRequestException("El monto debe ser mayor a cero");
+    return this.crearMovimiento(sucursalId, id, "PAGO", monto, dto.concepto);
   }
 
   private async crearMovimiento(
     sucursalId: string,
     clienteId: string,
-    tipo: 'CARGO' | 'PAGO',
+    tipo: "CARGO" | "PAGO",
     monto: Decimal,
     concepto: string | undefined,
   ) {
@@ -128,7 +131,7 @@ export class ClientesService {
       select: { tipo: true, monto: true },
     });
     return movimientos.reduce(
-      (acc, m) => (m.tipo === 'CARGO' ? acc.plus(m.monto) : acc.minus(m.monto)),
+      (acc, m) => (m.tipo === "CARGO" ? acc.plus(m.monto) : acc.minus(m.monto)),
       new Decimal(0),
     );
   }

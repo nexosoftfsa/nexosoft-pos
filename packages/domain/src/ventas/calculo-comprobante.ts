@@ -155,9 +155,13 @@ function repartirNetoEntreLineas(
     pendientes.set(clave, quedan);
 
     // La última línea del grupo se lleva lo que quede: así cierra exacto.
-    const neto = quedan === 0 || brutoGrupo.esCero()
-      ? sobra
-      : linea.importe.multiplicarPor(sobra.aDecimalString(4)).dividirPor(brutoGrupo.aDecimalString(4)).redondear(2);
+    const neto =
+      quedan === 0 || brutoGrupo.esCero()
+        ? sobra
+        : linea.importe
+            .multiplicarPor(sobra.aDecimalString(4))
+            .dividirPor(brutoGrupo.aDecimalString(4))
+            .redondear(2);
     restante.set(clave, sobra.restar(neto));
 
     const cantidad = Money.desde(linea.cantidad);

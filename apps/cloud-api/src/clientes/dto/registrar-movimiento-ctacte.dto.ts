@@ -1,4 +1,4 @@
-import { IsNumberString, IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsNumberString, IsString, IsOptional, MaxLength } from "class-validator";
 
 /** Cargo (venta a cuenta) o pago (cobro). El tipo lo define el endpoint. */
 export class RegistrarMovimientoCtaCteDto {

@@ -96,19 +96,38 @@ export function Inicio({
             Bienvenido a <strong>{nombreComercio}</strong>. Este es el pulso de hoy.
           </p>
         </div>
-        <button type="button" className="pill-btn pill-btn--primary" onClick={() => onNavegar("pos")}>
+        <button
+          type="button"
+          className="pill-btn pill-btn--primary"
+          onClick={() => onNavegar("pos")}
+        >
           Ir a vender
         </button>
       </div>
 
       <div className="kpis kpis--4">
-        <Kpi etiqueta="Ventas de hoy" valor={kpis ? pesos(Number(kpis.ventasHoy)) : "—"}
-          sub={kpis ? `${kpis.cantidadHoy} venta(s)` : ""} />
-        <Kpi etiqueta="Por cobrar" valor={kpis ? pesos(Number(kpis.porCobrar)) : "—"} sub="cuentas corrientes" />
-        <Kpi etiqueta="Lotes por vencer" valor={kpis ? String(kpis.porVencer) : "—"}
-          color={kpis && kpis.porVencer > 0 ? "var(--warn)" : undefined} sub="próximos 30 días" />
-        <Kpi etiqueta="Stock bajo" valor={kpis ? String(kpis.stockBajo) : "—"}
-          color={kpis && kpis.stockBajo > 0 ? "var(--peligro, #e5484d)" : undefined} sub="a reponer" />
+        <Kpi
+          etiqueta="Ventas de hoy"
+          valor={kpis ? pesos(Number(kpis.ventasHoy)) : "—"}
+          sub={kpis ? `${kpis.cantidadHoy} venta(s)` : ""}
+        />
+        <Kpi
+          etiqueta="Por cobrar"
+          valor={kpis ? pesos(Number(kpis.porCobrar)) : "—"}
+          sub="cuentas corrientes"
+        />
+        <Kpi
+          etiqueta="Lotes por vencer"
+          valor={kpis ? String(kpis.porVencer) : "—"}
+          color={kpis && kpis.porVencer > 0 ? "var(--warn)" : undefined}
+          sub="próximos 30 días"
+        />
+        <Kpi
+          etiqueta="Stock bajo"
+          valor={kpis ? String(kpis.stockBajo) : "—"}
+          color={kpis && kpis.stockBajo > 0 ? "var(--peligro, #e5484d)" : undefined}
+          sub="a reponer"
+        />
       </div>
 
       <div className="section-title">Accesos rápidos</div>
@@ -125,11 +144,23 @@ export function Inicio({
   );
 }
 
-function Kpi({ etiqueta, valor, sub, color }: { etiqueta: string; valor: string; sub?: string | undefined; color?: string | undefined }) {
+function Kpi({
+  etiqueta,
+  valor,
+  sub,
+  color,
+}: {
+  etiqueta: string;
+  valor: string;
+  sub?: string | undefined;
+  color?: string | undefined;
+}) {
   return (
     <div className="kpi">
       <div className="kpi__label">{etiqueta}</div>
-      <div className="kpi__val" style={color ? { color } : undefined}>{valor}</div>
+      <div className="kpi__val" style={color ? { color } : undefined}>
+        {valor}
+      </div>
       {sub && <div className="kpi__sub muted">{sub}</div>}
     </div>
   );

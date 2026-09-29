@@ -9,9 +9,9 @@ import {
   IsArray,
   ArrayMinSize,
   ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { MedioPago } from '@prisma/client';
+} from "class-validator";
+import { Type } from "class-transformer";
+import { MedioPago } from "@prisma/client";
 
 export class ItemVentaDto {
   @IsString()

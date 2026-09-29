@@ -14,7 +14,9 @@ describe("ClienteUsuariosHttp", () => {
     const [url, opciones] = fetchMock.mock.calls[0]!;
     expect(url).toBe("http://server/api/v1/usuarios");
     expect((opciones as { method: string }).method).toBe("GET");
-    expect((opciones as { headers: Record<string, string> }).headers["Authorization"]).toBe("Bearer tok");
+    expect((opciones as { headers: Record<string, string> }).headers["Authorization"]).toBe(
+      "Bearer tok",
+    );
     vi.unstubAllGlobals();
   });
 
@@ -23,7 +25,12 @@ describe("ClienteUsuariosHttp", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
-    await cliente.crear({ email: "a@b.com", nombreDisplay: "A", password: "12345678", rol: "CAJERO" });
+    await cliente.crear({
+      email: "a@b.com",
+      nombreDisplay: "A",
+      password: "12345678",
+      rol: "CAJERO",
+    });
 
     const [url, opciones] = fetchMock.mock.calls[0]!;
     expect(url).toBe("http://server/auth/register");
@@ -39,7 +46,9 @@ describe("ClienteUsuariosHttp", () => {
   });
 
   it("actualizar() pega PATCH /usuarios/:id con los cambios", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "u2", activo: false }) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ id: "u2", activo: false }) });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
@@ -83,7 +92,9 @@ describe("ClienteUsuariosHttp", () => {
   });
 
   it("obtenerFoto() pega GET /usuarios/:id/foto", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ fotoBase64: null }) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ fotoBase64: null }) });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
@@ -97,9 +108,10 @@ describe("ClienteUsuariosHttp", () => {
   });
 
   it("actualizarFoto() pega PUT /usuarios/:id/foto con la data URL", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: true, json: async () => ({ fotoBase64: "data:image/png;base64,abc" }) });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ fotoBase64: "data:image/png;base64,abc" }),
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
@@ -116,11 +128,17 @@ describe("ClienteUsuariosHttp", () => {
   it("lanza ErrorUsuarios con el mensaje del servidor si falla", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, status: 400, json: async () => ({ message: "No podés desactivarte a vos mismo." }) }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({ message: "No podés desactivarte a vos mismo." }),
+      }),
     );
     const cliente = new ClienteUsuariosHttp("http://server", () => "tok", "s1");
     await expect(cliente.actualizar("u1", { activo: false })).rejects.toThrow(ErrorUsuarios);
-    await expect(cliente.actualizar("u1", { activo: false })).rejects.toThrow("No podés desactivarte a vos mismo.");
+    await expect(cliente.actualizar("u1", { activo: false })).rejects.toThrow(
+      "No podés desactivarte a vos mismo.",
+    );
     vi.unstubAllGlobals();
   });
 });

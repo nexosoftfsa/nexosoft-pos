@@ -20,8 +20,6 @@
 import type { ResumenSync } from "@nexosoft/sync";
 
 export function llegoAlServidor(resumen: ResumenSync): boolean {
-  const resueltas = Object.values(resumen.resultados).filter(
-    (r) => r.ok || !r.reintentable,
-  );
+  const resueltas = Object.values(resumen.resultados).filter((r) => r.ok || !r.reintentable);
   return resueltas.length > 0;
 }

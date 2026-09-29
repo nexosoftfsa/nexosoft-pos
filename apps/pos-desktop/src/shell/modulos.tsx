@@ -42,12 +42,7 @@ export type Rol = "ADMIN" | "SUPERVISOR" | "CAJERO";
 export type Seccion = "Operación" | "Gestión" | "Inteligencia" | "Sistema";
 
 /** Orden de las secciones en el menú. */
-export const SECCIONES: readonly Seccion[] = [
-  "Operación",
-  "Gestión",
-  "Inteligencia",
-  "Sistema",
-];
+export const SECCIONES: readonly Seccion[] = ["Operación", "Gestión", "Inteligencia", "Sistema"];
 
 export interface DefinicionModulo {
   /**
@@ -77,22 +72,136 @@ const GESTION: readonly Rol[] = ["ADMIN", "SUPERVISOR"];
 const SOLO_ADMIN: readonly Rol[] = ["ADMIN"];
 
 export const MODULOS: readonly DefinicionModulo[] = [
-  { id: "inicio", titulo: "Inicio", crumb: "Panel general", seccion: "Operación", icono: IconoInicio, roles: TODOS },
-  { id: "pos", titulo: "Punto de Venta", crumb: "Operación · Caja", seccion: "Operación", icono: IconoPos, roles: TODOS },
-  { id: "caja", titulo: "Caja y Tesorería", crumb: "Turno de caja", seccion: "Operación", icono: IconoCaja, roles: TODOS },
-  { id: "comprobantes", titulo: "Comprobantes", crumb: "Facturas y notas de crédito", seccion: "Operación", icono: IconoComprobantes, roles: TODOS },
-  { id: "presupuestos", titulo: "Presupuestos", crumb: "Cotizaciones no fiscales", seccion: "Operación", icono: IconoPresupuesto, roles: TODOS },
-  { id: "remitos", titulo: "Remitos", crumb: "Documentos de entrega", seccion: "Operación", icono: IconoRemito, roles: TODOS },
-  { id: "catalogo", titulo: "Catálogo y Precios", crumb: "Artículos y listas", seccion: "Gestión", icono: IconoCatalogo, roles: GESTION },
-  { id: "stock", titulo: "Stock e Inventario", crumb: "Existencias", seccion: "Gestión", icono: IconoStock, roles: GESTION },
-  { id: "ctacte", titulo: "Cuentas Corrientes", crumb: "Clientes y proveedores", seccion: "Gestión", icono: IconoCtaCte, roles: GESTION },
-  { id: "etiquetas", titulo: "Etiquetas de góndola", crumb: "Buscar o escanear, exportar a Excel", seccion: "Gestión", icono: IconoEtiqueta, roles: GESTION },
-  { id: "proveedores", titulo: "Proveedores", crumb: "Altas y datos de contacto", seccion: "Gestión", icono: IconoProveedor, roles: GESTION },
-  { id: "medios-pago", titulo: "Medios de pago", crumb: "Tarjetas por banco y tasas", seccion: "Gestión", icono: IconoTarjeta, roles: GESTION },
-  { id: "reportes", titulo: "Reportes y Estadísticas", crumb: "Tablero", seccion: "Inteligencia", icono: IconoReportes, roles: GESTION },
-  { id: "ia", titulo: "Asistente IA", crumb: "OCR + Métricas", seccion: "Inteligencia", icono: IconoIa, roles: GESTION, badge: "Nuevo" },
-  { id: "usuarios", titulo: "Usuarios", crumb: "Altas, roles y permisos", seccion: "Sistema", icono: IconoUsuarios, roles: SOLO_ADMIN },
-  { id: "config", titulo: "Configuración", crumb: "Empresa · Fiscal", seccion: "Sistema", icono: IconoConfig, roles: GESTION, externo: true },
+  {
+    id: "inicio",
+    titulo: "Inicio",
+    crumb: "Panel general",
+    seccion: "Operación",
+    icono: IconoInicio,
+    roles: TODOS,
+  },
+  {
+    id: "pos",
+    titulo: "Punto de Venta",
+    crumb: "Operación · Caja",
+    seccion: "Operación",
+    icono: IconoPos,
+    roles: TODOS,
+  },
+  {
+    id: "caja",
+    titulo: "Caja y Tesorería",
+    crumb: "Turno de caja",
+    seccion: "Operación",
+    icono: IconoCaja,
+    roles: TODOS,
+  },
+  {
+    id: "comprobantes",
+    titulo: "Comprobantes",
+    crumb: "Facturas y notas de crédito",
+    seccion: "Operación",
+    icono: IconoComprobantes,
+    roles: TODOS,
+  },
+  {
+    id: "presupuestos",
+    titulo: "Presupuestos",
+    crumb: "Cotizaciones no fiscales",
+    seccion: "Operación",
+    icono: IconoPresupuesto,
+    roles: TODOS,
+  },
+  {
+    id: "remitos",
+    titulo: "Remitos",
+    crumb: "Documentos de entrega",
+    seccion: "Operación",
+    icono: IconoRemito,
+    roles: TODOS,
+  },
+  {
+    id: "catalogo",
+    titulo: "Catálogo y Precios",
+    crumb: "Artículos y listas",
+    seccion: "Gestión",
+    icono: IconoCatalogo,
+    roles: GESTION,
+  },
+  {
+    id: "stock",
+    titulo: "Stock e Inventario",
+    crumb: "Existencias",
+    seccion: "Gestión",
+    icono: IconoStock,
+    roles: GESTION,
+  },
+  {
+    id: "ctacte",
+    titulo: "Cuentas Corrientes",
+    crumb: "Clientes y proveedores",
+    seccion: "Gestión",
+    icono: IconoCtaCte,
+    roles: GESTION,
+  },
+  {
+    id: "etiquetas",
+    titulo: "Etiquetas de góndola",
+    crumb: "Buscar o escanear, exportar a Excel",
+    seccion: "Gestión",
+    icono: IconoEtiqueta,
+    roles: GESTION,
+  },
+  {
+    id: "proveedores",
+    titulo: "Proveedores",
+    crumb: "Altas y datos de contacto",
+    seccion: "Gestión",
+    icono: IconoProveedor,
+    roles: GESTION,
+  },
+  {
+    id: "medios-pago",
+    titulo: "Medios de pago",
+    crumb: "Tarjetas por banco y tasas",
+    seccion: "Gestión",
+    icono: IconoTarjeta,
+    roles: GESTION,
+  },
+  {
+    id: "reportes",
+    titulo: "Reportes y Estadísticas",
+    crumb: "Tablero",
+    seccion: "Inteligencia",
+    icono: IconoReportes,
+    roles: GESTION,
+  },
+  {
+    id: "ia",
+    titulo: "Asistente IA",
+    crumb: "OCR + Métricas",
+    seccion: "Inteligencia",
+    icono: IconoIa,
+    roles: GESTION,
+    badge: "Nuevo",
+  },
+  {
+    id: "usuarios",
+    titulo: "Usuarios",
+    crumb: "Altas, roles y permisos",
+    seccion: "Sistema",
+    icono: IconoUsuarios,
+    roles: SOLO_ADMIN,
+  },
+  {
+    id: "config",
+    titulo: "Configuración",
+    crumb: "Empresa · Fiscal",
+    seccion: "Sistema",
+    icono: IconoConfig,
+    roles: GESTION,
+    externo: true,
+  },
 ];
 
 export const ETIQUETA_ROL: Record<Rol, string> = {

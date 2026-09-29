@@ -18,11 +18,13 @@ vía comandos/IPC.
 ## Consecuencias
 
 ### Positivas
+
 - Footprint chico y bajo consumo de memoria vs. Electron.
 - Acceso nativo a hardware y a SQLite local.
 - UI web (React) reutilizable y rápida de desarrollar.
 
 ### Negativas / costos
+
 - **Requiere la toolchain de Rust, que NO está instalada en este entorno**
   (`rustup` + Build Tools de C++ + WebView2 en Windows). Es el principal
   riesgo/prerequisito.

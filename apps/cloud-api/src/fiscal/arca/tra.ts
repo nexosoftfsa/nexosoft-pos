@@ -26,9 +26,9 @@ const VIGENCIA_MIN = 10;
 
 /** Fecha a ISO 8601 con offset local (`2026-08-27T14:05:00-03:00`). */
 export function aIsoConOffset(fecha: Date): string {
-  const dosDigitos = (n: number) => String(Math.floor(Math.abs(n))).padStart(2, '0');
+  const dosDigitos = (n: number) => String(Math.floor(Math.abs(n))).padStart(2, "0");
   const offsetMin = -fecha.getTimezoneOffset();
-  const signo = offsetMin >= 0 ? '+' : '-';
+  const signo = offsetMin >= 0 ? "+" : "-";
   const off = `${signo}${dosDigitos(offsetMin / 60)}:${dosDigitos(offsetMin % 60)}`;
   return (
     `${fecha.getFullYear()}-${dosDigitos(fecha.getMonth() + 1)}-${dosDigitos(fecha.getDate())}` +
@@ -57,14 +57,14 @@ export function construirTra(opciones: OpcionesTra): string {
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<loginTicketRequest version="1.0">',
-    '<header>',
+    "<header>",
     `<uniqueId>${uniqueId}</uniqueId>`,
     `<generationTime>${aIsoConOffset(desde)}</generationTime>`,
     `<expirationTime>${aIsoConOffset(hasta)}</expirationTime>`,
-    '</header>',
+    "</header>",
     `<service>${opciones.servicio}</service>`,
-    '</loginTicketRequest>',
-  ].join('');
+    "</loginTicketRequest>",
+  ].join("");
 }
 
 export interface TicketAcceso {
@@ -85,11 +85,11 @@ export interface TicketAcceso {
 export function leerTicketAcceso(respuestaSoap: string): TicketAcceso {
   const desescapar = (s: string) =>
     s
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
       .replace(/&apos;/g, "'")
-      .replace(/&amp;/g, '&');
+      .replace(/&amp;/g, "&");
   const xml = desescapar(respuestaSoap);
 
   const token = /<token>([\s\S]*?)<\/token>/.exec(xml)?.[1]?.trim();
@@ -115,7 +115,7 @@ export function leerTicketAcceso(respuestaSoap: string): TicketAcceso {
 /** Mensaje de error de un SOAP Fault de ARCA, si lo hay. */
 export function leerFaultSoap(respuesta: string): string | null {
   const fault = /<faultstring>([\s\S]*?)<\/faultstring>/i.exec(respuesta)?.[1]?.trim();
-  return fault === undefined || fault === '' ? null : fault;
+  return fault === undefined || fault === "" ? null : fault;
 }
 
 function recortar(s: string, largo = 300): string {

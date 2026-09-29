@@ -26,7 +26,7 @@ La **Fase 6** agrega un **panel web de reportes**, con estas decisiones:
    separa "vender" (caja) de "controlar el negocio" (dueño), y se abre desde
    cualquier navegador de la red.
 2. **Solo lectura** en esta fase: reportes y export. El CRUD de administración
-   (productos, precios, usuarios) queda para una fase futura de *administración*.
+   (productos, precios, usuarios) queda para una fase futura de _administración_.
 3. **Reusa el auth existente** (`/auth/login`, JWT) — sin segundo sistema de
    identidad.
 4. **RBAC**: los endpoints de reportes quedan restringidos a **ADMIN/SUPERVISOR**

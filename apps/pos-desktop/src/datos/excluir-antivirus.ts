@@ -70,10 +70,7 @@ export async function excluirDelAntivirus(): Promise<ResultadoExclusion> {
   }
   const { Command } = await import("@tauri-apps/plugin-shell");
   try {
-    const resultado = await Command.create(
-      "excluir-antivirus",
-      ARGS_EXCLUIR_ANTIVIRUS,
-    ).execute();
+    const resultado = await Command.create("excluir-antivirus", ARGS_EXCLUIR_ANTIVIRUS).execute();
     if (resultado.code === 0) {
       return {
         ok: true,

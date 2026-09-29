@@ -1,5 +1,5 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
-import { RolUsuario } from '@prisma/client';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
+import { RolUsuario } from "@prisma/client";
 
 export class RegistroDto {
   // Nombre de usuario para loguearse. Se guarda en la columna `email` (nunca

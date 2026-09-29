@@ -20,7 +20,7 @@ ya escribimos:
    posicionales **`?`** (estilo SQLite nativo, el que entiende `node:sqlite` de
    los tests). Pero `@tauri-apps/plugin-sql` se apoya en **`sqlx`**, que para el
    driver SQLite espera la sintaxis **`$1, $2, …`** (su README es explícito:
-   *"sqlite and postgres use the `$#` syntax"*). Pasar `?` falla o liga mal.
+   _"sqlite and postgres use the `$#` syntax"_). Pasar `?` falla o liga mal.
 2. **Claves foráneas.** SQLite abre cada conexión con `foreign_keys = OFF`. El
    esquema (`esquema.ts`) delega explícitamente en el adaptador activarlas.
 

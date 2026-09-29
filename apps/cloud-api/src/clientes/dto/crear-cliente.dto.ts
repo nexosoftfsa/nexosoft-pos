@@ -6,8 +6,8 @@ import {
   IsNumberString,
   IsEmail,
   MaxLength,
-} from 'class-validator';
-import { CondicionIva } from '@prisma/client';
+} from "class-validator";
+import { CondicionIva } from "@prisma/client";
 
 export class CrearClienteDto {
   @IsString()

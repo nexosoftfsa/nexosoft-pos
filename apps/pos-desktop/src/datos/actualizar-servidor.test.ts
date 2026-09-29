@@ -71,7 +71,10 @@ describe("mensajes por código de salida", () => {
 
   it("cubre todos los códigos que define el script de PowerShell", () => {
     const script = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), "../../../../scripts/instalacion/actualizador-servidor.ps1"),
+      join(
+        dirname(fileURLToPath(import.meta.url)),
+        "../../../../scripts/instalacion/actualizador-servidor.ps1",
+      ),
       "utf8",
     );
     const definidos = [...script.matchAll(/^\$SALIDA_[A-Z_]+ = (\d+)/gm)].map((m) => Number(m[1]));

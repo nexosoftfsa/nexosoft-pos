@@ -19,9 +19,30 @@ export class ClientePresupuestosSimulado implements ClientePresupuestos {
       estado: "VIGENTE",
       creadoEn: new Date(Date.now() - 86400000).toISOString(),
       items: [
-        { id: "i1", descripcion: "Yerba mate 1 kg", cantidad: "5", precioUnitario: "3800.00", subtotal: "19000.00", productoId: "yerba" },
-        { id: "i2", descripcion: "Café molido 250 g", cantidad: "3", precioUnitario: "4300.00", subtotal: "12900.00", productoId: "cafe" },
-        { id: "i3", descripcion: "Pan lactal", cantidad: "1", precioUnitario: "2600.00", subtotal: "2600.00", productoId: "pan" },
+        {
+          id: "i1",
+          descripcion: "Yerba mate 1 kg",
+          cantidad: "5",
+          precioUnitario: "3800.00",
+          subtotal: "19000.00",
+          productoId: "yerba",
+        },
+        {
+          id: "i2",
+          descripcion: "Café molido 250 g",
+          cantidad: "3",
+          precioUnitario: "4300.00",
+          subtotal: "12900.00",
+          productoId: "cafe",
+        },
+        {
+          id: "i3",
+          descripcion: "Pan lactal",
+          cantidad: "1",
+          precioUnitario: "2600.00",
+          subtotal: "2600.00",
+          productoId: "pan",
+        },
       ],
     },
   ];
@@ -79,7 +100,8 @@ export class ClientePresupuestosSimulado implements ClientePresupuestos {
   private cambiar(id: string, estado: "CONVERTIDO" | "ANULADO"): Presupuesto {
     const p = this.presupuestos.find((x) => x.id === id);
     if (!p) throw new ErrorPresupuestos(`Presupuesto ${id} no encontrado`, 404);
-    if (p.estado !== "VIGENTE") throw new ErrorPresupuestos(`El presupuesto ya está ${p.estado.toLowerCase()}`, 400);
+    if (p.estado !== "VIGENTE")
+      throw new ErrorPresupuestos(`El presupuesto ya está ${p.estado.toLowerCase()}`, 400);
     const actualizado = { ...p, estado };
     this.presupuestos = this.presupuestos.map((x) => (x.id === id ? actualizado : x));
     return { ...actualizado };

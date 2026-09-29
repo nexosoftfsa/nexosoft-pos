@@ -6,11 +6,7 @@
  */
 import { esFalloDeRed, MENSAJE_SIN_CONEXION } from "./errores-red";
 
-export type CondicionIva =
-  | "CONSUMIDOR_FINAL"
-  | "RESPONSABLE_INSCRIPTO"
-  | "MONOTRIBUTO"
-  | "EXENTO";
+export type CondicionIva = "CONSUMIDOR_FINAL" | "RESPONSABLE_INSCRIPTO" | "MONOTRIBUTO" | "EXENTO";
 
 export interface Cliente {
   readonly id: string;
@@ -80,7 +76,10 @@ export class ClienteCtaCteHttp implements ClienteCtaCte {
   ) {}
 
   listar(incluirInactivos: boolean): Promise<ClienteConSaldo[]> {
-    return this.pedir<ClienteConSaldo[]>("GET", `/clientes${incluirInactivos ? "?todos=true" : ""}`);
+    return this.pedir<ClienteConSaldo[]>(
+      "GET",
+      `/clientes${incluirInactivos ? "?todos=true" : ""}`,
+    );
   }
 
   crear(datos: DatosCliente): Promise<Cliente> {

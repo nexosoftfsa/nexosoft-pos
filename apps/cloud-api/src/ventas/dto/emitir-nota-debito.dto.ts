@@ -1,4 +1,4 @@
-import { IsNumberString, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNumberString, IsString, MaxLength, MinLength } from "class-validator";
 
 /**
  * Emitir una Nota de Débito sobre un comprobante ya emitido.

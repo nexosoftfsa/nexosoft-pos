@@ -82,7 +82,7 @@ export interface ResultadoCae {
 export class ErrorCaeNoDisponible extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ErrorCaeNoDisponible';
+    this.name = "ErrorCaeNoDisponible";
   }
 }
 
@@ -94,7 +94,7 @@ export class ErrorCaeRechazado extends Error {
     readonly codigo?: string,
   ) {
     super(message);
-    this.name = 'ErrorCaeRechazado';
+    this.name = "ErrorCaeRechazado";
   }
 }
 
@@ -102,4 +102,4 @@ export interface ServicioCae {
   autorizar(solicitud: SolicitudCae): Promise<ResultadoCae>;
 }
 
-export const SERVICIO_CAE = Symbol('SERVICIO_CAE');
+export const SERVICIO_CAE = Symbol("SERVICIO_CAE");

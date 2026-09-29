@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Injectable, Logger } from "@nestjs/common";
+import { Decimal } from "@prisma/client/runtime/library";
 import {
   desglosarIvaIncluido,
   desgloseSinDiscriminar,
@@ -7,16 +7,16 @@ import {
   Money,
   type DesgloseIva,
   type TipoComprobante,
-} from '@nexosoft/domain';
+} from "@nexosoft/domain";
 
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from "../../prisma/prisma.service";
 import {
   ajustarAlTotal,
   alicuotaDeTipoIva,
   alicuotaImpresa,
   etiquetaAlicuota,
-} from './iva-de-producto';
-import { receptorArca, RECEPTOR_CONSUMIDOR_FINAL, type ReceptorArca } from './receptor-arca';
+} from "./iva-de-producto";
+import { receptorArca, RECEPTOR_CONSUMIDOR_FINAL, type ReceptorArca } from "./receptor-arca";
 
 /** Lo mínimo que hace falta de cada línea para desglosar. */
 export interface LineaDeVenta {
@@ -76,7 +76,7 @@ export class DesgloseDeVentaService {
   ): Promise<DesgloseIva> {
     const totalMoney = Money.desde(total.toFixed(2));
     // En un comprobante C no se discrimina: mandarlo discriminado es rechazo.
-    if (letraDe(tipoComprobante as TipoComprobante) === 'C') {
+    if (letraDe(tipoComprobante as TipoComprobante) === "C") {
       return desgloseSinDiscriminar(totalMoney);
     }
 

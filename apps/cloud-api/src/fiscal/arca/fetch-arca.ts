@@ -1,5 +1,5 @@
-import { Agent, request as pedirHttps } from 'node:https';
-import { URL } from 'node:url';
+import { Agent, request as pedirHttps } from "node:https";
+import { URL } from "node:url";
 
 /**
  * Cliente HTTP para ARCA, con el cifrado que su servidor de producción exige.
@@ -39,7 +39,7 @@ import { URL } from 'node:url';
  */
 
 /** Sólo intercambio de claves efímero por curva elíptica: rápido y con forward secrecy. */
-const CIFRADOS = 'ECDHE';
+const CIFRADOS = "ECDHE";
 
 const agente = new Agent({
   ciphers: CIFRADOS,
@@ -82,37 +82,37 @@ export const fetchArca: FetchLike = (url, init = {}) =>
       {
         agent: agente,
         hostname: destino.hostname,
-        port: destino.port === '' ? 443 : Number(destino.port),
+        port: destino.port === "" ? 443 : Number(destino.port),
         path: `${destino.pathname}${destino.search}`,
-        method: init.method ?? 'GET',
+        method: init.method ?? "GET",
         headers: init.headers ?? {},
       },
       (respuesta) => {
         const trozos: Buffer[] = [];
-        respuesta.on('data', (t: Buffer) => trozos.push(t));
-        respuesta.on('end', () => {
+        respuesta.on("data", (t: Buffer) => trozos.push(t));
+        respuesta.on("end", () => {
           const estado = respuesta.statusCode ?? 0;
-          const cuerpo = Buffer.concat(trozos).toString('utf8');
+          const cuerpo = Buffer.concat(trozos).toString("utf8");
           resolver({
             ok: estado >= 200 && estado < 300,
             status: estado,
             text: () => Promise.resolve(cuerpo),
           });
         });
-        respuesta.on('error', rechazar);
+        respuesta.on("error", rechazar);
       },
     );
 
     // Se aborta con el mismo motivo que traiga la señal: así el que llama
     // puede distinguir un corte por tiempo de un fallo de red.
     const alAbortar = () => pedido.destroy(signal?.reason as Error);
-    signal?.addEventListener('abort', alAbortar, { once: true });
+    signal?.addEventListener("abort", alAbortar, { once: true });
 
-    pedido.on('error', (e) => {
-      signal?.removeEventListener('abort', alAbortar);
+    pedido.on("error", (e) => {
+      signal?.removeEventListener("abort", alAbortar);
       rechazar(e);
     });
-    pedido.on('close', () => signal?.removeEventListener('abort', alAbortar));
+    pedido.on("close", () => signal?.removeEventListener("abort", alAbortar));
 
     if (init.body !== undefined) pedido.write(init.body);
     pedido.end();

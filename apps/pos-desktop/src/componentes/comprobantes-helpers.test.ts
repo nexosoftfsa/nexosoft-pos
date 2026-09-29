@@ -411,7 +411,12 @@ describe("datosTicketDeComprobante (Fase 10.4)", () => {
   });
 
   it("un TicketNoFiscal queda marcado esFiscal:false y sin CAE", () => {
-    const c = comprobante({ tipoComprobante: "TicketNoFiscal", cae: null, caeFechaVto: null, numeroComprobante: null });
+    const c = comprobante({
+      tipoComprobante: "TicketNoFiscal",
+      cae: null,
+      caeFechaVto: null,
+      numeroComprobante: null,
+    });
     const datos = datosTicketDeComprobante(c, CONFIG);
     expect(datos.esFiscal).toBe(false);
     expect(datos.cae).toBeUndefined();

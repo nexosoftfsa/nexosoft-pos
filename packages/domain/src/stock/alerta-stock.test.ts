@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { Cantidad } from "../comun/cantidad.js";
-import {
-  evaluarAlertasStockMinimo,
-  evaluarAlertasVencimiento,
-} from "./alerta-stock.js";
+import { evaluarAlertasStockMinimo, evaluarAlertasVencimiento } from "./alerta-stock.js";
 import { crearExistencia } from "./existencia.js";
 import { crearLote, type Lote } from "./lote.js";
 

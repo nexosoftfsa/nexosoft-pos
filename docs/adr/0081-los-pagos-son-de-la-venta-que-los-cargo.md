@@ -7,13 +7,13 @@ Estado: aceptado
 
 El asistente de cobro se cerraba con Esc **dejando los pagos cargados**, a
 propósito: la idea era poder retomar el cobro donde se había dejado. El
-comentario lo decía con todas las letras — *"Cierra el asistente sin tocar los
-pagos ya agregados"*.
+comentario lo decía con todas las letras — _"Cierra el asistente sin tocar los
+pagos ya agregados"_.
 
 En la prueba del 18/9/2026 Sebastián encontró a dónde lleva eso:
 
 > "Eliminé el producto del carrito y cargué otro y le di el primer Enter y me
-> salió directamente al cartel de *cobro completo* pero esta vez con un vuelto.
+> salió directamente al cartel de _cobro completo_ pero esta vez con un vuelto.
 > Se quedó pegado los importes que cargué anteriormente."
 
 Un producto de $ 1.600 con los $ 1.650 de la venta anterior todavía cargados:

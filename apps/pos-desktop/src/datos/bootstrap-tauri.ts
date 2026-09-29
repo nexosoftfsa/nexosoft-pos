@@ -149,14 +149,21 @@ export async function leerConfig(ejecutor: EjecutorSql): Promise<ConfiguracionCo
  * Es independiente del catálogo: hace falta SIEMPRE (también con pull del servidor).
  */
 export async function asegurarMaestros(ejecutor: EjecutorSql): Promise<void> {
-  const filas = await ejecutor.consultar<{ n: number }>("SELECT COUNT(*) AS n FROM comercio_config");
+  const filas = await ejecutor.consultar<{ n: number }>(
+    "SELECT COUNT(*) AS n FROM comercio_config",
+  );
   if (Number(filas[0]?.n ?? 0) === 0) {
     await guardarConfig(ejecutor, CONFIG_DEMO);
   }
   await guardarDeposito(ejecutor, crearDeposito({ id: DEPOSITO, nombre: "Depósito principal" }));
   await guardarLista(
     ejecutor,
-    crearListaDePrecios({ id: LISTA, nombre: "Minorista", tipo: TipoLista.Minorista, predeterminada: true }),
+    crearListaDePrecios({
+      id: LISTA,
+      nombre: "Minorista",
+      tipo: TipoLista.Minorista,
+      predeterminada: true,
+    }),
   );
 }
 
@@ -193,7 +200,9 @@ export async function leerCatalogo(
   repos: RepositoriosSqlite,
   config: ConfiguracionComercio,
 ): Promise<ProductoCatalogo[]> {
-  const filas = await ejecutor.consultar("SELECT * FROM articulo WHERE activo = 1 ORDER BY descripcion");
+  const filas = await ejecutor.consultar(
+    "SELECT * FROM articulo WHERE activo = 1 ORDER BY descripcion",
+  );
   const catalogo: ProductoCatalogo[] = [];
   for (const fila of filas) {
     const articulo = filaAArticulo(fila);
@@ -291,7 +300,9 @@ async function intentarPullCatalogo(
 }
 
 /** Arma el `EntornoPos` de producción sobre SQLite + sync HTTP. */
-export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}): Promise<EntornoPos> {
+export async function crearEntornoPosTauri(
+  opciones: OpcionesEntornoTauri = {},
+): Promise<EntornoPos> {
   const ejecutor = opciones.ejecutor ?? (await abrirBaseTauri());
   const repos = crearRepositoriosSqlite(ejecutor);
   await asegurarMaestros(ejecutor);
@@ -304,7 +315,8 @@ export async function crearEntornoPosTauri(opciones: OpcionesEntornoTauri = {}):
 
   // Con sesión: pull del catálogo del servidor (fuente de verdad). Sin sesión o
   // sin red: fallback al catálogo demo si la base está vacía.
-  const pulled = obtenerToken() !== null && (await intentarPullCatalogo(ejecutor, config, clienteCatalogo));
+  const pulled =
+    obtenerToken() !== null && (await intentarPullCatalogo(ejecutor, config, clienteCatalogo));
   if (!pulled) {
     await sembrarCatalogoDemoSiVacio(ejecutor, repos);
   }

@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/library';
-import type { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import type { RegistrarMovimientoDto } from './dto/registrar-movimiento.dto';
-import { asignarFefo } from './fefo';
-import { mapearFilaStockCruda, type FilaStockCruda } from './importar-stock-lote';
-import { RevertirDryRun, type ResultadoFilaImportacion } from '../common/importacion-lote';
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import { Decimal } from "@prisma/client/runtime/library";
+import type { Prisma } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import type { RegistrarMovimientoDto } from "./dto/registrar-movimiento.dto";
+import { asignarFefo } from "./fefo";
+import { mapearFilaStockCruda, type FilaStockCruda } from "./importar-stock-lote";
+import { RevertirDryRun, type ResultadoFilaImportacion } from "../common/importacion-lote";
 
 type Tx = Prisma.TransactionClient;
 
@@ -59,19 +59,19 @@ export class StockService {
     if (!producto) throw new NotFoundException(`Producto ${dto.productoId} no encontrado`);
 
     const cantidad = new Decimal(dto.cantidad);
-    if (cantidad.lte(0)) throw new BadRequestException('La cantidad debe ser mayor a cero');
+    if (cantidad.lte(0)) throw new BadRequestException("La cantidad debe ser mayor a cero");
 
     // Productos con lote (Fase 8.2): la ENTRADA abre un lote con vencimiento; la
     // SALIDA consume lotes por FEFO. El AJUSTE se registra a nivel producto.
-    if (producto.requiereLote && dto.tipo === 'ENTRADA') {
+    if (producto.requiereLote && dto.tipo === "ENTRADA") {
       return this.registrarEntradaConLote(sucursalId, dto, cantidad);
     }
-    if (producto.requiereLote && dto.tipo === 'SALIDA') {
+    if (producto.requiereLote && dto.tipo === "SALIDA") {
       return this.registrarSalidaFefo(sucursalId, dto, cantidad);
     }
 
     // Para salidas/ventas verificar que haya stock suficiente
-    if (dto.tipo === 'SALIDA' || dto.tipo === 'VENTA') {
+    if (dto.tipo === "SALIDA" || dto.tipo === "VENTA") {
       const saldoActual = await this.calcularSaldo(dto.productoId, sucursalId);
       if (saldoActual.lt(cantidad)) {
         throw new BadRequestException(
@@ -99,7 +99,7 @@ export class StockService {
   ) {
     if (!dto.fechaVencimiento) {
       throw new BadRequestException(
-        'La ENTRADA de un producto con lote necesita una fecha de vencimiento.',
+        "La ENTRADA de un producto con lote necesita una fecha de vencimiento.",
       );
     }
     const lote = await this.prisma.lote.create({
@@ -112,7 +112,7 @@ export class StockService {
     });
     return this.prisma.movimientoStock.create({
       data: {
-        tipo: 'ENTRADA',
+        tipo: "ENTRADA",
         cantidad,
         motivo: dto.motivo ?? null,
         productoId: dto.productoId,
@@ -140,7 +140,7 @@ export class StockService {
       asignaciones.map((a) =>
         this.prisma.movimientoStock.create({
           data: {
-            tipo: 'SALIDA',
+            tipo: "SALIDA",
             cantidad: a.cantidad,
             motivo: dto.motivo ?? null,
             productoId: dto.productoId,
@@ -212,9 +212,7 @@ export class StockService {
         });
       }
     }
-    return alertas.sort(
-      (a, b) => a.fechaVencimiento.getTime() - b.fechaVencimiento.getTime(),
-    );
+    return alertas.sort((a, b) => a.fechaVencimiento.getTime() - b.fechaVencimiento.getTime());
   }
 
   /** Saldo de cada lote de un producto (ENTRADA/AJUSTE suman, SALIDA/VENTA restan). */
@@ -235,8 +233,7 @@ export class StockService {
       if (m.loteId === null) continue;
       const actual = saldoPorLote.get(m.loteId);
       if (actual === undefined) continue;
-      const delta =
-        m.tipo === 'ENTRADA' || m.tipo === 'AJUSTE' ? m.cantidad : m.cantidad.neg();
+      const delta = m.tipo === "ENTRADA" || m.tipo === "AJUSTE" ? m.cantidad : m.cantidad.neg();
       saldoPorLote.set(m.loteId, actual.add(delta));
     }
     return lotes.map((l) => ({
@@ -256,7 +253,7 @@ export class StockService {
 
     return this.prisma.movimientoStock.findMany({
       where: { productoId, sucursalId },
-      orderBy: { creadoEn: 'desc' },
+      orderBy: { creadoEn: "desc" },
       include: { producto: { select: { id: true, nombre: true, codigo: true } } },
     });
   }
@@ -290,7 +287,7 @@ export class StockService {
           if (!producto) {
             resultados.push({
               fila: numeroFila,
-              resultado: 'error',
+              resultado: "error",
               mensaje: `No existe ningún producto con código ${carga.codigo} en esta sucursal.`,
             });
             continue;
@@ -301,7 +298,7 @@ export class StockService {
             if (!carga.fechaVencimiento) {
               resultados.push({
                 fila: numeroFila,
-                resultado: 'error',
+                resultado: "error",
                 mensaje: `El producto ${carga.codigo} es perecedero: necesita "Fecha de vencimiento".`,
               });
               continue;
@@ -310,7 +307,7 @@ export class StockService {
             if (Number.isNaN(fechaVencimiento.getTime())) {
               resultados.push({
                 fila: numeroFila,
-                resultado: 'error',
+                resultado: "error",
                 mensaje: `Fecha de vencimiento inválida para el código ${carga.codigo}: "${carga.fechaVencimiento}"`,
               });
               continue;
@@ -323,7 +320,7 @@ export class StockService {
 
           await tx.movimientoStock.create({
             data: {
-              tipo: 'ENTRADA',
+              tipo: "ENTRADA",
               cantidad: carga.cantidad,
               motivo: carga.motivo,
               productoId: producto.id,
@@ -331,9 +328,13 @@ export class StockService {
               loteId,
             },
           });
-          resultados.push({ fila: numeroFila, resultado: 'creada' });
+          resultados.push({ fila: numeroFila, resultado: "creada" });
         } catch (error) {
-          resultados.push({ fila: numeroFila, resultado: 'error', mensaje: (error as Error).message });
+          resultados.push({
+            fila: numeroFila,
+            resultado: "error",
+            mensaje: (error as Error).message,
+          });
         }
       }
       return resultados;
@@ -365,7 +366,7 @@ export class StockService {
     });
 
     return movimientos.reduce((acc, mov) => {
-      if (mov.tipo === 'ENTRADA' || mov.tipo === 'AJUSTE') {
+      if (mov.tipo === "ENTRADA" || mov.tipo === "AJUSTE") {
         return acc.add(mov.cantidad);
       }
       return acc.sub(mov.cantidad);

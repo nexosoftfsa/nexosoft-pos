@@ -52,13 +52,23 @@ describe("validarMovimiento", () => {
 
   it("acepta un formulario correcto (con coma decimal)", () => {
     expect(
-      validarMovimiento({ ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "ENTRADA", cantidad: "12,5" }),
+      validarMovimiento({
+        ...FORM_MOVIMIENTO_VACIO,
+        productoId: "x",
+        tipo: "ENTRADA",
+        cantidad: "12,5",
+      }),
     ).toEqual([]);
   });
 
   it("rechaza cantidad cero o negativa", () => {
     expect(
-      validarMovimiento({ ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "SALIDA", cantidad: "0" }),
+      validarMovimiento({
+        ...FORM_MOVIMIENTO_VACIO,
+        productoId: "x",
+        tipo: "SALIDA",
+        cantidad: "0",
+      }),
     ).not.toEqual([]);
   });
 
@@ -90,12 +100,23 @@ describe("pideLote", () => {
 
 describe("aDatosMovimiento", () => {
   it("normaliza la cantidad y omite el motivo vacío", () => {
-    const datos = aDatosMovimiento({ ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "ENTRADA", cantidad: "1.250,5" });
+    const datos = aDatosMovimiento({
+      ...FORM_MOVIMIENTO_VACIO,
+      productoId: "x",
+      tipo: "ENTRADA",
+      cantidad: "1.250,5",
+    });
     expect(datos).toEqual({ productoId: "x", tipo: "ENTRADA", cantidad: "1250.5" });
   });
 
   it("incluye el motivo si viene", () => {
-    const datos = aDatosMovimiento({ ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "SALIDA", cantidad: "2", motivo: "Rotura" });
+    const datos = aDatosMovimiento({
+      ...FORM_MOVIMIENTO_VACIO,
+      productoId: "x",
+      tipo: "SALIDA",
+      cantidad: "2",
+      motivo: "Rotura",
+    });
     expect(datos.motivo).toBe("Rotura");
   });
 
@@ -117,7 +138,13 @@ describe("aDatosMovimiento", () => {
 
   it("NO manda datos de lote si el producto no es perecedero", () => {
     const datos = aDatosMovimiento(
-      { ...FORM_MOVIMIENTO_VACIO, productoId: "x", tipo: "ENTRADA", cantidad: "10", fechaVencimiento: "2026-09-01" },
+      {
+        ...FORM_MOVIMIENTO_VACIO,
+        productoId: "x",
+        tipo: "ENTRADA",
+        cantidad: "10",
+        fechaVencimiento: "2026-09-01",
+      },
       false,
     );
     expect(datos.fechaVencimiento).toBeUndefined();

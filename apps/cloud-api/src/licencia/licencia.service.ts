@@ -1,11 +1,11 @@
-import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { ConfigService } from '@nestjs/config';
-import { evaluarLicencia, type EstadoLicencia, type Licencia } from '@nexosoft/licencias';
-import { PrismaService } from '../prisma/prisma.service';
-import { CLAVE_PUBLICA_LICENCIAS } from './clave-publica';
-import { LicenciasHttp, URL_LICENCIAS_DEFECTO } from './licencias-http';
-import { verificarToken } from './verificar-firma';
+import { Injectable, Logger, type OnModuleInit } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { ConfigService } from "@nestjs/config";
+import { evaluarLicencia, type EstadoLicencia, type Licencia } from "@nexosoft/licencias";
+import { PrismaService } from "../prisma/prisma.service";
+import { CLAVE_PUBLICA_LICENCIAS } from "./clave-publica";
+import { LicenciasHttp, URL_LICENCIAS_DEFECTO } from "./licencias-http";
+import { verificarToken } from "./verificar-firma";
 
 /** Id fijo de la única fila de configuración (mismo patrón que ComercioService). */
 const ID_CONFIG = 1;
@@ -67,20 +67,20 @@ export class LicenciaService implements OnModuleInit {
    */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async renovar(): Promise<void> {
-    const comercioId = this.comercioId ?? this.config.get<string>('LICENCIAS_COMERCIO_ID') ?? null;
-    if (comercioId === null || comercioId === '') {
+    const comercioId = this.comercioId ?? this.config.get<string>("LICENCIAS_COMERCIO_ID") ?? null;
+    if (comercioId === null || comercioId === "") {
       // Instalación sin suscripción configurada todavía: no se controla nada.
       return;
     }
     const proveedor = new LicenciasHttp(
-      this.config.get<string>('LICENCIAS_URL') ?? URL_LICENCIAS_DEFECTO,
+      this.config.get<string>("LICENCIAS_URL") ?? URL_LICENCIAS_DEFECTO,
       this.clavePublica(),
-      this.config.get<string>('VERSION') ?? 'desconocida',
+      this.config.get<string>("VERSION") ?? "desconocida",
     );
 
     const obtenida = await proveedor.obtenerConToken(comercioId);
     if (obtenida === null) {
-      this.log.warn('No se pudo renovar la licencia; se sigue con la última conocida.');
+      this.log.warn("No se pudo renovar la licencia; se sigue con la última conocida.");
       return;
     }
     this.licencia = obtenida.licencia;
@@ -94,8 +94,8 @@ export class LicenciaService implements OnModuleInit {
    * puede pisar por entorno para pruebas o para una rotación de emergencia.
    */
   private clavePublica(): string {
-    const delEntorno = (this.config.get<string>('LICENCIAS_CLAVE_PUBLICA') ?? '').trim();
-    return delEntorno !== '' ? delEntorno : CLAVE_PUBLICA_LICENCIAS;
+    const delEntorno = (this.config.get<string>("LICENCIAS_CLAVE_PUBLICA") ?? "").trim();
+    return delEntorno !== "" ? delEntorno : CLAVE_PUBLICA_LICENCIAS;
   }
 
   /** Lee de la base la última licencia recibida y la deja lista para usar. */
@@ -115,7 +115,7 @@ export class LicenciaService implements OnModuleInit {
     // editado para desbloquearse.
     this.licencia = verificarToken(token, this.clavePublica());
     if (this.licencia === null) {
-      this.log.warn('La licencia guardada no pasa la verificación; se ignora.');
+      this.log.warn("La licencia guardada no pasa la verificación; se ignora.");
     }
   }
 

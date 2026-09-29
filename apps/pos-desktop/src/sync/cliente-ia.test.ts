@@ -47,7 +47,12 @@ describe("interpretar", () => {
 describe("AsistenteIAMock", () => {
   it("responde ventas del día usando el cliente de reportes", async () => {
     const reportes = {
-      resumen: async () => ({ cantidadVentas: 3, totalVendido: "12000", totalDescuentos: "0", ticketPromedio: "4000" }),
+      resumen: async () => ({
+        cantidadVentas: 3,
+        totalVendido: "12000",
+        totalDescuentos: "0",
+        ticketPromedio: "4000",
+      }),
     };
     const asistente = new AsistenteIAMock({ reportes: reportes as never });
     const r = await asistente.preguntar("¿cuánto vendí hoy?");
@@ -84,7 +89,11 @@ describe("AsistenteIAMock", () => {
   });
 
   it("si falla la consulta de red (ventas), responde 'no hay datos aún' en vez del error crudo", async () => {
-    const reportes = { resumen: async () => { throw new TypeError("Failed to fetch"); } };
+    const reportes = {
+      resumen: async () => {
+        throw new TypeError("Failed to fetch");
+      },
+    };
     const asistente = new AsistenteIAMock({ reportes: reportes as never });
     const r = await asistente.preguntar("¿cuánto vendí hoy?");
     expect(r.toLowerCase()).toContain("no hay datos aún");
@@ -93,16 +102,28 @@ describe("AsistenteIAMock", () => {
 
   it("si falla la consulta de red (vencimientos/stock), responde 'no hay datos aún'", async () => {
     const stock = {
-      vencimientos: async () => { throw new TypeError("Failed to fetch"); },
-      saldos: async () => { throw new TypeError("Failed to fetch"); },
+      vencimientos: async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      saldos: async () => {
+        throw new TypeError("Failed to fetch");
+      },
     };
     const asistente = new AsistenteIAMock({ stock: stock as never });
-    expect((await asistente.preguntar("¿qué está por vencer?")).toLowerCase()).toContain("no hay datos aún");
-    expect((await asistente.preguntar("¿qué stock está bajo?")).toLowerCase()).toContain("no hay datos aún");
+    expect((await asistente.preguntar("¿qué está por vencer?")).toLowerCase()).toContain(
+      "no hay datos aún",
+    );
+    expect((await asistente.preguntar("¿qué stock está bajo?")).toLowerCase()).toContain(
+      "no hay datos aún",
+    );
   });
 
   it("si falla la consulta de red (deudores), responde 'no hay datos aún'", async () => {
-    const ctacte = { listar: async () => { throw new TypeError("Failed to fetch"); } };
+    const ctacte = {
+      listar: async () => {
+        throw new TypeError("Failed to fetch");
+      },
+    };
     const asistente = new AsistenteIAMock({ ctacte: ctacte as never });
     const r = await asistente.preguntar("¿quién me debe?");
     expect(r.toLowerCase()).toContain("no hay datos aún");
@@ -123,14 +144,20 @@ describe("AsistenteIAHttp", () => {
     expect(r).toBe("El CAE es...");
     const [url, opciones] = fetchMock.mock.calls[0]!;
     expect(url).toBe("http://server/api/v1/asistente/preguntar");
-    expect((opciones as { headers: Record<string, string> }).headers.Authorization).toBe("Bearer tok-123");
+    expect((opciones as { headers: Record<string, string> }).headers.Authorization).toBe(
+      "Bearer tok-123",
+    );
     vi.unstubAllGlobals();
   });
 
   it("lanza con el mensaje del servidor si la respuesta no es ok", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, status: 503, json: async () => ({ message: "sin GEMINI_API_KEY" }) }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+        json: async () => ({ message: "sin GEMINI_API_KEY" }),
+      }),
     );
     const cliente = new AsistenteIAHttp("http://server", () => null);
     await expect(cliente.preguntar("hola")).rejects.toThrow("sin GEMINI_API_KEY");

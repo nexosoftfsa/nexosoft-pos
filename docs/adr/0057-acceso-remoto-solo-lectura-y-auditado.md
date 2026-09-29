@@ -17,8 +17,8 @@ la fuerza bruta. Aun así, quedan dos huecos incómodos:
 
 1. **Si una credencial se filtra, el daño es total.** Un token de ADMIN
    robado permite, desde cualquier lugar del mundo, modificar catálogo,
-   usuarios y ventas. Y algunas *lecturas* son igual de sensibles: `GET
-   /usuarios/:id/credencial` devuelve la credencial de empleado (ADR-0051),
+   usuarios y ventas. Y algunas _lecturas_ son igual de sensibles: `GET
+/usuarios/:id/credencial` devuelve la credencial de empleado (ADR-0051),
    que sirve para iniciar sesión.
 2. **No queda rastro.** El dueño no tiene forma de saber si alguien entró a su
    panel desde afuera, ni cuándo.
@@ -54,12 +54,12 @@ autenticación**: lo que no está en la lista de `rutas-remotas.ts` se rechaza
 con 403 sin siquiera mirar el token. Hoy la lista es exactamente lo que
 consume `admin-web`:
 
-| | |
-| --- | --- |
-| `POST /auth/login` | el único POST que pasa |
-| `GET /health` | diagnóstico y la comprobación de alcanzabilidad |
-| `GET /comercio/logo` | branding del panel |
-| `GET /reportes/**` | todos los reportes, incluido el libro de ventas |
+|                      |                                                 |
+| -------------------- | ----------------------------------------------- |
+| `POST /auth/login`   | el único POST que pasa                          |
+| `GET /health`        | diagnóstico y la comprobación de alcanzabilidad |
+| `GET /comercio/logo` | branding del panel                              |
+| `GET /reportes/**`   | todos los reportes, incluido el libro de ventas |
 
 **Denegar por defecto** es deliberado: agregar un endpoint nuevo al servidor no
 abre un agujero remoto sin que nadie se entere. El costo es el simétrico —
@@ -67,8 +67,8 @@ agregar una llamada nueva a `admin-web` sin tocar la lista rompe el panel
 **sólo desde afuera del local**, que es el peor lugar para descubrirlo. Por eso
 los tests enumeran uno por uno los endpoints del panel.
 
-Con esto, el daño posible de una credencial robada baja de *"control total del
-comercio"* a *"vio los reportes"*.
+Con esto, el daño posible de una credencial robada baja de _"control total del
+comercio"_ a _"vio los reportes"_.
 
 ### 3. El `Host` como red de seguridad para instalaciones viejas
 
@@ -85,7 +85,7 @@ permisos.
 
 Un login que entra por el túnel deja un `RegistroAuditoria` con acción
 `LOGIN_REMOTO`, el usuario y la IP real (que ADR-0052 ya resuelve con `trust
-proxy`). Es *best-effort*: si la auditoría falla, el usuario entra igual — no
+proxy`). Es _best-effort_: si la auditoría falla, el usuario entra igual — no
 vale dejar a alguien afuera de su panel porque no se pudo escribir un registro.
 
 Los intentos **bloqueados** quedan como `WARN` en el log del servidor, no en
@@ -95,6 +95,7 @@ asociarles, y `RegistroAuditoria` los exige.
 ## Consecuencias
 
 ### Positivas
+
 - Una credencial robada ya no sirve para hacer daño desde afuera: sólo para
   mirar reportes que el dueño de todos modos quería ver desde el celular.
 - Las lecturas peligrosas (credenciales de empleado, respaldos, el catálogo
@@ -107,6 +108,7 @@ asociarles, y `RegistroAuditoria` los exige.
   configuración.
 
 ### Negativas / costos
+
 - **La lista blanca hay que mantenerla.** Una función nueva del panel que se
   olvide de actualizarla funciona en el local y falla desde afuera. Mitigado
   con tests que enumeran los endpoints del panel, pero es acoplamiento real
@@ -124,7 +126,7 @@ asociarles, y `RegistroAuditoria` los exige.
 ## Alternativas consideradas
 
 - **Distinguir el origen sólo por el header `Host`** — mucho más simple, sin
-  segundo listener. Descartada como señal *principal* porque es un dato que el
+  segundo listener. Descartada como señal _principal_ porque es un dato que el
   cliente controla; quedó como red de seguridad secundaria (punto 3).
 - **Permitir todos los `GET` y bloquear sólo las escrituras** — más cómodo y
   sin acoplamiento con `admin-web`, pero deja expuestas lecturas que no

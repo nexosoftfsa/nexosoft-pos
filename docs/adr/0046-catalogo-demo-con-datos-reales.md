@@ -38,7 +38,7 @@ misma pantalla en vez de recortar el catálogo a una selección chica.
    el caso de los lotes, con una excepción real: `ClienteStockSimulado`
    busca el producto por id y tira si no lo encuentra).
 3. **El rubro real viaja hasta `Articulo.rubroId`** (`crearArticulo(...,
-   rubroId: rubroASlug(d.rubro))`, nueva función `rubroASlug` en
+rubroId: rubroASlug(d.rubro))`, nueva función `rubroASlug` en
    `bootstrap.ts`) y `cliente-catalogo-admin-simulado.ts` deriva sus
    categorías DINÁMICAMENTE de los rubros presentes en `DEFS`, en vez de un
    mapa estático de 3 categorías por id de producto (que solo cubría los 8

@@ -1,18 +1,10 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  Request,
-  Res,
-  StreamableFile,
-} from '@nestjs/common';
-import { RolUsuario } from '@prisma/client';
-import { ReportesService } from './reportes.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { RangoFechasDto, TopProductosDto, StockBajoDto } from './dto/rango-fechas.dto';
+import { Controller, Get, Query, UseGuards, Request, Res, StreamableFile } from "@nestjs/common";
+import { RolUsuario } from "@prisma/client";
+import { ReportesService } from "./reportes.service";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
+import { RangoFechasDto, TopProductosDto, StockBajoDto } from "./dto/rango-fechas.dto";
 
 interface UsuarioJwt {
   id: string;
@@ -26,69 +18,64 @@ interface UsuarioJwt {
  */
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RolUsuario.ADMIN, RolUsuario.SUPERVISOR)
-@Controller('reportes')
+@Controller("reportes")
 export class ReportesController {
   constructor(private readonly reportesService: ReportesService) {}
 
-  @Get('ventas/resumen')
+  @Get("ventas/resumen")
   resumenVentas(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
     return this.reportesService.resumenVentas(req.user.sucursalId, rango);
   }
 
-  @Get('ventas/serie')
+  @Get("ventas/serie")
   serieDiaria(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
     return this.reportesService.serieDiaria(req.user.sucursalId, rango);
   }
 
-  @Get('ventas/por-medio-pago')
+  @Get("ventas/por-medio-pago")
   porMedioPago(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
     return this.reportesService.porMedioPago(req.user.sucursalId, rango);
   }
 
-  @Get('ventas/por-rubro')
+  @Get("ventas/por-rubro")
   porRubro(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
     return this.reportesService.porRubro(req.user.sucursalId, rango);
   }
 
-  @Get('ventas/por-terminal')
+  @Get("ventas/por-terminal")
   porTerminal(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
     return this.reportesService.porTerminal(req.user.sucursalId, rango);
   }
 
-  @Get('ventas/rentabilidad')
+  @Get("ventas/rentabilidad")
   rentabilidad(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
     return this.reportesService.rentabilidad(req.user.sucursalId, rango);
   }
 
-  @Get('ventas/detalle')
+  @Get("ventas/detalle")
   detalleVentas(@Request() req: { user: UsuarioJwt }, @Query() rango: RangoFechasDto) {
     return this.reportesService.detalleVentas(req.user.sucursalId, rango);
   }
 
-  @Get('productos/top')
+  @Get("productos/top")
   topProductos(@Request() req: { user: UsuarioJwt }, @Query() consulta: TopProductosDto) {
-    return this.reportesService.topProductos(
-      req.user.sucursalId,
-      consulta,
-      consulta.limite,
-    );
+    return this.reportesService.topProductos(req.user.sucursalId, consulta, consulta.limite);
   }
 
-  @Get('stock/bajo')
+  @Get("stock/bajo")
   stockBajo(@Request() req: { user: UsuarioJwt }, @Query() consulta: StockBajoDto) {
     return this.reportesService.stockBajo(req.user.sucursalId, consulta.umbral);
   }
 
   /** Descarga el libro de ventas Excel (el que viaja a la nube propia del cliente). */
-  @Get('libro-ventas')
+  @Get("libro-ventas")
   async libroVentas(
     @Res({ passthrough: true }) res: { set: (headers: Record<string, string>) => void },
   ): Promise<StreamableFile> {
     const contenido = await this.reportesService.abrirLibroDeVentas();
     res.set({
-      'Content-Type':
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': 'attachment; filename="ventas.xlsx"',
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": 'attachment; filename="ventas.xlsx"',
     });
     return new StreamableFile(contenido);
   }

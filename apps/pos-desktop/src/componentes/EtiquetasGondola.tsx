@@ -10,7 +10,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Money } from "@nexosoft/domain";
 import type { LectorDeBarras } from "@nexosoft/hardware";
 
-import { ErrorCatalogoAdmin, type ClienteCatalogoAdmin, type ProductoAdmin } from "../sync/cliente-catalogo-admin";
+import {
+  ErrorCatalogoAdmin,
+  type ClienteCatalogoAdmin,
+  type ProductoAdmin,
+} from "../sync/cliente-catalogo-admin";
 import { pesos } from "../formato";
 import { descargarBlob } from "../descargas";
 import { armarEtiquetas, filtrarProductos, rubrosDisponibles } from "./etiquetas-gondola-helpers";
@@ -69,9 +73,15 @@ export function EtiquetasGondola({
     };
   }, [cliente]);
 
-  const filtrados = useMemo(() => filtrarProductos(productos, busqueda, rubro), [productos, busqueda, rubro]);
+  const filtrados = useMemo(
+    () => filtrarProductos(productos, busqueda, rubro),
+    [productos, busqueda, rubro],
+  );
   const rubros = useMemo(() => rubrosDisponibles(productos), [productos]);
-  const totalEtiquetas = useMemo(() => [...seleccion.values()].reduce((a, n) => a + n, 0), [seleccion]);
+  const totalEtiquetas = useMemo(
+    () => [...seleccion.values()].reduce((a, n) => a + n, 0),
+    [seleccion],
+  );
 
   const alternar = useCallback((id: string) => {
     setSeleccion((prev) => {
@@ -138,7 +148,11 @@ export function EtiquetasGondola({
 
       <div className="toolbar">
         <span className="seg">
-          <button type="button" className={modo === "buscar" ? "on" : ""} onClick={() => setModo("buscar")}>
+          <button
+            type="button"
+            className={modo === "buscar" ? "on" : ""}
+            onClick={() => setModo("buscar")}
+          >
             Buscar
           </button>
           <button
@@ -177,7 +191,11 @@ export function EtiquetasGondola({
             Seleccionar los {filtrados.length} filtrados
           </button>
         )}
-        <button type="button" onClick={() => setSeleccion(new Map())} disabled={seleccion.size === 0}>
+        <button
+          type="button"
+          onClick={() => setSeleccion(new Map())}
+          disabled={seleccion.size === 0}
+        >
           Vaciar selección
         </button>
       </div>
@@ -227,8 +245,8 @@ export function EtiquetasGondola({
           <div className="card card__pad etiquetas-escaneo">
             <div className="section-title">Escaneá los productos con el lector</div>
             <p className="muted">
-              Cada producto escaneado se suma a la lista de la derecha. Volvé a escanear el
-              mismo producto para sumar otra copia de su etiqueta.
+              Cada producto escaneado se suma a la lista de la derecha. Volvé a escanear el mismo
+              producto para sumar otra copia de su etiqueta.
             </p>
             {ultimoEscaneo !== null && (
               <div className={ultimoEscaneo.ok ? "aviso-ok" : "error"}>{ultimoEscaneo.mensaje}</div>

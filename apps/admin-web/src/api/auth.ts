@@ -26,8 +26,7 @@ export async function iniciarSesion(
   });
 
   if (!res.ok) {
-    const detalle =
-      res.status === 401 ? "Email o contraseña incorrectos" : `Error ${res.status}`;
+    const detalle = res.status === 401 ? "Email o contraseña incorrectos" : `Error ${res.status}`;
     throw new ErrorApi(detalle, res.status);
   }
   return (await res.json()) as TokensAuth;

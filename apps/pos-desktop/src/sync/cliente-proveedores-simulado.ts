@@ -86,10 +86,14 @@ export class ClienteProveedoresSimulado implements ClienteProveedores {
   }
 
   /** Fase 14.C (demo): mismas reglas esenciales que el backend (nombre obligatorio, se omite nombre+CUIT repetido). */
-  async importar(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+  async importar(
+    filas: readonly Record<string, string>[],
+    dryRun: boolean,
+  ): Promise<FilaImportacion[]> {
     const proveedores = [...this.proveedores];
     const resultados: FilaImportacion[] = [];
-    const clave = (nombre: string, cuit: string | null) => `${nombre.trim().toLowerCase()}|${cuit ?? ""}`;
+    const clave = (nombre: string, cuit: string | null) =>
+      `${nombre.trim().toLowerCase()}|${cuit ?? ""}`;
     const clavesExistentes = new Set(proveedores.map((p) => clave(p.nombre, p.cuit)));
 
     filas.forEach((cruda, i) => {
@@ -106,7 +110,11 @@ export class ClienteProveedoresSimulado implements ClienteProveedores {
       const cuit = limpiar(cruda[COL.cuit]);
       const k = clave(nombre, cuit);
       if (clavesExistentes.has(k)) {
-        resultados.push({ fila, resultado: "omitida", mensaje: `Ya existe (o se repite) el proveedor "${nombre}"` });
+        resultados.push({
+          fila,
+          resultado: "omitida",
+          mensaje: `Ya existe (o se repite) el proveedor "${nombre}"`,
+        });
         return;
       }
       proveedores.push({

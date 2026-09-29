@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import * as argon2 from 'argon2';
-import { PrismaService } from '../prisma/prisma.service';
-import { armarPayload, generarTokenPlano, parsearPayload } from './credencial-payload';
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import * as argon2 from "argon2";
+import { PrismaService } from "../prisma/prisma.service";
+import { armarPayload, generarTokenPlano, parsearPayload } from "./credencial-payload";
 
 export interface EstadoCredencial {
   readonly activa: boolean;
@@ -52,7 +52,7 @@ export class CredencialesService {
       update: { tokenHash, version, activa: true, revocadaEn: null },
     });
 
-    await this.auditar('CREDENCIAL_REGENERADA', usuarioId, sucursalId, true);
+    await this.auditar("CREDENCIAL_REGENERADA", usuarioId, sucursalId, true);
 
     return { payload: armarPayload(usuarioId, tokenPlano), version };
   }
@@ -65,7 +65,7 @@ export class CredencialesService {
       data: { activa: false, revocadaEn: new Date() },
     });
 
-    await this.auditar('CREDENCIAL_REVOCADA', usuarioId, sucursalId, true);
+    await this.auditar("CREDENCIAL_REVOCADA", usuarioId, sucursalId, true);
   }
 
   /**
@@ -76,7 +76,7 @@ export class CredencialesService {
    */
   async validar(payloadCrudo: string) {
     const parseado = parsearPayload(payloadCrudo);
-    if (!parseado) throw new UnauthorizedException('Credencial inválida');
+    if (!parseado) throw new UnauthorizedException("Credencial inválida");
 
     const { usuarioId, tokenPlano } = parseado;
     const credencial = await this.prisma.credencialAcceso.findUnique({
@@ -86,34 +86,34 @@ export class CredencialesService {
 
     if (!credencial || !credencial.activa || !credencial.usuario.activo) {
       await this.registrarFallo(usuarioId, credencial?.usuario.sucursalId);
-      throw new UnauthorizedException('Credencial inválida');
+      throw new UnauthorizedException("Credencial inválida");
     }
 
     const matchea = await argon2.verify(credencial.tokenHash, tokenPlano);
     if (!matchea) {
       await this.registrarFallo(usuarioId, credencial.usuario.sucursalId);
-      throw new UnauthorizedException('Credencial inválida');
+      throw new UnauthorizedException("Credencial inválida");
     }
 
     await this.prisma.credencialAcceso.update({
       where: { usuarioId },
       data: { ultimoUsoEn: new Date() },
     });
-    await this.auditar('LOGIN_CREDENCIAL', usuarioId, credencial.usuario.sucursalId, true);
+    await this.auditar("LOGIN_CREDENCIAL", usuarioId, credencial.usuario.sucursalId, true);
 
     return credencial.usuario;
   }
 
   private async registrarFallo(usuarioId: string, sucursalId: string | undefined) {
     if (!sucursalId) return; // sin sucursal conocida no hay dónde auditar (usuario inexistente)
-    await this.auditar('LOGIN_CREDENCIAL_FALLIDO', usuarioId, sucursalId, false);
+    await this.auditar("LOGIN_CREDENCIAL_FALLIDO", usuarioId, sucursalId, false);
   }
 
   private async exigirUsuarioDeLaSucursal(usuarioId: string, sucursalId: string) {
     const existe = await this.prisma.usuario.findFirst({
       where: { id: usuarioId, sucursalId },
     });
-    if (!existe) throw new NotFoundException('Usuario no encontrado');
+    if (!existe) throw new NotFoundException("Usuario no encontrado");
   }
 
   private async auditar(
@@ -123,7 +123,7 @@ export class CredencialesService {
     exito: boolean,
   ): Promise<void> {
     await this.prisma.registroAuditoria.create({
-      data: { accion, entidad: 'Usuario', entidadId: usuarioId, usuarioId, sucursalId, exito },
+      data: { accion, entidad: "Usuario", entidadId: usuarioId, usuarioId, sucursalId, exito },
     });
   }
 }

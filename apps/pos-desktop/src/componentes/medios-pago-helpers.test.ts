@@ -38,7 +38,9 @@ describe("validarTarjeta", () => {
   });
 
   it("exige el banco", () => {
-    expect(validarTarjeta({ ...FORM_TARJETA_VACIO, banco: "" })).toContain("El banco es obligatorio.");
+    expect(validarTarjeta({ ...FORM_TARJETA_VACIO, banco: "" })).toContain(
+      "El banco es obligatorio.",
+    );
   });
 
   it("rechaza cuotas no numéricas o menores a 1", () => {

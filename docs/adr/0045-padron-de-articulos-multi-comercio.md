@@ -79,7 +79,7 @@ de semilla reusable de la Fase 10.2 (ADR-0042), pero a mucha mayor escala y
   (repo privado, dato agregado sin exponer qué comercio puntual vendió qué a
   qué precio).
 - El script queda reproducible (`extraer-padron-dbf.py --entrada ... --salida
-  ...`) por si en el futuro aparecen más carpetas DBF para sumar.
+...`) por si en el futuro aparecen más carpetas DBF para sumar.
 - **Deuda documentada:** 33 comercios sin `articulo.dbf` quedaron afuera (sus
   `fdetalle.dbf` no se procesaron); si hace falta más cobertura, es una
   sub-fase aparte, más pesada.

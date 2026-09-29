@@ -192,7 +192,11 @@ export class SesionManager {
     try {
       const tokens = await this.auth.refresh(this.estado.refreshToken);
       await actualizarTokens(this.ejecutor, tokens.accessToken, tokens.refreshToken);
-      this.estado = { ...this.estado, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
+      this.estado = {
+        ...this.estado,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
     } catch (error) {
       if (error instanceof ErrorAuth && error.status === 401) throw error;
       // Sin red u otro error transitorio: seguimos con el token actual.

@@ -52,7 +52,10 @@ export function aDatosProveedor(f: FormProveedor): DatosProveedor {
 }
 
 /** Filtra por texto (nombre, CUIT o contacto). */
-export function filtrarProveedores(proveedores: readonly Proveedor[], busqueda: string): Proveedor[] {
+export function filtrarProveedores(
+  proveedores: readonly Proveedor[],
+  busqueda: string,
+): Proveedor[] {
   const q = busqueda.trim().toLowerCase();
   if (q === "") return [...proveedores];
   return proveedores.filter((p) =>

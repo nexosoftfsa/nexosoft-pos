@@ -20,6 +20,7 @@ resolverTipoComprobante(condicionEmisor, condicionReceptor) -> TipoComprobante
 ```
 
 Reglas iniciales:
+
 - **Emisor RI:** Factura **A** a receptor RI; Factura **B** a Consumidor Final /
   Monotributo / Exento. IVA **discriminado**.
 - **Emisor Monotributo:** Factura **C** (IVA **no** discriminado).
@@ -31,10 +32,12 @@ el `MockServicioFiscal` la respeta para que el salto a ARCA real sea de bajo rie
 ## Consecuencias
 
 ### Positivas
+
 - Un solo producto sirve a RI y Monotributo; sin builds separados.
 - Regla de comprobante centralizada y testeable (matriz emisor × receptor).
 
 ### Negativas / costos
+
 - Más caminos a cubrir con tests; las validaciones de WSFEv1 difieren por letra.
 - Hay que mantener la matriz actualizada ante cambios normativos de ARCA.
 

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEmail, IsBoolean, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsBoolean, MaxLength } from "class-validator";
 
 export class ActualizarProveedorDto {
   @IsString()

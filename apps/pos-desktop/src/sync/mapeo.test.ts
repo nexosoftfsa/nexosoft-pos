@@ -140,7 +140,9 @@ describe("construirOperacionVenta", () => {
     const op = construirOperacionVenta({
       terminalId: "caja-1",
       medioPago: "EFECTIVO",
-      items: [{ productoId: "p1", cantidad: 1, precioUnitario: "1850.00", costoUnitario: "900.00" }],
+      items: [
+        { productoId: "p1", cantidad: 1, precioUnitario: "1850.00", costoUnitario: "900.00" },
+      ],
     });
     const payload = op.payload as { items: Array<{ costoUnitario?: string }> };
     expect(payload.items[0]?.costoUnitario).toBe("900.00");
@@ -203,7 +205,9 @@ describe("resumenMedioPago", () => {
     expect(resumenMedioPago([], "EFECTIVO")).toBe("EFECTIVO");
   });
   it("un solo medio devuelve ese medio", () => {
-    expect(resumenMedioPago([{ medioPago: "EFECTIVO", monto: "100" }], "TARJETA_DEBITO")).toBe("EFECTIVO");
+    expect(resumenMedioPago([{ medioPago: "EFECTIVO", monto: "100" }], "TARJETA_DEBITO")).toBe(
+      "EFECTIVO",
+    );
   });
   it("varios medios distintos devuelve COMBINADO", () => {
     expect(

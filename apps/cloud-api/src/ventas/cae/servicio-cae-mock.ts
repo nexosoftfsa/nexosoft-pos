@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { addDays } from 'date-fns';
-import type { ServicioCae, SolicitudCae, ResultadoCae } from './servicio-cae';
+import { Injectable } from "@nestjs/common";
+import { addDays } from "date-fns";
+import type { ServicioCae, SolicitudCae, ResultadoCae } from "./servicio-cae";
 
 /**
  * Mock funcional del servicio de CAE. Asigna un CAE y número de comprobante
@@ -15,7 +15,7 @@ export class ServicioCaeMock implements ServicioCae {
     this.contador += 1;
 
     // CAE simulado: 14 dígitos como el real, pero generado localmente.
-    const cae = String(Date.now()).padStart(14, '0').slice(-14);
+    const cae = String(Date.now()).padStart(14, "0").slice(-14);
 
     return Promise.resolve({
       cae,

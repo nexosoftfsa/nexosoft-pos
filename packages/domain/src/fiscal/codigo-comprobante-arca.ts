@@ -11,10 +11,10 @@
  * node_modules — es el problema que dejó un servidor sin arrancar en la PC de
  * un cliente. Acá está resuelto: `domain` tiene build de CommonJS.
  */
-import { ErrorFiscal } from '../comun/errores.js';
-import { letraDe, type TipoComprobante } from './tipo-comprobante.js';
+import { ErrorFiscal } from "../comun/errores.js";
+import { letraDe, type TipoComprobante } from "./tipo-comprobante.js";
 
-const TABLA: Record<'A' | 'B' | 'C', { factura: number; nc: number; nd: number }> = {
+const TABLA: Record<"A" | "B" | "C", { factura: number; nc: number; nd: number }> = {
   A: { factura: 1, nc: 3, nd: 2 },
   B: { factura: 6, nc: 8, nd: 7 },
   C: { factura: 11, nc: 13, nd: 12 },
@@ -22,16 +22,16 @@ const TABLA: Record<'A' | 'B' | 'C', { factura: number; nc: number; nd: number }
 
 export function codigoComprobanteArca(tipo: TipoComprobante): number {
   const letra = letraDe(tipo);
-  const base = letra === 'A' ? 'A' : letra === 'B' ? 'B' : letra === 'C' ? 'C' : undefined;
+  const base = letra === "A" ? "A" : letra === "B" ? "B" : letra === "C" ? "C" : undefined;
   if (base === undefined) {
     throw new ErrorFiscal(
-      'SIN_CODIGO_ARCA',
+      "SIN_CODIGO_ARCA",
       `El comprobante "${tipo}" no tiene código WSFEv1 (no es fiscal).`,
     );
   }
   const fila = TABLA[base];
-  if (tipo.startsWith('NotaCredito')) return fila.nc;
-  if (tipo.startsWith('NotaDebito')) return fila.nd;
+  if (tipo.startsWith("NotaCredito")) return fila.nc;
+  if (tipo.startsWith("NotaDebito")) return fila.nd;
   return fila.factura;
 }
 

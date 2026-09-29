@@ -21,10 +21,7 @@ export type Intencion = "ventas" | "stock_bajo" | "vencimientos" | "deudores" | 
 
 /** Minúsculas y sin tildes, para no depender de cómo se tipeó la pregunta. */
 function normalizar(texto: string): string {
-  return texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
+  return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 /**
@@ -41,7 +38,8 @@ const REGLAS: ReadonlyArray<{ intencion: Intencion; patron: RegExp }> = [
   },
   {
     intencion: "deudores",
-    patron: /\b(deudor(es)?|deudas?|fiado|fiados)\b|\bme deben?\b|\bcuentas? corrientes?\b|\bpor cobrar\b/,
+    patron:
+      /\b(deudor(es)?|deudas?|fiado|fiados)\b|\bme deben?\b|\bcuentas? corrientes?\b|\bpor cobrar\b/,
   },
   {
     intencion: "stock_bajo",
@@ -49,7 +47,8 @@ const REGLAS: ReadonlyArray<{ intencion: Intencion; patron: RegExp }> = [
   },
   {
     intencion: "ventas",
-    patron: /\b(vendi|vendio|vendimos|vendiste|ventas?|factur(e|o|amos|ado|acion)?|recaud(e|o|amos|ado|acion)?)\b/,
+    patron:
+      /\b(vendi|vendio|vendimos|vendiste|ventas?|factur(e|o|amos|ado|acion)?|recaud(e|o|amos|ado|acion)?)\b/,
   },
 ];
 
@@ -67,7 +66,8 @@ const pesos = (n: number) =>
 
 /** Se muestra cuando falla la consulta al servidor (red caída, servidor apagado, etc.)
  * en vez de dejar que el error crudo (p.ej. "Failed to fetch") llegue al chat. */
-const NO_HAY_DATOS = "No hay datos aún: no pude conectarme con el servidor para consultarlos. Probá de nuevo en un momento.";
+const NO_HAY_DATOS =
+  "No hay datos aún: no pude conectarme con el servidor para consultarlos. Probá de nuevo en un momento.";
 
 /** Rango "hoy" en fecha local (YYYY-MM-DD) para los reportes. */
 function hoyIso(): string {
@@ -121,7 +121,8 @@ export class AsistenteIAMock implements AsistenteIA {
     if (!this.fuentes.stock) return "No tengo acceso al stock en este momento.";
     try {
       const v = await this.fuentes.stock.vencimientos(30);
-      if (v.length === 0) return "No hay lotes vencidos ni próximos a vencer en los próximos 30 días. 👍";
+      if (v.length === 0)
+        return "No hay lotes vencidos ni próximos a vencer en los próximos 30 días. 👍";
       const filas = v
         .slice(0, 5)
         .map((a) => {
@@ -139,9 +140,15 @@ export class AsistenteIAMock implements AsistenteIA {
     if (!this.fuentes.stock) return "No tengo acceso al stock en este momento.";
     try {
       const saldos = await this.fuentes.stock.saldos();
-      const bajos = saldos.filter((s) => Number(s.saldo) <= 5).sort((a, b) => Number(a.saldo) - Number(b.saldo));
-      if (bajos.length === 0) return "El stock está en niveles razonables, no hay artículos por debajo del mínimo.";
-      const filas = bajos.slice(0, 6).map((s) => `• ${s.producto.nombre}: quedan ${s.saldo}`).join("\n");
+      const bajos = saldos
+        .filter((s) => Number(s.saldo) <= 5)
+        .sort((a, b) => Number(a.saldo) - Number(b.saldo));
+      if (bajos.length === 0)
+        return "El stock está en niveles razonables, no hay artículos por debajo del mínimo.";
+      const filas = bajos
+        .slice(0, 6)
+        .map((s) => `• ${s.producto.nombre}: quedan ${s.saldo}`)
+        .join("\n");
       return `Conviene reponer ${bajos.length} artículo(s):\n${filas}`;
     } catch {
       return NO_HAY_DATOS;
@@ -155,9 +162,13 @@ export class AsistenteIAMock implements AsistenteIA {
       const deudores = clientes
         .filter((c) => Number(c.saldo) > 0)
         .sort((a, b) => Number(b.saldo) - Number(a.saldo));
-      if (deudores.length === 0) return "Nadie te debe: todas las cuentas corrientes están al día. 👍";
+      if (deudores.length === 0)
+        return "Nadie te debe: todas las cuentas corrientes están al día. 👍";
       const total = deudores.reduce((a, c) => a + Number(c.saldo), 0);
-      const filas = deudores.slice(0, 6).map((c) => `• ${c.nombre}: debe ${pesos(Number(c.saldo))}`).join("\n");
+      const filas = deudores
+        .slice(0, 6)
+        .map((c) => `• ${c.nombre}: debe ${pesos(Number(c.saldo))}`)
+        .join("\n");
       return `Tenés ${pesos(total)} por cobrar de ${deudores.length} cliente(s):\n${filas}`;
     } catch {
       return NO_HAY_DATOS;

@@ -59,7 +59,9 @@ export class ClienteAsistenteConfigHttp implements ClienteAsistenteConfig {
       throw new ErrorAsistenteConfig(esFalloDeRed(e) ? MENSAJE_SIN_CONEXION : String(e), 0);
     }
     if (!res.ok) {
-      const cuerpoError = (await res.json().catch(() => null)) as { message?: string | string[] } | null;
+      const cuerpoError = (await res.json().catch(() => null)) as {
+        message?: string | string[];
+      } | null;
       const m = cuerpoError?.message;
       const mensaje = Array.isArray(m) ? m.join(". ") : (m ?? `Error ${res.status} del servidor`);
       throw new ErrorAsistenteConfig(mensaje, res.status);

@@ -64,6 +64,7 @@ independiente de la contraseña del usuario.
 ## Consecuencias
 
 ### Positivas
+
 - Perder o fotografiar la credencial impresa no compromete la contraseña real
   del empleado ni su acceso fuera de esa PC.
 - Revocar/regenerar una credencial comprometida es una operación de un clic,
@@ -76,6 +77,7 @@ independiente de la contraseña del usuario.
   mecanismo de sesión nuevo.
 
 ### Negativas / costos
+
 - Un empleado que pierde la credencial física puede seguir logueándose con
   usuario/contraseña mientras un ADMIN no la revoque explícitamente: la
   revocación no es automática (no hay forma de saber "se perdió" sin que

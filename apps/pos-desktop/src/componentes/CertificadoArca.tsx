@@ -31,7 +31,8 @@ import {
 import { preguntarSiNo } from "../dialogos";
 
 const AYUDA_HOMOLOGACION = "https://wsass-homo.afip.gob.ar/wsass/portal/main.aspx";
-const AYUDA_PRODUCCION = "https://serviciosweb.afip.gob.ar/clavefiscal/adminrel/agregarCertificado.aspx";
+const AYUDA_PRODUCCION =
+  "https://serviciosweb.afip.gob.ar/clavefiscal/adminrel/agregarCertificado.aspx";
 
 /**
  * El POS se actualiza antes que el servidor (el servidor lo hace solo, de
@@ -125,7 +126,12 @@ export function CertificadoArca({
     setAviso(null);
     try {
       const cliente = new ClienteCertificadoArcaHttp(servidorUrl, () => tokenRef.current());
-      const r = await cliente.generarCsr({ cuit, razonSocial, alias: aliasSugerido(razonSocial), forzar });
+      const r = await cliente.generarCsr({
+        cuit,
+        razonSocial,
+        alias: aliasSugerido(razonSocial),
+        forzar,
+      });
       setCsr(r);
       await cargar();
     } catch (e) {
@@ -210,7 +216,10 @@ export function CertificadoArca({
 
   async function guardarCsr() {
     if (csr === null) return;
-    await descargarBlob("pedido-certificado-arca.csr", new Blob([csr.csrPem], { type: "text/plain" }));
+    await descargarBlob(
+      "pedido-certificado-arca.csr",
+      new Blob([csr.csrPem], { type: "text/plain" }),
+    );
   }
 
   async function subirCertificado(e: ChangeEvent<HTMLInputElement>) {
@@ -353,8 +362,8 @@ export function CertificadoArca({
             {estado.hayCertificadoDelOtroEntorno === true && (
               <>
                 {" "}
-                Ya hay uno cargado también para el otro entorno, así que cambiar de entorno no
-                pide ningún trámite.
+                Ya hay uno cargado también para el otro entorno, así que cambiar de entorno no pide
+                ningún trámite.
               </>
             )}
           </div>
@@ -387,11 +396,7 @@ export function CertificadoArca({
                   )}
                 </div>
               ))}
-              <button
-                type="button"
-                className="linkbtn"
-                onClick={() => void copiarDiagnostico()}
-              >
+              <button type="button" className="linkbtn" onClick={() => void copiarDiagnostico()}>
                 Copiar el resultado
               </button>
             </div>
@@ -406,8 +411,8 @@ export function CertificadoArca({
             Generar un pedido nuevo (renovación)
           </button>
           <div className="config-ayuda">
-            Esto último es sólo para <b>renovar</b> un certificado vencido. Genera una clave nueva
-            y deja inservible el certificado actual: no es lo que hay que usar para pasar a
+            Esto último es sólo para <b>renovar</b> un certificado vencido. Genera una clave nueva y
+            deja inservible el certificado actual: no es lo que hay que usar para pasar a
             producción.
           </div>
         </>
@@ -428,8 +433,8 @@ export function CertificadoArca({
           </div>
           <div className="config-ayuda">
             <b>No generes un pedido nuevo.</b> El pedido (.csr) que ya tenés sirve para los dos
-            entornos; generar otro cambia la clave privada y deja inservible el certificado del
-            otro entorno, que hoy funciona.
+            entornos; generar otro cambia la clave privada y deja inservible el certificado del otro
+            entorno, que hoy funciona.
             <ol style={{ paddingLeft: "1.1rem", margin: "0.5rem 0" }}>
               <li>
                 Entrá al portal de ARCA de {nombreEntorno}:<br />
@@ -543,7 +548,9 @@ export function CertificadoArca({
                 <div className="config-ayuda" style={{ marginTop: "0.4rem" }}>
                   Pedido generado. Guardá el archivo y subilo a ARCA en el paso 2.
                   <br />
-                  <span style={{ fontFamily: "monospace", fontSize: "0.78rem" }}>{csr.subject}</span>
+                  <span style={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
+                    {csr.subject}
+                  </span>
                 </div>
               )}
               {csr === null && estado?.tieneClave === true && (
@@ -556,8 +563,8 @@ export function CertificadoArca({
             </li>
 
             <li style={{ marginBottom: "0.6rem" }}>
-              <b>Subirlo a ARCA</b> con la Clave Fiscal del comercio, y descargar el certificado
-              que devuelve.
+              <b>Subirlo a ARCA</b> con la Clave Fiscal del comercio, y descargar el certificado que
+              devuelve.
               <div className="config-ayuda" style={{ marginTop: "0.4rem" }}>
                 Para producción: <code>{AYUDA_PRODUCCION}</code>
                 <br />

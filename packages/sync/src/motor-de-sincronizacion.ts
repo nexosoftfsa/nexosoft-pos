@@ -80,7 +80,12 @@ export class MotorDeSincronizacion {
       resultados = {};
       const msg = mensajeDeTransporte(error);
       for (const op of pendientes) {
-        resultados[op.operacionId] = { ok: false, error: msg, reintentable: true, transporte: true };
+        resultados[op.operacionId] = {
+          ok: false,
+          error: msg,
+          reintentable: true,
+          transporte: true,
+        };
       }
     }
 

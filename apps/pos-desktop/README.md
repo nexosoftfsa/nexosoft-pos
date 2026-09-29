@@ -23,10 +23,10 @@ cada cierto intervalo.
 
 Adaptadores (en `src/sync/`):
 
-| Pieza | En el navegador (dev) | En Tauri / producción |
-| --- | --- | --- |
-| `AlmacenDeOperaciones` (cola) | `AlmacenEnMemoria` | `AlmacenSqlite` (plugin-sql) |
-| `ClienteDeSync` (transporte) | `ClienteSyncSimulado` | `ClienteSyncHttp` (servidor LAN) |
+| Pieza                         | En el navegador (dev) | En Tauri / producción            |
+| ----------------------------- | --------------------- | -------------------------------- |
+| `AlmacenDeOperaciones` (cola) | `AlmacenEnMemoria`    | `AlmacenSqlite` (plugin-sql)     |
+| `ClienteDeSync` (transporte)  | `ClienteSyncSimulado` | `ClienteSyncHttp` (servidor LAN) |
 
 Ambos adaptadores reales (`AlmacenSqlite`, `ClienteSyncHttp`) están implementados
 y testeados; se enchufan al cambiar la fábrica del entorno, sin tocar la UI.
@@ -39,13 +39,13 @@ y testeados; se enchufan al cambiar la fábrica del entorno, sin tocar la UI.
 
 ## Scripts
 
-| Comando             | Descripción                              |
-| ------------------- | ---------------------------------------- |
-| `pnpm dev`          | Vite (solo UI web, datos en memoria)     |
-| `pnpm tauri:dev`    | App de escritorio en modo desarrollo     |
-| `pnpm tauri:build`  | Compila el instalador nativo             |
-| `pnpm typecheck`    | Chequeo de tipos                         |
-| `pnpm test`         | Tests (Vitest)                           |
+| Comando            | Descripción                          |
+| ------------------ | ------------------------------------ |
+| `pnpm dev`         | Vite (solo UI web, datos en memoria) |
+| `pnpm tauri:dev`   | App de escritorio en modo desarrollo |
+| `pnpm tauri:build` | Compila el instalador nativo         |
+| `pnpm typecheck`   | Chequeo de tipos                     |
+| `pnpm test`        | Tests (Vitest)                       |
 
 ## Estado
 

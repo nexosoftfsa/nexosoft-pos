@@ -1,6 +1,6 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { LicenciaService } from './licencia.service';
+import { Controller, Get, UseGuards } from "@nestjs/common";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { LicenciaService } from "./licencia.service";
 
 /**
  * Estado de la suscripción para el POS (Fase 17.B, ADR-0056).
@@ -10,7 +10,7 @@ import { LicenciaService } from './licencia.service';
  * de la licencia más allá del estado y el aviso.
  */
 @UseGuards(JwtAuthGuard)
-@Controller('licencia')
+@Controller("licencia")
 export class LicenciaController {
   constructor(private readonly licencia: LicenciaService) {}
 

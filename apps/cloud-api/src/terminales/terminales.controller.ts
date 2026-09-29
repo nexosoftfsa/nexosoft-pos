@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
-import { RolUsuario } from '@prisma/client';
-import { TerminalesService } from './terminales.service';
-import { CrearTerminalDto } from './dto/crear-terminal.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
+import { Controller, Get, Post, Body, UseGuards, Request } from "@nestjs/common";
+import { RolUsuario } from "@prisma/client";
+import { TerminalesService } from "./terminales.service";
+import { CrearTerminalDto } from "./dto/crear-terminal.dto";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
 
 interface UsuarioJwt {
   id: string;
@@ -13,7 +13,7 @@ interface UsuarioJwt {
 }
 
 @UseGuards(JwtAuthGuard)
-@Controller('terminales')
+@Controller("terminales")
 export class TerminalesController {
   constructor(private readonly terminalesService: TerminalesService) {}
 

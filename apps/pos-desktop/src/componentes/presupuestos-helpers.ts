@@ -20,7 +20,9 @@ export function estaVencido(
   estado: EstadoPresupuesto,
   ahora: Date = new Date(),
 ): boolean {
-  return estado === "VIGENTE" && fechaVencimiento(creadoEn, validezDias).getTime() < ahora.getTime();
+  return (
+    estado === "VIGENTE" && fechaVencimiento(creadoEn, validezDias).getTime() < ahora.getTime()
+  );
 }
 
 export function normalizarImporte(valor: string): string {

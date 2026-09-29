@@ -8,14 +8,14 @@ en `docs/roadmap-fase-7-gestion.md`.
 
 ## Piezas
 
-| Archivo | Qué hace |
-| ------- | -------- |
-| `Shell.tsx` | Layout: sidebar (marca + nav + usuario) + topbar (título/migaja + estado) + contenido. Orquesta la cola de sync (`useSync`) y la baja a Ventas. Maneja el módulo activo y el cajón responsive. |
-| `modulos.tsx` | Registro declarativo de módulos (id, título, sección, ícono, roles, badge) y reglas de visibilidad por rol y por plan. **Lógica pura, testeada.** |
-| `modulos.test.ts` | Tests del gateo por rol, por plan y del módulo inicial. |
-| `iconos.tsx` | Íconos SVG del menú, portados de la maqueta. |
-| `Placeholder.tsx` | Pantalla "Próximamente" para los módulos aún no implementados. |
-| `shell.css` | Estilos del shell (paleta navy/teal de la maqueta). Se carga **después** de `estilos.css` y reasigna los acentos del POS para que todo armonice. |
+| Archivo           | Qué hace                                                                                                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Shell.tsx`       | Layout: sidebar (marca + nav + usuario) + topbar (título/migaja + estado) + contenido. Orquesta la cola de sync (`useSync`) y la baja a Ventas. Maneja el módulo activo y el cajón responsive. |
+| `modulos.tsx`     | Registro declarativo de módulos (id, título, sección, ícono, roles, badge) y reglas de visibilidad por rol y por plan. **Lógica pura, testeada.**                                              |
+| `modulos.test.ts` | Tests del gateo por rol, por plan y del módulo inicial.                                                                                                                                        |
+| `iconos.tsx`      | Íconos SVG del menú, portados de la maqueta.                                                                                                                                                   |
+| `Placeholder.tsx` | Pantalla "Próximamente" para los módulos aún no implementados.                                                                                                                                 |
+| `shell.css`       | Estilos del shell (paleta navy/teal de la maqueta). Se carga **después** de `estilos.css` y reasigna los acentos del POS para que todo armonice.                                               |
 
 ## Módulos y roles
 
@@ -23,12 +23,12 @@ El menú se arma desde `MODULOS`. Cada módulo declara qué roles lo ven; el res
 no lo ve en el menú (gateo de **presentación** — el backend igual impone permisos
 con su `RolesGuard`).
 
-| Sección | Módulos | Roles | Estado |
-| ------- | ------- | ----- | ------ |
-| Operación | Inicio · Punto de Venta · Caja · Comprobantes | todos | Ventas ✅ · **Caja ✅** · **Comprobantes ✅**, Inicio placeholder |
-| Gestión | Catálogo · Stock · Cuentas Corrientes | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)** · **Stock ✅** · **Ctas. Ctes. ✅** |
-| Inteligencia | Reportes · Asistente IA | ADMIN, SUPERVISOR | **Reportes ✅**, IA placeholder |
-| Sistema | Configuración | ADMIN, SUPERVISOR | reabre la fase de config del `App` |
+| Sección      | Módulos                                       | Roles             | Estado                                                            |
+| ------------ | --------------------------------------------- | ----------------- | ----------------------------------------------------------------- |
+| Operación    | Inicio · Punto de Venta · Caja · Comprobantes | todos             | Ventas ✅ · **Caja ✅** · **Comprobantes ✅**, Inicio placeholder |
+| Gestión      | Catálogo · Stock · Cuentas Corrientes         | ADMIN, SUPERVISOR | **Catálogo ✅ (ABM)** · **Stock ✅** · **Ctas. Ctes. ✅**         |
+| Inteligencia | Reportes · Asistente IA                       | ADMIN, SUPERVISOR | **Reportes ✅**, IA placeholder                                   |
+| Sistema      | Configuración                                 | ADMIN, SUPERVISOR | reabre la fase de config del `App`                                |
 
 Un rol desconocido o ausente cae al **menor privilegio** (CAJERO). El rol se lee
 del claim `rol` del JWT (`SesionManager.rol`). En el navegador de desarrollo no

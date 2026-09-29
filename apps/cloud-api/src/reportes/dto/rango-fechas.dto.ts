@@ -1,5 +1,5 @@
-import { IsOptional, IsDateString, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsDateString, IsInt, Min, Max } from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Rango de fechas (u horas) para los reportes. Ambos límites son opcionales:

@@ -2,11 +2,7 @@
  * Lógica pura de cuentas corrientes (Fase 7.5): condiciones de IVA, validación y
  * normalización del formulario de cliente, e interpretación del saldo.
  */
-import type {
-  Cliente,
-  CondicionIva,
-  DatosCliente,
-} from "../sync/cliente-ctacte";
+import type { Cliente, CondicionIva, DatosCliente } from "../sync/cliente-ctacte";
 
 export const CONDICIONES_IVA: ReadonlyArray<{ valor: CondicionIva; etiqueta: string }> = [
   { valor: "CONSUMIDOR_FINAL", etiqueta: "Consumidor Final" },

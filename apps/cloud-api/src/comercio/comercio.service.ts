@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
 
 /** Id fijo de la única fila de configuración (mismo patrón que AsistenteService, ADR-0040). */
 const ID_CONFIG = 1;
@@ -23,7 +23,7 @@ export class ComercioService {
   }
 
   async actualizarLogo(logoBase64: string): Promise<EstadoLogo> {
-    const valor = logoBase64.trim() === '' ? null : logoBase64;
+    const valor = logoBase64.trim() === "" ? null : logoBase64;
     const fila = await this.prisma.configuracionSistema.upsert({
       where: { id: ID_CONFIG },
       create: { id: ID_CONFIG, logoBase64: valor },

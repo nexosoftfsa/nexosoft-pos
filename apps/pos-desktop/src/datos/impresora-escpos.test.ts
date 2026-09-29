@@ -8,9 +8,8 @@ vi.mock("@tauri-apps/api/core", () => ({
   invoke: (...args: unknown[]) => invoke(...args) as unknown,
 }));
 
-const { ErrorImpresoraVirtual, ImpresoraEscPos, olvidarImpresoras } = await import(
-  "./impresora-escpos"
-);
+const { ErrorImpresoraVirtual, ImpresoraEscPos, olvidarImpresoras } =
+  await import("./impresora-escpos");
 
 const TERMICA = {
   nombre: "EPSON TM-T20II",

@@ -145,8 +145,7 @@ export function rangoDeFechas(ops: readonly OperacionEnCola[]): string | null {
  */
 export function confirmacionDescartar(ops: readonly OperacionEnCola[]): string {
   const rango = rangoDeFechas(ops);
-  const cuantas =
-    ops.length === 1 ? "1 operación" : `${ops.length} operaciones`;
+  const cuantas = ops.length === 1 ? "1 operación" : `${ops.length} operaciones`;
 
   return (
     `Descartar ${cuantas}${rango === null ? "" : ` ${rango}`}.\n\n` +

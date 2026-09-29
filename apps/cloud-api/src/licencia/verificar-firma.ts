@@ -1,6 +1,6 @@
-import { createPublicKey, verify } from 'node:crypto';
-import { z } from 'zod';
-import { EstadoSuscripcion, Plan, type Licencia } from '@nexosoft/licencias';
+import { createPublicKey, verify } from "node:crypto";
+import { z } from "zod";
+import { EstadoSuscripcion, Plan, type Licencia } from "@nexosoft/licencias";
 
 /**
  * Verificación de la licencia firmada (Fase 17.B, ADR-0056).
@@ -49,7 +49,7 @@ const LICENCIA_SCHEMA = z.object({
  * ni levantar un bloqueo real.
  */
 export function verificarToken(token: string, clavePublicaBase64: string): Licencia | null {
-  const partes = token.trim().split('.');
+  const partes = token.trim().split(".");
   if (partes.length !== 2) return null;
   const [payloadB64, firmaB64] = partes;
   if (payloadB64 === undefined || firmaB64 === undefined) return null;
@@ -58,12 +58,12 @@ export function verificarToken(token: string, clavePublicaBase64: string): Licen
   let firma: Buffer;
   let clave;
   try {
-    payload = Buffer.from(payloadB64, 'base64url');
-    firma = Buffer.from(firmaB64, 'base64url');
+    payload = Buffer.from(payloadB64, "base64url");
+    firma = Buffer.from(firmaB64, "base64url");
     clave = createPublicKey({
-      key: Buffer.from(clavePublicaBase64, 'base64'),
-      format: 'der',
-      type: 'spki',
+      key: Buffer.from(clavePublicaBase64, "base64"),
+      format: "der",
+      type: "spki",
     });
   } catch {
     return null;
@@ -79,7 +79,7 @@ export function verificarToken(token: string, clavePublicaBase64: string): Licen
   if (!firmaOk) return null;
 
   try {
-    const datos: unknown = JSON.parse(payload.toString('utf8'));
+    const datos: unknown = JSON.parse(payload.toString("utf8"));
     const r = LICENCIA_SCHEMA.safeParse(datos);
     if (!r.success) return null;
     const { mensaje, plan, ...resto } = r.data;

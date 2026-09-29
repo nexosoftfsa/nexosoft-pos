@@ -1,14 +1,14 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { Injectable } from '@nestjs/common';
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { Injectable } from "@nestjs/common";
 import {
   type AccesoRemoto,
   type ClaveDebilExpuesta,
   NO_CONFIGURADO,
   type RespuestaAccesoRemoto,
   parsearEstadoAccesoRemoto,
-} from './estado-acceso-remoto';
-import { RevisionClavesService } from '../auth/revision-claves.service';
+} from "./estado-acceso-remoto";
+import { RevisionClavesService } from "../auth/revision-claves.service";
 
 /**
  * Misma convención de carpeta de datos que
@@ -17,9 +17,9 @@ import { RevisionClavesService } from '../auth/revision-claves.service';
  * convención, y los tests).
  */
 const RUTA_DEFECTO = join(
-  process.env['ProgramData'] ?? 'C:\\ProgramData',
-  'NexoSoft',
-  'acceso-remoto.json',
+  process.env["ProgramData"] ?? "C:\\ProgramData",
+  "NexoSoft",
+  "acceso-remoto.json",
 );
 
 /**
@@ -54,7 +54,7 @@ export class AccesoRemotoService {
   constructor(private readonly revisionClaves: RevisionClavesService) {}
 
   private get ruta(): string {
-    return process.env['ACCESO_REMOTO_ARCHIVO'] ?? RUTA_DEFECTO;
+    return process.env["ACCESO_REMOTO_ARCHIVO"] ?? RUTA_DEFECTO;
   }
 
   /**
@@ -71,8 +71,8 @@ export class AccesoRemotoService {
     }
     let hostname: string | null = null;
     try {
-      const estado = parsearEstadoAccesoRemoto(await readFile(this.ruta, 'utf8'));
-      if (estado?.estado === 'activo' && estado.url !== null) {
+      const estado = parsearEstadoAccesoRemoto(await readFile(this.ruta, "utf8"));
+      if (estado?.estado === "activo" && estado.url !== null) {
         hostname = new URL(estado.url).hostname;
       }
     } catch {
@@ -97,7 +97,7 @@ export class AccesoRemotoService {
       rol: c.rol,
       motivo: c.motivo,
     });
-    if (solicitante.rol === 'ADMIN') return this.revisionClaves.listar().map(aExpuesta);
+    if (solicitante.rol === "ADMIN") return this.revisionClaves.listar().map(aExpuesta);
     const propia = this.revisionClaves.deUsuario(solicitante.id);
     return propia === null ? [] : [aExpuesta(propia)];
   }
@@ -105,7 +105,7 @@ export class AccesoRemotoService {
   async obtener(): Promise<AccesoRemoto> {
     let texto: string;
     try {
-      texto = await readFile(this.ruta, 'utf8');
+      texto = await readFile(this.ruta, "utf8");
     } catch {
       // No existe el archivo: en esta PC nunca se dio de alta el acceso
       // remoto. No es un error, es el caso normal de un comercio que todavía
@@ -117,10 +117,10 @@ export class AccesoRemotoService {
     if (estado === null) {
       return {
         ...NO_CONFIGURADO,
-        mensaje: 'No se pudo leer el estado del acceso remoto en esta PC.',
+        mensaje: "No se pudo leer el estado del acceso remoto en esta PC.",
       };
     }
-    if (estado.estado !== 'activo' || estado.url === null) return estado;
+    if (estado.estado !== "activo" || estado.url === null) return estado;
 
     return { ...estado, alcanzable: await this.comprobarAlcanzable(estado.url) };
   }

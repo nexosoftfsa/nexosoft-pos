@@ -29,6 +29,7 @@ offline-first y sincroniza después.
    saldoTeorico = fondoApertura + Σ ventasEfectivo(ventana) + Σ ingresos − Σ egresos
    diferencia   = montoContado − saldoTeorico    (+ sobrante / − faltante)
    ```
+
 3. **Cualquier usuario logueado abre, mueve y cierra su caja** (decisión del
    usuario). No se gatea el cierre por rol; es el turno del propio cajero.
 4. **Dinero con `Decimal(12,2)`** y agregación en el backend (consistente con

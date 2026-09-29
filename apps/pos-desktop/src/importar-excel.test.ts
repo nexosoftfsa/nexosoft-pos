@@ -35,7 +35,7 @@ describe("leerFilasExcel", () => {
   });
 
   it("salta filas completamente vacías", async () => {
-    const bytes = await armarXlsx(["Nombre"], [["Ana"], ["", ], ["Beto"]]);
+    const bytes = await armarXlsx(["Nombre"], [["Ana"], [""], ["Beto"]]);
     const r = await leerFilasExcel("test.xlsx", bytes);
     expect(r.filas).toHaveLength(2);
   });
@@ -50,6 +50,8 @@ describe("leerFilasExcel", () => {
     const wb = new Workbook();
     wb.addWorksheet("Vacía");
     const bytes = new Uint8Array(await wb.xlsx.writeBuffer());
-    await expect(leerFilasExcel("vacio.xlsx", bytes)).rejects.toThrow("no tiene fila de encabezados");
+    await expect(leerFilasExcel("vacio.xlsx", bytes)).rejects.toThrow(
+      "no tiene fila de encabezados",
+    );
   });
 });

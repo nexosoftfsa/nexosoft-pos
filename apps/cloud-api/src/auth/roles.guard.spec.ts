@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ForbiddenException } from '@nestjs/common';
-import type { ExecutionContext } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
-import { RolesGuard } from './roles.guard';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { ForbiddenException } from "@nestjs/common";
+import type { ExecutionContext } from "@nestjs/common";
+import type { Reflector } from "@nestjs/core";
+import { RolesGuard } from "./roles.guard";
 
 function contextoConUsuario(user: unknown): ExecutionContext {
   return {
@@ -12,7 +12,7 @@ function contextoConUsuario(user: unknown): ExecutionContext {
   } as unknown as ExecutionContext;
 }
 
-describe('RolesGuard', () => {
+describe("RolesGuard", () => {
   let reflector: { getAllAndOverride: ReturnType<typeof vi.fn> };
   let guard: RolesGuard;
 
@@ -21,27 +21,25 @@ describe('RolesGuard', () => {
     guard = new RolesGuard(reflector as unknown as Reflector);
   });
 
-  it('deja pasar cuando la ruta no declara roles', () => {
+  it("deja pasar cuando la ruta no declara roles", () => {
     reflector.getAllAndOverride.mockReturnValue(undefined);
-    expect(guard.canActivate(contextoConUsuario({ rol: 'CAJERO' }))).toBe(true);
+    expect(guard.canActivate(contextoConUsuario({ rol: "CAJERO" }))).toBe(true);
   });
 
-  it('deja pasar cuando el rol del usuario está permitido', () => {
-    reflector.getAllAndOverride.mockReturnValue(['ADMIN', 'SUPERVISOR']);
-    expect(guard.canActivate(contextoConUsuario({ rol: 'SUPERVISOR' }))).toBe(true);
+  it("deja pasar cuando el rol del usuario está permitido", () => {
+    reflector.getAllAndOverride.mockReturnValue(["ADMIN", "SUPERVISOR"]);
+    expect(guard.canActivate(contextoConUsuario({ rol: "SUPERVISOR" }))).toBe(true);
   });
 
-  it('rechaza con ForbiddenException cuando el rol no está permitido', () => {
-    reflector.getAllAndOverride.mockReturnValue(['ADMIN', 'SUPERVISOR']);
-    expect(() => guard.canActivate(contextoConUsuario({ rol: 'CAJERO' }))).toThrow(
+  it("rechaza con ForbiddenException cuando el rol no está permitido", () => {
+    reflector.getAllAndOverride.mockReturnValue(["ADMIN", "SUPERVISOR"]);
+    expect(() => guard.canActivate(contextoConUsuario({ rol: "CAJERO" }))).toThrow(
       ForbiddenException,
     );
   });
 
-  it('rechaza cuando no hay usuario en la request', () => {
-    reflector.getAllAndOverride.mockReturnValue(['ADMIN']);
-    expect(() => guard.canActivate(contextoConUsuario(undefined))).toThrow(
-      ForbiddenException,
-    );
+  it("rechaza cuando no hay usuario en la request", () => {
+    reflector.getAllAndOverride.mockReturnValue(["ADMIN"]);
+    expect(() => guard.canActivate(contextoConUsuario(undefined))).toThrow(ForbiddenException);
   });
 });

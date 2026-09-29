@@ -172,7 +172,11 @@ export function PantallaConfig({
                   onChange={(e) => void elegirLogo(e)}
                 />
                 {logoDataUrl !== undefined && (
-                  <button type="button" className="linkbtn" onClick={() => setLogoDataUrl(undefined)}>
+                  <button
+                    type="button"
+                    className="linkbtn"
+                    onClick={() => setLogoDataUrl(undefined)}
+                  >
                     Quitar
                   </button>
                 )}

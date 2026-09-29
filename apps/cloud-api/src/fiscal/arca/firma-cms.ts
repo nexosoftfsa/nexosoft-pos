@@ -9,12 +9,12 @@
  * comercio no hay openssl, y depender de un ejecutable externo para poder
  * facturar sería frágil.
  */
-import * as forge from 'node-forge';
+import * as forge from "node-forge";
 
 export class ErrorFirmaCms extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ErrorFirmaCms';
+    this.name = "ErrorFirmaCms";
   }
 }
 
@@ -25,24 +25,20 @@ export class ErrorFirmaCms extends Error {
  * @param certificadoPem El .crt que emitió ARCA.
  * @param clavePrivadaPem La clave con la que se generó el pedido.
  */
-export function firmarTraCms(
-  tra: string,
-  certificadoPem: string,
-  clavePrivadaPem: string,
-): string {
+export function firmarTraCms(tra: string, certificadoPem: string, clavePrivadaPem: string): string {
   let certificado: forge.pki.Certificate;
   let clave: forge.pki.rsa.PrivateKey;
   try {
     certificado = forge.pki.certificateFromPem(certificadoPem);
   } catch {
     throw new ErrorFirmaCms(
-      'El certificado guardado no se puede leer. Volvé a cargarlo en Configuración.',
+      "El certificado guardado no se puede leer. Volvé a cargarlo en Configuración.",
     );
   }
   try {
     clave = forge.pki.privateKeyFromPem(clavePrivadaPem);
   } catch {
-    throw new ErrorFirmaCms('La clave privada del certificado no se puede leer.');
+    throw new ErrorFirmaCms("La clave privada del certificado no se puede leer.");
   }
 
   // Que la clave sea la del certificado se verifica al cargarlo, pero acá
@@ -51,23 +47,23 @@ export function firmarTraCms(
   const publicaDelCert = certificado.publicKey as forge.pki.rsa.PublicKey;
   if (publicaDelCert.n.toString(16) !== clave.n.toString(16)) {
     throw new ErrorFirmaCms(
-      'El certificado y la clave privada no son del mismo par. Generá el pedido de nuevo y volvé a sacar el certificado en ARCA.',
+      "El certificado y la clave privada no son del mismo par. Generá el pedido de nuevo y volvé a sacar el certificado en ARCA.",
     );
   }
 
   const p7 = forge.pkcs7.createSignedData();
-  p7.content = forge.util.createBuffer(tra, 'utf8');
+  p7.content = forge.util.createBuffer(tra, "utf8");
   p7.addCertificate(certificado);
   p7.addSigner({
     key: clave,
     certificate: certificado,
-    digestAlgorithm: forge.pki.oids['sha256'] as string,
+    digestAlgorithm: forge.pki.oids["sha256"] as string,
     // Los OIDs de node-forge vienen tipados como `string | undefined` porque
     // el diccionario es un índice abierto; acá son constantes conocidas.
     authenticatedAttributes: [
-      { type: forge.pki.oids['contentType'] as string, value: forge.pki.oids['data'] as string },
-      { type: forge.pki.oids['messageDigest'] as string },
-      { type: forge.pki.oids['signingTime'] as string, value: new Date().toISOString() },
+      { type: forge.pki.oids["contentType"] as string, value: forge.pki.oids["data"] as string },
+      { type: forge.pki.oids["messageDigest"] as string },
+      { type: forge.pki.oids["signingTime"] as string, value: new Date().toISOString() },
     ],
   });
   // `detached: false`: el TRA viaja adentro del CMS. ARCA lo necesita así.

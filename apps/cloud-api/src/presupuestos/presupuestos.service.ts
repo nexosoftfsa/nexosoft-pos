@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/library';
-import { PrismaService } from '../prisma/prisma.service';
-import { VentasService } from '../ventas/ventas.service';
-import type { CrearPresupuestoDto } from './dto/crear-presupuesto.dto';
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import { Decimal } from "@prisma/client/runtime/library";
+import { PrismaService } from "../prisma/prisma.service";
+import { VentasService } from "../ventas/ventas.service";
+import type { CrearPresupuestoDto } from "./dto/crear-presupuesto.dto";
 
 /** Usuario que ejecuta la conversión (para atribuir la venta generada). */
 interface UsuarioCtx {
@@ -26,7 +26,7 @@ export class PresupuestosService {
   listar(sucursalId: string) {
     return this.prisma.presupuesto.findMany({
       where: { sucursalId },
-      orderBy: { creadoEn: 'desc' },
+      orderBy: { creadoEn: "desc" },
       include: { items: true },
     });
   }
@@ -56,7 +56,7 @@ export class PresupuestosService {
 
     const ultimo = await this.prisma.presupuesto.findFirst({
       where: { sucursalId },
-      orderBy: { numero: 'desc' },
+      orderBy: { numero: "desc" },
       select: { numero: true },
     });
 
@@ -83,22 +83,22 @@ export class PresupuestosService {
    */
   async convertir(usuario: UsuarioCtx, id: string) {
     const p = await this.obtener(usuario.sucursalId, id);
-    if (p.estado !== 'VIGENTE') {
+    if (p.estado !== "VIGENTE") {
       throw new BadRequestException(`El presupuesto ya está ${p.estado.toLowerCase()}`);
     }
     if (p.items.length === 0) {
-      throw new BadRequestException('El presupuesto no tiene ítems para convertir.');
+      throw new BadRequestException("El presupuesto no tiene ítems para convertir.");
     }
     const sinProducto = p.items.filter((it) => it.productoId === null);
     if (sinProducto.length > 0) {
       throw new BadRequestException(
-        'No se puede convertir: hay ítems sin producto del catálogo (líneas libres).',
+        "No se puede convertir: hay ítems sin producto del catálogo (líneas libres).",
       );
     }
 
     const venta = await this.ventas.registrar(usuario, {
       operacionId: `presup-${p.id}`,
-      medioPago: 'EFECTIVO',
+      medioPago: "EFECTIVO",
       items: p.items.map((it) => ({
         productoId: it.productoId as string,
         cantidad: it.cantidad.toString(),
@@ -108,7 +108,7 @@ export class PresupuestosService {
 
     const presupuesto = await this.prisma.presupuesto.update({
       where: { id },
-      data: { estado: 'CONVERTIDO' },
+      data: { estado: "CONVERTIDO" },
       include: { items: true },
     });
     return { presupuesto, venta };
@@ -116,12 +116,12 @@ export class PresupuestosService {
 
   async anular(sucursalId: string, id: string) {
     const p = await this.obtener(sucursalId, id);
-    if (p.estado !== 'VIGENTE') {
+    if (p.estado !== "VIGENTE") {
       throw new BadRequestException(`El presupuesto ya está ${p.estado.toLowerCase()}`);
     }
     return this.prisma.presupuesto.update({
       where: { id },
-      data: { estado: 'ANULADO' },
+      data: { estado: "ANULADO" },
       include: { items: true },
     });
   }

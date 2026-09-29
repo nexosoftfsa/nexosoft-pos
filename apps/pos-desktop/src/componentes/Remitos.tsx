@@ -27,7 +27,9 @@ function mensaje(e: unknown): string {
 }
 function fecha(d: string): string {
   const x = new Date(d);
-  return Number.isNaN(x.getTime()) ? d : x.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+  return Number.isNaN(x.getTime())
+    ? d
+    : x.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
 export function Remitos({
@@ -74,7 +76,13 @@ export function Remitos({
       const blob = await exportarExcel([
         {
           nombre: "Remitos",
-          columnas: [{ titulo: "N°" }, { titulo: "Cliente", ancho: 24 }, { titulo: "Fecha" }, { titulo: "Ítems" }, { titulo: "Estado" }],
+          columnas: [
+            { titulo: "N°" },
+            { titulo: "Cliente", ancho: 24 },
+            { titulo: "Fecha" },
+            { titulo: "Ítems" },
+            { titulo: "Estado" },
+          ],
           filas: items.map((r) => [
             r.numero,
             r.clienteNombre ?? "",
@@ -120,12 +128,16 @@ export function Remitos({
             <tbody>
               {cargando && (
                 <tr>
-                  <td colSpan={6} className="td-vacio">Cargando remitos…</td>
+                  <td colSpan={6} className="td-vacio">
+                    Cargando remitos…
+                  </td>
                 </tr>
               )}
               {!cargando && items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="td-vacio">No hay remitos.</td>
+                  <td colSpan={6} className="td-vacio">
+                    No hay remitos.
+                  </td>
                 </tr>
               )}
               {!cargando &&
@@ -143,9 +155,15 @@ export function Remitos({
                       )}
                     </td>
                     <td className="acciones">
-                      <button type="button" className="linkbtn" onClick={() => setVer(r)}>Ver</button>
+                      <button type="button" className="linkbtn" onClick={() => setVer(r)}>
+                        Ver
+                      </button>
                       {r.estado === "EMITIDO" && (
-                        <button type="button" className="linkbtn linkbtn--danger" onClick={() => void anular(r)}>
+                        <button
+                          type="button"
+                          className="linkbtn linkbtn--danger"
+                          onClick={() => void anular(r)}
+                        >
                           Anular
                         </button>
                       )}
@@ -206,7 +224,11 @@ function ModalNuevo({
     }
     setLineas((l) => [
       ...l,
-      { descripcion: descripcion.trim(), cantidad: normalizarCantidad(cantidad), ...(sel !== "" ? { productoId: sel } : {}) },
+      {
+        descripcion: descripcion.trim(),
+        cantidad: normalizarCantidad(cantidad),
+        ...(sel !== "" ? { productoId: sel } : {}),
+      },
     ]);
     setSel("");
     setDescripcion("");
@@ -239,34 +261,53 @@ function ModalNuevo({
       <div className="modal__box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <div className="modal__head">
           <h3>Nuevo remito</h3>
-          <button type="button" className="modal__x" onClick={onCerrar} aria-label="Cerrar">×</button>
+          <button type="button" className="modal__x" onClick={onCerrar} aria-label="Cerrar">
+            ×
+          </button>
         </div>
         <div className="modal__body">
           <div className="field">
             <label>Cliente (opcional)</label>
-            <input className="input" value={clienteNombre} onChange={(e) => setClienteNombre(e.target.value)} />
+            <input
+              className="input"
+              value={clienteNombre}
+              onChange={(e) => setClienteNombre(e.target.value)}
+            />
           </div>
           <div className="field">
             <label>Agregar ítem</label>
             <select className="input" value={sel} onChange={(e) => elegir(e.target.value)}>
               <option value="">— Elegí un producto o escribí abajo —</option>
               {catalogo.map((c) => (
-                <option key={c.id} value={c.id}>{c.descripcion}</option>
+                <option key={c.id} value={c.id}>
+                  {c.descripcion}
+                </option>
               ))}
             </select>
           </div>
           <div className="modal__row">
             <div className="field">
               <label>Descripción</label>
-              <input className="input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+              <input
+                className="input"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+              />
             </div>
             <div className="field">
               <label>Cantidad</label>
-              <input className="input" inputMode="decimal" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
+              <input
+                className="input"
+                inputMode="decimal"
+                value={cantidad}
+                onChange={(e) => setCantidad(e.target.value)}
+              />
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <button type="button" className="pill-btn" onClick={agregar}>+ Agregar ítem</button>
+            <button type="button" className="pill-btn" onClick={agregar}>
+              + Agregar ítem
+            </button>
           </div>
 
           {lineas.length > 0 && (
@@ -285,7 +326,11 @@ function ModalNuevo({
                       <td>{l.descripcion}</td>
                       <td className="num">{l.cantidad}</td>
                       <td className="acciones">
-                        <button type="button" className="linkbtn linkbtn--danger" onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}>
+                        <button
+                          type="button"
+                          className="linkbtn linkbtn--danger"
+                          onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}
+                        >
                           Quitar
                         </button>
                       </td>
@@ -298,8 +343,15 @@ function ModalNuevo({
           {error !== null && <div className="error">{error}</div>}
         </div>
         <div className="modal__foot">
-          <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>Cancelar</button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar remito"}
           </button>
         </div>
@@ -322,10 +374,14 @@ function ModalVer({ remito, onCerrar }: { remito: Remito; onCerrar: () => void }
             </li>
           ))}
         </ul>
-        {remito.observaciones !== null && <div className="ticket-numero">{remito.observaciones}</div>}
+        {remito.observaciones !== null && (
+          <div className="ticket-numero">{remito.observaciones}</div>
+        )}
         <div className="ticket-acciones">
           <button onClick={() => window.print()}>Imprimir</button>
-          <button className="primario" onClick={onCerrar}>Cerrar</button>
+          <button className="primario" onClick={onCerrar}>
+            Cerrar
+          </button>
         </div>
       </div>
     </div>

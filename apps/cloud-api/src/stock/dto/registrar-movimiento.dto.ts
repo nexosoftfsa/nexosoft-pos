@@ -5,8 +5,8 @@ import {
   IsOptional,
   IsNumberString,
   IsDateString,
-} from 'class-validator';
-import { TipoMovimiento } from '@prisma/client';
+} from "class-validator";
+import { TipoMovimiento } from "@prisma/client";
 
 export class RegistrarMovimientoDto {
   @IsString()

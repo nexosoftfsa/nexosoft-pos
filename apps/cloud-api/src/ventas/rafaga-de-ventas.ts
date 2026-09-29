@@ -64,8 +64,8 @@ export function esRafagaAnormal(ventasEnLaVentana: number): boolean {
 export function motivoRafaga(ventasEnLaVentana: number): string {
   return (
     `Esta terminal registró ${ventasEnLaVentana} ventas en el último minuto, que es más de lo que ` +
-    'puede pasar en una caja real. Para no emitir comprobantes de más ante ARCA, el servidor frenó ' +
-    'las siguientes. Las ventas ya emitidas están bien. Cerrá el POS y volvé a abrirlo, y si vuelve ' +
-    'a pasar avisanos antes de seguir vendiendo.'
+    "puede pasar en una caja real. Para no emitir comprobantes de más ante ARCA, el servidor frenó " +
+    "las siguientes. Las ventas ya emitidas están bien. Cerrá el POS y volvé a abrirlo, y si vuelve " +
+    "a pasar avisanos antes de seguir vendiendo."
   );
 }

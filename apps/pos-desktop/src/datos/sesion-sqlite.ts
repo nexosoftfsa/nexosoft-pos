@@ -80,10 +80,10 @@ export async function actualizarTokens(
   accessToken: string,
   refreshToken: string,
 ): Promise<void> {
-  await ejecutor.ejecutar(
-    "UPDATE sesion SET access_token = ?, refresh_token = ? WHERE id = 1",
-    [accessToken, refreshToken],
-  );
+  await ejecutor.ejecutar("UPDATE sesion SET access_token = ?, refresh_token = ? WHERE id = 1", [
+    accessToken,
+    refreshToken,
+  ]);
 }
 
 /** Persiste la terminal elegida. */
@@ -92,10 +92,10 @@ export async function actualizarTerminal(
   terminalId: string,
   terminalNombre: string,
 ): Promise<void> {
-  await ejecutor.ejecutar(
-    "UPDATE sesion SET terminal_id = ?, terminal_nombre = ? WHERE id = 1",
-    [terminalId, terminalNombre],
-  );
+  await ejecutor.ejecutar("UPDATE sesion SET terminal_id = ?, terminal_nombre = ? WHERE id = 1", [
+    terminalId,
+    terminalNombre,
+  ]);
 }
 
 export async function borrarSesion(ejecutor: EjecutorSql): Promise<void> {

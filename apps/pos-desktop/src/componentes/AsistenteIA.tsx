@@ -109,7 +109,13 @@ export function AsistenteIA({
 
         <div className="ia-sugerencias">
           {SUGERENCIAS.map((s) => (
-            <button key={s} type="button" className="pill-btn" onClick={() => void preguntar(s)} disabled={pensando}>
+            <button
+              key={s}
+              type="button"
+              className="pill-btn"
+              onClick={() => void preguntar(s)}
+              disabled={pensando}
+            >
               {s}
             </button>
           ))}
@@ -128,7 +134,11 @@ export function AsistenteIA({
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
           />
-          <button type="submit" className="pill-btn pill-btn--primary" disabled={pensando || texto.trim() === ""}>
+          <button
+            type="submit"
+            className="pill-btn pill-btn--primary"
+            disabled={pensando || texto.trim() === ""}
+          >
             Preguntar
           </button>
         </form>
@@ -180,7 +190,10 @@ function ModalConfigIA({
     setError(null);
     setAviso(null);
     try {
-      const r = await cliente.actualizar(apiKey.trim(), modelo.trim() === "" ? undefined : modelo.trim());
+      const r = await cliente.actualizar(
+        apiKey.trim(),
+        modelo.trim() === "" ? undefined : modelo.trim(),
+      );
       setEstado(r);
       setApiKey("");
       setAviso("Clave guardada. Ya podés cerrar esta ventana y preguntarle al asistente.");
@@ -245,7 +258,12 @@ function ModalConfigIA({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cerrar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar"}
           </button>
         </div>

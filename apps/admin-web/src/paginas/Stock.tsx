@@ -32,11 +32,7 @@ export function Stock() {
               onClick={() =>
                 descargarCsv("stock-bajo.csv", [
                   ["Código", "Producto", "Saldo"],
-                  ...(bajo.datos ?? []).map((s) => [
-                    s.producto.codigo,
-                    s.producto.nombre,
-                    s.saldo,
-                  ]),
+                  ...(bajo.datos ?? []).map((s) => [s.producto.codigo, s.producto.nombre, s.saldo]),
                 ])
               }
             >

@@ -12,9 +12,9 @@
  * Vive en el dominio porque lo necesitan el ticket chico, el A4 y la vista
  * previa: una sola definición, no tres.
  */
-import { normalizarCuit } from './cuit.js';
+import { normalizarCuit } from "./cuit.js";
 
-export const URL_QR_ARCA = 'https://www.afip.gob.ar/fe/qr/';
+export const URL_QR_ARCA = "https://www.afip.gob.ar/fe/qr/";
 
 export interface DatosQrArca {
   /** Fecha de emisión del comprobante. */
@@ -37,7 +37,7 @@ export interface DatosQrArca {
 
 /** `yyyy-mm-dd`, que es como lo pide el QR (distinto del yyyymmdd de WSFEv1). */
 function aFechaQr(f: Date): string {
-  const dd = (n: number) => String(n).padStart(2, '0');
+  const dd = (n: number) => String(n).padStart(2, "0");
   return `${f.getFullYear()}-${dd(f.getMonth() + 1)}-${dd(f.getDate())}`;
 }
 
@@ -100,11 +100,11 @@ export function urlQrArca(datos: DatosQrArca): string {
     tipoCmp: datos.tipoComprobante,
     nroCmp: datos.numeroComprobante,
     importe: Number(datos.importe),
-    moneda: 'PES',
+    moneda: "PES",
     ctz: 1,
     tipoDocRec: datos.tipoDocReceptor ?? 99,
     nroDocRec: datos.nroDocReceptor ?? 0,
-    tipoCodAut: 'E',
+    tipoCodAut: "E",
     codAut: Number(datos.cae),
   };
   return `${URL_QR_ARCA}?p=${aBase64(JSON.stringify(payload))}`;
@@ -118,5 +118,5 @@ export function urlQrArca(datos: DatosQrArca): string {
  * sería peor que no imprimirlo.
  */
 export function llevaQrFiscal(cae: string | null | undefined): boolean {
-  return typeof cae === 'string' && cae.trim() !== '';
+  return typeof cae === "string" && cae.trim() !== "";
 }

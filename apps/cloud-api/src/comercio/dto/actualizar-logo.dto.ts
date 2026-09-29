@@ -1,4 +1,4 @@
-import { IsString, MaxLength } from 'class-validator';
+import { IsString, MaxLength } from "class-validator";
 
 export class ActualizarLogoDto {
   /** Data URL del logo (ej. `data:image/png;base64,...`). String vacío = borrar. */

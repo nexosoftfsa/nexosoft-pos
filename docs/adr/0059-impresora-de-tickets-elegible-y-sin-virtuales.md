@@ -78,7 +78,7 @@ muestra.
 
 No se muestra un error porque no lo es: se abre un diálogo de impresión, que ya
 es señal de que el ticket no salió solo por la térmica. Lo que no puede volver a
-pasar es que no pase *nada*.
+pasar es que no pase _nada_.
 
 ## Consecuencias
 

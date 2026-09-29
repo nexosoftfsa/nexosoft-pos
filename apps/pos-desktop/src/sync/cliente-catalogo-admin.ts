@@ -58,7 +58,10 @@ export interface DatosProducto {
   readonly tipoIva: TipoIvaRemoto;
   readonly tipo?: TipoProductoRemoto;
   readonly requiereLote?: boolean;
-  readonly componentes?: ReadonlyArray<{ readonly componenteId: string; readonly cantidad: string }>;
+  readonly componentes?: ReadonlyArray<{
+    readonly componenteId: string;
+    readonly cantidad: string;
+  }>;
   readonly categoriaId?: string | null;
 }
 
@@ -85,7 +88,10 @@ export interface ClienteCatalogoAdmin {
   desactivarProducto(id: string): Promise<void>;
   listarCategorias(): Promise<CategoriaAdmin[]>;
   /** Fase 14.B: alta masiva desde Excel. `dryRun: true` no persiste nada, solo valida. */
-  importarProductos(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]>;
+  importarProductos(
+    filas: readonly Record<string, string>[],
+    dryRun: boolean,
+  ): Promise<FilaImportacion[]>;
 }
 
 /** Error de catálogo con el status HTTP (409 = código duplicado, etc.). */
@@ -133,7 +139,10 @@ export class ClienteCatalogoAdminHttp implements ClienteCatalogoAdmin {
     return this.pedir<CategoriaAdmin[]>("GET", "/categorias");
   }
 
-  importarProductos(filas: readonly Record<string, string>[], dryRun: boolean): Promise<FilaImportacion[]> {
+  importarProductos(
+    filas: readonly Record<string, string>[],
+    dryRun: boolean,
+  ): Promise<FilaImportacion[]> {
     return this.pedir<FilaImportacion[]>("POST", "/productos/importar", { filas, dryRun });
   }
 

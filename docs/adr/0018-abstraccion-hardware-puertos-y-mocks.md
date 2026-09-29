@@ -18,6 +18,7 @@ puerto y documenta qué falta para producción.
 Se implementan tres puertos en `@nexosoft/hardware` con sus mocks:
 
 ### ImpresoraTermica
+
 - `imprimirTicket(datos: DatosTicket): Promise<void>`
 - `abrirCajon(): Promise<void>`
 - `verificarEstado(): Promise<EstadoImpresora>`
@@ -25,6 +26,7 @@ Se implementan tres puertos en `@nexosoft/hardware` con sus mocks:
   de IVA, formas de pago y datos fiscales (CAE opcional).
 
 ### LectorDeBarras
+
 - `onEscaneo(cb): () => void` — patrón observer; devuelve función de baja.
 - `desconectar(): Promise<void>`
 - Los lectores HID (USB plug-and-play) no necesitan driver: el SO los expone
@@ -32,6 +34,7 @@ Se implementan tres puertos en `@nexosoft/hardware` con sus mocks:
   Los lectores seriales requerirán un plugin Tauri adicional.
 
 ### Balanza
+
 - `leerPeso(): Promise<Cantidad>`
 - `tarar(): Promise<void>`
 - `verificarEstado(): Promise<EstadoBalanza>`
@@ -50,12 +53,12 @@ desde tests.
 
 ## Qué falta para producción
 
-| Periférico | Pendiente |
-|---|---|
+| Periférico        | Pendiente                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------ |
 | Impresora ESC/POS | Plugin Tauri (Rust) para USB/serial + adaptador que arme los bytes ESC/POS según el modelo |
-| Lector HID | Solo listener de keydown — sin código adicional |
-| Lector serial | Plugin Tauri para abrir puerto COM y emitir el código al frontend |
-| Balanza | Plugin Tauri para RS-232 + parser de trama según marca/modelo |
+| Lector HID        | Solo listener de keydown — sin código adicional                                            |
+| Lector serial     | Plugin Tauri para abrir puerto COM y emitir el código al frontend                          |
+| Balanza           | Plugin Tauri para RS-232 + parser de trama según marca/modelo                              |
 
 Ningún cambio en la UI del POS ni en el dominio cuando se implementen estos
 adaptadores: solo se inyecta la instancia real en lugar del mock.

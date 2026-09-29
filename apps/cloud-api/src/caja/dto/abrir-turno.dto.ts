@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumberString } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumberString } from "class-validator";
 
 export class AbrirTurnoDto {
   @IsString()

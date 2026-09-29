@@ -16,9 +16,11 @@ Lo que decidimos hacer, en una o dos frases claras.
 ## Consecuencias
 
 ### Positivas
+
 - …
 
 ### Negativas / costos
+
 - …
 
 ## Alternativas consideradas

@@ -85,10 +85,10 @@ secret del Worker; clave pública embebida en `cloud-api`, que no es secreta):
 {
   "comercioId": "lagus",
   "estado": "ACTIVA | RECORDATORIO | ADVERTENCIA | BLOQUEADA",
-  "vencePagoEl": "2026-09-10",        // fecha de pago de la suscripción
+  "vencePagoEl": "2026-09-10", // fecha de pago de la suscripción
   "validaHasta": "2026-08-29T00:00Z", // vencimiento del TOKEN (7 días)
   "mensaje": "texto opcional a mostrar",
-  "emitidaEn": "2026-08-22T00:00Z"
+  "emitidaEn": "2026-08-22T00:00Z",
 }
 ```
 
@@ -113,12 +113,12 @@ hacerlo es bajo.
 
 ### 4. Qué hace cada estado
 
-| Estado | POS | `cloud-api` |
-| --- | --- | --- |
-| `ACTIVA` | nada | nada |
-| `RECORDATORIO` | banner suave: "tu pago vence el 10/09" | expone el estado |
-| `ADVERTENCIA` | banner naranja fijo: "pago vencido, se bloquea el 20/09" | expone el estado |
-| `BLOQUEADA` | pantalla de bloqueo con el contacto de NexoSoft | rechaza operaciones de escritura (HTTP 402) |
+| Estado         | POS                                                      | `cloud-api`                                 |
+| -------------- | -------------------------------------------------------- | ------------------------------------------- |
+| `ACTIVA`       | nada                                                     | nada                                        |
+| `RECORDATORIO` | banner suave: "tu pago vence el 10/09"                   | expone el estado                            |
+| `ADVERTENCIA`  | banner naranja fijo: "pago vencido, se bloquea el 20/09" | expone el estado                            |
+| `BLOQUEADA`    | pantalla de bloqueo con el contacto de NexoSoft          | rechaza operaciones de escritura (HTTP 402) |
 
 **Qué queda disponible en `BLOQUEADA`** (decidido el 2026-08-23; el pedido
 original era "todas las funciones bloqueadas", y se optó por esto): se bloquea
@@ -170,6 +170,7 @@ más costaría mucho y se rompería igual.
 ## Consecuencias
 
 ### Positivas
+
 - Los tres escalones que se pidieron, automáticos: el sistema avisa solo y
   escala solo, sin que nadie tenga que acordarse de llamar.
 - Cero infraestructura nueva que mantener y sin costo mensual.
@@ -180,6 +181,7 @@ más costaría mucho y se rompería igual.
 - Ninguna caída nuestra puede frenarle la caja a un comercio.
 
 ### Negativas / costos
+
 - **Un comercio sin internet no se bloquea nunca.** Aceptado a conciencia
   (punto 3).
 - Bloquear la caja de un comercio es una acción con consecuencias reales
@@ -198,7 +200,7 @@ más costaría mucho y se rompería igual.
 
 - **Licencia por archivo firmado, sin ningún servidor** (se la mandamos por
   WhatsApp cada mes) — cero infraestructura, pero la renovación es manual
-  para nosotros *y* para el cliente, todos los meses, con cada comercio. No
+  para nosotros _y_ para el cliente, todos los meses, con cada comercio. No
   escala más allá de un puñado de clientes.
 - **VPS propio con la API de licencias y el panel** — más control, pero hay
   que pagarlo, mantenerlo, actualizarlo y asegurarlo, para algo que un Worker

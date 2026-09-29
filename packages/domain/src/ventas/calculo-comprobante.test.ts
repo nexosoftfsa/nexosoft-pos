@@ -49,9 +49,7 @@ describe("calcularComprobante — exento", () => {
 
     expect(r.subtotalesPorAlicuota).toHaveLength(2);
     expect(r.subtotalesPorAlicuota.filter((s) => s.alicuota === null)).toHaveLength(1);
-    expect(
-      r.subtotalesPorAlicuota.filter((s) => s.alicuota?.codigoArca === 3),
-    ).toHaveLength(1);
+    expect(r.subtotalesPorAlicuota.filter((s) => s.alicuota?.codigoArca === 3)).toHaveLength(1);
   });
 
   it("convive con una línea gravada sin ensuciarle el IVA", () => {
@@ -135,7 +133,9 @@ describe("calcularComprobante — neto por línea", () => {
     );
 
     for (const grupo of r.subtotalesPorAlicuota) {
-      const deEsteGrupo = r.lineas.filter((l) => l.alicuota?.porcentaje === grupo.alicuota?.porcentaje);
+      const deEsteGrupo = r.lineas.filter(
+        (l) => l.alicuota?.porcentaje === grupo.alicuota?.porcentaje,
+      );
       const suma = deEsteGrupo.reduce((a, l) => a.sumar(l.neto), Money.cero());
       expect(suma.aDecimalString(2)).toBe(grupo.neto.aDecimalString(2));
     }

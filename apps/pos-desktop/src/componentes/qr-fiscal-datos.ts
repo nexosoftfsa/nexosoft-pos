@@ -44,9 +44,10 @@ export function llevaQr(datos: DatosTicket): boolean {
  * Un path solo en vez de un `<rect>` por módulo: un QR grande tiene miles de
  * módulos y eso serían miles de nodos en el DOM.
  */
-export function pathDeModulos(
-  modulos: { readonly size: number; readonly data: Uint8Array | readonly number[] },
-): string {
+export function pathDeModulos(modulos: {
+  readonly size: number;
+  readonly data: Uint8Array | readonly number[];
+}): string {
   const partes: string[] = [];
   for (let fila = 0; fila < modulos.size; fila++) {
     for (let col = 0; col < modulos.size; col++) {

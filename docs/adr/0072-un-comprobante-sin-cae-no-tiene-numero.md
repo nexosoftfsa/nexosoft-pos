@@ -27,11 +27,11 @@ Los rechazos del 4/9 dejaron sembrado exactamente eso: Factura A ocupando los
 números 1 a 5, y Nota de Débito los números 1 y 2. ARCA venía empezando de 1 en
 homologación para esos tipos. Todo cierra:
 
-| | Provisionales del 4/9 | 6/9 |
-|---|---|---|
-| Factura A | 1, 2, 3, 4, 5 | 5 intentos, ARCA dio 1→5, los cinco chocaron. La venta siguiente sacó **6** |
-| Nota de Débito | 1, 2 | chocó con 1 y 2, entró con el **3** |
-| Factura B | 1, 2 | ARCA venía en 5765: **5766** a la primera |
+|                | Provisionales del 4/9 | 6/9                                                                         |
+| -------------- | --------------------- | --------------------------------------------------------------------------- |
+| Factura A      | 1, 2, 3, 4, 5         | 5 intentos, ARCA dio 1→5, los cinco chocaron. La venta siguiente sacó **6** |
+| Nota de Débito | 1, 2                  | chocó con 1 y 2, entró con el **3**                                         |
+| Factura B      | 1, 2                  | ARCA venía en 5765: **5766** a la primera                                   |
 
 ### Lo que lo hace grave
 

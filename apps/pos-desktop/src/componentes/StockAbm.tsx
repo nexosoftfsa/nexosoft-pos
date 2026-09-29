@@ -47,7 +47,12 @@ function fechaHora(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
     ? iso
-    : d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    : d.toLocaleString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 }
 
 const UMBRAL_DEFECTO = 5;
@@ -97,20 +102,28 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
     saldo: (s) => s.saldo,
     estado: (s) => RANGO_ESTADO[estadoStock(s.saldo, umbral)] ?? 0,
   };
-  const { filasOrdenadas: ordenados, clave: claveOrden, direccion, alternar } = useOrdenTabla(
-    filtrados,
-    columnasOrden,
-  );
+  const {
+    filasOrdenadas: ordenados,
+    clave: claveOrden,
+    direccion,
+    alternar,
+  } = useOrdenTabla(filtrados, columnasOrden);
 
   async function exportar() {
     try {
       const blob = await exportarExcel([
         {
           nombre: "Stock",
-          columnas: [{ titulo: "Código" }, { titulo: "Producto", ancho: 30 }, { titulo: "Saldo" }, { titulo: "Estado" }],
+          columnas: [
+            { titulo: "Código" },
+            { titulo: "Producto", ancho: 30 },
+            { titulo: "Saldo" },
+            { titulo: "Estado" },
+          ],
           filas: saldos.map((s) => {
             const estado = estadoStock(s.saldo, umbral);
-            const etiqueta = estado === "ok" ? "OK" : estado === "bajo" ? "Bajo mínimo" : "Sin stock";
+            const etiqueta =
+              estado === "ok" ? "OK" : estado === "bajo" ? "Bajo mínimo" : "Sin stock";
             return [s.producto.codigo, s.producto.nombre, s.saldo, etiqueta];
           }),
         },
@@ -142,7 +155,10 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
         </div>
         <div className="kpi">
           <div className="kpi__label">Lotes por vencer</div>
-          <div className="kpi__val" style={{ color: alertas.length > 0 ? "var(--warn)" : undefined }}>
+          <div
+            className="kpi__val"
+            style={{ color: alertas.length > 0 ? "var(--warn)" : undefined }}
+          >
             {alertas.length}
           </div>
         </div>
@@ -187,7 +203,11 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
           />
         </label>
         <label className="check">
-          <input type="checkbox" checked={soloAlertas} onChange={(e) => setSoloAlertas(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={soloAlertas}
+            onChange={(e) => setSoloAlertas(e.target.checked)}
+          />
           Ver sólo alertas
         </label>
         <div className="spacer" />
@@ -197,7 +217,11 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
         <button type="button" className="pill-btn" onClick={() => setImportando(true)}>
           Importar
         </button>
-        <button type="button" className="pill-btn pill-btn--primary" onClick={() => setMovProducto("abierto")}>
+        <button
+          type="button"
+          className="pill-btn pill-btn--primary"
+          onClick={() => setMovProducto("abierto")}
+        >
           + Registrar movimiento
         </button>
       </div>
@@ -209,10 +233,35 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
           <table>
             <thead>
               <tr>
-                <ThOrdenable titulo="Código" columnaClave="codigo" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
-                <ThOrdenable titulo="Producto" columnaClave="producto" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
-                <ThOrdenable titulo="Saldo" columnaClave="saldo" claveActiva={claveOrden} direccion={direccion} alternar={alternar} className="num" />
-                <ThOrdenable titulo="Estado" columnaClave="estado" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
+                <ThOrdenable
+                  titulo="Código"
+                  columnaClave="codigo"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                />
+                <ThOrdenable
+                  titulo="Producto"
+                  columnaClave="producto"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                />
+                <ThOrdenable
+                  titulo="Saldo"
+                  columnaClave="saldo"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                  className="num"
+                />
+                <ThOrdenable
+                  titulo="Estado"
+                  columnaClave="estado"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                />
                 <th />
               </tr>
             </thead>
@@ -244,19 +293,33 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
                       <td className="num strong">{s.saldo}</td>
                       <td>
                         {estado === "ok" && <span className="badge badge--ok">OK</span>}
-                        {estado === "bajo" && <span className="badge badge--warn">Bajo mínimo</span>}
+                        {estado === "bajo" && (
+                          <span className="badge badge--warn">Bajo mínimo</span>
+                        )}
                         {estado === "sin" && <span className="badge badge--danger">Sin stock</span>}
                       </td>
                       <td className="acciones">
-                        <button type="button" className="linkbtn" onClick={() => setMovProducto(s.producto)}>
+                        <button
+                          type="button"
+                          className="linkbtn"
+                          onClick={() => setMovProducto(s.producto)}
+                        >
                           Movimiento
                         </button>
                         {s.producto.requiereLote && (
-                          <button type="button" className="linkbtn" onClick={() => setLotesDe(s.producto)}>
+                          <button
+                            type="button"
+                            className="linkbtn"
+                            onClick={() => setLotesDe(s.producto)}
+                          >
                             Lotes
                           </button>
                         )}
-                        <button type="button" className="linkbtn" onClick={() => setHistorialDe(s.producto)}>
+                        <button
+                          type="button"
+                          className="linkbtn"
+                          onClick={() => setHistorialDe(s.producto)}
+                        >
                           Historial
                         </button>
                       </td>
@@ -286,7 +349,11 @@ export function StockAbm({ cliente }: { cliente: ClienteStock }) {
       )}
 
       {historialDe !== null && (
-        <ModalHistorial cliente={cliente} producto={historialDe} onCerrar={() => setHistorialDe(null)} />
+        <ModalHistorial
+          cliente={cliente}
+          producto={historialDe}
+          onCerrar={() => setHistorialDe(null)}
+        />
       )}
 
       {importando && (
@@ -422,7 +489,9 @@ function ModalMovimiento({
             </div>
           )}
           {requiereLote && form.tipo === "SALIDA" && (
-            <p className="muted combo-ayuda">La salida consume los lotes que vencen antes (FEFO).</p>
+            <p className="muted combo-ayuda">
+              La salida consume los lotes que vencen antes (FEFO).
+            </p>
           )}
           <div className="field">
             <label>Motivo (opcional)</label>
@@ -445,7 +514,12 @@ function ModalMovimiento({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Registrar"}
           </button>
         </div>
@@ -489,7 +563,9 @@ function ModalLotes({
         <div className="modal__body">
           {error !== null && <div className="error">{error}</div>}
           {error === null && lotes === null && <div className="muted">Cargando…</div>}
-          {lotes !== null && lotes.length === 0 && <div className="muted">Sin lotes registrados.</div>}
+          {lotes !== null && lotes.length === 0 && (
+            <div className="muted">Sin lotes registrados.</div>
+          )}
           {lotes !== null && lotes.length > 0 && (
             <div className="tablewrap">
               <table>
@@ -577,7 +653,14 @@ function ModalHistorial({
                     <tr key={m.id}>
                       <td>{fechaHora(m.creadoEn)}</td>
                       <td>{etiquetaMovimiento(m.tipo)}</td>
-                      <td className="num strong" style={{ color: sumaAlSaldo(m.tipo) ? "var(--ok-fuerte)" : "var(--peligro, #e5484d)" }}>
+                      <td
+                        className="num strong"
+                        style={{
+                          color: sumaAlSaldo(m.tipo)
+                            ? "var(--ok-fuerte)"
+                            : "var(--peligro, #e5484d)",
+                        }}
+                      >
                         {sumaAlSaldo(m.tipo) ? "+" : "−"}
                         {m.cantidad}
                       </td>

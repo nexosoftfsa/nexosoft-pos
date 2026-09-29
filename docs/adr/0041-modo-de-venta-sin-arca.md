@@ -40,7 +40,7 @@ con lo que se le entrega al cliente en mano.
    `DEFAULT 1`). El comercio prende el flag el día que completa el alta —sin
    reinstalar nada.
 4. **El tipo viaja al cloud-api** vía `construirOperacionVenta`/`CrearVentaDto.
-   tipoComprobante` (antes no se enviaba; el backend asumía siempre
+tipoComprobante` (antes no se enviaba; el backend asumía siempre
    `'FacturaB'`). `VentasService.registrar`/`.anular` **no piden CAE** cuando el
    tipo es `TicketNoFiscal` (`esComprobanteFiscal()`), y persisten
    `cae`/`caeFechaVto`/`numeroComprobante` en `null`. **Anular un

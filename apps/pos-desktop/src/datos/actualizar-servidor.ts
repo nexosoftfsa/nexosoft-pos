@@ -37,7 +37,8 @@ export const ARGS_ACTUALIZAR_SERVIDOR = [
   "$standalone='C:\\NexoSoft-Servidor\\scripts\\actualizador-servidor.ps1'; $legacy='C:\\NexoSoft\\scripts\\actualizacion\\actualizar-servidor.ps1'; if (Test-Path $standalone) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$standalone,'-ServidorDir','C:\\NexoSoft-Servidor\\dist-servidor','-NodeDir','C:\\NexoSoft-Servidor\\node-portable') } elseif (Test-Path $legacy) { $a=@('-NoProfile','-ExecutionPolicy','Bypass','-File',$legacy) } else { exit 3 }; $p=Start-Process -FilePath powershell.exe -ArgumentList $a -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
 ];
 
-const LOG = 'C:\\NexoSoft-Servidor\\logs\\actualizador.log (o la carpeta "logs" del repo si el servidor se instaló con git)';
+const LOG =
+  'C:\\NexoSoft-Servidor\\logs\\actualizador.log (o la carpeta "logs" del repo si el servidor se instaló con git)';
 
 /**
  * Cada código de salida del actualizador corresponde a una acción distinta de
@@ -52,12 +53,15 @@ const LOG = 'C:\\NexoSoft-Servidor\\logs\\actualizador.log (o la carpeta "logs" 
 const MENSAJES: Readonly<Record<number, string>> = {
   3: "No encontré el servidor instalado en esta PC (ni en C:\\NexoSoft-Servidor ni en C:\\NexoSoft). Si el servidor corre en otra máquina, actualizalo desde ahí.",
   4: "No se pudo cerrar el servidor para actualizarlo, así que no se tocó nada: seguís trabajando con la versión de siempre. Probá de nuevo con el negocio cerrado, o reiniciá la PC y volvé a intentar.",
-  5: "La actualización falló y no se pudo volver a la versión anterior: EL SERVIDOR ESTÁ CAÍDO y las terminales no van a poder vender contra él. Avisá a soporte ahora. El detalle está en el log: " +
+  5:
+    "La actualización falló y no se pudo volver a la versión anterior: EL SERVIDOR ESTÁ CAÍDO y las terminales no van a poder vender contra él. Avisá a soporte ahora. El detalle está en el log: " +
     LOG,
   6: "No se pudo consultar ni descargar la actualización. Revisá que esta PC tenga internet y probá de nuevo. No se cambió nada.",
-  7: "La instalación del servidor está incompleta: falta la carpeta del programa. Puede haber quedado por la mitad una actualización anterior. El log dice cómo recuperarla: " +
+  7:
+    "La instalación del servidor está incompleta: falta la carpeta del programa. Puede haber quedado por la mitad una actualización anterior. El log dice cómo recuperarla: " +
     LOG,
-  8: "La actualización falló y se volvió sola a la versión anterior, que quedó funcionando. No perdiste nada. El motivo está en el log: " +
+  8:
+    "La actualización falló y se volvió sola a la versión anterior, que quedó funcionando. No perdiste nada. El motivo está en el log: " +
     LOG,
 };
 
@@ -103,7 +107,10 @@ export async function actualizarServidor(): Promise<ResultadoActualizarServidor>
     if (resultado.code === 0) {
       // Salida 0 cubre tanto "se actualizó" como "ya estaba al día": el script
       // no distingue, y la versión que quedó se ve arriba, en el panel.
-      return { ok: true, detalle: "Listo: el servidor quedó en la última versión y responde bien." };
+      return {
+        ok: true,
+        detalle: "Listo: el servidor quedó en la última versión y responde bien.",
+      };
     }
     return { ok: false, detalle: detalleDeSalida(resultado.code) };
   } catch (e) {

@@ -82,7 +82,14 @@ export function Proveedores({ cliente: api }: { cliente: ClienteProveedores }) {
             { titulo: "Email", ancho: 26 },
             { titulo: "Estado" },
           ],
-          filas: todos.map((p) => [p.nombre, p.cuit ?? "", p.contacto ?? "", p.telefono ?? "", p.email ?? "", p.activo ? "Activo" : "Inactivo"]),
+          filas: todos.map((p) => [
+            p.nombre,
+            p.cuit ?? "",
+            p.contacto ?? "",
+            p.telefono ?? "",
+            p.email ?? "",
+            p.activo ? "Activo" : "Inactivo",
+          ]),
         },
       ]);
       await descargarBlob("proveedores.xlsx", blob);
@@ -116,7 +123,11 @@ export function Proveedores({ cliente: api }: { cliente: ClienteProveedores }) {
         <button type="button" className="pill-btn" onClick={() => setImportando(true)}>
           Importar
         </button>
-        <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nuevo")}>
+        <button
+          type="button"
+          className="pill-btn pill-btn--primary"
+          onClick={() => setEditando("nuevo")}
+        >
           + Nuevo proveedor
         </button>
       </div>
@@ -266,31 +277,55 @@ function ModalProveedor({
         <div className="modal__body">
           <div className="field">
             <label>Nombre / Razón social</label>
-            <input className="input" value={form.nombre} onChange={(e) => campo("nombre", e.target.value)} />
+            <input
+              className="input"
+              value={form.nombre}
+              onChange={(e) => campo("nombre", e.target.value)}
+            />
           </div>
           <div className="modal__row">
             <div className="field">
               <label>CUIT</label>
-              <input className="input" value={form.cuit} onChange={(e) => campo("cuit", e.target.value)} />
+              <input
+                className="input"
+                value={form.cuit}
+                onChange={(e) => campo("cuit", e.target.value)}
+              />
             </div>
             <div className="field">
               <label>Contacto</label>
-              <input className="input" value={form.contacto} onChange={(e) => campo("contacto", e.target.value)} />
+              <input
+                className="input"
+                value={form.contacto}
+                onChange={(e) => campo("contacto", e.target.value)}
+              />
             </div>
           </div>
           <div className="modal__row">
             <div className="field">
               <label>Teléfono</label>
-              <input className="input" value={form.telefono} onChange={(e) => campo("telefono", e.target.value)} />
+              <input
+                className="input"
+                value={form.telefono}
+                onChange={(e) => campo("telefono", e.target.value)}
+              />
             </div>
             <div className="field">
               <label>Email</label>
-              <input className="input" value={form.email} onChange={(e) => campo("email", e.target.value)} />
+              <input
+                className="input"
+                value={form.email}
+                onChange={(e) => campo("email", e.target.value)}
+              />
             </div>
           </div>
           <div className="field">
             <label>Dirección</label>
-            <input className="input" value={form.direccion} onChange={(e) => campo("direccion", e.target.value)} />
+            <input
+              className="input"
+              value={form.direccion}
+              onChange={(e) => campo("direccion", e.target.value)}
+            />
           </div>
           {errores.length > 0 && (
             <div className="error">
@@ -304,7 +339,12 @@ function ModalProveedor({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar"}
           </button>
         </div>

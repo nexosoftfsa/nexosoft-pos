@@ -125,7 +125,7 @@ dar vuelto y entregar.
 
 Y **no rompe el modo offline**, que era el riesgo real de poner un tope: una
 terminal que vuelve de estar sin servidor sube su cola de golpe, y pueden ser
-cincuenta ventas en dos segundos. Se distinguen por la *fecha de la venta*, no
+cincuenta ventas en dos segundos. Se distinguen por la _fecha de la venta_, no
 por cuándo llegan: sólo cuentan para el tope las que ocurrieron recién, que son
 las únicas que un bucle puede producir.
 

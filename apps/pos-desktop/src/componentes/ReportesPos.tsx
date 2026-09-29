@@ -37,7 +37,16 @@ import {
 } from "./reportes-helpers";
 
 /** Colores fijos para la torta de rubros — no dependen de cuántos rubros haya. */
-const PALETA_TORTA = ["#0f766e", "#2563eb", "#d97706", "#dc2626", "#7c3aed", "#059669", "#db2777", "#64748b"];
+const PALETA_TORTA = [
+  "#0f766e",
+  "#2563eb",
+  "#d97706",
+  "#dc2626",
+  "#7c3aed",
+  "#059669",
+  "#db2777",
+  "#64748b",
+];
 const TOP_RUBROS = 7;
 
 /** Rango personalizado por defecto: desde la medianoche de hoy hasta ahora. */
@@ -200,7 +209,10 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
         },
         {
           nombre: "Resumen",
-          columnas: [{ titulo: "Métrica", ancho: 22 }, { titulo: "Valor", ancho: 20 }],
+          columnas: [
+            { titulo: "Métrica", ancho: 22 },
+            { titulo: "Valor", ancho: 20 },
+          ],
           filas: [
             ["Período", `${rango.desde} — ${rango.hasta}`],
             ["Total vendido", money(datos.resumen.totalVendido)],
@@ -237,7 +249,10 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
           filas: datos.top.map((p, i) => [i + 1, p.codigo, p.nombre, p.cantidad, money(p.monto)]),
         },
       ]);
-      await descargarBlob(`reporte-ventas_${rango.desde.slice(0, 10)}_a_${rango.hasta.slice(0, 10)}.xlsx`, blob);
+      await descargarBlob(
+        `reporte-ventas_${rango.desde.slice(0, 10)}_a_${rango.hasta.slice(0, 10)}.xlsx`,
+        blob,
+      );
     } catch (e) {
       setError(mensaje(e));
     }
@@ -293,7 +308,12 @@ export function ReportesPos({ cliente }: { cliente: ClienteReportes }) {
         <span className="muted">
           {rango.desde} — {rango.hasta}
         </span>
-        <button type="button" className="pill-btn" disabled={datos === null} onClick={() => void exportarResumen()}>
+        <button
+          type="button"
+          className="pill-btn"
+          disabled={datos === null}
+          onClick={() => void exportarResumen()}
+        >
           Exportar resumen
         </button>
       </div>

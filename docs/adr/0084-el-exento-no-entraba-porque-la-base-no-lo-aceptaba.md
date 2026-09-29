@@ -205,9 +205,9 @@ La causa es `subtotalNeto()`, que filtraba los renglones gravados y devolvía
 bloque de totales con ese `null` —el subtotal y los renglones del desglose—,
 así que desaparecía entero.
 
-`null` estaba significando dos cosas distintas: *"este comprobante no
-discrimina"* (una B, o una A vieja sin desglose guardado) y *"no hay nada
-gravado"*. La segunda no es ausencia de dato: **es cero**. Ahora `subtotalNeto`
+`null` estaba significando dos cosas distintas: _"este comprobante no
+discrimina"_ (una B, o una A vieja sin desglose guardado) y _"no hay nada
+gravado"_. La segunda no es ausencia de dato: **es cero**. Ahora `subtotalNeto`
 devuelve `null` sólo cuando no hay desglose, y cero cuando lo hay y todo es
 exento.
 
@@ -217,8 +217,8 @@ el duplicado (ADR-0083), y ahora esto. **Y el test lo fijaba al revés** — yo
 mismo escribí `expect(subtotalNeto(...)).toBeNull()` para este caso. Un test
 que documenta el error no protege de nada; lo hace durar.
 
-La pregunta que faltó las tres veces es la misma: *¿corresponde mostrarlo?*, no
-*¿hay algo que sumar?*
+La pregunta que faltó las tres veces es la misma: _¿corresponde mostrarlo?_, no
+_¿hay algo que sumar?_
 
 También de esta ronda: al cancelar una pregunta, el foco no volvía al buscador
 y la caja quedaba sin recibir el teclado. Lo devuelve `Dialogos.tsx` —que anota

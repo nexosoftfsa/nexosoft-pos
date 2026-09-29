@@ -3,11 +3,11 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { RolUsuario } from '@prisma/client';
-import * as argon2 from 'argon2';
-import { PrismaService } from '../prisma/prisma.service';
-import { RevisionClavesService } from '../auth/revision-claves.service';
+} from "@nestjs/common";
+import { RolUsuario } from "@prisma/client";
+import * as argon2 from "argon2";
+import { PrismaService } from "../prisma/prisma.service";
+import { RevisionClavesService } from "../auth/revision-claves.service";
 
 const SELECT_PUBLICO = {
   id: true,
@@ -43,28 +43,23 @@ export class UsuariosService {
     return this.prisma.usuario.findMany({
       where: { sucursalId },
       select: SELECT_PUBLICO,
-      orderBy: { creadoEn: 'asc' },
+      orderBy: { creadoEn: "asc" },
     });
   }
 
-  async actualizar(
-    id: string,
-    sucursalId: string,
-    solicitanteId: string,
-    cambios: CambiosUsuario,
-  ) {
+  async actualizar(id: string, sucursalId: string, solicitanteId: string, cambios: CambiosUsuario) {
     // No puede tocar usuarios de otra sucursal (ni siquiera para saber si existen).
     const existe = await this.prisma.usuario.findFirst({ where: { id, sucursalId } });
-    if (!existe) throw new NotFoundException('Usuario no encontrado');
+    if (!existe) throw new NotFoundException("Usuario no encontrado");
 
     // Un ADMIN no puede desactivarse ni quitarse el rol a sí mismo: es la forma
     // más común de quedar todos bloqueados afuera del sistema por accidente.
     if (id === solicitanteId) {
       if (cambios.activo === false) {
-        throw new BadRequestException('No podés desactivar tu propio usuario.');
+        throw new BadRequestException("No podés desactivar tu propio usuario.");
       }
       if (cambios.rol !== undefined && cambios.rol !== RolUsuario.ADMIN) {
-        throw new BadRequestException('No podés quitarte el rol de administrador a vos mismo.');
+        throw new BadRequestException("No podés quitarte el rol de administrador a vos mismo.");
       }
     }
 
@@ -96,20 +91,20 @@ export class UsuariosService {
       where: { id, sucursalId },
       include: { sucursal: { select: { nombre: true } } },
     });
-    if (!usuario) throw new NotFoundException('Usuario no encontrado');
+    if (!usuario) throw new NotFoundException("Usuario no encontrado");
 
     // La propia: hay que saber la actual. Ver CambiarPasswordDto para el
     // porqué. Un ADMIN cambiándole la clave a otro no la necesita.
     if (id === solicitanteId) {
-      if (cambio.passwordActual === undefined || cambio.passwordActual === '') {
+      if (cambio.passwordActual === undefined || cambio.passwordActual === "") {
         throw new BadRequestException(
-          'Para cambiar tu propia contraseña tenés que escribir la actual.',
+          "Para cambiar tu propia contraseña tenés que escribir la actual.",
         );
       }
       const actualOk = await argon2.verify(usuario.passwordHash, cambio.passwordActual);
-      if (!actualOk) throw new UnauthorizedException('La contraseña actual no es correcta.');
+      if (!actualOk) throw new UnauthorizedException("La contraseña actual no es correcta.");
       if (cambio.passwordActual === cambio.passwordNueva) {
-        throw new BadRequestException('La contraseña nueva tiene que ser distinta de la actual.');
+        throw new BadRequestException("La contraseña nueva tiene que ser distinta de la actual.");
       }
     }
 
@@ -137,15 +132,15 @@ export class UsuariosService {
       where: { id, sucursalId },
       select: { fotoBase64: true },
     });
-    if (!usuario) throw new NotFoundException('Usuario no encontrado');
+    if (!usuario) throw new NotFoundException("Usuario no encontrado");
     return { fotoBase64: usuario.fotoBase64 };
   }
 
   async actualizarFoto(id: string, sucursalId: string, fotoBase64: string): Promise<EstadoFoto> {
     const existe = await this.prisma.usuario.findFirst({ where: { id, sucursalId } });
-    if (!existe) throw new NotFoundException('Usuario no encontrado');
+    if (!existe) throw new NotFoundException("Usuario no encontrado");
 
-    const valor = fotoBase64.trim() === '' ? null : fotoBase64;
+    const valor = fotoBase64.trim() === "" ? null : fotoBase64;
     const actualizado = await this.prisma.usuario.update({
       where: { id },
       data: { fotoBase64: valor },

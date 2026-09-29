@@ -49,7 +49,9 @@ function fechaHora(iso: string | null): string {
 function etiquetaDiferencia(diferencia: string | null): string {
   const dif = leerDiferencia(diferencia);
   if (dif === null) return "";
-  return diferencia !== null && dif.signo !== "exacto" ? `${dif.etiqueta} · ${money(diferencia)}` : dif.etiqueta;
+  return diferencia !== null && dif.signo !== "exacto"
+    ? `${dif.etiqueta} · ${money(diferencia)}`
+    : dif.etiqueta;
 }
 
 function BadgeDiferencia({ diferencia }: { diferencia: string | null }) {

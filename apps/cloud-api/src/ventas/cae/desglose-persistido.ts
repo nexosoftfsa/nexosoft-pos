@@ -10,9 +10,9 @@
  * discriminar IVA — sólo el total. Para la C no importaba (no discrimina); para
  * la A el duplicado así no sirve.
  */
-import { Decimal } from '@prisma/client/runtime/library';
-import type { Prisma } from '@prisma/client';
-import type { DesgloseIva } from '@nexosoft/domain';
+import { Decimal } from "@prisma/client/runtime/library";
+import type { Prisma } from "@prisma/client";
+import type { DesgloseIva } from "@nexosoft/domain";
 
 /** Un renglón del array `Iva` de WSFEv1, como se guarda en la base. */
 export interface RenglonIvaGuardado {
@@ -126,9 +126,9 @@ export function importesGuardados(venta: {
 function renglones(crudo: unknown): RenglonIvaGuardado[] {
   if (!Array.isArray(crudo)) return [];
   return crudo.flatMap((r) => {
-    if (r === null || typeof r !== 'object') return [];
+    if (r === null || typeof r !== "object") return [];
     const { codigoArca, base, importe } = r as Record<string, unknown>;
-    if (typeof codigoArca !== 'number' || typeof base !== 'string' || typeof importe !== 'string') {
+    if (typeof codigoArca !== "number" || typeof base !== "string" || typeof importe !== "string") {
       return [];
     }
     return [{ codigoArca, base, importe }];

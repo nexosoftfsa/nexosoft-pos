@@ -19,12 +19,12 @@ depende sólo de nosotros.
 
 ### Lo que la undécima vuelta (29/9) dejó cerrado
 
-- **EL EXENTO ENTRÓ.** *"Catálogo al día (27 productos)"*. Cuatro vueltas.
+- **EL EXENTO ENTRÓ.** _"Catálogo al día (27 productos)"_. Cuatro vueltas.
 - **La Factura A mixta sale bien y su duplicado es idéntico.** Seba:
-  *"Idénticos ambos"*. Subtotal neto 8.264,46 + Exento 1.450,00 + IVA 1.735,54
+  _"Idénticos ambos"_. Subtotal neto 8.264,46 + Exento 1.450,00 + IVA 1.735,54
   = 11.450,00, y los renglones suman 9.714,46.
 - **El ticket chico original y su duplicado también coinciden.**
-- **F4 pregunta**, el separador de miles anda (*"Perfecto!"*), las
+- **F4 pregunta**, el separador de miles anda (_"Perfecto!"_), las
   confirmaciones de gestión preguntan, y el F12 ya no está.
 
 ### Lo que la undécima vuelta destapó
@@ -34,15 +34,15 @@ depende sólo de nosotros.
 - [x] **La Factura A de PUROS exentos salía sin el bloque de totales.** Ni
       "Subtotal neto" ni el renglón "Exento": sólo los renglones y el TOTAL. El
       que la recibe no tenía cómo saber que la operación era exenta.
-      *`subtotalNeto()` devolvía `null` cuando no quedaba ningún renglón
+      _`subtotalNeto()` devolvía `null` cuando no quedaba ningún renglón
       gravado, y ese `null` gobierna el bloque entero en los tres renderers.
       Tercera vez con la misma confusión —"no hay nada que sumar" tratado como
-      "no se sabe"— y **el test lo fijaba al revés** (apéndice de ADR-0084).*
+      "no se sabe"— y **el test lo fijaba al revés** (apéndice de ADR-0084)._
 
 - [x] **Al cancelar una pregunta, el foco no volvía al buscador.** Había que
       llevarlo con el mouse, en una pantalla que se opera con el teclado.
-      *Lo devuelve `Dialogos.tsx`, antes de resolver la promesa, y la caja lo
-      manda siempre al buscador.*
+      _Lo devuelve `Dialogos.tsx`, antes de resolver la promesa, y la caja lo
+      manda siempre al buscador._
 
 - [ ] **El duplicado no muestra el vuelto.** Sigue pendiente: el servidor no lo
       guarda. Columna nueva + payload + DTO.
@@ -56,7 +56,7 @@ depende sólo de nosotros.
   Verificado por Seba: 1.450,00 + 8.264,46 = 9.714,46 (ADR-0083).
 - **La Transparencia Fiscal anda en la B.** IVA Contenido $ 286,36 sobre un
   aceite de $ 1.650 al 21%.
-- **El tilde de "Venta registrada" quedó claro.** Seba: *"Perfecto!"*.
+- **El tilde de "Venta registrada" quedó claro.** Seba: _"Perfecto!"_.
 - **Los pagos, el medio de pago y el lector** siguen bien desde la novena.
 
 ### Lo que la décima vuelta destapó
@@ -69,8 +69,8 @@ depende sólo de nosotros.
       para los exentos. Como el volcado corre en una sola transacción, el
       primer exento hacía `ROLLBACK` de todo: **no fallaba el exento, no
       entraba nada**. De ahí que se viera como "el catálogo no baja".
-      *Migración de SQLite que recrea las dos tablas, condicional y con las FK
-      chequeadas (ADR-0084). Una base nueva nunca lo tuvo; la de Seba sí.*
+      _Migración de SQLite que recrea las dos tablas, condicional y con las FK
+      chequeadas (ADR-0084). Una base nueva nunca lo tuvo; la de Seba sí._
 
 - [ ] **Confirmar en campo que el catálogo ya baja.** Es el paso 2 de la
       prueba, y es el que cierra tres vueltas de pruebas perdidas.
@@ -79,40 +79,40 @@ depende sólo de nosotros.
       original y el duplicado de la MISMA Factura A: el original imprimió
       "IVA 0%" sobre el arroz y el duplicado "Exento". El POS imprimía con su
       catálogo y el servidor declaraba con el suyo.
-      *Ahora el POS manda la alícuota que imprimió y el servidor declara ésa
+      _Ahora el POS manda la alícuota que imprimió y el servidor declara ésa
       (ADR-0084). El catálogo del servidor queda de respaldo, y si difieren
-      queda un warning en el log.*
+      queda un warning en el log._
 
 - [ ] **Confirmar que el duplicado salga igual que el original.** No sólo los
       números: encabezados, tipografía e interlineado. Las hojas se
       renderizaban adentro de la pantalla que las imprimía y heredaban su CSS
       —`.gestion th { text-transform: uppercase }`—, así que Comprobantes
-      imprimía distinto que la caja. *Ahora van por un portal a `<body>`.*
+      imprimía distinto que la caja. _Ahora van por un portal a `<body>`._
 
 - [x] **F4 no hacía nada.** Segunda ronda seguida con el mismo botón roto: el
       22/9 vaciaba la caja sin preguntar, el 26/9 no hacía absolutamente nada.
-      *El diálogo del webview de Tauri no se puede usar; ahora lo dibuja la app.
+      _El diálogo del webview de Tauri no se puede usar; ahora lo dibuja la app.
       De paso se arreglaron los **diez** `window.confirm` de los módulos de
-      gestión, que venían ejecutándose sin preguntar.*
+      gestión, que venían ejecutándose sin preguntar._
 
 - [x] **Separador de miles al tipear el importe.** Seba puso $ 20.000 donde
-      quería $ 2.000. *El campo agrupa los miles a medida que entran los
-      dígitos, con el cursor en su lugar.*
+      quería $ 2.000. _El campo agrupa los miles a medida que entran los
+      dígitos, con el cursor en su lugar._
 
 - [x] **Se sacó el atajo F12.** Lo pidió dos rondas seguidas.
 
 - [ ] **El duplicado no muestra el vuelto.** El servidor no lo guarda, así que
       la reimpresión lo pone en cero. El original sí lo muestra, y difieren.
-      *Arreglarlo es una columna nueva en la venta, el payload de sync y el
+      _Arreglarlo es una columna nueva en la venta, el payload de sync y el
       DTO. No es grave —el vuelto no es un dato fiscal— pero el papel tiene que
-      decir lo mismo las dos veces.*
+      decir lo mismo las dos veces._
 
 - [ ] **"Microsoft Print to PDF" dejó de funcionar** desde el POS (no desde
       otros programas). La pantalla de impresión aparece, se elige, y el
       archivo no se guarda ni avisa nada. Con "Guardar como PDF" anda.
-      *Seba lo bajó de prioridad: se mira junto con las pruebas de térmica.
+      _Seba lo bajó de prioridad: se mira junto con las pruebas de térmica.
       Sospecha: el `afterprint` limpia la hoja antes de que ese driver termine
-      de generar el archivo.*
+      de generar el archivo._
 
 ---
 
@@ -142,8 +142,8 @@ pueden usarnos legalmente. Era la duda más cara de todas.
       caja ignora cualquier recargo de débito que haya quedado guardado de
       antes** — que era la parte que importaba, porque si no el arreglo quedaba
       esperando a que alguien entrara a editar la tarjeta.
-      *Prueba de un minuto: configurar un débito, ver que no deje poner recargo
-      ni cuotas, y cobrar con él.*
+      _Prueba de un minuto: configurar un débito, ver que no deje poner recargo
+      ni cuotas, y cobrar con él._
 
 - [ ] **Ingresos Brutos en el comprobante.** El mismo régimen de transparencia,
       pero provincial: hay que informar la **alícuota** de IIBB (no el importe)
@@ -151,15 +151,15 @@ pueden usarnos legalmente. Era la duda más cara de todas.
       (Res. AGIP 339/2026); Entre Ríos y Chubut avanzaron con cronogramas
       propios; Mendoza y Santa Fe adhirieron sin reglamentar; el resto no se
       movió. **Formosa no lo implementó**, así que no bloquea a LAGUS.
-      *El problema de diseño es que cada provincia pide algo distinto: la
-      alícuota tiene que ser configuración por sucursal, no una constante.*
+      _El problema de diseño es que cada provincia pide algo distinto: la
+      alícuota tiene que ser configuración por sucursal, no una constante._
 
 - [ ] **Factura de Crédito Electrónica MiPyME (Ley 27.440).** Si una MiPyME le
       factura a una empresa grande por más de **$5.549.862** (valor desde el
       14/4/2026, se actualiza), corresponde emitir una FCE y no una Factura A
       común. No lo soportamos.
-      *No bloquea a un comercio minorista. Sí bloquearía a una distribuidora,
-      que es justamente el perfil del CUIT con el que probamos.*
+      _No bloquea a un comercio minorista. Sí bloquearía a una distribuidora,
+      que es justamente el perfil del CUIT con el que probamos._
 
 - [ ] **Libro IVA Digital (RG 4597).** Es obligación del comercio, no nuestra,
       pero hoy no exportamos nada con ese formato: el contador tiene que
@@ -176,8 +176,8 @@ pueden usarnos legalmente. Era la duda más cara de todas.
 - [ ] **Datos personales (Ley 25.326).** Guardamos clientes con nombre, CUIT o
       DNI y domicilio, y los alojamos nosotros. La ley exige inscribir la base
       en el registro de la AAIP y tener medidas de seguridad documentadas.
-      *No es técnico y es de NexoSoft, no del comercio. Va junto con el contrato
-      de licencias, que ya está pendiente.*
+      _No es técnico y es de NexoSoft, no del comercio. Va junto con el contrato
+      de licencias, que ya está pendiente._
 
 ---
 
@@ -189,8 +189,8 @@ pueden usarnos legalmente. Era la duda más cara de todas.
       de que son sólo los nacionales. Rige desde el 1/4/2025 y no lo
       cumplíamos. De paso se corrigió que la térmica discriminara el IVA por
       alícuota en una B, que el A4 no hacía.
-      *Falta mirar un PDF: el IVA contenido tiene que coincidir con el IVA que
-      se le declaró a ARCA.*
+      _Falta mirar un PDF: el IVA contenido tiene que coincidir con el IVA que
+      se le declaró a ARCA._
 
 - [ ] **Preguntarle al contador por los impuestos internos.** Hoy el renglón va
       en **$0,00**, que es lo que imprime un supermercado real y la lectura
@@ -198,17 +198,17 @@ pueden usarnos legalmente. Era la duda más cara de todas.
       revende no es sujeto pasivo. La norma **no resuelve** el caso del
       revendedor —los tributaristas se lo están reclamando a ARCA— así que
       conviene tenerlo confirmado por escrito.
-      *Si dijera que hay que estimarlo, necesitamos que diga con qué criterio:
-      inventarlo nosotros no es una opción.*
-      *El campo `otrosImpuestosNacionales` ya existe, para el día que le
+      _Si dijera que hay que estimarlo, necesitamos que diga con qué criterio:
+      inventarlo nosotros no es una opción._
+      _El campo `otrosImpuestosNacionales` ya existe, para el día que le
       vendamos a alguien que sí los liquida. Ese caso además tiene que mandar
-      el importe a ARCA en `Tributos`, que es trabajo de servidor.*
+      el importe a ARCA en `Tributos`, que es trabajo de servidor._
 
 - [ ] **Conseguir un CUIT de Responsable Inscripto.** Es lo único que separa a
       la A y la B de estar verificadas **en producción**. Con el CUIT de Seba
       —Monotributo en el padrón— se prueba el circuito pero no se emite de
       verdad.
-      *Decisión tuya, no es técnico.*
+      _Decisión tuya, no es técnico._
 
 ---
 
@@ -218,7 +218,7 @@ pueden usarnos legalmente. Era la duda más cara de todas.
       **Nunca se probó.** Hay que ver que durante el bloqueo sigan andando
       **cerrar la caja, Reportes y Comprobantes**: un comercio bloqueado tiene
       que poder cerrar el día y sacar sus números, aunque no pueda vender.
-      *Bloquea: cobrar la suscripción. Es el modelo de negocio.*
+      _Bloquea: cobrar la suscripción. Es el modelo de negocio._
 
 ---
 
@@ -233,9 +233,9 @@ Implementado y con tests, nunca visto sobre el fierro.
       Sale junto con la térmica.
 - [ ] **Balanza.** **No hay adaptador real**, sólo el mock (ADR-0018). Falta un
       plugin Tauri para RS-232 y el parser de la trama, que depende de la marca.
-      ❓ *¿LAGUS vende por peso?*
+      ❓ _¿LAGUS vende por peso?_
 - [ ] **Lector de código de barras.** Si es **HID** ya anda; si es **serial**,
-      falta el plugin del puerto COM. ❓ *¿Cuál usa LAGUS?*
+      falta el plugin del puerto COM. ❓ _¿Cuál usa LAGUS?_
 
 ---
 
@@ -247,12 +247,12 @@ Implementado y con tests, nunca visto sobre el fierro.
       Tiene que decir, además, que el certificado es **por entorno**: si el alta
       se prueba en homologación y después pasa a producción, son dos trámites
       con el mismo `.csr` (ADR-0071).
-      *Bloquea: que instale alguien que no seamos nosotros. O sea, bloquea vender.*
+      _Bloquea: que instale alguien que no seamos nosotros. O sea, bloquea vender._
 
 - [ ] **Instalación en Program Files en vez de AppData.** Frenado por riesgo de
       doble instalación. Hay que probarlo en una PC de descarte.
-      *Ganancia: le saca peso a una de las señales que hicieron que Defender se
-      comiera el POS.*
+      _Ganancia: le saca peso a una de las señales que hicieron que Defender se
+      comiera el POS._
 
 - [ ] **Dejar por escrito qué hacemos con la firma de código.** Ya está decidido
       no gastar ahora. Falta aceptar el costo por escrito: cada alta lleva un
@@ -265,8 +265,8 @@ Implementado y con tests, nunca visto sobre el fierro.
 - [ ] **Alerta de vencimiento de certificados.** El dato ya existe
       (`diasParaVencer`); falta que alguien lo mire de forma centralizada. Hoy
       el servidor es por sucursal y nadie va a mirar cincuenta tableros.
-      *Un certificado de ARCA dura 2 años: con 50 clientes son 50 bombas de
-      tiempo silenciosas.*
+      _Un certificado de ARCA dura 2 años: con 50 clientes son 50 bombas de
+      tiempo silenciosas._
 - [ ] **Licencias: la parte legal.** Lo técnico está hecho. Falta el contrato y
       el límite por sucursal.
 - [ ] **Multisucursal.** Postergado a propósito; el rumbo ya está elegido.
@@ -278,8 +278,8 @@ Implementado y con tests, nunca visto sobre el fierro.
 - [ ] **El umbral de $10.000.000** (RG 5700/2025) no está implementado: hoy se
       puede emitir una B por cualquier monto sin identificar al comprador.
       Falta decidir si al superarlo se **bloquea** o se **avisa**.
-      *Recomendación: avisar. Frenar una venta por un tema formal, con el cliente
-      adelante, es peor que emitirla y corregirla.*
+      _Recomendación: avisar. Frenar una venta por un tema formal, con el cliente
+      adelante, es peor que emitirla y corregirla._
 - [ ] **Elegir la alícuota de una Nota de Débito.** Hoy va siempre al 21% en A y
       B. Si hace falta elegirla, el concepto tendría que venir con su tasa.
 - [ ] **Nota de Crédito parcial.** Hoy anular es por el total. Devolver un solo
@@ -289,8 +289,8 @@ Implementado y con tests, nunca visto sobre el fierro.
       cualquier otra falla del `INSERT` entre el CAE y el commit deja lo mismo:
       un comprobante autorizado en ARCA que no existe en nuestra base. Hoy al
       menos queda registrado como discrepancia fiscal, con el número y el CAE.
-      *Arreglarlo de verdad implica reservar la fila antes de hablar con ARCA,
-      o poder anular ante ARCA lo que no se pudo guardar. Ninguna es chica.*
+      _Arreglarlo de verdad implica reservar la fila antes de hablar con ARCA,
+      o poder anular ante ARCA lo que no se pudo guardar. Ninguna es chica._
 - [ ] **Cachear el último número de comprobante** para sacarle un viaje a ARCA
       por venta (ADR-0061). No se hizo a propósito.
 - [ ] **ADR-0018 quedó viejo:** dice que falta el plugin de impresora ESC/POS y

@@ -1,5 +1,9 @@
-import { ErrorWsfe, type DatosComprobante, type ResultadoAutorizacion } from '../../fiscal/arca/wsfev1';
-import type { TicketAcceso } from '../../fiscal/arca/tra';
+import {
+  ErrorWsfe,
+  type DatosComprobante,
+  type ResultadoAutorizacion,
+} from "../../fiscal/arca/wsfev1";
+import type { TicketAcceso } from "../../fiscal/arca/tra";
 
 /** Lo único que se necesita de `ClienteWsfev1` para pedir el CAE y recuperarlo. */
 export interface ClienteParaRecuperar {
@@ -46,7 +50,7 @@ export async function solicitarConRecuperacion(
     avisar(
       `La respuesta de ARCA se perdió (${e.message}), pero el comprobante ` +
         `${datos.codigoComprobante}-${datos.puntoDeVenta}-${datos.numero} ya estaba autorizado. ` +
-        'Se recupera el CAE en vez de emitir otro.',
+        "Se recupera el CAE en vez de emitir otro.",
     );
     return yaEmitido;
   }
@@ -73,9 +77,7 @@ async function consultarSinFallar(
       datos.numero,
     );
   } catch (e) {
-    avisar(
-      `No se pudo consultar si el comprobante había quedado emitido: ${(e as Error).message}`,
-    );
+    avisar(`No se pudo consultar si el comprobante había quedado emitido: ${(e as Error).message}`);
     return null;
   }
 }

@@ -3,12 +3,12 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
-} from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/library';
-import { PrismaService } from '../prisma/prisma.service';
-import type { AbrirTurnoDto } from './dto/abrir-turno.dto';
-import type { RegistrarMovimientoCajaDto } from './dto/registrar-movimiento-caja.dto';
-import type { CerrarTurnoDto } from './dto/cerrar-turno.dto';
+} from "@nestjs/common";
+import { Decimal } from "@prisma/client/runtime/library";
+import { PrismaService } from "../prisma/prisma.service";
+import type { AbrirTurnoDto } from "./dto/abrir-turno.dto";
+import type { RegistrarMovimientoCajaDto } from "./dto/registrar-movimiento-caja.dto";
+import type { CerrarTurnoDto } from "./dto/cerrar-turno.dto";
 
 /**
  * Caja y tesorería (Fase 7.4). Un turno de caja se abre en una terminal con un
@@ -28,14 +28,14 @@ export class CajaService {
     if (!terminal) throw new NotFoundException(`Terminal ${dto.terminalId} no encontrada`);
 
     const abierto = await this.prisma.turnoCaja.findFirst({
-      where: { terminalId: dto.terminalId, sucursalId, estado: 'ABIERTO' },
+      where: { terminalId: dto.terminalId, sucursalId, estado: "ABIERTO" },
     });
     if (abierto) {
-      throw new ConflictException('Ya hay un turno de caja abierto en esta terminal');
+      throw new ConflictException("Ya hay un turno de caja abierto en esta terminal");
     }
 
     const fondo = new Decimal(dto.fondoApertura);
-    if (fondo.lt(0)) throw new BadRequestException('El fondo de apertura no puede ser negativo');
+    if (fondo.lt(0)) throw new BadRequestException("El fondo de apertura no puede ser negativo");
 
     const turno = await this.prisma.turnoCaja.create({
       data: {
@@ -51,8 +51,8 @@ export class CajaService {
   /** Turno abierto de una terminal (con resumen), o null si no hay ninguno. */
   async turnoActual(sucursalId: string, terminalId: string) {
     const turno = await this.prisma.turnoCaja.findFirst({
-      where: { terminalId, sucursalId, estado: 'ABIERTO' },
-      include: { movimientos: { orderBy: { creadoEn: 'desc' } } },
+      where: { terminalId, sucursalId, estado: "ABIERTO" },
+      include: { movimientos: { orderBy: { creadoEn: "desc" } } },
     });
     return turno ? this.conResumen(turno) : null;
   }
@@ -60,21 +60,18 @@ export class CajaService {
   async obtenerTurno(sucursalId: string, id: string) {
     const turno = await this.prisma.turnoCaja.findFirst({
       where: { id, sucursalId },
-      include: { movimientos: { orderBy: { creadoEn: 'desc' } } },
+      include: { movimientos: { orderBy: { creadoEn: "desc" } } },
     });
     if (!turno) throw new NotFoundException(`Turno ${id} no encontrado`);
     return this.conResumen(turno);
   }
 
   /** Historial de turnos (más reciente primero), con terminal y cajero. */
-  async listarTurnos(
-    sucursalId: string,
-    opciones: { limite?: number; terminalId?: string } = {},
-  ) {
+  async listarTurnos(sucursalId: string, opciones: { limite?: number; terminalId?: string } = {}) {
     const limite = opciones.limite ?? 30;
     const turnos = await this.prisma.turnoCaja.findMany({
       where: { sucursalId, ...(opciones.terminalId ? { terminalId: opciones.terminalId } : {}) },
-      orderBy: { abiertoEn: 'desc' },
+      orderBy: { abiertoEn: "desc" },
       take: Math.min(Math.max(limite, 1), 100),
       include: {
         terminal: { select: { nombre: true } },
@@ -87,7 +84,7 @@ export class CajaService {
   async registrarMovimiento(sucursalId: string, turnoId: string, dto: RegistrarMovimientoCajaDto) {
     const turno = await this.turnoAbierto(sucursalId, turnoId);
     const monto = new Decimal(dto.monto);
-    if (monto.lte(0)) throw new BadRequestException('El monto debe ser mayor a cero');
+    if (monto.lte(0)) throw new BadRequestException("El monto debe ser mayor a cero");
 
     await this.prisma.movimientoCaja.create({
       data: {
@@ -104,7 +101,7 @@ export class CajaService {
   async cerrarTurno(sucursalId: string, turnoId: string, dto: CerrarTurnoDto) {
     const turno = await this.turnoAbierto(sucursalId, turnoId);
     const contado = new Decimal(dto.montoContado);
-    if (contado.lt(0)) throw new BadRequestException('El monto contado no puede ser negativo');
+    if (contado.lt(0)) throw new BadRequestException("El monto contado no puede ser negativo");
 
     const resumen = await this.calcularResumen(turno);
     const diferencia = contado.minus(new Decimal(resumen.saldoTeorico));
@@ -112,7 +109,7 @@ export class CajaService {
     await this.prisma.turnoCaja.update({
       where: { id: turno.id },
       data: {
-        estado: 'CERRADO',
+        estado: "CERRADO",
         cerradoEn: new Date(),
         montoContado: contado,
         diferencia,
@@ -131,8 +128,8 @@ export class CajaService {
       where: { id: turnoId, sucursalId },
     });
     if (!turno) throw new NotFoundException(`Turno ${turnoId} no encontrado`);
-    if (turno.estado !== 'ABIERTO') {
-      throw new BadRequestException('El turno ya está cerrado');
+    if (turno.estado !== "ABIERTO") {
+      throw new BadRequestException("El turno ya está cerrado");
     }
     return turno;
   }
@@ -141,7 +138,7 @@ export class CajaService {
   private async conResumen<T extends { id: string }>(turno: T) {
     const completo = await this.prisma.turnoCaja.findUniqueOrThrow({
       where: { id: turno.id },
-      include: { movimientos: { orderBy: { creadoEn: 'desc' } } },
+      include: { movimientos: { orderBy: { creadoEn: "desc" } } },
     });
     return { ...completo, resumen: await this.calcularResumen(completo) };
   }
@@ -167,8 +164,8 @@ export class CajaService {
       where: {
         sucursalId: turno.sucursalId,
         terminalId: turno.terminalId,
-        medioPago: 'EFECTIVO',
-        estado: { not: 'ANULADA' },
+        medioPago: "EFECTIVO",
+        estado: { not: "ANULADA" },
         creadaEn: { gte: turno.abiertoEn, lte: hasta },
       },
       select: { total: true },
@@ -182,7 +179,7 @@ export class CajaService {
     let ingresos = new Decimal(0);
     let egresos = new Decimal(0);
     for (const m of movimientos) {
-      if (m.tipo === 'INGRESO') ingresos = ingresos.plus(m.monto);
+      if (m.tipo === "INGRESO") ingresos = ingresos.plus(m.monto);
       else egresos = egresos.plus(m.monto);
     }
 

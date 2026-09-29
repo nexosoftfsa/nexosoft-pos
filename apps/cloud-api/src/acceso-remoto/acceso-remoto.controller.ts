@@ -1,9 +1,9 @@
-import { Controller, Get, Request, UseGuards } from '@nestjs/common';
-import { RolUsuario } from '@prisma/client';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { AccesoRemotoService } from './acceso-remoto.service';
+import { Controller, Get, Request, UseGuards } from "@nestjs/common";
+import { RolUsuario } from "@prisma/client";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
+import { AccesoRemotoService } from "./acceso-remoto.service";
 
 /**
  * Dirección pública del panel de este comercio (Fase 17.A, ADR-0055).
@@ -14,7 +14,7 @@ import { AccesoRemotoService } from './acceso-remoto.service';
  */
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RolUsuario.ADMIN, RolUsuario.SUPERVISOR)
-@Controller('acceso-remoto')
+@Controller("acceso-remoto")
 export class AccesoRemotoController {
   constructor(private readonly accesoRemoto: AccesoRemotoService) {}
 

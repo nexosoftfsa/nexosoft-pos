@@ -15,67 +15,67 @@ Consecuencias y Alternativas consideradas.
 
 ## Índice
 
-| #    | Título                                                                                                 | Estado   |
-| ---- | ------------------------------------------------------------------------------------------------------ | -------- |
-| 0001 | [Registrar decisiones con ADR](0001-registro-de-decisiones-adr.md)                                     | Aceptada |
-| 0002 | [Monorepo con pnpm + Turborepo](0002-monorepo-pnpm-turborepo.md)                                       | Aceptada |
-| 0003 | [Cliente POS de escritorio con Tauri 2](0003-cliente-pos-tauri.md)                                     | Aceptada |
-| 0004 | [SQLite como fuente de verdad offline](0004-sqlite-fuente-de-verdad-offline.md)                        | Aceptada |
-| 0005 | [Estrategia de sincronización offline-first](0005-sincronizacion-offline-first.md)                     | Aceptada |
-| 0006 | [Backend NestJS + PostgreSQL + Prisma](0006-backend-nestjs-postgresql.md)                              | Aceptada |
-| 0007 | [Manejo de dinero con decimales exactos](0007-manejo-de-dinero-decimal-exacto.md)                      | Aceptada |
-| 0008 | [Servicio fiscal ARCA aislado](0008-servicio-fiscal-arca-aislado.md)                                   | Aceptada |
-| 0009 | [Abstracción de hardware con puertos y mocks](0009-abstraccion-hardware-mocks.md)                      | Aceptada |
-| 0010 | [Pasarela de pago aislada (MercadoPago)](0010-pasarela-de-pago-mercadopago.md)                         | Aceptada |
-| 0011 | [Proveedor LLM: Google Gemini](0011-proveedor-llm-gemini.md)                                           | Aceptada |
-| 0012 | [Condición fiscal del emisor configurable](0012-condicion-fiscal-emisor-configurable.md)               | Aceptada |
-| 0013 | [Precios IVA incluido y cálculo de comprobante](0013-precios-iva-incluido-y-calculo-de-comprobante.md) | Aceptada |
-| 0014 | [Costeo y marcación de precios por régimen](0014-costeo-y-marcacion-por-regimen.md)                    | Aceptada |
-| 0015 | [Cantidades exactas y control de stock negativo](0015-cantidades-exactas-y-control-de-stock.md)        | Aceptada |
-| 0016 | [Capa de aplicación con puertos de repositorio](0016-capa-de-aplicacion-y-puertos-de-repositorio.md)   | Aceptada |
-| 0017 | [Adaptador SQLite detrás de un ejecutor, testeable sin Tauri](0017-adaptador-sqlite-via-ejecutor.md)   | Aceptada |
-| 0018 | [Abstracción de hardware con puertos y mocks](0018-abstraccion-hardware-puertos-y-mocks.md)            | Aceptada |
-| 0019 | [Topología de despliegue: servidor de sucursal en LAN](0019-topologia-servidor-de-sucursal-lan.md)     | Aceptada |
-| 0020 | [Respaldo en la nube propia del cliente](0020-respaldo-en-nube-propia.md)                              | Aceptada |
-| 0021 | [Libro de ventas en Excel y respaldo por venta](0021-libro-de-ventas-excel-y-respaldo-en-venta.md)     | Aceptada |
-| 0022 | [Adaptador `EjecutorSql` sobre Tauri y reescritura de placeholders](0022-adaptador-ejecutorsql-tauri-y-placeholders.md) | Aceptada |
-| 0023 | [Transacciones en el POS por serialización del acceso a SQLite](0023-transacciones-sqlite-por-serializacion.md) | Aceptada |
-| 0024 | [Panel web de reportes como app independiente (read-only)](0024-panel-web-de-reportes.md) | Aceptada |
-| 0025 | [Shell de gestión en el POS (menú lateral + identidad de la maqueta)](0025-shell-de-gestion-en-el-pos.md) | Aceptada |
-| 0026 | [Caja por turnos, ventas en efectivo por ventana de tiempo](0026-caja-por-turnos-y-ventana-de-tiempo.md) | Aceptada |
-| 0027 | [Clientes y cuenta corriente como ledger](0027-clientes-y-cuenta-corriente-ledger.md) | Aceptada |
-| 0028 | [Comprobantes y anulación con Nota de Crédito (online)](0028-comprobantes-y-anulacion-con-nota-de-credito.md) | Aceptada |
-| 0029 | [Pago combinado (desglose de pagos por venta)](0029-pago-combinado.md) | Aceptada |
-| 0030 | [Recargo global en el comprobante](0030-recargo-global.md) | Aceptada |
-| 0031 | [Presupuestos como comprobante no fiscal](0031-presupuestos-no-fiscales.md) | Aceptada |
-| 0032 | [Remitos como documento de entrega no fiscal](0032-remitos-no-fiscales.md) | Aceptada |
-| 0033 | [Combos como producto compuesto (stock por componente)](0033-combos-producto-compuesto.md) | Aceptada |
-| 0034 | [Lotes y vencimientos con consumo FEFO](0034-lotes-y-vencimientos-fefo.md) | Aceptada |
-| 0035 | [Convertir un presupuesto en una venta real](0035-presupuesto-a-venta.md) | Aceptada |
-| 0036 | [El remito mueve stock (entrega)](0036-remito-mueve-stock.md) | Aceptada |
-| 0037 | [Venta a cuenta corriente (fiado)](0037-venta-a-cuenta-corriente.md) | Aceptada |
-| 0038 | [Promociones (2x1 / %) aplicadas en el POS](0038-promociones-en-el-pos.md) | Aceptada |
-| 0039 | [Asistente IA con Google Gemini (server-side)](0039-asistente-ia-gemini.md) | Aceptada |
-| 0040 | [Configurar la clave de Gemini desde la UI](0040-configuracion-asistente-desde-ui.md) | Aceptada |
-| 0041 | [Modo de venta sin alta en ARCA (TicketNoFiscal)](0041-modo-de-venta-sin-arca.md) | Aceptada |
-| 0042 | [Importador de catálogo desde el sistema anterior del comercio](0042-importador-de-catalogo.md) | Aceptada |
-| 0043 | [Impresión A4 del comprobante](0043-impresion-a4-del-comprobante.md) | Aceptada |
-| 0044 | [Etiquetas de góndola](0044-etiquetas-de-gondola.md) | Aceptada |
-| 0045 | [Padrón de artículos multi-comercio (herramienta de negocio)](0045-padron-de-articulos-multi-comercio.md) | Aceptada |
-| 0046 | [Catálogo demo con datos reales del cliente + buscador en la venta](0046-catalogo-demo-con-datos-reales.md) | Aceptada |
-| 0047 | [`POST /auth/register` cerrado salvo alta del primer ADMIN](0047-registro-cerrado-salvo-alta-de-primer-admin.md) | Aceptada |
-| 0048 | [Snapshot del costo en el ítem de venta, para ganancia real en reportes](0048-snapshot-de-costo-en-item-de-venta.md) | Aceptada |
-| 0049 | [Etiquetas de góndola por escaneo, export a Excel, sin código de barras](0049-etiquetas-por-escaneo-y-export-excel.md) | Aceptada |
-| 0050 | [Medios de pago (tarjetas por banco) y recargo por tarjeta](0050-medios-de-pago-y-recargo-por-tarjeta.md) | Aceptada |
+| #    | Título                                                                                                                                | Estado   |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0001 | [Registrar decisiones con ADR](0001-registro-de-decisiones-adr.md)                                                                    | Aceptada |
+| 0002 | [Monorepo con pnpm + Turborepo](0002-monorepo-pnpm-turborepo.md)                                                                      | Aceptada |
+| 0003 | [Cliente POS de escritorio con Tauri 2](0003-cliente-pos-tauri.md)                                                                    | Aceptada |
+| 0004 | [SQLite como fuente de verdad offline](0004-sqlite-fuente-de-verdad-offline.md)                                                       | Aceptada |
+| 0005 | [Estrategia de sincronización offline-first](0005-sincronizacion-offline-first.md)                                                    | Aceptada |
+| 0006 | [Backend NestJS + PostgreSQL + Prisma](0006-backend-nestjs-postgresql.md)                                                             | Aceptada |
+| 0007 | [Manejo de dinero con decimales exactos](0007-manejo-de-dinero-decimal-exacto.md)                                                     | Aceptada |
+| 0008 | [Servicio fiscal ARCA aislado](0008-servicio-fiscal-arca-aislado.md)                                                                  | Aceptada |
+| 0009 | [Abstracción de hardware con puertos y mocks](0009-abstraccion-hardware-mocks.md)                                                     | Aceptada |
+| 0010 | [Pasarela de pago aislada (MercadoPago)](0010-pasarela-de-pago-mercadopago.md)                                                        | Aceptada |
+| 0011 | [Proveedor LLM: Google Gemini](0011-proveedor-llm-gemini.md)                                                                          | Aceptada |
+| 0012 | [Condición fiscal del emisor configurable](0012-condicion-fiscal-emisor-configurable.md)                                              | Aceptada |
+| 0013 | [Precios IVA incluido y cálculo de comprobante](0013-precios-iva-incluido-y-calculo-de-comprobante.md)                                | Aceptada |
+| 0014 | [Costeo y marcación de precios por régimen](0014-costeo-y-marcacion-por-regimen.md)                                                   | Aceptada |
+| 0015 | [Cantidades exactas y control de stock negativo](0015-cantidades-exactas-y-control-de-stock.md)                                       | Aceptada |
+| 0016 | [Capa de aplicación con puertos de repositorio](0016-capa-de-aplicacion-y-puertos-de-repositorio.md)                                  | Aceptada |
+| 0017 | [Adaptador SQLite detrás de un ejecutor, testeable sin Tauri](0017-adaptador-sqlite-via-ejecutor.md)                                  | Aceptada |
+| 0018 | [Abstracción de hardware con puertos y mocks](0018-abstraccion-hardware-puertos-y-mocks.md)                                           | Aceptada |
+| 0019 | [Topología de despliegue: servidor de sucursal en LAN](0019-topologia-servidor-de-sucursal-lan.md)                                    | Aceptada |
+| 0020 | [Respaldo en la nube propia del cliente](0020-respaldo-en-nube-propia.md)                                                             | Aceptada |
+| 0021 | [Libro de ventas en Excel y respaldo por venta](0021-libro-de-ventas-excel-y-respaldo-en-venta.md)                                    | Aceptada |
+| 0022 | [Adaptador `EjecutorSql` sobre Tauri y reescritura de placeholders](0022-adaptador-ejecutorsql-tauri-y-placeholders.md)               | Aceptada |
+| 0023 | [Transacciones en el POS por serialización del acceso a SQLite](0023-transacciones-sqlite-por-serializacion.md)                       | Aceptada |
+| 0024 | [Panel web de reportes como app independiente (read-only)](0024-panel-web-de-reportes.md)                                             | Aceptada |
+| 0025 | [Shell de gestión en el POS (menú lateral + identidad de la maqueta)](0025-shell-de-gestion-en-el-pos.md)                             | Aceptada |
+| 0026 | [Caja por turnos, ventas en efectivo por ventana de tiempo](0026-caja-por-turnos-y-ventana-de-tiempo.md)                              | Aceptada |
+| 0027 | [Clientes y cuenta corriente como ledger](0027-clientes-y-cuenta-corriente-ledger.md)                                                 | Aceptada |
+| 0028 | [Comprobantes y anulación con Nota de Crédito (online)](0028-comprobantes-y-anulacion-con-nota-de-credito.md)                         | Aceptada |
+| 0029 | [Pago combinado (desglose de pagos por venta)](0029-pago-combinado.md)                                                                | Aceptada |
+| 0030 | [Recargo global en el comprobante](0030-recargo-global.md)                                                                            | Aceptada |
+| 0031 | [Presupuestos como comprobante no fiscal](0031-presupuestos-no-fiscales.md)                                                           | Aceptada |
+| 0032 | [Remitos como documento de entrega no fiscal](0032-remitos-no-fiscales.md)                                                            | Aceptada |
+| 0033 | [Combos como producto compuesto (stock por componente)](0033-combos-producto-compuesto.md)                                            | Aceptada |
+| 0034 | [Lotes y vencimientos con consumo FEFO](0034-lotes-y-vencimientos-fefo.md)                                                            | Aceptada |
+| 0035 | [Convertir un presupuesto en una venta real](0035-presupuesto-a-venta.md)                                                             | Aceptada |
+| 0036 | [El remito mueve stock (entrega)](0036-remito-mueve-stock.md)                                                                         | Aceptada |
+| 0037 | [Venta a cuenta corriente (fiado)](0037-venta-a-cuenta-corriente.md)                                                                  | Aceptada |
+| 0038 | [Promociones (2x1 / %) aplicadas en el POS](0038-promociones-en-el-pos.md)                                                            | Aceptada |
+| 0039 | [Asistente IA con Google Gemini (server-side)](0039-asistente-ia-gemini.md)                                                           | Aceptada |
+| 0040 | [Configurar la clave de Gemini desde la UI](0040-configuracion-asistente-desde-ui.md)                                                 | Aceptada |
+| 0041 | [Modo de venta sin alta en ARCA (TicketNoFiscal)](0041-modo-de-venta-sin-arca.md)                                                     | Aceptada |
+| 0042 | [Importador de catálogo desde el sistema anterior del comercio](0042-importador-de-catalogo.md)                                       | Aceptada |
+| 0043 | [Impresión A4 del comprobante](0043-impresion-a4-del-comprobante.md)                                                                  | Aceptada |
+| 0044 | [Etiquetas de góndola](0044-etiquetas-de-gondola.md)                                                                                  | Aceptada |
+| 0045 | [Padrón de artículos multi-comercio (herramienta de negocio)](0045-padron-de-articulos-multi-comercio.md)                             | Aceptada |
+| 0046 | [Catálogo demo con datos reales del cliente + buscador en la venta](0046-catalogo-demo-con-datos-reales.md)                           | Aceptada |
+| 0047 | [`POST /auth/register` cerrado salvo alta del primer ADMIN](0047-registro-cerrado-salvo-alta-de-primer-admin.md)                      | Aceptada |
+| 0048 | [Snapshot del costo en el ítem de venta, para ganancia real en reportes](0048-snapshot-de-costo-en-item-de-venta.md)                  | Aceptada |
+| 0049 | [Etiquetas de góndola por escaneo, export a Excel, sin código de barras](0049-etiquetas-por-escaneo-y-export-excel.md)                | Aceptada |
+| 0050 | [Medios de pago (tarjetas por banco) y recargo por tarjeta](0050-medios-de-pago-y-recargo-por-tarjeta.md)                             | Aceptada |
 | 0051 | [Credencial de empleado con código de barras (token dedicado, no la contraseña)](0051-credencial-de-empleado-con-codigo-de-barras.md) | Aceptada |
-| 0052 | [Acceso remoto a admin-web vía Cloudflare Tunnel](0052-acceso-remoto-admin-web-cloudflare-tunnel.md) | Aceptada |
-| 0053 | [Botón "Actualizar servidor" en el POS, vía script elevado con scope fijo](0053-actualizacion-del-servidor-desde-el-pos.md) | Aceptada |
-| 0054 | [Operación de la pantalla de venta 100% por lector de barras y teclado](0054-operacion-de-venta-por-lector-y-teclado.md) | Aceptada |
-| 0055 | [Acceso remoto con túnel con nombre y subdominio fijo por comercio](0055-acceso-remoto-tunel-con-nombre-por-comercio.md) | Aceptada |
-| 0056 | [Suscripción mensual: licencia firmada, tres avisos y panel de clientes](0056-suscripcion-mensual-y-panel-de-clientes.md) | Aceptada |
-| 0057 | [El acceso remoto es de sólo lectura, por un puerto propio, y queda auditado](0057-acceso-remoto-solo-lectura-y-auditado.md) | Aceptada |
-| 0058 | [CAE real contra ARCA: quién factura, qué pasa si ARCA se cae](0058-cae-real-contra-arca.md) | Aceptada |
-| 0059 | [La impresora de tickets se elige por terminal, y las virtuales se rechazan](0059-impresora-de-tickets-elegible-y-sin-virtuales.md) | Aceptada |
-| 0060 | [Emisión contra ARCA: lo que sólo falla con un certificado real](0060-emision-contra-arca-endurecida.md) | Aceptada |
-| 0061 | [El ticket del cliente espera el CAE (con un tope)](0061-el-ticket-espera-el-cae.md) | Aceptada |
-| 0062 | [Las llamadas a ARCA piden ECDHE, y no usan `fetch`](0062-cifrado-ecdhe-para-arca.md) | Aceptada |
+| 0052 | [Acceso remoto a admin-web vía Cloudflare Tunnel](0052-acceso-remoto-admin-web-cloudflare-tunnel.md)                                  | Aceptada |
+| 0053 | [Botón "Actualizar servidor" en el POS, vía script elevado con scope fijo](0053-actualizacion-del-servidor-desde-el-pos.md)           | Aceptada |
+| 0054 | [Operación de la pantalla de venta 100% por lector de barras y teclado](0054-operacion-de-venta-por-lector-y-teclado.md)              | Aceptada |
+| 0055 | [Acceso remoto con túnel con nombre y subdominio fijo por comercio](0055-acceso-remoto-tunel-con-nombre-por-comercio.md)              | Aceptada |
+| 0056 | [Suscripción mensual: licencia firmada, tres avisos y panel de clientes](0056-suscripcion-mensual-y-panel-de-clientes.md)             | Aceptada |
+| 0057 | [El acceso remoto es de sólo lectura, por un puerto propio, y queda auditado](0057-acceso-remoto-solo-lectura-y-auditado.md)          | Aceptada |
+| 0058 | [CAE real contra ARCA: quién factura, qué pasa si ARCA se cae](0058-cae-real-contra-arca.md)                                          | Aceptada |
+| 0059 | [La impresora de tickets se elige por terminal, y las virtuales se rechazan](0059-impresora-de-tickets-elegible-y-sin-virtuales.md)   | Aceptada |
+| 0060 | [Emisión contra ARCA: lo que sólo falla con un certificado real](0060-emision-contra-arca-endurecida.md)                              | Aceptada |
+| 0061 | [El ticket del cliente espera el CAE (con un tope)](0061-el-ticket-espera-el-cae.md)                                                  | Aceptada |
+| 0062 | [Las llamadas a ARCA piden ECDHE, y no usan `fetch`](0062-cifrado-ecdhe-para-arca.md)                                                 | Aceptada |

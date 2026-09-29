@@ -24,10 +24,12 @@ descuentos, recargos, redondeo y vuelto. Además hay cálculos con porcentajes
 ## Consecuencias
 
 ### Positivas
+
 - Exactitud y reglas de redondeo centralizadas y testeadas.
 - Mismo cálculo en POS y backend (sin discrepancias de totales/IVA).
 
 ### Negativas / costos
+
 - No se opera con aritmética nativa: hay que usar la API de `Money`.
 - Pequeño overhead vs. `number` (despreciable para el caso de uso).
 

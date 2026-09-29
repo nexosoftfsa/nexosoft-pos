@@ -21,17 +21,17 @@
  * suma del array `Iva` dé `ImpIVA`. De eso se encarga `desglosarIvaIncluido`
  * en el dominio.
  */
-import { esCorteDeTiempo } from './corte-de-tiempo';
-import { detalleDeRed } from './detalle-de-red';
-import { fetchArca, type FetchLike, type RespuestaHttp } from './fetch-arca';
-import { type TicketAcceso } from './tra';
+import { esCorteDeTiempo } from "./corte-de-tiempo";
+import { detalleDeRed } from "./detalle-de-red";
+import { fetchArca, type FetchLike, type RespuestaHttp } from "./fetch-arca";
+import { type TicketAcceso } from "./tra";
 
 export const URL_WSFEV1 = {
-  homologacion: 'https://wswhomo.afip.gov.ar/wsfev1/service.asmx',
-  produccion: 'https://servicios1.afip.gov.ar/wsfev1/service.asmx',
+  homologacion: "https://wswhomo.afip.gov.ar/wsfev1/service.asmx",
+  produccion: "https://servicios1.afip.gov.ar/wsfev1/service.asmx",
 } as const;
 
-const NS = 'http://ar.gov.afip.dif.FEV1/';
+const NS = "http://ar.gov.afip.dif.FEV1/";
 
 export class ErrorWsfe extends Error {
   constructor(
@@ -40,7 +40,7 @@ export class ErrorWsfe extends Error {
     readonly codigo?: string,
   ) {
     super(message);
-    this.name = 'ErrorWsfe';
+    this.name = "ErrorWsfe";
   }
 }
 
@@ -48,7 +48,7 @@ export class ErrorWsfe extends Error {
 export class ErrorWsfeNoSoportado extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ErrorWsfeNoSoportado';
+    this.name = "ErrorWsfeNoSoportado";
   }
 }
 
@@ -123,7 +123,7 @@ export interface ResultadoAutorizacion {
 
 /** `yyyymmdd`, el formato de fecha de WSFEv1. */
 export function aFechaArca(f: Date): string {
-  const dd = (n: number) => String(n).padStart(2, '0');
+  const dd = (n: number) => String(n).padStart(2, "0");
   return `${f.getFullYear()}${dd(f.getMonth() + 1)}${dd(f.getDate())}`;
 }
 
@@ -186,13 +186,13 @@ export class ClienteWsfev1 {
       this.auth(ticket) +
       `<PtoVta>${puntoDeVenta}</PtoVta>` +
       `<CbteTipo>${codigoComprobante}</CbteTipo>` +
-      '</FECompUltimoAutorizado>';
+      "</FECompUltimoAutorizado>";
 
-    const xml = await this.llamar('FECompUltimoAutorizado', cuerpo);
+    const xml = await this.llamar("FECompUltimoAutorizado", cuerpo);
     this.tirarSiHayErrores(xml);
     const nro = /<CbteNro>(\d+)<\/CbteNro>/.exec(xml)?.[1];
     if (nro === undefined) {
-      throw new ErrorWsfe('ARCA no devolvió el último número autorizado.', true);
+      throw new ErrorWsfe("ARCA no devolvió el último número autorizado.", true);
     }
     return Number(nro);
   }
@@ -204,14 +204,14 @@ export class ClienteWsfev1 {
   ): Promise<ResultadoAutorizacion> {
     const discrimina = !esComprobanteC(datos.codigoComprobante);
     const tipoDoc = datos.tipoDocReceptor ?? 99;
-    const nroDoc = datos.nroDocReceptor ?? '0';
+    const nroDoc = datos.nroDocReceptor ?? "0";
 
     // Una Factura A es contra otro responsable inscripto: sin CUIT del
     // receptor, ARCA la rechaza. Mejor cortar acá que mandar un 99/0 que
     // seguro vuelve rechazado.
-    if (esComprobanteA(datos.codigoComprobante) && (tipoDoc !== 80 || nroDoc === '0')) {
+    if (esComprobanteA(datos.codigoComprobante) && (tipoDoc !== 80 || nroDoc === "0")) {
       throw new ErrorWsfeNoSoportado(
-        'Una Factura A necesita el CUIT del cliente. Cargalo en la venta o emitila como Factura B.',
+        "Una Factura A necesita el CUIT del cliente. Cargalo en la venta o emitila como Factura B.",
       );
     }
 
@@ -220,82 +220,83 @@ export class ClienteWsfev1 {
     const asociados = datos.comprobantesAsociados ?? [];
     if (requiereComprobanteAsociado(datos.codigoComprobante) && asociados.length === 0) {
       throw new ErrorWsfeNoSoportado(
-        'Una Nota de Crédito o de Débito tiene que informar el comprobante que corrige, y no se encontró el original.',
+        "Una Nota de Crédito o de Débito tiene que informar el comprobante que corrige, y no se encontró el original.",
       );
     }
 
     // En un comprobante C no se discrimina IVA: el total va entero al neto y
     // NO va el array de alícuotas. Mandarlo discriminado es rechazo.
-    const iva = discrimina && datos.renglonesIva.length > 0
-      ? '<Iva>' +
-        datos.renglonesIva
-          .map(
-            (r) =>
-              '<AlicIva>' +
-              `<Id>${r.codigoArca}</Id>` +
-              `<BaseImp>${r.base}</BaseImp>` +
-              `<Importe>${r.importe}</Importe>` +
-              '</AlicIva>',
-          )
-          .join('') +
-        '</Iva>'
-      : '';
+    const iva =
+      discrimina && datos.renglonesIva.length > 0
+        ? "<Iva>" +
+          datos.renglonesIva
+            .map(
+              (r) =>
+                "<AlicIva>" +
+                `<Id>${r.codigoArca}</Id>` +
+                `<BaseImp>${r.base}</BaseImp>` +
+                `<Importe>${r.importe}</Importe>` +
+                "</AlicIva>",
+            )
+            .join("") +
+          "</Iva>"
+        : "";
 
     const cbtesAsoc =
       asociados.length > 0
-        ? '<CbtesAsoc>' +
+        ? "<CbtesAsoc>" +
           asociados
             .map(
               (a) =>
-                '<CbteAsoc>' +
+                "<CbteAsoc>" +
                 `<Tipo>${a.codigoComprobante}</Tipo>` +
                 `<PtoVta>${a.puntoDeVenta}</PtoVta>` +
                 `<Nro>${a.numero}</Nro>` +
-                (a.cuit !== undefined ? `<Cuit>${a.cuit}</Cuit>` : '') +
-                (a.fecha !== undefined ? `<CbteFch>${aFechaArca(a.fecha)}</CbteFch>` : '') +
-                '</CbteAsoc>',
+                (a.cuit !== undefined ? `<Cuit>${a.cuit}</Cuit>` : "") +
+                (a.fecha !== undefined ? `<CbteFch>${aFechaArca(a.fecha)}</CbteFch>` : "") +
+                "</CbteAsoc>",
             )
-            .join('') +
-          '</CbtesAsoc>'
-        : '';
+            .join("") +
+          "</CbtesAsoc>"
+        : "";
 
     const detalle =
-      '<FECAEDetRequest>' +
-      '<Concepto>1</Concepto>' +
+      "<FECAEDetRequest>" +
+      "<Concepto>1</Concepto>" +
       `<DocTipo>${tipoDoc}</DocTipo>` +
       `<DocNro>${nroDoc}</DocNro>` +
       `<CbteDesde>${datos.numero}</CbteDesde>` +
       `<CbteHasta>${datos.numero}</CbteHasta>` +
       `<CbteFch>${aFechaArca(datos.fecha)}</CbteFch>` +
       `<ImpTotal>${datos.total}</ImpTotal>` +
-      '<ImpTotConc>0</ImpTotConc>' +
+      "<ImpTotConc>0</ImpTotConc>" +
       `<ImpNeto>${discrimina ? datos.neto : datos.total}</ImpNeto>` +
-      `<ImpOpEx>${discrimina ? datos.exento : '0'}</ImpOpEx>` +
-      '<ImpTrib>0</ImpTrib>' +
-      `<ImpIVA>${discrimina ? datos.iva : '0'}</ImpIVA>` +
-      '<MonId>PES</MonId>' +
-      '<MonCotiz>1</MonCotiz>' +
+      `<ImpOpEx>${discrimina ? datos.exento : "0"}</ImpOpEx>` +
+      "<ImpTrib>0</ImpTrib>" +
+      `<ImpIVA>${discrimina ? datos.iva : "0"}</ImpIVA>` +
+      "<MonId>PES</MonId>" +
+      "<MonCotiz>1</MonCotiz>" +
       // El orden importa: el XSD de WSFEv1 es una secuencia, y va
       // CondicionIVAReceptorId → CbtesAsoc → Iva, después de MonCotiz.
       `<CondicionIVAReceptorId>${datos.condicionIvaReceptor ?? 5}</CondicionIVAReceptorId>` +
       cbtesAsoc +
       iva +
-      '</FECAEDetRequest>';
+      "</FECAEDetRequest>";
 
     const cuerpo =
       `<FECAESolicitar xmlns="${NS}">` +
       this.auth(ticket) +
-      '<FeCAEReq>' +
-      '<FeCabReq>' +
-      '<CantReg>1</CantReg>' +
+      "<FeCAEReq>" +
+      "<FeCabReq>" +
+      "<CantReg>1</CantReg>" +
       `<PtoVta>${datos.puntoDeVenta}</PtoVta>` +
       `<CbteTipo>${datos.codigoComprobante}</CbteTipo>` +
-      '</FeCabReq>' +
+      "</FeCabReq>" +
       `<FeDetReq>${detalle}</FeDetReq>` +
-      '</FeCAEReq>' +
-      '</FECAESolicitar>';
+      "</FeCAEReq>" +
+      "</FECAESolicitar>";
 
-    const xml = await this.llamar('FECAESolicitar', cuerpo);
+    const xml = await this.llamar("FECAESolicitar", cuerpo);
     return leerRespuestaCae(xml);
   }
 
@@ -317,24 +318,24 @@ export class ClienteWsfev1 {
     const cuerpo =
       `<FECompConsultar xmlns="${NS}">` +
       this.auth(ticket) +
-      '<FeCompConsReq>' +
+      "<FeCompConsReq>" +
       `<CbteTipo>${codigoComprobante}</CbteTipo>` +
       `<CbteNro>${numero}</CbteNro>` +
       `<PtoVta>${puntoDeVenta}</PtoVta>` +
-      '</FeCompConsReq>' +
-      '</FECompConsultar>';
+      "</FeCompConsReq>" +
+      "</FECompConsultar>";
 
-    const xml = await this.llamar('FECompConsultar', cuerpo);
+    const xml = await this.llamar("FECompConsultar", cuerpo);
     return leerRespuestaConsulta(xml);
   }
 
   private auth(ticket: TicketAcceso): string {
     return (
-      '<Auth>' +
+      "<Auth>" +
       `<Token>${ticket.token}</Token>` +
       `<Sign>${ticket.sign}</Sign>` +
       `<Cuit>${this.opciones.cuit}</Cuit>` +
-      '</Auth>'
+      "</Auth>"
     );
   }
 
@@ -345,16 +346,16 @@ export class ClienteWsfev1 {
       ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"' +
       ' xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">' +
       `<soap:Body>${cuerpo}</soap:Body>` +
-      '</soap:Envelope>';
+      "</soap:Envelope>";
 
     const hacerFetch = this.opciones.fetchImpl ?? fetchArca;
     const timeoutMs = this.opciones.timeoutMs ?? TIMEOUT_WSFE_MS;
     let res: RespuestaHttp;
     try {
       res = await hacerFetch(this.url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'text/xml; charset=utf-8',
+          "Content-Type": "text/xml; charset=utf-8",
           SOAPAction: `${NS}${operacion}`,
         },
         body: sobre,
@@ -362,15 +363,9 @@ export class ClienteWsfev1 {
       });
     } catch (e) {
       if (esCorteDeTiempo(e)) {
-        throw new ErrorWsfe(
-          `ARCA no respondió en ${Math.round(timeoutMs / 1000)} segundos.`,
-          true,
-        );
+        throw new ErrorWsfe(`ARCA no respondió en ${Math.round(timeoutMs / 1000)} segundos.`, true);
       }
-      throw new ErrorWsfe(
-        `No se pudo contactar a ARCA: ${detalleDeRed(e)}`,
-        true,
-      );
+      throw new ErrorWsfe(`No se pudo contactar a ARCA: ${detalleDeRed(e)}`, true);
     }
     const texto = await res.text();
     const fault = /<faultstring>([\s\S]*?)<\/faultstring>/i.exec(texto)?.[1]?.trim();
@@ -382,7 +377,7 @@ export class ClienteWsfev1 {
   private tirarSiHayErrores(xml: string): void {
     const err = leerErrores(xml);
     if (err.length > 0) {
-      throw new ErrorWsfe(`ARCA: ${err.map((e) => e.mensaje).join('. ')}`, false, err[0]?.codigo);
+      throw new ErrorWsfe(`ARCA: ${err.map((e) => e.mensaje).join(". ")}`, false, err[0]?.codigo);
     }
   }
 }
@@ -400,7 +395,7 @@ export function leerErrores(xml: string): ErrorDeArca[] {
   const re = /<Err>[\s\S]*?<Code>(\d+)<\/Code>[\s\S]*?<Msg>([\s\S]*?)<\/Msg>[\s\S]*?<\/Err>/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(bloque)) !== null) {
-    salida.push({ codigo: m[1] ?? '', mensaje: (m[2] ?? '').trim() });
+    salida.push({ codigo: m[1] ?? "", mensaje: (m[2] ?? "").trim() });
   }
   return salida;
 }
@@ -413,7 +408,7 @@ export function leerObservaciones(xml: string): string[] {
   const re = /<Code>(\d+)<\/Code>[\s\S]*?<Msg>([\s\S]*?)<\/Msg>/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(bloque)) !== null) {
-    salida.push(`${m[1]}: ${(m[2] ?? '').trim()}`);
+    salida.push(`${m[1]}: ${(m[2] ?? "").trim()}`);
   }
   return salida;
 }
@@ -428,7 +423,7 @@ function desdeFechaArca(yyyymmdd: string): Date {
 }
 
 /** Código de ARCA para "no existen datos para lo consultado". */
-const SIN_DATOS_EN_ARCA = '602';
+const SIN_DATOS_EN_ARCA = "602";
 
 /**
  * Interpreta la respuesta de FECompConsultar.
@@ -445,7 +440,7 @@ export function leerRespuestaConsulta(xml: string): ResultadoAutorizacion | null
   if (errores.some((e) => e.codigo === SIN_DATOS_EN_ARCA)) return null;
   if (errores.length > 0) {
     throw new ErrorWsfe(
-      `ARCA: ${errores.map((e) => e.mensaje).join('. ')}`,
+      `ARCA: ${errores.map((e) => e.mensaje).join(". ")}`,
       false,
       errores[0]?.codigo,
     );
@@ -455,8 +450,7 @@ export function leerRespuestaConsulta(xml: string): ResultadoAutorizacion | null
     /<CodAutorizacion>(\d+)<\/CodAutorizacion>/.exec(xml)?.[1] ??
     /<CAE>(\d+)<\/CAE>/.exec(xml)?.[1];
   const vto =
-    /<FchVto>(\d{8})<\/FchVto>/.exec(xml)?.[1] ??
-    /<CAEFchVto>(\d{8})<\/CAEFchVto>/.exec(xml)?.[1];
+    /<FchVto>(\d{8})<\/FchVto>/.exec(xml)?.[1] ?? /<CAEFchVto>(\d{8})<\/CAEFchVto>/.exec(xml)?.[1];
   // Sin CAE, el comprobante no está autorizado: para el que pregunta es lo
   // mismo que si no existiera.
   if (cae === undefined || vto === undefined) return null;
@@ -477,7 +471,7 @@ export function leerRespuestaCae(xml: string): ResultadoAutorizacion {
   const errores = leerErrores(xml);
   if (errores.length > 0) {
     throw new ErrorWsfe(
-      `ARCA rechazó el comprobante: ${errores.map((e) => `${e.codigo} ${e.mensaje}`).join('. ')}`,
+      `ARCA rechazó el comprobante: ${errores.map((e) => `${e.codigo} ${e.mensaje}`).join(". ")}`,
       false,
       errores[0]?.codigo,
     );
@@ -485,21 +479,15 @@ export function leerRespuestaCae(xml: string): ResultadoAutorizacion {
 
   const resultado = /<Resultado>([APR])<\/Resultado>/.exec(xml)?.[1];
   const observaciones = leerObservaciones(xml);
-  if (resultado === 'R') {
-    throw new ErrorWsfe(
-      `ARCA rechazó el comprobante. ${observaciones.join('. ')}`.trim(),
-      false,
-    );
+  if (resultado === "R") {
+    throw new ErrorWsfe(`ARCA rechazó el comprobante. ${observaciones.join(". ")}`.trim(), false);
   }
 
   const cae = /<CAE>(\d+)<\/CAE>/.exec(xml)?.[1];
   const vto = /<CAEFchVto>(\d{8})<\/CAEFchVto>/.exec(xml)?.[1];
   const numero = /<CbteDesde>(\d+)<\/CbteDesde>/.exec(xml)?.[1];
   if (cae === undefined || vto === undefined) {
-    throw new ErrorWsfe(
-      `ARCA no devolvió el CAE. ${observaciones.join('. ')}`.trim(),
-      true,
-    );
+    throw new ErrorWsfe(`ARCA no devolvió el CAE. ${observaciones.join(". ")}`.trim(), true);
   }
 
   return {

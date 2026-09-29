@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Request } from '@nestjs/common';
-import { PresupuestosService } from './presupuestos.service';
-import { CrearPresupuestoDto } from './dto/crear-presupuesto.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Get, Post, Param, Body, UseGuards, Request } from "@nestjs/common";
+import { PresupuestosService } from "./presupuestos.service";
+import { CrearPresupuestoDto } from "./dto/crear-presupuesto.dto";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 
 interface UsuarioJwt {
   id: string;
@@ -11,7 +11,7 @@ interface UsuarioJwt {
 }
 
 @UseGuards(JwtAuthGuard)
-@Controller('presupuestos')
+@Controller("presupuestos")
 export class PresupuestosController {
   constructor(private readonly presupuestos: PresupuestosService) {}
 
@@ -25,19 +25,19 @@ export class PresupuestosController {
     return this.presupuestos.crear(req.user.sucursalId, dto);
   }
 
-  @Get(':id')
-  obtener(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
+  @Get(":id")
+  obtener(@Request() req: { user: UsuarioJwt }, @Param("id") id: string) {
     return this.presupuestos.obtener(req.user.sucursalId, id);
   }
 
-  @Post(':id/convertir')
-  convertir(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
+  @Post(":id/convertir")
+  convertir(@Request() req: { user: UsuarioJwt }, @Param("id") id: string) {
     const { id: usuarioId, email, sucursalId } = req.user;
     return this.presupuestos.convertir({ id: usuarioId, email, sucursalId }, id);
   }
 
-  @Post(':id/anular')
-  anular(@Request() req: { user: UsuarioJwt }, @Param('id') id: string) {
+  @Post(":id/anular")
+  anular(@Request() req: { user: UsuarioJwt }, @Param("id") id: string) {
     return this.presupuestos.anular(req.user.sucursalId, id);
   }
 }

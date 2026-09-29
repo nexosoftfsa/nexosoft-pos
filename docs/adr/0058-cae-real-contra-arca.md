@@ -37,7 +37,7 @@ certificado en el servidor. Si los hay, usa `ServicioCaeArca`; si no, el mock,
 que emite un ticket **no fiscal**.
 
 Se decide en el momento y no al arrancar porque el comercio se da de alta
-*después* de instalar: carga sus datos y su certificado desde Configuración, y de
+_después_ de instalar: carga sus datos y su certificado desde Configuración, y de
 la venta siguiente en adelante factura en serio, sin reiniciar nada.
 
 Que un comercio sin alta caiga en el mock no es un modo de prueba: es el comercio
@@ -49,12 +49,12 @@ cada venta pendiente para siempre.
 La venta ya ocurrió: el cliente pagó y se llevó la mercadería. Por eso el estado
 fiscal es del comprobante, no de la venta:
 
-| Estado | Qué pasó | Qué se hace |
-|---|---|---|
-| `AUTORIZADA` | ARCA dio el CAE | nada |
-| `PENDIENTE` | ARCA no respondió | `CaePendientesService` reintenta cada 5 min |
-| `RECHAZADA` | ARCA contestó que está mal | queda marcada; reintentar no sirve |
-| `NO_APLICA` | ticket no fiscal | nada |
+| Estado       | Qué pasó                   | Qué se hace                                 |
+| ------------ | -------------------------- | ------------------------------------------- |
+| `AUTORIZADA` | ARCA dio el CAE            | nada                                        |
+| `PENDIENTE`  | ARCA no respondió          | `CaePendientesService` reintenta cada 5 min |
+| `RECHAZADA`  | ARCA contestó que está mal | queda marcada; reintentar no sirve          |
+| `NO_APLICA`  | ticket no fiscal           | nada                                        |
 
 El reintento va **en orden de emisión y frena en la primera que falla**: ARCA
 exige numeración correlativa por punto de venta, y saltear una la deja sin poder

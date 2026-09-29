@@ -15,8 +15,8 @@ const ALICUOTA_POR_TIPO = { EXENTO: ALICUOTAS_IVA.CERO, ... };
 ```
 
 Pero **el dominio sí distinguía**: `LineaParaDesglose.alicuota` acepta `null`
-desde siempre, y hay un test que lo dice con todas las letras — *"No es lo mismo
-que exento: ARCA quiere el renglón con Id 3"*. El servidor también:
+desde siempre, y hay un test que lo dice con todas las letras — _"No es lo mismo
+que exento: ARCA quiere el renglón con Id 3"_. El servidor también:
 `alicuotaDeTipoIva('EXENTO')` devuelve `null` y el importe va a `ImpOpEx` sin
 renglón de IVA.
 

@@ -12,7 +12,12 @@
  * Todos los intentos quedan en `intentos` para assertion en tests.
  */
 
-import { ErrorPasarela, type IntentoPago, type PasarelaDePago, type SolicitudPago } from "./pasarela.js";
+import {
+  ErrorPasarela,
+  type IntentoPago,
+  type PasarelaDePago,
+  type SolicitudPago,
+} from "./pasarela.js";
 
 export class MockPasarelaDePago implements PasarelaDePago {
   resultadoSimulado: "aprobado" | "rechazado" | "timeout" = "aprobado";

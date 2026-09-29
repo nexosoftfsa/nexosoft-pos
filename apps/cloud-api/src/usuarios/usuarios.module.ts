@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { UsuariosController } from './usuarios.controller';
-import { UsuariosService } from './usuarios.service';
-import { AuthModule } from '../auth/auth.module';
+import { Module } from "@nestjs/common";
+import { UsuariosController } from "./usuarios.controller";
+import { UsuariosService } from "./usuarios.service";
+import { AuthModule } from "../auth/auth.module";
 
 @Module({
   // Por RevisionClavesService: al cambiar una contraseña hay que reevaluar si

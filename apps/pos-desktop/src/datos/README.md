@@ -10,15 +10,15 @@ UI no cambia entre ellos:
 
 ## Piezas
 
-| Archivo | Rol |
-| ------- | --- |
+| Archivo                 | Rol                                                                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `ejecutor-sql-tauri.ts` | Adaptador de `EjecutorSql` (@nexosoft/app) sobre `@tauri-apps/plugin-sql`. Reescribe placeholders `?` → `$N` (ADR-0022), activa `foreign_keys`, ofrece `transaccion()` serializada (ADR-0023) e incluye `estaEnTauri()`. |
-| `bootstrap.ts` | Fábrica del `EntornoPos` para el navegador (memoria + simulado). Exporta la semilla demo (`construirSemillaDemo`, `CONFIG_DEMO`) que reusa Tauri. |
-| `bootstrap-tauri.ts` | Fábrica del `EntornoPos` de producción: SQLite + sync HTTP. Asegura maestros, hace el pull del catálogo (o siembra demo de fallback), lee config/catálogo y arma `ServicioDeVentaTransaccional`. |
-| `catalogo-pull.ts` | `sincronizarCatalogo`: vuelca el catálogo del servidor en los repos locales (catálogo authoritative; stock que respeta ventas offline). |
-| `sesion-sqlite.ts` | Tabla `sesion` (fila única): persiste tokens + terminal elegida. |
-| `sesion.ts` | `SesionManager`: login, refresh (lee el `exp` del JWT), elegir terminal, `obtenerToken`/`terminalId`. |
-| `ajustes-sqlite.ts` | Tabla `ajuste` (clave/valor) para settings de la terminal; hoy la URL del servidor de sucursal. |
+| `bootstrap.ts`          | Fábrica del `EntornoPos` para el navegador (memoria + simulado). Exporta la semilla demo (`construirSemillaDemo`, `CONFIG_DEMO`) que reusa Tauri.                                                                        |
+| `bootstrap-tauri.ts`    | Fábrica del `EntornoPos` de producción: SQLite + sync HTTP. Asegura maestros, hace el pull del catálogo (o siembra demo de fallback), lee config/catálogo y arma `ServicioDeVentaTransaccional`.                         |
+| `catalogo-pull.ts`      | `sincronizarCatalogo`: vuelca el catálogo del servidor en los repos locales (catálogo authoritative; stock que respeta ventas offline).                                                                                  |
+| `sesion-sqlite.ts`      | Tabla `sesion` (fila única): persiste tokens + terminal elegida.                                                                                                                                                         |
+| `sesion.ts`             | `SesionManager`: login, refresh (lee el `exp` del JWT), elegir terminal, `obtenerToken`/`terminalId`.                                                                                                                    |
+| `ajustes-sqlite.ts`     | Tabla `ajuste` (clave/valor) para settings de la terminal; hoy la URL del servidor de sucursal.                                                                                                                          |
 
 El transporte y mapeo viven en `../sync/`: `cliente-catalogo-http.ts`, `mapeo-catalogo.ts`,
 `cliente-auth-http.ts` (`POST /auth/login`,`/refresh`) y `cliente-terminales-http.ts`

@@ -1,9 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { codigoComprobanteArcaOpcional } from '@nexosoft/domain';
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { codigoComprobanteArcaOpcional } from "@nexosoft/domain";
 
-import { PrismaService } from '../../prisma/prisma.service';
-import { ServicioCaeArca } from './servicio-cae-arca';
-import { compararConArca, type VerificacionArca } from './verificacion-arca';
+import { PrismaService } from "../../prisma/prisma.service";
+import { ServicioCaeArca } from "./servicio-cae-arca";
+import { compararConArca, type VerificacionArca } from "./verificacion-arca";
 
 /**
  * "Verificar en ARCA": le pregunta a ARCA qué tiene registrado de un
@@ -41,9 +41,8 @@ export class VerificacionArcaService {
     const codigoComprobante = codigoComprobanteArcaOpcional(venta.tipoComprobante);
     if (codigoComprobante === null || venta.numeroComprobante === null) {
       return {
-        estado: 'NO_APLICA',
-        mensaje:
-          'Este comprobante no es fiscal: no existe en ARCA y no hay nada que verificar.',
+        estado: "NO_APLICA",
+        mensaje: "Este comprobante no es fiscal: no existe en ARCA y no hay nada que verificar.",
         diferencias: [],
       };
     }
@@ -65,7 +64,7 @@ export class VerificacionArcaService {
       // perfecto y ser ARCA la que no contesta. Se informa como tal.
       this.log.warn(`No se pudo verificar ${ventaId} contra ARCA: ${(e as Error).message}`);
       return {
-        estado: 'NO_SE_PUDO',
+        estado: "NO_SE_PUDO",
         mensaje: `No se pudo consultar a ARCA: ${(e as Error).message}`,
         diferencias: [],
       };

@@ -29,10 +29,7 @@ export function Productos() {
           <div className="panel__controles">
             <label className="campo campo--inline">
               <span>Mostrar</span>
-              <select
-                value={limite}
-                onChange={(e) => setLimite(Number(e.target.value))}
-              >
+              <select value={limite} onChange={(e) => setLimite(Number(e.target.value))}>
                 {OPCIONES_LIMITE.map((n) => (
                   <option key={n} value={n}>
                     Top {n}

@@ -24,7 +24,7 @@ que las ventas consuman primero lo que caduca antes.
    VENTA consumen lotes por FEFO** (First-Expire-First-Out: vence antes, sale
    antes). El algoritmo es una **función pura** (`asignarFefo`) testeable sin base.
 4. **Vencidos = solo alerta, no bloquean** (decisión del usuario): `GET
-   /stock/vencimientos?dias=N` lista los lotes con saldo > 0 vencidos o próximos a
+/stock/vencimientos?dias=N` lista los lotes con saldo > 0 vencidos o próximos a
    vencer; la venta nunca se traba por un vencimiento.
 5. **La venta ya ocurrida no se pierde**: si al sincronizar una venta los lotes no
    alcanzan a cubrir la cantidad (p. ej. lotes mal cargados), se imputa lo que hay

@@ -25,8 +25,8 @@ su saldo y estado de cuenta.
 3. **Límite de crédito.** Si `limiteCredito > 0`, un CARGO que dejaría el saldo por
    encima del límite se rechaza (**409**). `0 = sin límite`.
 4. **La "venta a cuenta" se registra como un CARGO desde la pantalla de cuentas
-   corrientes** (online). La integración automática *venta en el POS con medio
-   `CUENTA_CORRIENTE` → CARGO del cliente* queda como trabajo futuro: requiere
+   corrientes** (online). La integración automática _venta en el POS con medio
+   `CUENTA_CORRIENTE` → CARGO del cliente_ queda como trabajo futuro: requiere
    meter `clienteId` en el flujo de venta (dominio + payload de sync + ingesta),
    un cambio transversal que no corresponde a esta sub-fase. El ledger + los
    clientes son el núcleo del valor ("saber quién debe cuánto").

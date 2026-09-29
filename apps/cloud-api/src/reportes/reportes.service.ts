@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { promises as fs } from 'node:fs';
-import { join } from 'node:path';
-import { ConfigService } from '@nestjs/config';
-import { Decimal } from '@prisma/client/runtime/library';
-import { PrismaService } from '../prisma/prisma.service';
-import type { RangoFechasDto } from './dto/rango-fechas.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { promises as fs } from "node:fs";
+import { join } from "node:path";
+import { ConfigService } from "@nestjs/config";
+import { Decimal } from "@prisma/client/runtime/library";
+import { PrismaService } from "../prisma/prisma.service";
+import type { RangoFechasDto } from "./dto/rango-fechas.dto";
 
 /** Días hacia atrás que cubre un reporte cuando no se indica rango. */
 const DIAS_POR_DEFECTO = 30;
@@ -14,10 +14,10 @@ const DIAS_POR_DEFECTO = 30;
  * la noche (que en UTC cae al día siguiente) quedaría en el día equivocado o fuera
  * de un filtro "hasta hoy".
  */
-const OFFSET_AR = '-03:00';
+const OFFSET_AR = "-03:00";
 const OFFSET_AR_MS = 3 * 60 * 60 * 1000;
 /** Solo las ventas COMPLETADA cuentan para los reportes (se excluyen ANULADA/PENDIENTE). */
-const ESTADO_VALIDO = 'COMPLETADA' as const;
+const ESTADO_VALIDO = "COMPLETADA" as const;
 const TOP_POR_DEFECTO = 10;
 const UMBRAL_STOCK_POR_DEFECTO = 5;
 
@@ -48,8 +48,7 @@ export class ReportesService {
     const totalVendido = ventas.reduce((a, v) => a.add(v.total), new Decimal(0));
     const totalDescuentos = ventas.reduce((a, v) => a.add(v.descuento), new Decimal(0));
     const cantidadVentas = ventas.length;
-    const ticketPromedio =
-      cantidadVentas === 0 ? new Decimal(0) : totalVendido.div(cantidadVentas);
+    const ticketPromedio = cantidadVentas === 0 ? new Decimal(0) : totalVendido.div(cantidadVentas);
 
     return {
       desde: gte.toISOString(),
@@ -67,7 +66,7 @@ export class ReportesService {
     const ventas = await this.prisma.venta.findMany({
       where: { sucursalId, estado: ESTADO_VALIDO, creadaEn: { gte, lt } },
       select: { total: true, creadaEn: true },
-      orderBy: { creadaEn: 'asc' },
+      orderBy: { creadaEn: "asc" },
     });
 
     const porDia = new Map<string, { total: Decimal; cantidad: number }>();
@@ -126,7 +125,7 @@ export class ReportesService {
 
     const porRubro = new Map<string, Decimal>();
     for (const it of items) {
-      const rubro = it.producto.categoria?.nombre ?? 'Sin rubro';
+      const rubro = it.producto.categoria?.nombre ?? "Sin rubro";
       porRubro.set(rubro, (porRubro.get(rubro) ?? new Decimal(0)).add(it.subtotal));
     }
 
@@ -147,13 +146,10 @@ export class ReportesService {
       },
     });
 
-    const porTerminal = new Map<
-      string,
-      { nombre: string; total: Decimal; cantidad: number }
-    >();
+    const porTerminal = new Map<string, { nombre: string; total: Decimal; cantidad: number }>();
     for (const v of ventas) {
-      const clave = v.terminalId ?? 'sin-terminal';
-      const nombre = v.terminal?.nombre ?? 'Sin terminal';
+      const clave = v.terminalId ?? "sin-terminal";
+      const nombre = v.terminal?.nombre ?? "Sin terminal";
       const acc = porTerminal.get(clave) ?? { nombre, total: new Decimal(0), cantidad: 0 };
       acc.total = acc.total.add(v.total);
       acc.cantidad += 1;
@@ -190,13 +186,12 @@ export class ReportesService {
       { nombre: string; codigo: string; cantidad: Decimal; monto: Decimal }
     >();
     for (const it of items) {
-      const acc =
-        porProducto.get(it.productoId) ?? {
-          nombre: it.producto.nombre,
-          codigo: it.producto.codigo,
-          cantidad: new Decimal(0),
-          monto: new Decimal(0),
-        };
+      const acc = porProducto.get(it.productoId) ?? {
+        nombre: it.producto.nombre,
+        codigo: it.producto.codigo,
+        cantidad: new Decimal(0),
+        monto: new Decimal(0),
+      };
       acc.cantidad = acc.cantidad.add(it.cantidad);
       acc.monto = acc.monto.add(it.subtotal);
       porProducto.set(it.productoId, acc);
@@ -281,7 +276,7 @@ export class ReportesService {
           select: { codigo: true, nombre: true, categoria: { select: { nombre: true } } },
         },
       },
-      orderBy: { venta: { creadaEn: 'asc' } },
+      orderBy: { venta: { creadaEn: "asc" } },
     });
 
     return items.map((it) => ({
@@ -318,9 +313,7 @@ export class ReportesService {
       });
       const saldo = movimientos.reduce(
         (acc, m) =>
-          m.tipo === 'ENTRADA' || m.tipo === 'AJUSTE'
-            ? acc.add(m.cantidad)
-            : acc.sub(m.cantidad),
+          m.tipo === "ENTRADA" || m.tipo === "AJUSTE" ? acc.add(m.cantidad) : acc.sub(m.cantidad),
         new Decimal(0),
       );
       if (saldo.lte(limite)) bajos.push({ producto: p, saldo: saldo.toString() });
@@ -331,10 +324,8 @@ export class ReportesService {
 
   /** Ruta del libro de ventas Excel (misma config que el `VentasModule`, ADR-0021). */
   rutaLibroVentas(): string {
-    const carpeta = this.config.get<string>('RESPALDO_RUTA') ?? './respaldos';
-    return (
-      this.config.get<string>('LIBRO_VENTAS_ARCHIVO') ?? join(carpeta, 'ventas.xlsx')
-    );
+    const carpeta = this.config.get<string>("RESPALDO_RUTA") ?? "./respaldos";
+    return this.config.get<string>("LIBRO_VENTAS_ARCHIVO") ?? join(carpeta, "ventas.xlsx");
   }
 
   /** Lee el libro de ventas Excel. Lanza 404 si todavía no existe (sin ventas). */
@@ -342,9 +333,7 @@ export class ReportesService {
     try {
       return await fs.readFile(this.rutaLibroVentas());
     } catch {
-      throw new NotFoundException(
-        'Todavía no hay libro de ventas (ninguna venta registrada).',
-      );
+      throw new NotFoundException("Todavía no hay libro de ventas (ninguna venta registrada).");
     }
   }
 
@@ -363,7 +352,7 @@ export class ReportesService {
 
     const gte = this.aInstanteAr(desde);
     const lt = this.aInstanteAr(hasta);
-    if (!hasta.includes('T')) {
+    if (!hasta.includes("T")) {
       lt.setUTCDate(lt.getUTCDate() + 1); // hasta inclusive (día local completo)
     }
 
@@ -375,7 +364,7 @@ export class ReportesService {
    * instante UTC correspondiente. Sin hora, se toma la medianoche AR de ese día.
    */
   private aInstanteAr(valor: string): Date {
-    const conHora = valor.includes('T') ? valor : `${valor}T00:00:00`;
+    const conHora = valor.includes("T") ? valor : `${valor}T00:00:00`;
     const conSegundos = /T\d{2}:\d{2}$/.test(conHora) ? `${conHora}:00` : conHora;
     return new Date(`${conSegundos}.000${OFFSET_AR}`);
   }

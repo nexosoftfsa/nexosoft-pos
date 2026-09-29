@@ -12,10 +12,11 @@ terminales (cajas) en una misma sucursal** que necesitan compartir datos
 pagar infraestructura en la nube** (ver [[0020-respaldo-en-nube-propia]]).
 
 El backend ([ADR-0006](0006-backend-nestjs-postgresql.md)) ya existe como
-`@nexosoft/cloud-api` (NestJS + PostgreSQL + Prisma). La pregunta no es *qué*
+`@nexosoft/cloud-api` (NestJS + PostgreSQL + Prisma). La pregunta no es _qué_
 backend, sino **dónde corre** cuando el cliente no quiere nube paga.
 
 Restricciones del dominio retail:
+
 - Una caja **no puede dejar de vender** porque se cayó la red interna o el
   servidor (continuidad operativa).
 - La concurrencia de varias cajas sobre los mismos datos exige una base con

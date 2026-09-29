@@ -126,7 +126,9 @@ describe("EjecutorSqlTauri.ejecutar / consultar", () => {
 
 describe("EjecutorSqlTauri.transaccion", () => {
   it("hace COMMIT y persiste lo escrito cuando `fn` no lanza", async () => {
-    const ejecutor = await EjecutorSqlTauri.abrir("sqlite:test.db", async () => crearBaseNodeSqlite());
+    const ejecutor = await EjecutorSqlTauri.abrir("sqlite:test.db", async () =>
+      crearBaseNodeSqlite(),
+    );
     await ejecutor.ejecutar("CREATE TABLE t (id TEXT PRIMARY KEY)");
 
     const resultado = await ejecutor.transaccion(async (tx) => {
@@ -141,7 +143,9 @@ describe("EjecutorSqlTauri.transaccion", () => {
   });
 
   it("hace ROLLBACK y descarta lo escrito cuando `fn` lanza", async () => {
-    const ejecutor = await EjecutorSqlTauri.abrir("sqlite:test.db", async () => crearBaseNodeSqlite());
+    const ejecutor = await EjecutorSqlTauri.abrir("sqlite:test.db", async () =>
+      crearBaseNodeSqlite(),
+    );
     await ejecutor.ejecutar("CREATE TABLE t (id TEXT PRIMARY KEY)");
     await ejecutor.ejecutar("INSERT INTO t (id) VALUES (?)", ["previo"]);
 

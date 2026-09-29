@@ -12,18 +12,20 @@ Necesitamos compartir tipos y dominio sin publicar paquetes a un registry.
 ## Decisión
 
 Monorepo con **pnpm workspaces** + **Turborepo**. Un paquete compartido
-`@nexosoft/domain` consumido como *internal package* (`workspace:*`, código TS
+`@nexosoft/domain` consumido como _internal package_ (`workspace:*`, código TS
 transpilado por el consumidor). Turborepo orquesta `build/test/lint/typecheck`
 con caché.
 
 ## Consecuencias
 
 ### Positivas
+
 - Una sola fuente de verdad del dominio; refactors atómicos cross-package.
 - pnpm: instalación rápida y `node_modules` eficiente (store con enlaces).
 - Caché de tareas y ejecución en paralelo con Turborepo.
 
 ### Negativas / costos
+
 - pnpm no viene instalado en este entorno (se resuelve con `corepack`).
 - Curva inicial de configuración del workspace.
 

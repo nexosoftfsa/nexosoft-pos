@@ -13,15 +13,15 @@ Las ventas que cuentan son únicamente las de estado **`COMPLETADA`**
 Todos bajo `/api/v1/reportes`. Requieren `Authorization: Bearer <token>` de un
 usuario ADMIN o SUPERVISOR.
 
-| Método y ruta | Query | Devuelve |
-| ------------- | ----- | -------- |
-| `GET /ventas/resumen` | `desde?`, `hasta?` | KPIs: `cantidadVentas`, `totalVendido`, `totalDescuentos`, `ticketPromedio` |
-| `GET /ventas/serie` | `desde?`, `hasta?` | Serie diaria: `[{ fecha, total, cantidad }]` |
-| `GET /ventas/por-medio-pago` | `desde?`, `hasta?` | `[{ medioPago, total, cantidad }]` (desc. por total) |
-| `GET /ventas/por-terminal` | `desde?`, `hasta?` | `[{ terminalId, nombre, total, cantidad }]` (desc. por total) |
-| `GET /productos/top` | `desde?`, `hasta?`, `limite?` (1–100, def. 10) | Top productos: `[{ productoId, nombre, codigo, cantidad, monto }]` (desc. por cantidad) |
-| `GET /stock/bajo` | `umbral?` (≥0, def. 5) | Productos con saldo ≤ umbral: `[{ producto, saldo }]` (asc. por saldo) |
-| `GET /libro-ventas` | — | Descarga el **libro de ventas Excel** (`ventas.xlsx`) que genera el `VentasModule` (ADR-0021). 404 si todavía no hay ventas. |
+| Método y ruta                | Query                                          | Devuelve                                                                                                                     |
+| ---------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `GET /ventas/resumen`        | `desde?`, `hasta?`                             | KPIs: `cantidadVentas`, `totalVendido`, `totalDescuentos`, `ticketPromedio`                                                  |
+| `GET /ventas/serie`          | `desde?`, `hasta?`                             | Serie diaria: `[{ fecha, total, cantidad }]`                                                                                 |
+| `GET /ventas/por-medio-pago` | `desde?`, `hasta?`                             | `[{ medioPago, total, cantidad }]` (desc. por total)                                                                         |
+| `GET /ventas/por-terminal`   | `desde?`, `hasta?`                             | `[{ terminalId, nombre, total, cantidad }]` (desc. por total)                                                                |
+| `GET /productos/top`         | `desde?`, `hasta?`, `limite?` (1–100, def. 10) | Top productos: `[{ productoId, nombre, codigo, cantidad, monto }]` (desc. por cantidad)                                      |
+| `GET /stock/bajo`            | `umbral?` (≥0, def. 5)                         | Productos con saldo ≤ umbral: `[{ producto, saldo }]` (asc. por saldo)                                                       |
+| `GET /libro-ventas`          | —                                              | Descarga el **libro de ventas Excel** (`ventas.xlsx`) que genera el `VentasModule` (ADR-0021). 404 si todavía no hay ventas. |
 
 ### Rango de fechas
 

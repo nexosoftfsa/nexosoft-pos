@@ -33,7 +33,7 @@ de venta al momento de la operación, no el costo.
   criterio que ya aplicaba a `precioUnitario`).
 - La columna es **nullable** a propósito: las ventas sincronizadas antes de esta
   migración no tienen el snapshot. `ReportesService.rentabilidad()` usa
-  `costoUnitario ?? producto.precioCosto` (el costo *actual*) como fallback
+  `costoUnitario ?? producto.precioCosto` (el costo _actual_) como fallback
   documentado para esos casos — una aproximación aceptada, no un bloqueante.
 - Las Notas de Débito (cargos/intereses, sin producto real) snapshotean
   `costoNeto: Money.cero()`: no representan mercadería vendida.

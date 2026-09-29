@@ -44,8 +44,8 @@ describe("esperarConTope", () => {
   });
 
   it("propaga el error si el trabajo falla antes del tope", async () => {
-    await expect(
-      esperarConTope(Promise.reject(new Error("sin red")), 8_000),
-    ).rejects.toThrow("sin red");
+    await expect(esperarConTope(Promise.reject(new Error("sin red")), 8_000)).rejects.toThrow(
+      "sin red",
+    );
   });
 });

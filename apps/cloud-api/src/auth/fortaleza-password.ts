@@ -27,22 +27,22 @@ export const LARGO_MINIMO_REMOTO = 12;
  * resto de las reglas ya cubre lo que estas ejemplifican.
  */
 const COMUNES: ReadonlySet<string> = new Set([
-  '12345678',
-  '123456789',
-  '1234567890',
-  'contraseña',
-  'contrasena',
-  'password',
-  'password1',
-  'passw0rd',
-  'qwertyuiop',
-  'administrador',
-  'admin1234',
-  'administrador1',
-  'nexosoft',
-  'nexosoft123',
-  'iloveyou',
-  'bienvenido',
+  "12345678",
+  "123456789",
+  "1234567890",
+  "contraseña",
+  "contrasena",
+  "password",
+  "password1",
+  "passw0rd",
+  "qwertyuiop",
+  "administrador",
+  "admin1234",
+  "administrador1",
+  "nexosoft",
+  "nexosoft123",
+  "iloveyou",
+  "bienvenido",
 ]);
 
 export interface Fortaleza {
@@ -63,8 +63,8 @@ export interface ContextoPassword {
 /** Palabras del contexto que valen como pista (las muy cortas dan falsos positivos). */
 function pistas(contexto: ContextoPassword): string[] {
   const crudas = [
-    contexto.email?.split('@')[0] ?? '',
-    ...(contexto.nombreComercio ?? '').split(/[\s.,-]+/),
+    contexto.email?.split("@")[0] ?? "",
+    ...(contexto.nombreComercio ?? "").split(/[\s.,-]+/),
   ];
   return crudas.map((p) => p.trim().toLowerCase()).filter((p) => p.length >= 4);
 }
@@ -85,13 +85,13 @@ export function evaluarFortaleza(password: string, contexto: ContextoPassword = 
     };
   }
   if (COMUNES.has(minuscula)) {
-    return { debil: true, motivo: 'Es una de las contraseñas más usadas del mundo.' };
+    return { debil: true, motivo: "Es una de las contraseñas más usadas del mundo." };
   }
   for (const pista of pistas(contexto)) {
     if (minuscula.includes(pista)) {
       return {
         debil: true,
-        motivo: 'Contiene el nombre del comercio o del usuario, que cualquiera conoce.',
+        motivo: "Contiene el nombre del comercio o del usuario, que cualquiera conoce.",
       };
     }
   }
@@ -104,8 +104,8 @@ export function evaluarFortaleza(password: string, contexto: ContextoPassword = 
     return {
       debil: true,
       motivo: soloDigitos
-        ? 'Son todos números.'
-        : 'Son todas letras minúsculas, sin números ni símbolos.',
+        ? "Son todos números."
+        : "Son todas letras minúsculas, sin números ni símbolos.",
     };
   }
   return FUERTE;

@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/library';
-import type { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { asignarFefo, type LoteConSaldo } from '../stock/fefo';
-import type { CrearRemitoDto } from './dto/crear-remito.dto';
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import { Decimal } from "@prisma/client/runtime/library";
+import type { Prisma } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import { asignarFefo, type LoteConSaldo } from "../stock/fefo";
+import type { CrearRemitoDto } from "./dto/crear-remito.dto";
 
 type Tx = Prisma.TransactionClient;
 
@@ -20,7 +20,7 @@ export class RemitosService {
   listar(sucursalId: string) {
     return this.prisma.remito.findMany({
       where: { sucursalId },
-      orderBy: { creadoEn: 'desc' },
+      orderBy: { creadoEn: "desc" },
       include: { items: true },
     });
   }
@@ -37,7 +37,7 @@ export class RemitosService {
   async crear(sucursalId: string, dto: CrearRemitoDto) {
     const ultimo = await this.prisma.remito.findFirst({
       where: { sucursalId },
-      orderBy: { numero: 'desc' },
+      orderBy: { numero: "desc" },
       select: { numero: true },
     });
     return this.prisma.$transaction(async (tx) => {
@@ -71,17 +71,17 @@ export class RemitosService {
 
   async anular(sucursalId: string, id: string) {
     const r = await this.obtener(sucursalId, id);
-    if (r.estado !== 'EMITIDO') throw new BadRequestException('El remito ya está anulado');
+    if (r.estado !== "EMITIDO") throw new BadRequestException("El remito ya está anulado");
     return this.prisma.$transaction(async (tx) => {
       // La mercadería vuelve: espejamos las SALIDA reales del remito como ENTRADA
       // (al mismo lote, para perecederos).
       const salidas = await tx.movimientoStock.findMany({
-        where: { remitoId: id, tipo: 'SALIDA' },
+        where: { remitoId: id, tipo: "SALIDA" },
       });
       for (const m of salidas) {
         await tx.movimientoStock.create({
           data: {
-            tipo: 'ENTRADA',
+            tipo: "ENTRADA",
             cantidad: m.cantidad,
             motivo: `Anulación remito N° ${r.numero}`,
             productoId: m.productoId,
@@ -93,7 +93,7 @@ export class RemitosService {
       }
       return tx.remito.update({
         where: { id },
-        data: { estado: 'ANULADO' },
+        data: { estado: "ANULADO" },
         include: { items: true },
       });
     });
@@ -115,7 +115,7 @@ export class RemitosService {
     });
     if (!producto?.requiereLote) {
       await tx.movimientoStock.create({
-        data: { tipo: 'SALIDA', cantidad, motivo, productoId, sucursalId, remitoId },
+        data: { tipo: "SALIDA", cantidad, motivo, productoId, sucursalId, remitoId },
       });
       return;
     }
@@ -125,17 +125,29 @@ export class RemitosService {
     );
     for (const a of asignaciones) {
       await tx.movimientoStock.create({
-        data: { tipo: 'SALIDA', cantidad: a.cantidad, motivo, productoId, sucursalId, loteId: a.loteId, remitoId },
+        data: {
+          tipo: "SALIDA",
+          cantidad: a.cantidad,
+          motivo,
+          productoId,
+          sucursalId,
+          loteId: a.loteId,
+          remitoId,
+        },
       });
     }
     if (restante.gt(0)) {
       await tx.movimientoStock.create({
-        data: { tipo: 'SALIDA', cantidad: restante, motivo, productoId, sucursalId, remitoId },
+        data: { tipo: "SALIDA", cantidad: restante, motivo, productoId, sucursalId, remitoId },
       });
     }
   }
 
-  private async saldosDeLotes(tx: Tx, sucursalId: string, productoId: string): Promise<LoteConSaldo[]> {
+  private async saldosDeLotes(
+    tx: Tx,
+    sucursalId: string,
+    productoId: string,
+  ): Promise<LoteConSaldo[]> {
     const lotes = await tx.lote.findMany({
       where: { productoId, sucursalId },
       select: { id: true, fechaVencimiento: true },
@@ -153,7 +165,7 @@ export class RemitosService {
       if (cur === undefined) continue;
       saldo.set(
         m.loteId,
-        m.tipo === 'ENTRADA' || m.tipo === 'AJUSTE' ? cur.add(m.cantidad) : cur.sub(m.cantidad),
+        m.tipo === "ENTRADA" || m.tipo === "AJUSTE" ? cur.add(m.cantidad) : cur.sub(m.cantidad),
       );
     }
     return lotes.map((l) => ({

@@ -18,7 +18,10 @@ class EjecutorNodeSqlite implements EjecutorSql {
     if (params.length === 0) this.db.exec(sql);
     else this.db.prepare(sql).run(...params);
   }
-  async consultar<T extends Fila = Fila>(sql: string, params: readonly ValorSql[] = []): Promise<T[]> {
+  async consultar<T extends Fila = Fila>(
+    sql: string,
+    params: readonly ValorSql[] = [],
+  ): Promise<T[]> {
     return this.db.prepare(sql).all(...params) as unknown as T[];
   }
 }
@@ -27,7 +30,10 @@ function op(operacionId: string, creadaEn = "2026-06-26T10:00:00.000Z"): Operaci
   return {
     operacionId,
     tipo: "venta",
-    payload: { medioPago: "EFECTIVO", items: [{ productoId: "p1", cantidad: "2", precioUnitario: "100" }] },
+    payload: {
+      medioPago: "EFECTIVO",
+      items: [{ productoId: "p1", cantidad: "2", precioUnitario: "100" }],
+    },
     terminalId: "caja-1",
     creadaEn,
   };

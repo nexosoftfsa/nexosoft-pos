@@ -8,11 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { descargarBlob } from "../descargas";
 import { exportarExcel } from "../exportar-excel";
-import {
-  ErrorMediosPago,
-  type ClienteMediosPago,
-  type Tarjeta,
-} from "../sync/cliente-medios-pago";
+import { ErrorMediosPago, type ClienteMediosPago, type Tarjeta } from "../sync/cliente-medios-pago";
 import {
   aclaracionDelTipo,
   aDatosTarjeta,
@@ -69,7 +65,12 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
   const filtradas = filtrarTarjetas(tarjetas, busqueda);
 
   async function desactivar(t: Tarjeta) {
-    if (!(await preguntarSiNo(`¿Desactivar "${t.banco}${t.marca ? ` — ${t.marca}` : ""}"? Se puede reactivar luego.`))) return;
+    if (
+      !(await preguntarSiNo(
+        `¿Desactivar "${t.banco}${t.marca ? ` — ${t.marca}` : ""}"? Se puede reactivar luego.`,
+      ))
+    )
+      return;
     try {
       await api.desactivar(t.id);
       await cargar();
@@ -91,7 +92,13 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
             { titulo: "Tasas por cuotas", ancho: 30 },
             { titulo: "Estado" },
           ],
-          filas: todas.map((t) => [t.banco, etiquetaTipo(t.tipo), t.marca ?? "", etiquetaTasas(t), t.activo ? "Activa" : "Inactiva"]),
+          filas: todas.map((t) => [
+            t.banco,
+            etiquetaTipo(t.tipo),
+            t.marca ?? "",
+            etiquetaTasas(t),
+            t.activo ? "Activa" : "Inactiva",
+          ]),
         },
       ]);
       await descargarBlob("medios-de-pago.xlsx", blob);
@@ -122,7 +129,11 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
         <button type="button" className="pill-btn" onClick={() => void exportar()}>
           Exportar
         </button>
-        <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nueva")}>
+        <button
+          type="button"
+          className="pill-btn pill-btn--primary"
+          onClick={() => setEditando("nueva")}
+        >
           + Nueva tarjeta
         </button>
       </div>
@@ -163,7 +174,13 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
                     <td className="strong">{t.banco}</td>
                     <td>{etiquetaTipo(t.tipo)}</td>
                     <td>{t.marca ?? <span className="muted">—</span>}</td>
-                    <td>{etiquetaTasas(t) === "" ? <span className="muted">—</span> : etiquetaTasas(t)}</td>
+                    <td>
+                      {etiquetaTasas(t) === "" ? (
+                        <span className="muted">—</span>
+                      ) : (
+                        etiquetaTasas(t)
+                      )}
+                    </td>
                     <td>
                       {t.activo ? (
                         <span className="badge badge--ok">Activa</span>
@@ -276,7 +293,11 @@ function ModalTarjeta({
           <div className="modal__row">
             <div className="field">
               <label>Banco</label>
-              <input className="input" value={form.banco} onChange={(e) => campo("banco", e.target.value)} />
+              <input
+                className="input"
+                value={form.banco}
+                onChange={(e) => campo("banco", e.target.value)}
+              />
             </div>
             <div className="field">
               <label>Tipo</label>
@@ -359,7 +380,12 @@ function ModalTarjeta({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar"}
           </button>
         </div>

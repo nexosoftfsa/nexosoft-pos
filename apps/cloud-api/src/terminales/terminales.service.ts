@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import type { CrearTerminalDto } from './dto/crear-terminal.dto';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import type { CrearTerminalDto } from "./dto/crear-terminal.dto";
 
 /**
  * Terminales (cajas) de una sucursal. El POS las lista para que el cajero elija
@@ -14,7 +14,7 @@ export class TerminalesService {
   listar(sucursalId: string) {
     return this.prisma.terminal.findMany({
       where: { sucursalId, activa: true },
-      orderBy: { nombre: 'asc' },
+      orderBy: { nombre: "asc" },
     });
   }
 

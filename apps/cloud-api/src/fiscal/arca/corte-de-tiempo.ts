@@ -9,5 +9,5 @@
 /** ¿El fetch se cortó por el timeout que le pusimos, y no por un error de red? */
 export function esCorteDeTiempo(e: unknown): boolean {
   const nombre = (e as Error | undefined)?.name;
-  return nombre === 'TimeoutError' || nombre === 'AbortError';
+  return nombre === "TimeoutError" || nombre === "AbortError";
 }

@@ -1,4 +1,4 @@
-import { IsInt, IsNumberString, IsString, IsOptional, MaxLength, Min } from 'class-validator';
+import { IsInt, IsNumberString, IsString, IsOptional, MaxLength, Min } from "class-validator";
 
 export class CerrarTurnoDto {
   /** Efectivo contado físicamente en el arqueo. */

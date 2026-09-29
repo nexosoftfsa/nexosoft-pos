@@ -1,15 +1,15 @@
-import 'reflect-metadata';
-import { createServer } from 'node:http';
-import { join } from 'node:path';
-import { NestFactory } from '@nestjs/core';
-import { Logger, ValidationPipe } from '@nestjs/common';
-import type { NestExpressApplication } from '@nestjs/platform-express';
-import { AppModule } from './app.module';
-import { PrismaService } from './prisma/prisma.service';
+import "reflect-metadata";
+import { createServer } from "node:http";
+import { join } from "node:path";
+import { NestFactory } from "@nestjs/core";
+import { Logger, ValidationPipe } from "@nestjs/common";
+import type { NestExpressApplication } from "@nestjs/platform-express";
+import { AppModule } from "./app.module";
+import { PrismaService } from "./prisma/prisma.service";
 import {
   avisoDeMigracionesPendientes,
   buscarMigracionesPendientes,
-} from './prisma/migraciones-pendientes';
+} from "./prisma/migraciones-pendientes";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -19,7 +19,7 @@ async function bootstrap() {
   // articulos enviado de una por el importador de Excel lo supera facil
   // ("request entity too large" / 413). 20mb cubre catalogos grandes con
   // margen de sobra.
-  app.useBodyParser('json', { limit: '20mb' });
+  app.useBodyParser("json", { limit: "20mb" });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -34,28 +34,28 @@ async function bootstrap() {
   // IP real del cliente desde X-Forwarded-For en vez de la IP del túnel/proxy
   // -- sin esto, el rate-limiting por IP (ver ThrottlerModule en app.module.ts)
   // no sirve de nada, porque todos los pedidos parecerían venir del mismo lado.
-  app.set('trust proxy', 1);
+  app.set("trust proxy", 1);
 
   // CORS_ORIGINS: lista separada por comas de orígenes permitidos (ej. el
   // dominio del túnel). Sin la variable, sigue abierto a cualquier origen --
   // el default de antes de esta fase, correcto mientras todo corre en la LAN
   // (ADR-0019). Definila en producción antes de exponer el servidor afuera.
-  const origenes = process.env['CORS_ORIGINS'];
-  app.enableCors(origenes ? { origin: origenes.split(',').map((o) => o.trim()) } : undefined);
-  app.setGlobalPrefix('api/v1');
+  const origenes = process.env["CORS_ORIGINS"];
+  app.enableCors(origenes ? { origin: origenes.split(",").map((o) => o.trim()) } : undefined);
+  app.setGlobalPrefix("api/v1");
 
   // Una migración sin aplicar no se nota al arrancar: falla después, en la
   // pantalla que use la columna nueva, con un 500 que no explica nada. Se avisa
   // acá y NO se corta el arranque (ver `migraciones-pendientes.ts`).
   const pendientes = await buscarMigracionesPendientes(
     app.get(PrismaService),
-    join(process.cwd(), 'prisma', 'migrations'),
+    join(process.cwd(), "prisma", "migrations"),
   );
   if (pendientes.length > 0) {
-    new Logger('Migraciones').warn(`\n${avisoDeMigracionesPendientes(pendientes)}\n`);
+    new Logger("Migraciones").warn(`\n${avisoDeMigracionesPendientes(pendientes)}\n`);
   }
 
-  const port = process.env['PORT'] ?? 3000;
+  const port = process.env["PORT"] ?? 3000;
   await app.listen(port);
   console.log(`NexoSoft cloud-api corriendo en http://localhost:${port}/api/v1`);
 
@@ -67,21 +67,21 @@ async function bootstrap() {
   //
   // Es la MISMA app de Nest: no se duplica nada, sólo se la escucha en dos
   // sockets distintos.
-  const portRemoto = Number(process.env['PORT_REMOTO'] ?? 3001);
+  const portRemoto = Number(process.env["PORT_REMOTO"] ?? 3001);
   const servidorRemoto = createServer(app.getHttpAdapter().getInstance());
   // El acceso remoto es OPCIONAL: si este puerto no se puede abrir (otra app
   // ya lo tiene), el comercio tiene que poder seguir vendiendo igual. Sin
   // este manejador, Node emite un 'error' no capturado y se lleva puesto todo
   // el servidor -- verificado: la parte de la LAN ya había arrancado bien y
   // el proceso moría igual.
-  servidorRemoto.on('error', (e: NodeJS.ErrnoException) => {
+  servidorRemoto.on("error", (e: NodeJS.ErrnoException) => {
     console.error(
       `No se pudo abrir el puerto del acceso remoto (${portRemoto}): ${e.code ?? e.message}. ` +
-        'El servidor sigue funcionando en la red del local; el panel no se va a ver desde afuera ' +
-        'hasta que se libere ese puerto o se cambie PORT_REMOTO.',
+        "El servidor sigue funcionando en la red del local; el panel no se va a ver desde afuera " +
+        "hasta que se libere ese puerto o se cambie PORT_REMOTO.",
     );
   });
-  servidorRemoto.listen(portRemoto, '127.0.0.1', () => {
+  servidorRemoto.listen(portRemoto, "127.0.0.1", () => {
     console.log(`Acceso remoto (solo lectura) escuchando en 127.0.0.1:${portRemoto}`);
   });
 }

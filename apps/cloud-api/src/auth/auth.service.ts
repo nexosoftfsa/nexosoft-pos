@@ -4,20 +4,20 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { addDays } from 'date-fns';
-import * as argon2 from 'argon2';
-import { PrismaService } from '../prisma/prisma.service';
-import { CredencialesService } from '../credenciales/credenciales.service';
-import { LoginLockoutService } from './login-lockout.service';
-import { RevisionClavesService } from './revision-claves.service';
-import type { RegistroDto } from './dto/registro.dto';
-import type { LoginDto } from './dto/login.dto';
-import type { JwtPayload } from './jwt.strategy';
+} from "@nestjs/common";
+import { JwtService, type JwtSignOptions } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import { addDays } from "date-fns";
+import * as argon2 from "argon2";
+import { PrismaService } from "../prisma/prisma.service";
+import { CredencialesService } from "../credenciales/credenciales.service";
+import { LoginLockoutService } from "./login-lockout.service";
+import { RevisionClavesService } from "./revision-claves.service";
+import type { RegistroDto } from "./dto/registro.dto";
+import type { LoginDto } from "./dto/login.dto";
+import type { JwtPayload } from "./jwt.strategy";
 
-const MENSAJE_BLOQUEADO = 'Demasiados intentos fallidos. Probá de nuevo en unos minutos.';
+const MENSAJE_BLOQUEADO = "Demasiados intentos fallidos. Probá de nuevo en unos minutos.";
 
 @Injectable()
 export class AuthService {
@@ -32,7 +32,7 @@ export class AuthService {
 
   async registrar(dto: RegistroDto) {
     const existe = await this.prisma.usuario.findUnique({ where: { email: dto.email } });
-    if (existe) throw new ConflictException('El email ya está registrado');
+    if (existe) throw new ConflictException("El email ya está registrado");
 
     const passwordHash = await argon2.hash(dto.password);
 
@@ -41,7 +41,7 @@ export class AuthService {
         email: dto.email,
         nombreDisplay: dto.nombreDisplay,
         passwordHash,
-        rol: dto.rol ?? 'CAJERO',
+        rol: dto.rol ?? "CAJERO",
         sucursalId: dto.sucursalId,
       },
       select: { id: true, email: true, nombreDisplay: true, rol: true, sucursalId: true },
@@ -71,13 +71,13 @@ export class AuthService {
 
     if (!usuario || !usuario.activo) {
       this.lockout.registrarFallo(dto.email);
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedException("Credenciales inválidas");
     }
 
     const passwordOk = await argon2.verify(usuario.passwordHash, dto.password);
     if (!passwordOk) {
       this.lockout.registrarFallo(dto.email);
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedException("Credenciales inválidas");
     }
 
     this.lockout.registrarExito(dto.email);
@@ -104,13 +104,13 @@ export class AuthService {
     try {
       await this.prisma.registroAuditoria.create({
         data: {
-          accion: 'LOGIN_REMOTO',
-          entidad: 'Usuario',
+          accion: "LOGIN_REMOTO",
+          entidad: "Usuario",
           entidadId: usuario.id,
           usuarioId: usuario.id,
           sucursalId: usuario.sucursalId,
           exito: true,
-          detalle: 'Ingreso al panel desde fuera del local',
+          detalle: "Ingreso al panel desde fuera del local",
           ...(ip !== undefined ? { ip } : {}),
         },
       });
@@ -129,8 +129,8 @@ export class AuthService {
     if (!usuario) return;
     await this.prisma.registroAuditoria.create({
       data: {
-        accion: 'LOGIN_BLOQUEADO',
-        entidad: 'Usuario',
+        accion: "LOGIN_BLOQUEADO",
+        entidad: "Usuario",
         entidadId: usuario.id,
         usuarioId: usuario.id,
         sucursalId: usuario.sucursalId,
@@ -155,7 +155,7 @@ export class AuthService {
       if (record) {
         await this.prisma.refreshToken.delete({ where: { id: record.id } });
       }
-      throw new UnauthorizedException('Refresh token inválido o expirado');
+      throw new UnauthorizedException("Refresh token inválido o expirado");
     }
 
     await this.prisma.refreshToken.delete({ where: { id: record.id } });
@@ -165,7 +165,7 @@ export class AuthService {
       select: { id: true, email: true, rol: true, sucursalId: true, activo: true },
     });
 
-    if (!usuario.activo) throw new UnauthorizedException('Usuario inactivo');
+    if (!usuario.activo) throw new UnauthorizedException("Usuario inactivo");
 
     return this.generarTokens(usuario.id, usuario.email, usuario.rol, usuario.sucursalId);
   }
@@ -174,11 +174,11 @@ export class AuthService {
     const payload: JwtPayload = { sub: usuarioId, email, rol, sucursalId };
 
     // El valor viene de config (string en runtime); la librería lo parsea con `ms`.
-    const accessExpiry = (this.config.get<string>('JWT_ACCESS_EXPIRY') ?? '15m') as NonNullable<
-      JwtSignOptions['expiresIn']
+    const accessExpiry = (this.config.get<string>("JWT_ACCESS_EXPIRY") ?? "15m") as NonNullable<
+      JwtSignOptions["expiresIn"]
     >;
-    const refreshExpiry = (this.config.get<string>('JWT_REFRESH_EXPIRY') ?? '30d') as NonNullable<
-      JwtSignOptions['expiresIn']
+    const refreshExpiry = (this.config.get<string>("JWT_REFRESH_EXPIRY") ?? "30d") as NonNullable<
+      JwtSignOptions["expiresIn"]
     >;
 
     const accessToken = this.jwt.sign(payload, { expiresIn: accessExpiry });
@@ -186,12 +186,12 @@ export class AuthService {
     const refreshTokenStr = this.jwt.sign(
       { sub: usuarioId },
       {
-        secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
+        secret: this.config.getOrThrow<string>("JWT_REFRESH_SECRET"),
         expiresIn: refreshExpiry,
       },
     );
 
-    const diasRefresh = parseInt(this.config.get<string>('JWT_REFRESH_DAYS') ?? '30', 10);
+    const diasRefresh = parseInt(this.config.get<string>("JWT_REFRESH_DAYS") ?? "30", 10);
 
     await this.prisma.refreshToken.create({
       data: {

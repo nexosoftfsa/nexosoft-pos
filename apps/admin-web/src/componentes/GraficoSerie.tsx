@@ -29,13 +29,7 @@ export function GraficoSerie({ datos }: { datos: PuntoSerie[] }) {
           labelStyle={{ color: "#e2e8f0" }}
           formatter={(valor: number) => [formatearMoneda(String(valor)), "Total"]}
         />
-        <Line
-          type="monotone"
-          dataKey="total"
-          stroke="#38bdf8"
-          strokeWidth={2}
-          dot={{ r: 3 }}
-        />
+        <Line type="monotone" dataKey="total" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3 }} />
       </LineChart>
     </ResponsiveContainer>
   );

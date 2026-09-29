@@ -54,9 +54,30 @@ export class ClienteCtaCteSimulado implements ClienteCtaCte {
     },
   ];
   private movimientos: Array<MovimientoCtaCte & { clienteId: string }> = [
-    { id: "m1", clienteId: "cli-ana", tipo: "CARGO", monto: "12000.00", concepto: "Venta a cuenta", creadoEn: new Date(Date.now() - 4 * 86400000).toISOString() },
-    { id: "m2", clienteId: "cli-ana", tipo: "PAGO", monto: "5000.00", concepto: "Cobro parcial", creadoEn: new Date(Date.now() - 2 * 86400000).toISOString() },
-    { id: "m3", clienteId: "cli-rest", tipo: "CARGO", monto: "34500.00", concepto: "Pedido semanal", creadoEn: new Date(Date.now() - 86400000).toISOString() },
+    {
+      id: "m1",
+      clienteId: "cli-ana",
+      tipo: "CARGO",
+      monto: "12000.00",
+      concepto: "Venta a cuenta",
+      creadoEn: new Date(Date.now() - 4 * 86400000).toISOString(),
+    },
+    {
+      id: "m2",
+      clienteId: "cli-ana",
+      tipo: "PAGO",
+      monto: "5000.00",
+      concepto: "Cobro parcial",
+      creadoEn: new Date(Date.now() - 2 * 86400000).toISOString(),
+    },
+    {
+      id: "m3",
+      clienteId: "cli-rest",
+      tipo: "CARGO",
+      monto: "34500.00",
+      concepto: "Pedido semanal",
+      creadoEn: new Date(Date.now() - 86400000).toISOString(),
+    },
   ];
   private secuencia = 0;
 
@@ -77,9 +98,7 @@ export class ClienteCtaCteSimulado implements ClienteCtaCte {
   }
 
   async listar(incluirInactivos: boolean): Promise<ClienteConSaldo[]> {
-    return this.clientes
-      .filter((c) => incluirInactivos || c.activo)
-      .map((c) => this.conSaldo(c));
+    return this.clientes.filter((c) => incluirInactivos || c.activo).map((c) => this.conSaldo(c));
   }
 
   async crear(datos: DatosCliente): Promise<Cliente> {
@@ -98,7 +117,10 @@ export class ClienteCtaCteSimulado implements ClienteCtaCte {
     return { ...nuevo };
   }
 
-  async actualizar(id: string, cambios: Partial<DatosCliente> & { activo?: boolean }): Promise<Cliente> {
+  async actualizar(
+    id: string,
+    cambios: Partial<DatosCliente> & { activo?: boolean },
+  ): Promise<Cliente> {
     const actual = this.buscar(id);
     const actualizado: Cliente = {
       ...actual,

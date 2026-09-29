@@ -1,14 +1,14 @@
-import { Body, Controller, Get, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { RolUsuario } from '@prisma/client';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { CertificadoService } from './certificado.service';
-import { ConfiguracionFiscalService } from './configuracion-fiscal.service';
-import { DiagnosticoArcaService } from './diagnostico-arca.service';
-import { ALIAS_POR_DEFECTO } from './csr';
-import type { EntornoArca } from './arca/wsaa';
+import { Body, Controller, Get, Post, Put, Query, UseGuards } from "@nestjs/common";
+import { RolUsuario } from "@prisma/client";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
+import { CertificadoService } from "./certificado.service";
+import { ConfiguracionFiscalService } from "./configuracion-fiscal.service";
+import { DiagnosticoArcaService } from "./diagnostico-arca.service";
+import { ALIAS_POR_DEFECTO } from "./csr";
+import type { EntornoArca } from "./arca/wsaa";
 
 export class GenerarCsrDto {
   @IsString()
@@ -63,7 +63,7 @@ export class SubirCertificadoDto {
  */
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RolUsuario.ADMIN)
-@Controller('fiscal/certificado')
+@Controller("fiscal/certificado")
 export class CertificadoController {
   constructor(
     private readonly certificados: CertificadoService,
@@ -78,17 +78,17 @@ export class CertificadoController {
    * asumir pruebas y no producción.
    */
   private async entornoDe(pedido?: string): Promise<EntornoArca> {
-    if (pedido === 'produccion' || pedido === 'homologacion') return pedido;
+    if (pedido === "produccion" || pedido === "homologacion") return pedido;
     const fiscal = await this.configuracion.obtener();
-    return fiscal?.entorno ?? 'homologacion';
+    return fiscal?.entorno ?? "homologacion";
   }
 
   @Get()
-  async estado(@Query('cuit') cuit: string, @Query('entorno') entorno?: string) {
-    return this.certificados.estado(cuit ?? '', await this.entornoDe(entorno));
+  async estado(@Query("cuit") cuit: string, @Query("entorno") entorno?: string) {
+    return this.certificados.estado(cuit ?? "", await this.entornoDe(entorno));
   }
 
-  @Post('csr')
+  @Post("csr")
   generar(@Body() dto: GenerarCsrDto) {
     return this.certificados.generar(
       { cuit: dto.cuit, razonSocial: dto.razonSocial, alias: dto.alias ?? ALIAS_POR_DEFECTO },
@@ -110,7 +110,7 @@ export class CertificadoController {
    * pasos se traba: llegar a ARCA, autenticar con el certificado, o consultar
    * el punto de venta.
    */
-  @Get('diagnostico')
+  @Get("diagnostico")
   diagnostico() {
     return this.diagnosticos.correr();
   }

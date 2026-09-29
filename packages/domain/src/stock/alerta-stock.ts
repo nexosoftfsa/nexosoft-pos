@@ -5,12 +5,7 @@
  */
 import type { Cantidad } from "../comun/cantidad.js";
 import { bajoStockMinimo, type Existencia } from "./existencia.js";
-import {
-  diasParaVencer,
-  estaVencido,
-  porVencer,
-  type Lote,
-} from "./lote.js";
+import { diasParaVencer, estaVencido, porVencer, type Lote } from "./lote.js";
 
 export interface AlertaStockMinimo {
   readonly articuloId: string;
@@ -20,9 +15,7 @@ export interface AlertaStockMinimo {
 }
 
 /** Lista las existencias que están en o por debajo de su stock mínimo. */
-export function evaluarAlertasStockMinimo(
-  existencias: readonly Existencia[],
-): AlertaStockMinimo[] {
+export function evaluarAlertasStockMinimo(existencias: readonly Existencia[]): AlertaStockMinimo[] {
   return existencias.filter(bajoStockMinimo).map((e) => ({
     articuloId: e.articuloId,
     depositoId: e.depositoId,

@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import type { CrearProveedorDto } from './dto/crear-proveedor.dto';
-import type { ActualizarProveedorDto } from './dto/actualizar-proveedor.dto';
-import { mapearFilaProveedorCruda, claveProveedor, type FilaProveedorCruda } from './importar-proveedores-lote';
-import { RevertirDryRun, type ResultadoFilaImportacion } from '../common/importacion-lote';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import type { CrearProveedorDto } from "./dto/crear-proveedor.dto";
+import type { ActualizarProveedorDto } from "./dto/actualizar-proveedor.dto";
+import {
+  mapearFilaProveedorCruda,
+  claveProveedor,
+  type FilaProveedorCruda,
+} from "./importar-proveedores-lote";
+import { RevertirDryRun, type ResultadoFilaImportacion } from "../common/importacion-lote";
 
 type Tx = Prisma.TransactionClient;
 
@@ -19,7 +23,7 @@ export class ProveedoresService {
   async listarProveedores(sucursalId: string, soloActivos = true) {
     return this.prisma.proveedor.findMany({
       where: { sucursalId, ...(soloActivos ? { activo: true } : {}) },
-      orderBy: { nombre: 'asc' },
+      orderBy: { nombre: "asc" },
     });
   }
 
@@ -81,9 +85,12 @@ export class ProveedoresService {
     const procesarLote = async (tx: Tx): Promise<ResultadoFilaImportacion[]> => {
       const resultados: ResultadoFilaImportacion[] = [];
       const clavesExistentes = new Set(
-        (await tx.proveedor.findMany({ where: { sucursalId }, select: { nombre: true, cuit: true } })).map((p) =>
-          claveProveedor(p.nombre, p.cuit),
-        ),
+        (
+          await tx.proveedor.findMany({
+            where: { sucursalId },
+            select: { nombre: true, cuit: true },
+          })
+        ).map((p) => claveProveedor(p.nombre, p.cuit)),
       );
 
       for (let i = 0; i < filas.length; i++) {
@@ -94,16 +101,20 @@ export class ProveedoresService {
           if (clavesExistentes.has(clave)) {
             resultados.push({
               fila: numeroFila,
-              resultado: 'omitida',
+              resultado: "omitida",
               mensaje: `Ya existe (o se repite en el archivo) el proveedor "${proveedor.nombre}"`,
             });
             continue;
           }
           await tx.proveedor.create({ data: { ...proveedor, sucursalId } });
           clavesExistentes.add(clave);
-          resultados.push({ fila: numeroFila, resultado: 'creada' });
+          resultados.push({ fila: numeroFila, resultado: "creada" });
         } catch (error) {
-          resultados.push({ fila: numeroFila, resultado: 'error', mensaje: (error as Error).message });
+          resultados.push({
+            fila: numeroFila,
+            resultado: "error",
+            mensaje: (error as Error).message,
+          });
         }
       }
       return resultados;

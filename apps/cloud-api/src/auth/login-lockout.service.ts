@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 const MAX_INTENTOS = 5;
 const VENTANA_MS = 15 * 60 * 1000;

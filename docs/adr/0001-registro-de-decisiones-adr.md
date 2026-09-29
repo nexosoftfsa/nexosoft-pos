@@ -19,10 +19,12 @@ reemplaza.
 ## Consecuencias
 
 ### Positivas
+
 - Trazabilidad de decisiones y supuestos.
 - Onboarding más rápido; el "porqué" no se pierde.
 
 ### Negativas / costos
+
 - Disciplina de escribir el ADR cuando se toma la decisión.
 
 ## Alternativas consideradas

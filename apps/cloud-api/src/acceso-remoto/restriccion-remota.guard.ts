@@ -4,9 +4,9 @@ import {
   ForbiddenException,
   Injectable,
   Logger,
-} from '@nestjs/common';
-import { AccesoRemotoService } from './acceso-remoto.service';
-import { permitidaEnRemoto } from './rutas-remotas';
+} from "@nestjs/common";
+import { AccesoRemotoService } from "./acceso-remoto.service";
+import { permitidaEnRemoto } from "./rutas-remotas";
 
 /**
  * Puerto donde escucha el túnel, sólo en loopback. Ver `main.ts`: el
@@ -17,7 +17,7 @@ import { permitidaEnRemoto } from './rutas-remotas';
 export const PUERTO_REMOTO_DEFECTO = 3001;
 
 export function puertoRemoto(): number {
-  return Number(process.env['PORT_REMOTO'] ?? PUERTO_REMOTO_DEFECTO);
+  return Number(process.env["PORT_REMOTO"] ?? PUERTO_REMOTO_DEFECTO);
 }
 
 /**
@@ -52,20 +52,20 @@ export class RestriccionRemotaGuard implements CanActivate {
   async canActivate(contexto: ExecutionContext): Promise<boolean> {
     // Sólo aplica a HTTP; no hay otro transporte hoy, pero un guard global se
     // ejecuta igual para lo que venga.
-    if (contexto.getType() !== 'http') return true;
+    if (contexto.getType() !== "http") return true;
 
     const pedido = contexto.switchToHttp().getRequest<PedidoConOrigen>();
     if (!(await this.vieneDelTunel(pedido))) return true;
 
     pedido.esRemota = true;
-    const ruta = pedido.originalUrl ?? pedido.url ?? '/';
+    const ruta = pedido.originalUrl ?? pedido.url ?? "/";
     if (permitidaEnRemoto(pedido.method, ruta)) return true;
 
     // Un intento de escribir desde afuera es raro por definición: o alguien
     // está probando el sistema, o algo anda mal. Queda en el log del servidor.
     this.log.warn(`Bloqueado desde afuera: ${pedido.method} ${ruta}`);
     throw new ForbiddenException(
-      'Desde fuera del local el panel es de solo lectura. Esta operación se hace en el sistema del comercio.',
+      "Desde fuera del local el panel es de solo lectura. Esta operación se hace en el sistema del comercio.",
     );
   }
 
@@ -86,7 +86,7 @@ export class RestriccionRemotaGuard implements CanActivate {
     const hostname = await this.accesoRemoto.hostnamePublico();
     if (hostname === null) return false;
     // El Host puede traer puerto (`lagus.nexosoft.com.ar:443`).
-    const host = (pedido.headers?.host ?? '').split(':')[0]?.toLowerCase();
+    const host = (pedido.headers?.host ?? "").split(":")[0]?.toLowerCase();
     return host === hostname.toLowerCase();
   }
 }

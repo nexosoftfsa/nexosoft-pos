@@ -1,8 +1,8 @@
-import { promises as fs } from 'node:fs';
-import { dirname } from 'node:path';
-import { Logger } from '@nestjs/common';
-import { Workbook } from 'exceljs';
-import type { LibroDeVentas, FilaVenta } from './libro-de-ventas';
+import { promises as fs } from "node:fs";
+import { dirname } from "node:path";
+import { Logger } from "@nestjs/common";
+import { Workbook } from "exceljs";
+import type { LibroDeVentas, FilaVenta } from "./libro-de-ventas";
 
 /**
  * Libro de ventas en Excel (ADR-0021). Una fila por venta, archivo que se va
@@ -14,10 +14,19 @@ import type { LibroDeVentas, FilaVenta } from './libro-de-ventas';
  * desde dos requests a la vez sin corromperlo.
  */
 export class LibroDeVentasExcel implements LibroDeVentas {
-  private static readonly HOJA = 'Ventas';
+  private static readonly HOJA = "Ventas";
   private static readonly ENCABEZADOS = [
-    'Fecha', 'Operación', 'Comprobante', 'Sucursal', 'Usuario',
-    'Medio de pago', 'Ítems', 'Subtotal', 'Descuento', 'Total', 'CAE',
+    "Fecha",
+    "Operación",
+    "Comprobante",
+    "Sucursal",
+    "Usuario",
+    "Medio de pago",
+    "Ítems",
+    "Subtotal",
+    "Descuento",
+    "Total",
+    "CAE",
   ];
 
   private readonly logger = new Logger(LibroDeVentasExcel.name);
@@ -86,7 +95,10 @@ export class LibroDeVentasExcel implements LibroDeVentas {
     return hoja;
   }
 
-  private buscarPorOperacion(hoja: ReturnType<Workbook['getWorksheet']> & object, operacionId: string) {
+  private buscarPorOperacion(
+    hoja: ReturnType<Workbook["getWorksheet"]> & object,
+    operacionId: string,
+  ) {
     let encontrada: ReturnType<typeof hoja.getRow> | undefined;
     hoja.eachRow((row, numero) => {
       if (numero === 1) return; // encabezados

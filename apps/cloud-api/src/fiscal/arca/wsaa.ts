@@ -1,11 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
-import { firmarTraCms } from './firma-cms';
-import { construirTra, leerFaultSoap, leerTicketAcceso, type TicketAcceso } from './tra';
-import { esCorteDeTiempo } from './corte-de-tiempo';
-import { detalleDeRed } from './detalle-de-red';
-import { fetchArca, type FetchLike, type RespuestaHttp } from './fetch-arca';
+import { firmarTraCms } from "./firma-cms";
+import { construirTra, leerFaultSoap, leerTicketAcceso, type TicketAcceso } from "./tra";
+import { esCorteDeTiempo } from "./corte-de-tiempo";
+import { detalleDeRed } from "./detalle-de-red";
+import { fetchArca, type FetchLike, type RespuestaHttp } from "./fetch-arca";
 
 /**
  * WSAA: el servicio de autenticación de ARCA.
@@ -20,8 +20,8 @@ import { fetchArca, type FetchLike, type RespuestaHttp } from './fetch-arca';
  */
 
 export const URL_WSAA = {
-  homologacion: 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms',
-  produccion: 'https://wsaa.afip.gov.ar/ws/services/LoginCms',
+  homologacion: "https://wsaahomo.afip.gov.ar/ws/services/LoginCms",
+  produccion: "https://wsaa.afip.gov.ar/ws/services/LoginCms",
 } as const;
 
 export type EntornoArca = keyof typeof URL_WSAA;
@@ -33,7 +33,7 @@ export class ErrorWsaa extends Error {
     readonly transitorio: boolean,
   ) {
     super(message);
-    this.name = 'ErrorWsaa';
+    this.name = "ErrorWsaa";
   }
 }
 
@@ -70,7 +70,7 @@ export class ClienteWsaa {
   ) {}
 
   /** Ticket vigente para el servicio pedido (`wsfe` para facturación). */
-  async obtenerTicket(servicio = 'wsfe'): Promise<TicketAcceso> {
+  async obtenerTicket(servicio = "wsfe"): Promise<TicketAcceso> {
     const cacheado = this.enMemoria ?? this.leerDeDisco();
     if (cacheado !== null && this.sirve(cacheado)) {
       this.enMemoria = cacheado;
@@ -96,8 +96,8 @@ export class ClienteWsaa {
     let res: RespuestaHttp;
     try {
       res = await hacerFetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: '' },
+        method: "POST",
+        headers: { "Content-Type": "text/xml; charset=utf-8", SOAPAction: "" },
         body: sobreLoginCms(cms),
         signal: AbortSignal.timeout(timeoutMs),
       });
@@ -119,7 +119,7 @@ export class ClienteWsaa {
       // reintentando, hay que esperar a que venza.
       if (/ya posee un TA valido/i.test(fault)) {
         throw new ErrorWsaa(
-          'ARCA dice que ya hay un ticket de acceso vigente para este certificado. Puede pasar si el servidor se reinstaló. Se destraba solo cuando venza (hasta 12 horas).',
+          "ARCA dice que ya hay un ticket de acceso vigente para este certificado. Puede pasar si el servidor se reinstaló. Se destraba solo cuando venza (hasta 12 horas).",
           true,
         );
       }
@@ -145,7 +145,7 @@ export class ClienteWsaa {
   private leerDeDisco(): TicketAcceso | null {
     try {
       if (!existsSync(this.opciones.rutaCache)) return null;
-      const crudo = JSON.parse(readFileSync(this.opciones.rutaCache, 'utf8')) as TicketEnDisco;
+      const crudo = JSON.parse(readFileSync(this.opciones.rutaCache, "utf8")) as TicketEnDisco;
       const expiracion = new Date(crudo.expiracion);
       if (Number.isNaN(expiracion.getTime())) return null;
       return { token: crudo.token, sign: crudo.sign, expiracion };
@@ -173,7 +173,7 @@ export class ClienteWsaa {
 
 /** Ruta del caché del ticket, junto al certificado del comercio. */
 export function rutaCacheTicket(raizSecrets: string, cuit: string, entorno: EntornoArca): string {
-  return join(raizSecrets, 'arca', cuit, `ticket-${entorno}.json`);
+  return join(raizSecrets, "arca", cuit, `ticket-${entorno}.json`);
 }
 
 function sobreLoginCms(cmsBase64: string): string {
@@ -181,12 +181,12 @@ function sobreLoginCms(cmsBase64: string): string {
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"',
     ' xmlns:wsaa="http://wsaa.view.sua.dvadac.desein.afip.gov">',
-    '<soapenv:Header/>',
-    '<soapenv:Body>',
-    '<wsaa:loginCms>',
+    "<soapenv:Header/>",
+    "<soapenv:Body>",
+    "<wsaa:loginCms>",
     `<wsaa:in0>${cmsBase64}</wsaa:in0>`,
-    '</wsaa:loginCms>',
-    '</soapenv:Body>',
-    '</soapenv:Envelope>',
-  ].join('');
+    "</wsaa:loginCms>",
+    "</soapenv:Body>",
+    "</soapenv:Envelope>",
+  ].join("");
 }

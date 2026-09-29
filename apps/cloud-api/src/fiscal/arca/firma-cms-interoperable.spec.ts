@@ -1,9 +1,9 @@
-import { createPublicKey, generateKeyPairSync, verify as verificarFirma } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
-import * as forge from 'node-forge';
+import { createPublicKey, generateKeyPairSync, verify as verificarFirma } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import * as forge from "node-forge";
 
-import { firmarTraCms } from './firma-cms';
-import { construirTra } from './tra';
+import { firmarTraCms } from "./firma-cms";
+import { construirTra } from "./tra";
 
 /**
  * La firma del TRA la valida ARCA con SU stack, no con node-forge.
@@ -18,20 +18,20 @@ import { construirTra } from './tra';
  * facturar: es el eslabón donde un fallo cuesta más caro y se ve menos.
  */
 function certificadoAutofirmado() {
-  const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
-  const clavePem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+  const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const clavePem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
 
   const cert = forge.pki.createCertificate();
   cert.publicKey = forge.pki.publicKeyFromPem(
-    publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+    publicKey.export({ type: "spki", format: "pem" }).toString(),
   );
-  cert.serialNumber = '01';
+  cert.serialNumber = "01";
   cert.validity.notBefore = new Date(Date.now() - 60_000);
   cert.validity.notAfter = new Date(Date.now() + 3_600_000);
   const sujeto = [
-    { name: 'countryName', value: 'AR' },
-    { name: 'organizationName', value: 'NexoSoft Prueba' },
-    { name: 'commonName', value: 'prueba-cms' },
+    { name: "countryName", value: "AR" },
+    { name: "organizationName", value: "NexoSoft Prueba" },
+    { name: "commonName", value: "prueba-cms" },
   ];
   cert.setSubject(sujeto);
   cert.setIssuer(sujeto);
@@ -60,48 +60,48 @@ function firmaDelCms(base64: string): { bytesFirmados: Buffer; firma: Buffer } {
   );
 
   return {
-    bytesFirmados: Buffer.from(forge.asn1.toDer(set).getBytes(), 'binary'),
-    firma: Buffer.from(p7.rawCapture.signature, 'binary'),
+    bytesFirmados: Buffer.from(forge.asn1.toDer(set).getBytes(), "binary"),
+    firma: Buffer.from(p7.rawCapture.signature, "binary"),
   };
 }
 
-describe('firmarTraCms (interoperabilidad)', () => {
-  it('la firma la valida node:crypto, no sólo node-forge', () => {
+describe("firmarTraCms (interoperabilidad)", () => {
+  it("la firma la valida node:crypto, no sólo node-forge", () => {
     const { certificadoPem, clavePem, publicKey } = certificadoAutofirmado();
 
     const { bytesFirmados, firma } = firmaDelCms(
-      firmarTraCms(construirTra({ servicio: 'wsfe' }), certificadoPem, clavePem),
+      firmarTraCms(construirTra({ servicio: "wsfe" }), certificadoPem, clavePem),
     );
 
     expect(firma.length).toBeGreaterThan(0);
-    expect(verificarFirma('sha256', bytesFirmados, publicKey, firma)).toBe(true);
+    expect(verificarFirma("sha256", bytesFirmados, publicKey, firma)).toBe(true);
   });
 
-  it('el TRA viaja ADENTRO del CMS: ARCA lo necesita así', () => {
+  it("el TRA viaja ADENTRO del CMS: ARCA lo necesita así", () => {
     const { certificadoPem, clavePem } = certificadoAutofirmado();
 
     const der = forge.util.decode64(
-      firmarTraCms(construirTra({ servicio: 'wsfe' }), certificadoPem, clavePem),
+      firmarTraCms(construirTra({ servicio: "wsfe" }), certificadoPem, clavePem),
     );
 
     // Si la firma fuera "detached", el TRA no estaría y WSAA no tendría qué
     // leer.
-    expect(Buffer.from(der, 'binary').toString('utf8')).toContain('<service>wsfe</service>');
+    expect(Buffer.from(der, "binary").toString("utf8")).toContain("<service>wsfe</service>");
   });
 
-  it('con otra clave la verificación falla: el control sirve de algo', () => {
+  it("con otra clave la verificación falla: el control sirve de algo", () => {
     const { certificadoPem, clavePem } = certificadoAutofirmado();
-    const otra = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    const otra = generateKeyPairSync("rsa", { modulusLength: 2048 });
 
     const { bytesFirmados, firma } = firmaDelCms(
-      firmarTraCms(construirTra({ servicio: 'wsfe' }), certificadoPem, clavePem),
+      firmarTraCms(construirTra({ servicio: "wsfe" }), certificadoPem, clavePem),
     );
 
     expect(
       verificarFirma(
-        'sha256',
+        "sha256",
         bytesFirmados,
-        createPublicKey(otra.publicKey.export({ type: 'spki', format: 'pem' }).toString()),
+        createPublicKey(otra.publicKey.export({ type: "spki", format: "pem" }).toString()),
         firma,
       ),
     ).toBe(false);

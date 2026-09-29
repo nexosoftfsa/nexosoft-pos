@@ -28,13 +28,13 @@ siguen vendiendo aunque el servidor esté caído.
 
 ## Piezas (puertos + adaptadores)
 
-| Pieza | Rol |
-| --- | --- |
-| `OperacionSync` / `OperacionEnCola` | La operación y su estado en la cola |
-| `AlmacenDeOperaciones` (puerto) | Persistencia de la cola. En el POS: SQLite |
-| `AlmacenEnMemoria` | Adaptador para tests/dev |
-| `ClienteDeSync` (puerto) | Transporte al servidor. En el POS: HTTP |
-| `MotorDeSincronizacion` | Encola, envía por lotes, reintenta, marca estados |
+| Pieza                               | Rol                                               |
+| ----------------------------------- | ------------------------------------------------- |
+| `OperacionSync` / `OperacionEnCola` | La operación y su estado en la cola               |
+| `AlmacenDeOperaciones` (puerto)     | Persistencia de la cola. En el POS: SQLite        |
+| `AlmacenEnMemoria`                  | Adaptador para tests/dev                          |
+| `ClienteDeSync` (puerto)            | Transporte al servidor. En el POS: HTTP           |
+| `MotorDeSincronizacion`             | Encola, envía por lotes, reintenta, marca estados |
 
 ## Estados de una operación
 

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { describe, expect, it } from "vitest";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 /**
  * Windows PowerShell 5.1 lee un `.ps1` SIN BOM como Windows-1252, no como
@@ -18,29 +18,29 @@ import { join } from 'node:path';
  * La regla es simple: un `.ps1` puede tener acentos, pero entonces tiene que
  * tener BOM. Sin BOM, sólo ASCII.
  */
-const RAIZ = join(__dirname, '..', '..', '..');
-const CARPETAS = ['scripts'];
+const RAIZ = join(__dirname, "..", "..", "..");
+const CARPETAS = ["scripts"];
 
 function archivosPs1(dir: string): string[] {
   const salida: string[] = [];
   for (const entrada of readdirSync(dir)) {
     const completo = join(dir, entrada);
     if (statSync(completo).isDirectory()) salida.push(...archivosPs1(completo));
-    else if (entrada.toLowerCase().endsWith('.ps1')) salida.push(completo);
+    else if (entrada.toLowerCase().endsWith(".ps1")) salida.push(completo);
   }
   return salida;
 }
 
 /** Carpetas de código fuente donde se busca texto ya corrompido. */
-const FUENTES = ['apps/cloud-api/src', 'apps/pos-desktop/src', 'apps/admin-web/src', 'packages'];
+const FUENTES = ["apps/cloud-api/src", "apps/pos-desktop/src", "apps/admin-web/src", "packages"];
 
 function archivosFuente(dir: string): string[] {
   const salida: string[] = [];
   for (const entrada of readdirSync(dir)) {
-    if (entrada === 'node_modules' || entrada === 'dist') continue;
+    if (entrada === "node_modules" || entrada === "dist") continue;
     const completo = join(dir, entrada);
     if (statSync(completo).isDirectory()) salida.push(...archivosFuente(completo));
-    else if (/\.(ts|tsx)$/.test(entrada) && !entrada.endsWith('scripts-encoding.spec.ts')) {
+    else if (/\.(ts|tsx)$/.test(entrada) && !entrada.endsWith("scripts-encoding.spec.ts")) {
       salida.push(completo);
     }
   }
@@ -57,15 +57,15 @@ function archivosFuente(dir: string): string[] {
  */
 const MOJIBAKE = /Ã[©³¡­º±ƒ]|Â[°¡¿]|â€/;
 
-describe('los scripts de PowerShell los puede leer Windows PowerShell 5.1', () => {
+describe("los scripts de PowerShell los puede leer Windows PowerShell 5.1", () => {
   const archivos = CARPETAS.flatMap((c) => archivosPs1(join(RAIZ, c)));
 
-  it('hay scripts para revisar', () => {
+  it("hay scripts para revisar", () => {
     expect(archivos.length).toBeGreaterThan(0);
   });
 
   it.each(archivos.map((a) => [a.slice(RAIZ.length + 1), a]))(
-    '%s: con acentos lleva BOM, o es ASCII puro',
+    "%s: con acentos lleva BOM, o es ASCII puro",
     (_relativo, ruta) => {
       const bytes = readFileSync(ruta);
       const tieneBom = bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf;
@@ -73,30 +73,30 @@ describe('los scripts de PowerShell los puede leer Windows PowerShell 5.1', () =
       const noAscii = bytes.filter((b) => b > 127).length;
       expect(
         noAscii,
-        'sin BOM, PowerShell 5.1 lo lee como Windows-1252 y los acentos lo pueden romper. ' +
-          'Guardalo como UTF-8 con BOM, o sacale los caracteres no ASCII.',
+        "sin BOM, PowerShell 5.1 lo lee como Windows-1252 y los acentos lo pueden romper. " +
+          "Guardalo como UTF-8 con BOM, o sacale los caracteres no ASCII.",
       ).toBe(0);
     },
   );
 });
 
-describe('el código fuente no tiene texto ya corrompido', () => {
+describe("el código fuente no tiene texto ya corrompido", () => {
   const archivos = FUENTES.flatMap((c) => archivosFuente(join(RAIZ, c)));
 
-  it('hay archivos para revisar', () => {
+  it("hay archivos para revisar", () => {
     expect(archivos.length).toBeGreaterThan(0);
   });
 
-  it('ningún archivo tiene acentos mal codificados', () => {
+  it("ningún archivo tiene acentos mal codificados", () => {
     const rotos = archivos
-      .filter((a) => MOJIBAKE.test(readFileSync(a, 'utf8')))
+      .filter((a) => MOJIBAKE.test(readFileSync(a, "utf8")))
       .map((a) => a.slice(RAIZ.length + 1));
 
     expect(
       rotos,
-      'Estos archivos tienen texto UTF-8 leído como Windows-1252 y vuelto a guardar ' +
+      "Estos archivos tienen texto UTF-8 leído como Windows-1252 y vuelto a guardar " +
         '("Descripción" quedó como "DescripciÃ³n"). Suele pasar al editarlos con una ' +
-        'herramienta que no respeta la codificación. Reabrilos como UTF-8 y corregí el texto.',
+        "herramienta que no respeta la codificación. Reabrilos como UTF-8 y corregí el texto.",
     ).toEqual([]);
   });
 });

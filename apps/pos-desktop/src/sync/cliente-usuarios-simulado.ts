@@ -93,7 +93,10 @@ export class ClienteUsuariosSimulado implements ClienteUsuarios {
     // El demo no guarda contraseñas; lo que sí se reproduce es la regla que
     // más confunde: para cambiar la propia hay que saber la actual.
     if (id === "u-demo-1" && (cambio.passwordActual ?? "") === "") {
-      throw new ErrorUsuarios("Para cambiar tu propia contraseña tenés que escribir la actual.", 400);
+      throw new ErrorUsuarios(
+        "Para cambiar tu propia contraseña tenés que escribir la actual.",
+        400,
+      );
     }
     return { ...u };
   }

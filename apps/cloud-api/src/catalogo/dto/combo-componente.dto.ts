@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumberString } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumberString } from "class-validator";
 
 /** Un componente de un combo: producto que entra y en qué cantidad. */
 export class ComboComponenteDto {

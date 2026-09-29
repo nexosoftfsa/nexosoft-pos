@@ -27,25 +27,25 @@ interface RutaPermitida {
 
 const PERMITIDAS: readonly RutaPermitida[] = [
   // Entrar al panel. Es el único POST que pasa: sin esto no hay sesión.
-  { metodo: 'POST', patron: /^\/auth\/login$/ },
+  { metodo: "POST", patron: /^\/auth\/login$/ },
   // Diagnóstico, y lo que usa el propio servidor para comprobar que el túnel
   // responde desde afuera.
-  { metodo: 'GET', patron: /^\/health$/ },
+  { metodo: "GET", patron: /^\/health$/ },
   // Branding del panel.
-  { metodo: 'GET', patron: /^\/comercio\/logo$/ },
+  { metodo: "GET", patron: /^\/comercio\/logo$/ },
   // Todos los reportes, incluido el libro de ventas en Excel.
-  { metodo: 'GET', patron: /^\/reportes(\/|$)/ },
+  { metodo: "GET", patron: /^\/reportes(\/|$)/ },
 ];
 
 /** Prefijo global de la API (ver `setGlobalPrefix` en main.ts). */
-const PREFIJO = '/api/v1';
+const PREFIJO = "/api/v1";
 
 /** Deja la ruta comparable: sin prefijo, sin query y sin barra final. */
 export function normalizarRuta(ruta: string): string {
-  const sinQuery = ruta.split('?')[0] ?? '';
+  const sinQuery = ruta.split("?")[0] ?? "";
   const sinPrefijo = sinQuery.startsWith(PREFIJO) ? sinQuery.slice(PREFIJO.length) : sinQuery;
-  const limpia = sinPrefijo.replace(/\/+$/, '');
-  return limpia === '' ? '/' : limpia;
+  const limpia = sinPrefijo.replace(/\/+$/, "");
+  return limpia === "" ? "/" : limpia;
 }
 
 /**
@@ -56,7 +56,7 @@ export function permitidaEnRemoto(metodo: string, ruta: string): boolean {
   const m = metodo.toUpperCase();
   // OPTIONS es el preflight de CORS: negarlo rompería el panel sin ganar nada,
   // porque no lleva datos ni ejecuta nada.
-  if (m === 'OPTIONS') return true;
+  if (m === "OPTIONS") return true;
   const normalizada = normalizarRuta(ruta);
   return PERMITIDAS.some((p) => p.metodo === m && p.patron.test(normalizada));
 }

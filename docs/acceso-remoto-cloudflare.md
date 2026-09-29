@@ -33,7 +33,7 @@ Abre el navegador: elegir `nexosoft.com.ar` y autorizar. Deja
 > **`cert.pem` es un secreto de NUESTRA cuenta**: con él se pueden crear y
 > borrar túneles y tocar el DNS del dominio. Nunca se sube al repo ni se
 > copia a la PC de un cliente — al comercio solo le llega el código de
-> activación de *su* túnel.
+> activación de _su_ túnel.
 
 Si no tenés `cloudflared` a mano, sale de
 `.\scripts\release\preparar-runtimes-instalador.ps1` (queda en
@@ -47,7 +47,7 @@ Si no tenés `cloudflared` a mano, sale de
 
 Eso, en una sola corrida: da de alta el comercio en el **panel de clientes**,
 crea el túnel `nexosoft-lagus`, apunta el CNAME de `lagus.nexosoft.com.ar`, y
-arma **un solo código** que ata la suscripción *y* levanta el acceso remoto.
+arma **un solo código** que ata la suscripción _y_ levanta el acceso remoto.
 Si el túnel ya existía, lo reusa.
 
 Para un comercio **sin** acceso remoto, el mismo comando sin
@@ -69,7 +69,7 @@ Para un comercio **sin** acceso remoto, el mismo comando sin
 Es **un solo string** para mandarle al comercio: el hostname más las
 credenciales de su túnel, en base64 (no está cifrado). Tratalo como una
 contraseña y mandáselo únicamente al comercio que corresponde, por un canal
-directo. Quien lo tenga puede levantar *ese* túnel — nada más: no da acceso
+directo. Quien lo tenga puede levantar _ese_ túnel — nada más: no da acceso
 al dominio ni a los otros comercios.
 
 ## 3. Activarlo en la PC del comercio
@@ -104,14 +104,14 @@ C:\NexoSoft-Servidor\scripts\instalar-acceso-remoto.ps1 -Accion activar -Codigo 
 
 ## Operación
 
-| Qué | Dónde |
-| --- | --- |
-| Apagar el acceso remoto | POS → Configuración → Acceso remoto → "Desactivar" |
-| Volver a activarlo | Mismo lugar → "Volver a activar" (usa lo ya guardado) |
-| Ver qué pasó | `C:\ProgramData\NexoSoft\logs\acceso-remoto.log` y `cloudflared.log` |
-| Estado a mano | `instalar-acceso-remoto.ps1 -Accion estado` |
-| Ver los túneles (nuestra PC) | `cloudflared tunnel list` / `cloudflared tunnel info nexosoft-<comercio>` |
-| Dar de baja del todo | `-Accion desactivar` en la PC **y** `cloudflared tunnel delete nexosoft-<comercio>` |
+| Qué                          | Dónde                                                                               |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
+| Apagar el acceso remoto      | POS → Configuración → Acceso remoto → "Desactivar"                                  |
+| Volver a activarlo           | Mismo lugar → "Volver a activar" (usa lo ya guardado)                               |
+| Ver qué pasó                 | `C:\ProgramData\NexoSoft\logs\acceso-remoto.log` y `cloudflared.log`                |
+| Estado a mano                | `instalar-acceso-remoto.ps1 -Accion estado`                                         |
+| Ver los túneles (nuestra PC) | `cloudflared tunnel list` / `cloudflared tunnel info nexosoft-<comercio>`           |
+| Dar de baja del todo         | `-Accion desactivar` en la PC **y** `cloudflared tunnel delete nexosoft-<comercio>` |
 
 Archivos que quedan en la PC del comercio, en `C:\ProgramData\NexoSoft\`:
 
@@ -150,7 +150,7 @@ en el local y falla sólo desde afuera.
   loopback (`PORT_REMOTO`). El 3000 sigue siendo el de la LAN. Que un pedido
   llegue por el 3001 es lo que lo marca como "vino de internet".
 - `cloudflared` corre como **tarea programada de Windows** (`NexoSoft Acceso
-  Remoto`): arranca sola al prender la PC y se reinicia sola si se cae, igual
+Remoto`): arranca sola al prender la PC y se reinicia sola si se cae, igual
   que las tareas del `cloud-api` y de PostgreSQL. Se usa tarea en vez de
   `cloudflared service install` para apuntar al `config.yml` con una ruta
   explícita, sin depender de dónde busca `cloudflared` su configuración

@@ -1,4 +1,4 @@
-import { cuitEsValido, normalizarCuit } from '@nexosoft/domain';
+import { cuitEsValido, normalizarCuit } from "@nexosoft/domain";
 
 /** `DocTipo`/`DocNro`/`CondicionIVAReceptorId` de WSFEv1. */
 export interface ReceptorArca {
@@ -24,11 +24,11 @@ export const CONDICION_IVA_RECEPTOR = {
 /** Traduce la condición del cliente al código de ARCA. */
 export function condicionIvaReceptorArca(condicion: string | null | undefined): number {
   switch (condicion) {
-    case 'RESPONSABLE_INSCRIPTO':
+    case "RESPONSABLE_INSCRIPTO":
       return CONDICION_IVA_RECEPTOR.RESPONSABLE_INSCRIPTO;
-    case 'MONOTRIBUTO':
+    case "MONOTRIBUTO":
       return CONDICION_IVA_RECEPTOR.MONOTRIBUTO;
-    case 'EXENTO':
+    case "EXENTO":
       return CONDICION_IVA_RECEPTOR.EXENTO;
     default:
       // Sin cliente cargado, la venta es a consumidor final: el caso normal
@@ -45,7 +45,7 @@ const SIN_IDENTIFICAR = 99;
 
 export const RECEPTOR_CONSUMIDOR_FINAL: ReceptorArca = {
   tipoDocReceptor: SIN_IDENTIFICAR,
-  nroDocReceptor: '0',
+  nroDocReceptor: "0",
   condicionIvaReceptor: CONDICION_IVA_RECEPTOR.CONSUMIDOR_FINAL,
 };
 
@@ -64,12 +64,12 @@ export function receptorArca(
   const condicionIvaReceptor = condicionIvaReceptorArca(condicionIva);
   const sinIdentificar: ReceptorArca = {
     tipoDocReceptor: SIN_IDENTIFICAR,
-    nroDocReceptor: '0',
+    nroDocReceptor: "0",
     condicionIvaReceptor,
   };
 
-  const digitos = (documento ?? '').replace(/\D/g, '');
-  if (digitos === '') return sinIdentificar;
+  const digitos = (documento ?? "").replace(/\D/g, "");
+  if (digitos === "") return sinIdentificar;
 
   if (digitos.length === 11) {
     // Un CUIT con dígito verificador malo no lo toma ARCA: mejor emitir como

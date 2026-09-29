@@ -61,21 +61,35 @@ export class ClienteReportesSimulado implements ClienteReportes {
   async serie(rango: RangoFechas): Promise<PuntoSerie[]> {
     // Solo los días CON ventas, igual que el endpoint real: es lo que hace
     // que el conteo por días trabajados de los reportes tenga sentido.
-    const porDia = agrupar(this.ventas(rango), (v) => v.dia, (v) => v.total);
+    const porDia = agrupar(
+      this.ventas(rango),
+      (v) => v.dia,
+      (v) => v.total,
+    );
     return porDia
       .map(([fecha, { total, cantidad }]) => ({ fecha, total: dosDecimales(total), cantidad }))
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
   }
 
   async porMedioPago(rango: RangoFechas): Promise<VentaPorMedio[]> {
-    return agrupar(this.ventas(rango), (v) => v.medioPago, (v) => v.total).map(
-      ([medioPago, { total, cantidad }]) => ({ medioPago, total: dosDecimales(total), cantidad }),
-    );
+    return agrupar(
+      this.ventas(rango),
+      (v) => v.medioPago,
+      (v) => v.total,
+    ).map(([medioPago, { total, cantidad }]) => ({
+      medioPago,
+      total: dosDecimales(total),
+      cantidad,
+    }));
   }
 
   async porRubro(rango: RangoFechas): Promise<VentaPorRubro[]> {
     const lineas = this.ventas(rango).flatMap((v) => v.lineas);
-    return agrupar(lineas, (l) => l.rubro, (l) => l.total).map(([rubro, { total }]) => ({
+    return agrupar(
+      lineas,
+      (l) => l.rubro,
+      (l) => l.total,
+    ).map(([rubro, { total }]) => ({
       rubro,
       total: dosDecimales(total),
     }));

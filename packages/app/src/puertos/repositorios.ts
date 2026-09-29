@@ -105,10 +105,7 @@ export interface RepositorioVentas {
   /** Deja anotado con qué operación de la cola viaja esta venta. */
   vincularOperacion(ventaId: string, operacionId: string): Promise<void>;
   /** Vuelca sobre la venta local lo que resolvió el servidor. */
-  aplicarResueltoPorElServidor(
-    operacionId: string,
-    resuelto: ResueltoPorElServidor,
-  ): Promise<void>;
+  aplicarResueltoPorElServidor(operacionId: string, resuelto: ResueltoPorElServidor): Promise<void>;
   /** Las últimas ventas de esta terminal, para verlas sin conexión. */
   ultimas(limite: number): Promise<readonly VentaLocal[]>;
 }

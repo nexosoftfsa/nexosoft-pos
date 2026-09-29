@@ -17,13 +17,13 @@ resultado a un **destino intercambiable**.
 
 ## Piezas
 
-| Pieza                  | Rol                                                            |
-| ---------------------- | ------------------------------------------------------------- |
-| `DestinoDeRespaldo`    | Puerto: `escribir`/`leer`/`listar`/`eliminar`                 |
-| `DestinoCarpeta`       | Filesystem: disco local, NAS o carpeta de Drive/OneDrive      |
-| `DestinoEnMemoria`     | Mock funcional para tests                                     |
-| `MotorDeRespaldo`      | Snapshot + compresión + retención + restauración              |
-| `RespaldoSchedulerService` | Respaldo automático según cron (`RESPALDO_CRON`)          |
+| Pieza                      | Rol                                                      |
+| -------------------------- | -------------------------------------------------------- |
+| `DestinoDeRespaldo`        | Puerto: `escribir`/`leer`/`listar`/`eliminar`            |
+| `DestinoCarpeta`           | Filesystem: disco local, NAS o carpeta de Drive/OneDrive |
+| `DestinoEnMemoria`         | Mock funcional para tests                                |
+| `MotorDeRespaldo`          | Snapshot + compresión + retención + restauración         |
+| `RespaldoSchedulerService` | Respaldo automático según cron (`RESPALDO_CRON`)         |
 
 Para respaldar a la nube propia, basta apuntar `RESPALDO_RUTA` a la carpeta local
 que Google Drive / OneDrive Desktop sincroniza. El sistema no sabe (ni necesita
@@ -40,10 +40,10 @@ RESPALDO_CRON=                 # cron del respaldo automático; vacío = sólo m
 
 ## Endpoints
 
-| Método | Ruta                | Acción                       |
-| ------ | ------------------- | ---------------------------- |
-| `POST` | `/api/v1/respaldo`  | Crea un respaldo ahora       |
-| `GET`  | `/api/v1/respaldo`  | Lista los respaldos          |
+| Método | Ruta               | Acción                 |
+| ------ | ------------------ | ---------------------- |
+| `POST` | `/api/v1/respaldo` | Crea un respaldo ahora |
+| `GET`  | `/api/v1/respaldo` | Lista los respaldos    |
 
 La **restauración es destructiva** (reemplaza toda la base) y **no se expone por
 HTTP**: vive como `MotorDeRespaldo.restaurar(nombre)` para una herramienta de

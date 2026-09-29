@@ -12,14 +12,14 @@ botón de Comprobantes era "Anular", que emite una Nota de Crédito.
 Una Nota de Débito es la contracara de la de Crédito y las diferencias no son
 de detalle:
 
-| | Nota de Crédito | Nota de Débito |
-|---|---|---|
-| Qué hace | anula o reduce | **suma** |
-| Monto | el total del original | **el suyo propio** |
-| El original | queda ANULADO | **sigue vigente** |
-| Stock | vuelve a entrar | **no se toca** |
-| Cuenta corriente | (no aplica hoy) | **suma la deuda** |
-| Cuántas por comprobante | una | **varias** |
+|                         | Nota de Crédito       | Nota de Débito     |
+| ----------------------- | --------------------- | ------------------ |
+| Qué hace                | anula o reduce        | **suma**           |
+| Monto                   | el total del original | **el suyo propio** |
+| El original             | queda ANULADO         | **sigue vigente**  |
+| Stock                   | vuelve a entrar       | **no se toca**     |
+| Cuenta corriente        | (no aplica hoy)       | **suma la deuda**  |
+| Cuántas por comprobante | una                   | **varias**         |
 
 Se emite por intereses de mora, un flete que se factura después, un ajuste de
 precio hacia arriba. Nada de eso mueve mercadería.

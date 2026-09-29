@@ -8,11 +8,11 @@ Ver [ADR-0018](../../docs/adr/0018-abstraccion-hardware-puertos-y-mocks.md).
 
 ## Puertos disponibles
 
-| Puerto | Archivo | Qué hace |
-|---|---|---|
-| `ImpresoraTermica` | `impresora.ts` | Imprime tickets, abre cajón, verifica estado |
-| `LectorDeBarras` | `lector.ts` | Observer de escaneos: `onEscaneo(cb) → unsub` |
-| `Balanza` | `balanza.ts` | Lee peso, tara, verifica conexión |
+| Puerto             | Archivo        | Qué hace                                      |
+| ------------------ | -------------- | --------------------------------------------- |
+| `ImpresoraTermica` | `impresora.ts` | Imprime tickets, abre cajón, verifica estado  |
+| `LectorDeBarras`   | `lector.ts`    | Observer de escaneos: `onEscaneo(cb) → unsub` |
+| `Balanza`          | `balanza.ts`   | Lee peso, tara, verifica conexión             |
 
 ## Mocks
 

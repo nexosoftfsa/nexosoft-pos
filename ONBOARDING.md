@@ -99,23 +99,24 @@ Monorepo con **pnpm workspaces** (`pnpm-workspace.yaml`: `apps/*` y
 `packages/*`) orquestado con **Turborepo**. TypeScript en modo estricto en
 todo el código TS/React. Versiones verificadas en esta máquina:
 
-| Herramienta | Versión usada | Dónde se define |
-| --- | --- | --- |
-| Node.js | ≥ 22 (probado con 24) | `package.json` → `engines.node` |
-| pnpm | 9.15.4, vía `corepack` | `package.json` → `packageManager` |
-| TypeScript | 5.7.x | cada `package.json` |
-| Turborepo | 2.3.x | `package.json` raíz |
-| Rust / Cargo | estable, 1.96 (mínimo declarado 1.77.2) | `apps/pos-desktop/src-tauri/Cargo.toml` |
-| Tauri | 2.11.3 (CLI 2.1.0) | `Cargo.toml` / `package.json` de pos-desktop |
-| React | 18.3.x | pos-desktop y admin-web |
-| Vite | 6.x | pos-desktop y admin-web |
-| NestJS | 10.4.x | cloud-api |
-| Prisma | 6.1.x | cloud-api |
-| PostgreSQL | ≥ 16 | servidor de sucursal (cloud-api) |
+| Herramienta  | Versión usada                           | Dónde se define                              |
+| ------------ | --------------------------------------- | -------------------------------------------- |
+| Node.js      | ≥ 22 (probado con 24)                   | `package.json` → `engines.node`              |
+| pnpm         | 9.15.4, vía `corepack`                  | `package.json` → `packageManager`            |
+| TypeScript   | 5.7.x                                   | cada `package.json`                          |
+| Turborepo    | 2.3.x                                   | `package.json` raíz                          |
+| Rust / Cargo | estable, 1.96 (mínimo declarado 1.77.2) | `apps/pos-desktop/src-tauri/Cargo.toml`      |
+| Tauri        | 2.11.3 (CLI 2.1.0)                      | `Cargo.toml` / `package.json` de pos-desktop |
+| React        | 18.3.x                                  | pos-desktop y admin-web                      |
+| Vite         | 6.x                                     | pos-desktop y admin-web                      |
+| NestJS       | 10.4.x                                  | cloud-api                                    |
+| Prisma       | 6.1.x                                   | cloud-api                                    |
+| PostgreSQL   | ≥ 16                                    | servidor de sucursal (cloud-api)             |
 
 ### Dependencias principales del frontend (por paquete)
 
 **`apps/pos-desktop`** (cliente de escritorio):
+
 - `react` / `react-dom` — UI.
 - `@tauri-apps/api` — puente JS↔Rust del shell nativo.
 - `@tauri-apps/plugin-sql` — acceso a SQLite desde el frontend (vía Rust).
@@ -126,10 +127,12 @@ todo el código TS/React. Versiones verificadas en esta máquina:
   `@tauri-apps/cli` (compilar el instalador).
 
 **`apps/admin-web`** (panel de reportes):
+
 - `react-router-dom` — ruteo del panel.
 - `recharts` — gráficos del dashboard.
 
 **`apps/cloud-api`** (backend):
+
 - `@nestjs/*` (common, core, config, jwt, passport, platform-express,
   schedule, serve-static) — framework del backend, auth JWT, cron de
   respaldo, y servir el panel web estático desde el mismo backend.
@@ -144,6 +147,7 @@ todo el código TS/React. Versiones verificadas en esta máquina:
 
 **Paquetes compartidos** (`packages/*`, todos TypeScript puro, sin runtime
 propio salvo lo declarado):
+
 - `domain` — dinero (`decimal.js`), IVA, comprobantes. Sin dependencias de
   infraestructura: lo usan tanto el POS como el backend.
 - `app` — casos de uso (armar/confirmar venta) y los "puertos" (interfaces)
@@ -233,16 +237,16 @@ sistema operativo que un navegador no tiene. Dependencias (`Cargo.toml`):
 
 ### Archivos/módulos más importantes para entender el sistema rápido
 
-| Archivo | Por qué importa |
-| --- | --- |
-| `packages/domain/src/` | Reglas de negocio puras (dinero, IVA, comprobantes). Todo lo demás depende de esto. |
-| `apps/cloud-api/prisma/schema.prisma` | La verdad sobre qué datos existen y cómo se relacionan (servidor). |
-| `packages/app/sql/esquema-sqlite.sql` | La verdad sobre los datos en cada caja (local, offline). |
-| `apps/pos-desktop/src/shell/modulos.tsx` | Qué módulos ve cada rol en el menú — el punto de extensión natural para gating (p. ej. por plan de suscripción, más adelante). |
-| `apps/pos-desktop/src/App.tsx` | Arranca la app, decide si corre en Tauri o en navegador, maneja login/sesión/config. |
-| `apps/pos-desktop/src-tauri/capabilities/default.json` | Qué puede hacer el frontend contra SQLite (si falta un permiso acá, las queries fallan en silencio raro — ver sección 8). |
-| `CLAUDE.md` | Las reglas no negociables del proyecto. |
-| `docs/adr/README.md` | Índice de las 41 decisiones de arquitectura documentadas. |
+| Archivo                                                | Por qué importa                                                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/domain/src/`                                 | Reglas de negocio puras (dinero, IVA, comprobantes). Todo lo demás depende de esto.                                            |
+| `apps/cloud-api/prisma/schema.prisma`                  | La verdad sobre qué datos existen y cómo se relacionan (servidor).                                                             |
+| `packages/app/sql/esquema-sqlite.sql`                  | La verdad sobre los datos en cada caja (local, offline).                                                                       |
+| `apps/pos-desktop/src/shell/modulos.tsx`               | Qué módulos ve cada rol en el menú — el punto de extensión natural para gating (p. ej. por plan de suscripción, más adelante). |
+| `apps/pos-desktop/src/App.tsx`                         | Arranca la app, decide si corre en Tauri o en navegador, maneja login/sesión/config.                                           |
+| `apps/pos-desktop/src-tauri/capabilities/default.json` | Qué puede hacer el frontend contra SQLite (si falta un permiso acá, las queries fallan en silencio raro — ver sección 8).      |
+| `CLAUDE.md`                                            | Las reglas no negociables del proyecto.                                                                                        |
+| `docs/adr/README.md`                                   | Índice de las 41 decisiones de arquitectura documentadas.                                                                      |
 
 ---
 
@@ -268,19 +272,19 @@ Hay **dos bases de datos distintas**, a propósito (offline-first):
 **Modelos principales** (nombre de tabla real entre paréntesis, ver
 `schema.prisma` para todos los campos):
 
-| Modelo | Tabla | Qué guarda |
-| --- | --- | --- |
-| `Sucursal` | `sucursales` | El comercio/local. Todo lo demás cuelga de acá. |
-| `Terminal` | `terminales` | Cada caja física de la sucursal. |
-| `Usuario` / `RefreshToken` | `usuarios` / `refresh_tokens` | Login, rol (ADMIN/CAJERO/SUPERVISOR), tokens JWT. |
-| `Categoria` / `Producto` / `ComboComponente` | `categorias` / `productos` / `combo_componentes` | Catálogo. `Producto.tipo` puede ser SIMPLE o COMBO. |
-| `MovimientoStock` / `Lote` | `movimientos_stock` / `lotes` | Entradas/salidas de stock; lotes con vencimiento (FEFO) para perecederos. |
-| `Venta` / `Pago` / `ItemVenta` | `ventas` / `pagos` / `items_venta` | La venta, su desglose de pagos (pago combinado) y sus ítems. `medioPago` incluye EFECTIVO/TARJETA_DEBITO/TARJETA_CREDITO/MERCADOPAGO_QR/TRANSFERENCIA/CUENTA_CORRIENTE/COMBINADO. |
-| `TurnoCaja` / `MovimientoCaja` | `turnos_caja` / `movimientos_caja` | Apertura/cierre de caja, arqueo, ingresos/egresos de efectivo. |
-| `Cliente` / `MovimientoCuentaCorriente` | `clientes` / `movimientos_cuenta_corriente` | Cuenta corriente (fiado): CARGO (deuda) / PAGO (cobro). |
-| `Presupuesto` / `ItemPresupuesto` | `presupuestos` / `items_presupuesto` | Comprobante no fiscal, convertible a venta real. |
-| `Remito` / `ItemRemito` | `remitos` / `items_remito` | Comprobante no fiscal, mueve stock (entrega sin precios). |
-| `ConfiguracionSistema` | `configuracion_sistema` | Fila única: clave de Gemini cargada desde la UI (tiene prioridad sobre la variable de entorno). |
+| Modelo                                       | Tabla                                            | Qué guarda                                                                                                                                                                        |
+| -------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Sucursal`                                   | `sucursales`                                     | El comercio/local. Todo lo demás cuelga de acá.                                                                                                                                   |
+| `Terminal`                                   | `terminales`                                     | Cada caja física de la sucursal.                                                                                                                                                  |
+| `Usuario` / `RefreshToken`                   | `usuarios` / `refresh_tokens`                    | Login, rol (ADMIN/CAJERO/SUPERVISOR), tokens JWT.                                                                                                                                 |
+| `Categoria` / `Producto` / `ComboComponente` | `categorias` / `productos` / `combo_componentes` | Catálogo. `Producto.tipo` puede ser SIMPLE o COMBO.                                                                                                                               |
+| `MovimientoStock` / `Lote`                   | `movimientos_stock` / `lotes`                    | Entradas/salidas de stock; lotes con vencimiento (FEFO) para perecederos.                                                                                                         |
+| `Venta` / `Pago` / `ItemVenta`               | `ventas` / `pagos` / `items_venta`               | La venta, su desglose de pagos (pago combinado) y sus ítems. `medioPago` incluye EFECTIVO/TARJETA_DEBITO/TARJETA_CREDITO/MERCADOPAGO_QR/TRANSFERENCIA/CUENTA_CORRIENTE/COMBINADO. |
+| `TurnoCaja` / `MovimientoCaja`               | `turnos_caja` / `movimientos_caja`               | Apertura/cierre de caja, arqueo, ingresos/egresos de efectivo.                                                                                                                    |
+| `Cliente` / `MovimientoCuentaCorriente`      | `clientes` / `movimientos_cuenta_corriente`      | Cuenta corriente (fiado): CARGO (deuda) / PAGO (cobro).                                                                                                                           |
+| `Presupuesto` / `ItemPresupuesto`            | `presupuestos` / `items_presupuesto`             | Comprobante no fiscal, convertible a venta real.                                                                                                                                  |
+| `Remito` / `ItemRemito`                      | `remitos` / `items_remito`                       | Comprobante no fiscal, mueve stock (entrega sin precios).                                                                                                                         |
+| `ConfiguracionSistema`                       | `configuracion_sistema`                          | Fila única: clave de Gemini cargada desde la UI (tiene prioridad sobre la variable de entorno).                                                                                   |
 
 Todas las tablas de negocio llevan `sucursalId` (multi-sucursal desde el
 diseño, aunque hoy en la práctica cada servidor atiende una sola sucursal).
@@ -310,30 +314,30 @@ El backend (`apps/cloud-api`) lee su configuración de un archivo `.env` en
 plantilla en `.env.example` (raíz del repo) con todos los nombres.
 **Acá solo se listan los nombres y para qué sirven — ningún valor real.**
 
-| Variable | Para qué sirve |
-| --- | --- |
-| `NODE_ENV` | Entorno de ejecución (`development` / `production`). |
-| `PORT` | Puerto donde escucha el backend (el código lee `PORT`; el `.env.example` documenta `API_PORT` — **inconsistencia real a corregir**, ver sección 8). Default 3000 si no está seteada. |
-| `DATABASE_URL` | Cadena de conexión a PostgreSQL (usuario, clave, host, puerto, nombre de base). |
-| `JWT_SECRET` | Firma del access token JWT. Obligatoria (el código usa `getOrThrow`, sin esto el backend no arranca). |
-| `JWT_ACCESS_EXPIRY` | Vigencia del access token (default 15m si no está). |
-| `JWT_REFRESH_SECRET` | Firma del refresh token. Obligatoria. |
-| `JWT_REFRESH_EXPIRY` / `JWT_REFRESH_DAYS` | Vigencia del refresh token. |
-| `ARCA_ENV` | `homologacion` o `produccion` — hoy no se usa (ARCA real no está implementado), queda preparada para cuando se conecte. |
-| `ARCA_CUIT`, `ARCA_CERT_PATH`, `ARCA_KEY_PATH`, `ARCA_KEY_PASSPHRASE` | Datos del certificado fiscal del comercio. Sin uso real todavía (mock activo). |
-| `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL` | Documentadas en el ejemplo pero el código real usa `GEMINI_API_KEY`/`GEMINI_MODEL` directamente (ver siguiente fila) — otra inconsistencia menor entre la plantilla y el código. |
-| `GEMINI_API_KEY` | Clave de Google Gemini para el Asistente IA. **Si hay una clave cargada desde la pantalla de Configuración del POS (guardada en `configuracion_sistema`), esa tiene prioridad** — esta variable es el respaldo. |
-| `GEMINI_MODEL` | Modelo de Gemini a usar (default `gemini-2.5-flash`; ver nota en el código sobre `gemini-2.0-flash` dando error de cuota en el free tier). |
-| `PAGOS_PROVIDER`, `MP_ENV`, `MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY` | Credenciales de MercadoPago. Sin uso real todavía (mock activo, `MercadoPagoPoint` lanza error si se intenta usar sin esto). |
-| `SYNC_BACKEND` | Documentada pero informativa — la sincronización real usa la implementación propia (`@nexosoft/sync`), no un backend externo. |
-| `RESPALDO_RUTA` | Carpeta donde se escriben los snapshots de respaldo (puede ser la carpeta local de Google Drive/OneDrive — así sube solo, sin integrar ninguna API). |
-| `RESPALDO_RETENER` | Cuántos respaldos viejos conservar antes de borrar los más antiguos. |
-| `RESPALDO_CRON` | Expresión cron para respaldo automático (vacío = solo manual / al cerrar caja). |
-| `RESPALDO_EN_CADA_VENTA` | Si `true`, genera un snapshot completo después de cada venta (default `false`, caro en alto volumen). |
-| `LIBRO_VENTAS_ARCHIVO` | Ruta del Excel de ventas (default `RESPALDO_RUTA/ventas.xlsx`). |
-| `CORS_ORIGINS` | Fase 15.B: lista de orígenes permitidos por CORS, separados por coma. Vacía/sin definir = CORS abierto a cualquier origen (correcto en LAN, ADR-0019). Con el acceso remoto de ADR-0055 **no hace falta tocarla**: el panel lo sirve el mismo `cloud-api`, así que las llamadas van al mismo origen. Sigue estando para quien sirva `admin-web` desde otro origen. |
-| `ACCESO_REMOTO_ARCHIVO` | Fase 17.A: ruta del archivo de estado del acceso remoto que escribe `instalar-acceso-remoto.ps1`. Por defecto `%ProgramData%\NexoSoft\acceso-remoto.json` — solo se define en instalaciones fuera de esa convención. Ver ADR-0055. |
-| `PORT_REMOTO` | Fase 17.C: puerto dedicado al túnel de acceso remoto (default `3001`). `cloud-api` lo escucha **solo en loopback** y no se abre en el firewall; lo que entra por ahí queda en **solo lectura**. Tiene que coincidir con el `service:` del `config.yml` del túnel. Ver ADR-0057. |
+| Variable                                                              | Para qué sirve                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NODE_ENV`                                                            | Entorno de ejecución (`development` / `production`).                                                                                                                                                                                                                                                                                                               |
+| `PORT`                                                                | Puerto donde escucha el backend (el código lee `PORT`; el `.env.example` documenta `API_PORT` — **inconsistencia real a corregir**, ver sección 8). Default 3000 si no está seteada.                                                                                                                                                                               |
+| `DATABASE_URL`                                                        | Cadena de conexión a PostgreSQL (usuario, clave, host, puerto, nombre de base).                                                                                                                                                                                                                                                                                    |
+| `JWT_SECRET`                                                          | Firma del access token JWT. Obligatoria (el código usa `getOrThrow`, sin esto el backend no arranca).                                                                                                                                                                                                                                                              |
+| `JWT_ACCESS_EXPIRY`                                                   | Vigencia del access token (default 15m si no está).                                                                                                                                                                                                                                                                                                                |
+| `JWT_REFRESH_SECRET`                                                  | Firma del refresh token. Obligatoria.                                                                                                                                                                                                                                                                                                                              |
+| `JWT_REFRESH_EXPIRY` / `JWT_REFRESH_DAYS`                             | Vigencia del refresh token.                                                                                                                                                                                                                                                                                                                                        |
+| `ARCA_ENV`                                                            | `homologacion` o `produccion` — hoy no se usa (ARCA real no está implementado), queda preparada para cuando se conecte.                                                                                                                                                                                                                                            |
+| `ARCA_CUIT`, `ARCA_CERT_PATH`, `ARCA_KEY_PATH`, `ARCA_KEY_PASSPHRASE` | Datos del certificado fiscal del comercio. Sin uso real todavía (mock activo).                                                                                                                                                                                                                                                                                     |
+| `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`                            | Documentadas en el ejemplo pero el código real usa `GEMINI_API_KEY`/`GEMINI_MODEL` directamente (ver siguiente fila) — otra inconsistencia menor entre la plantilla y el código.                                                                                                                                                                                   |
+| `GEMINI_API_KEY`                                                      | Clave de Google Gemini para el Asistente IA. **Si hay una clave cargada desde la pantalla de Configuración del POS (guardada en `configuracion_sistema`), esa tiene prioridad** — esta variable es el respaldo.                                                                                                                                                    |
+| `GEMINI_MODEL`                                                        | Modelo de Gemini a usar (default `gemini-2.5-flash`; ver nota en el código sobre `gemini-2.0-flash` dando error de cuota en el free tier).                                                                                                                                                                                                                         |
+| `PAGOS_PROVIDER`, `MP_ENV`, `MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`        | Credenciales de MercadoPago. Sin uso real todavía (mock activo, `MercadoPagoPoint` lanza error si se intenta usar sin esto).                                                                                                                                                                                                                                       |
+| `SYNC_BACKEND`                                                        | Documentada pero informativa — la sincronización real usa la implementación propia (`@nexosoft/sync`), no un backend externo.                                                                                                                                                                                                                                      |
+| `RESPALDO_RUTA`                                                       | Carpeta donde se escriben los snapshots de respaldo (puede ser la carpeta local de Google Drive/OneDrive — así sube solo, sin integrar ninguna API).                                                                                                                                                                                                               |
+| `RESPALDO_RETENER`                                                    | Cuántos respaldos viejos conservar antes de borrar los más antiguos.                                                                                                                                                                                                                                                                                               |
+| `RESPALDO_CRON`                                                       | Expresión cron para respaldo automático (vacío = solo manual / al cerrar caja).                                                                                                                                                                                                                                                                                    |
+| `RESPALDO_EN_CADA_VENTA`                                              | Si `true`, genera un snapshot completo después de cada venta (default `false`, caro en alto volumen).                                                                                                                                                                                                                                                              |
+| `LIBRO_VENTAS_ARCHIVO`                                                | Ruta del Excel de ventas (default `RESPALDO_RUTA/ventas.xlsx`).                                                                                                                                                                                                                                                                                                    |
+| `CORS_ORIGINS`                                                        | Fase 15.B: lista de orígenes permitidos por CORS, separados por coma. Vacía/sin definir = CORS abierto a cualquier origen (correcto en LAN, ADR-0019). Con el acceso remoto de ADR-0055 **no hace falta tocarla**: el panel lo sirve el mismo `cloud-api`, así que las llamadas van al mismo origen. Sigue estando para quien sirva `admin-web` desde otro origen. |
+| `ACCESO_REMOTO_ARCHIVO`                                               | Fase 17.A: ruta del archivo de estado del acceso remoto que escribe `instalar-acceso-remoto.ps1`. Por defecto `%ProgramData%\NexoSoft\acceso-remoto.json` — solo se define en instalaciones fuera de esa convención. Ver ADR-0055.                                                                                                                                 |
+| `PORT_REMOTO`                                                         | Fase 17.C: puerto dedicado al túnel de acceso remoto (default `3001`). `cloud-api` lo escucha **solo en loopback** y no se abre en el firewall; lo que entra por ahí queda en **solo lectura**. Tiene que coincidir con el `service:` del `config.yml` del túnel. Ver ADR-0057.                                                                                    |
 
 **`apps/pos-desktop` (el POS instalado) no usa variables de entorno de
 build.** Su configuración (URL del servidor, datos fiscales del comercio) se
@@ -354,12 +358,12 @@ no se copia entre máquinas.
 
 ### 5.3 Integraciones externas — resumen de cómo están hoy
 
-| Integración | Estado | Dónde vive |
-| --- | --- | --- |
-| **ARCA / CAE** (facturación fiscal) | Mock funcional completo; real sin implementar (falta certificado del cliente) | `packages/fiscal` |
-| **MercadoPago** (Point/QR) | Mock funcional completo; real sin implementar (falta SDK + credenciales) | `packages/pagos` |
-| **Google Gemini** (asistente IA) | **Real y funcional**, clave configurable desde la UI | `apps/cloud-api/src/asistente` + `packages` no aplica (vive solo en el backend) |
-| **Impresora ESC/POS, lector de barras, balanza** | Solo mocks; hardware real sin implementar | `packages/hardware` |
+| Integración                                      | Estado                                                                        | Dónde vive                                                                      |
+| ------------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **ARCA / CAE** (facturación fiscal)              | Mock funcional completo; real sin implementar (falta certificado del cliente) | `packages/fiscal`                                                               |
+| **MercadoPago** (Point/QR)                       | Mock funcional completo; real sin implementar (falta SDK + credenciales)      | `packages/pagos`                                                                |
+| **Google Gemini** (asistente IA)                 | **Real y funcional**, clave configurable desde la UI                          | `apps/cloud-api/src/asistente` + `packages` no aplica (vive solo en el backend) |
+| **Impresora ESC/POS, lector de barras, balanza** | Solo mocks; hardware real sin implementar                                     | `packages/hardware`                                                             |
 
 Todas siguen el mismo patrón (ver `CLAUDE.md` §6): interfaz (puerto) + mock
 funcional con tests, para poder desarrollar y probar sin la integración real.
@@ -370,13 +374,13 @@ funcional con tests, para poder desarrollar y probar sin la integración real.
 
 ### 6.1 Requisitos previos
 
-| Herramienta | Necesario para | Notas |
-| --- | --- | --- |
-| Node.js ≥ 22 | Todo | Esta máquina tiene 24.16.0 |
-| pnpm 9.x vía `corepack` | Todo | `corepack enable pnpm` |
-| Rust estable + Cargo | Compilar/correr el POS nativo (Tauri) | Esta máquina tiene 1.96.0 |
-| WebView2 + Build Tools de Visual Studio (C++) | Tauri en Windows | Sin esto, `tauri dev`/`tauri build` fallan |
-| PostgreSQL ≥ 16 | Correr el backend contra una base real | Para tests/e2e no hace falta instalarlo: se usa `embedded-postgres` (portable, sin Docker) |
+| Herramienta                                   | Necesario para                         | Notas                                                                                      |
+| --------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Node.js ≥ 22                                  | Todo                                   | Esta máquina tiene 24.16.0                                                                 |
+| pnpm 9.x vía `corepack`                       | Todo                                   | `corepack enable pnpm`                                                                     |
+| Rust estable + Cargo                          | Compilar/correr el POS nativo (Tauri)  | Esta máquina tiene 1.96.0                                                                  |
+| WebView2 + Build Tools de Visual Studio (C++) | Tauri en Windows                       | Sin esto, `tauri dev`/`tauri build` fallan                                                 |
+| PostgreSQL ≥ 16                               | Correr el backend contra una base real | Para tests/e2e no hace falta instalarlo: se usa `embedded-postgres` (portable, sin Docker) |
 
 ### 6.2 Instalación
 
@@ -492,6 +496,7 @@ El `.gitignore` actual excluye (entre otras cosas):
   `extensions.json`/`settings.json`) — archivos de editor/SO.
 
 Con esa configuración, **quedan incluidos** (es lo que se sube):
+
 - Todo el código fuente (`apps/*/src`, `packages/*/src`, `apps/*/src-tauri/src`).
 - Los `package.json`, `Cargo.toml`, `tsconfig*.json`, `tauri.conf.json`,
   configs de ESLint/Prettier/Vitest.

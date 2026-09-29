@@ -47,10 +47,10 @@ teórico 90.000, diferencia +30.000**: tres números que no cierran entre sí.
 
 Una sola regla, `numeroEsProvisional()`, para los tres formatos:
 
-| Comprobante | Lo numera | La prueba de que lo hizo |
-|---|---|---|
-| Fiscal | ARCA | el CAE |
-| Ticket interno | el servidor de sucursal | `numeroConfirmado` |
+| Comprobante    | Lo numera               | La prueba de que lo hizo |
+| -------------- | ----------------------- | ------------------------ |
+| Fiscal         | ARCA                    | el CAE                   |
+| Ticket interno | el servidor de sucursal | `numeroConfirmado`       |
 
 Mientras no esté confirmado se imprime `Referencia interna NNNNNNNN` y una
 leyenda que dice quién asigna el definitivo — distinta según el caso, porque un

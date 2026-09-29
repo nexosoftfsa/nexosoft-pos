@@ -1,15 +1,12 @@
-import { gzipSync, gunzipSync } from 'node:zlib';
-import { createHash } from 'node:crypto';
-import { Logger } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
-import type { PrismaService } from '../prisma/prisma.service';
-import type {
-  DestinoDeRespaldo,
-  MetadatosRespaldo,
-} from './puertos/destino-de-respaldo';
+import { gzipSync, gunzipSync } from "node:zlib";
+import { createHash } from "node:crypto";
+import { Logger } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
+import type { PrismaService } from "../prisma/prisma.service";
+import type { DestinoDeRespaldo, MetadatosRespaldo } from "./puertos/destino-de-respaldo";
 
 /** Versión del formato de snapshot. Subir si cambia la estructura. */
-const VERSION_SNAPSHOT = '1';
+const VERSION_SNAPSHOT = "1";
 
 /**
  * Tablas incluidas en el respaldo, en orden de inserción (respeta las FKs).
@@ -50,10 +47,10 @@ export class MotorDeRespaldo {
    */
   async crearRespaldo(): Promise<MetadatosRespaldo> {
     const snapshot = await this.generarSnapshot();
-    const json = Buffer.from(JSON.stringify(snapshot), 'utf-8');
+    const json = Buffer.from(JSON.stringify(snapshot), "utf-8");
     const contenido = gzipSync(json);
 
-    const nombre = `nexosoft-${new Date().toISOString().replace(/[:.]/g, '-')}.json.gz`;
+    const nombre = `nexosoft-${new Date().toISOString().replace(/[:.]/g, "-")}.json.gz`;
     await this.destino.escribir(nombre, contenido);
 
     this.logger.log(`Respaldo creado: ${nombre} (${contenido.byteLength} bytes)`);
@@ -73,7 +70,7 @@ export class MotorDeRespaldo {
    */
   async restaurar(nombre: string): Promise<void> {
     const contenido = await this.destino.leer(nombre);
-    const snapshot = JSON.parse(gunzipSync(contenido).toString('utf-8')) as Snapshot;
+    const snapshot = JSON.parse(gunzipSync(contenido).toString("utf-8")) as Snapshot;
 
     if (snapshot.version !== VERSION_SNAPSHOT) {
       throw new Error(
@@ -83,7 +80,7 @@ export class MotorDeRespaldo {
 
     const checksumActual = this.calcularChecksum(snapshot.tablas);
     if (checksumActual !== snapshot.checksum) {
-      throw new Error('El respaldo está corrupto: el checksum no coincide');
+      throw new Error("El respaldo está corrupto: el checksum no coincide");
     }
 
     const t = snapshot.tablas;
@@ -146,7 +143,7 @@ export class MotorDeRespaldo {
   }
 
   private calcularChecksum(tablas: SnapshotTablas): string {
-    return createHash('sha256').update(JSON.stringify(tablas)).digest('hex');
+    return createHash("sha256").update(JSON.stringify(tablas)).digest("hex");
   }
 
   /** Elimina los respaldos que exceden la política de retención. */

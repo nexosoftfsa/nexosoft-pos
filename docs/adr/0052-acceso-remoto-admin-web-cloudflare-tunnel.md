@@ -72,6 +72,7 @@ no confiable al panel.
 ## Consecuencias
 
 ### Positivas
+
 - El dueño ve el panel desde el celular, desde cualquier lugar, sin mantener
   un segundo cliente nativo (Android) ni su ciclo de release aparte.
 - Los prerrequisitos de seguridad (throttling, lockout, CORS) protegen
@@ -83,14 +84,15 @@ no confiable al panel.
   servidor a internet.
 
 ### Negativas / costos
+
 - El lockout es **en memoria**: se resetea al reiniciar `cloud-api` y no se
   comparte entre instancias. Aceptado porque `cloud-api` corre como un único
   servidor de sucursal (ADR-0019), no horizontalmente escalado; si eso
   cambia, el lockout necesita moverse a una tabla o storage compartido.
 - Configurar el túnel (dominio, DNS, `cloudflared`, credenciales) es un paso
   operativo manual por comercio, fuera del repo — no es un "activalo con un
-  flag". *(Este costo es justamente el que resolvió después ADR-0055; el
-  procedimiento vigente está en `docs/acceso-remoto-cloudflare.md`.)*
+  flag". _(Este costo es justamente el que resolvió después ADR-0055; el
+  procedimiento vigente está en `docs/acceso-remoto-cloudflare.md`.)_
 - El JWT en `localStorage` sigue siendo vulnerable a XSS si en el futuro se
   agrega contenido no confiable al panel (ver decisión arriba).
 

@@ -51,9 +51,7 @@ export function Layout() {
               key={s.ruta}
               to={s.ruta}
               end={s.fin}
-              className={({ isActive }) =>
-                `layout__link${isActive ? " layout__link--activo" : ""}`
-              }
+              className={({ isActive }) => `layout__link${isActive ? " layout__link--activo" : ""}`}
             >
               {s.etiqueta}
             </NavLink>

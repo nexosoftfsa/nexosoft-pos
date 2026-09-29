@@ -1,4 +1,4 @@
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from "@prisma/client/runtime/library";
 
 /** Un lote con su saldo disponible y su vencimiento. */
 export interface LoteConSaldo {

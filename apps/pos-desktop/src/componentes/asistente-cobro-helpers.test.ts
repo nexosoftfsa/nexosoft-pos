@@ -99,24 +99,24 @@ describe("montoBaseParaSaldoExacto", () => {
 
 describe("superaSaldoSinVuelto", () => {
   it("efectivo nunca supera (admite vuelto)", () => {
-    expect(superaSaldoSinVuelto(FormaDePago.Efectivo, Money.desde("20000"), Money.desde("15100"))).toBe(
-      false,
-    );
+    expect(
+      superaSaldoSinVuelto(FormaDePago.Efectivo, Money.desde("20000"), Money.desde("15100")),
+    ).toBe(false);
   });
   it("tarjeta por encima del saldo no admite vuelto", () => {
-    expect(superaSaldoSinVuelto(FormaDePago.Tarjeta, Money.desde("15200"), Money.desde("15100"))).toBe(
-      true,
-    );
+    expect(
+      superaSaldoSinVuelto(FormaDePago.Tarjeta, Money.desde("15200"), Money.desde("15100")),
+    ).toBe(true);
   });
   it("tarjeta por el saldo exacto no supera", () => {
-    expect(superaSaldoSinVuelto(FormaDePago.Tarjeta, Money.desde("15100"), Money.desde("15100"))).toBe(
-      false,
-    );
+    expect(
+      superaSaldoSinVuelto(FormaDePago.Tarjeta, Money.desde("15100"), Money.desde("15100")),
+    ).toBe(false);
   });
   it("tarjeta por debajo del saldo (pago parcial) no supera", () => {
-    expect(superaSaldoSinVuelto(FormaDePago.Tarjeta, Money.desde("5000"), Money.desde("15100"))).toBe(
-      false,
-    );
+    expect(
+      superaSaldoSinVuelto(FormaDePago.Tarjeta, Money.desde("5000"), Money.desde("15100")),
+    ).toBe(false);
   });
 });
 

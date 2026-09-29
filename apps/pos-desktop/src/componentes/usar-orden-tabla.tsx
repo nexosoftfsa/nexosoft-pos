@@ -69,7 +69,9 @@ export function ThOrdenable({
     <th className={`th-ordenable${className ? ` ${className}` : ""}`}>
       <button type="button" className="th-ordenable__btn" onClick={() => alternar(columnaClave)}>
         {titulo}
-        <span className="th-ordenable__flecha">{activa ? (direccion === "asc" ? " ▲" : " ▼") : ""}</span>
+        <span className="th-ordenable__flecha">
+          {activa ? (direccion === "asc" ? " ▲" : " ▼") : ""}
+        </span>
       </button>
     </th>
   );

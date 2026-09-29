@@ -20,7 +20,9 @@ describe("ClienteCajaHttp", () => {
 
   it("turnoActual() parsea el turno cuando sí hay uno abierto", async () => {
     const turno = { id: "t1", estado: "ABIERTO", fondoApertura: "1000.00" };
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify(turno) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, text: async () => JSON.stringify(turno) });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteCajaHttp("http://server", () => "tok");
@@ -32,7 +34,9 @@ describe("ClienteCajaHttp", () => {
 
   it("abrirTurno() pega POST /caja/turnos", async () => {
     const turno = { id: "t1", estado: "ABIERTO" };
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify(turno) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, text: async () => JSON.stringify(turno) });
     vi.stubGlobal("fetch", fetchMock);
 
     const cliente = new ClienteCajaHttp("http://server", () => "tok");
@@ -48,7 +52,11 @@ describe("ClienteCajaHttp", () => {
   it("lanza ErrorCaja con el mensaje del servidor si falla", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, status: 400, json: async () => ({ message: "Turno ya cerrado" }) }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({ message: "Turno ya cerrado" }),
+      }),
     );
     const cliente = new ClienteCajaHttp("http://server", () => "tok");
     await expect(cliente.turnoActual("term-1")).rejects.toThrow(ErrorCaja);
@@ -57,7 +65,10 @@ describe("ClienteCajaHttp", () => {
   });
 
   it("lanza ErrorCaja si el body no es JSON válido (respuesta corrupta de verdad)", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, text: async () => "<html>error</html>" }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, text: async () => "<html>error</html>" }),
+    );
     const cliente = new ClienteCajaHttp("http://server", () => "tok");
     await expect(cliente.turnoActual("term-1")).rejects.toThrow(ErrorCaja);
     vi.unstubAllGlobals();

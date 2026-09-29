@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes } from "node:crypto";
 
 /**
  * Prefijo del payload codificado en el código de barras de la credencial
@@ -6,7 +6,7 @@ import { randomBytes } from 'node:crypto';
  * escaneado que no sea una credencial (ej. si por error se escanea un
  * producto en la pantalla de login).
  */
-const PREFIJO = 'NXSCRED';
+const PREFIJO = "NXSCRED";
 
 export interface PayloadCredencial {
   readonly usuarioId: string;
@@ -15,7 +15,7 @@ export interface PayloadCredencial {
 
 /** Genera un token aleatorio de alta entropía (~144 bits) para una credencial nueva. */
 export function generarTokenPlano(): string {
-  return randomBytes(24).toString('base64url');
+  return randomBytes(24).toString("base64url");
 }
 
 /**
@@ -30,7 +30,7 @@ export function armarPayload(usuarioId: string, tokenPlano: string): string {
 
 /** Parsea un código escaneado. Devuelve `null` si no tiene el formato esperado. */
 export function parsearPayload(codigo: string): PayloadCredencial | null {
-  const partes = codigo.split(':');
+  const partes = codigo.split(":");
   if (partes.length !== 3) return null;
 
   const [prefijo, usuarioId, tokenPlano] = partes;

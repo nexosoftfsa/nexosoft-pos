@@ -121,13 +121,19 @@ export function CatalogoAbm({
     utilidad: (p) => margenUtilidad(p.precioVenta, p.precioCosto) ?? -Infinity,
     estado: (p) => (p.activo ? 1 : 0),
   };
-  const { filasOrdenadas: ordenados, clave: claveOrden, direccion, alternar } = useOrdenTabla(
-    filtrados,
-    columnasOrden,
-  );
+  const {
+    filasOrdenadas: ordenados,
+    clave: claveOrden,
+    direccion,
+    alternar,
+  } = useOrdenTabla(filtrados, columnasOrden);
 
   async function desactivar(p: ProductoAdmin) {
-    if (!(await preguntarSiNo(`¿Desactivar "${p.nombre}"? No se borra: deja de venderse y se puede reactivar.`))) {
+    if (
+      !(await preguntarSiNo(
+        `¿Desactivar "${p.nombre}"? No se borra: deja de venderse y se puede reactivar.`,
+      ))
+    ) {
       return;
     }
     try {
@@ -187,7 +193,11 @@ export function CatalogoAbm({
   async function exportarRubros() {
     try {
       const blob = await exportarExcel([
-        { nombre: "Rubros", columnas: [{ titulo: "Rubro", ancho: 30 }], filas: categorias.map((c) => [c.nombre]) },
+        {
+          nombre: "Rubros",
+          columnas: [{ titulo: "Rubro", ancho: 30 }],
+          filas: categorias.map((c) => [c.nombre]),
+        },
       ]);
       await descargarBlob("rubros.xlsx", blob);
     } catch (e) {
@@ -223,7 +233,11 @@ export function CatalogoAbm({
         <button type="button" className="pill-btn" onClick={() => setImportando(true)}>
           Importar artículos
         </button>
-        <button type="button" className="pill-btn pill-btn--primary" onClick={() => setEditando("nuevo")}>
+        <button
+          type="button"
+          className="pill-btn pill-btn--primary"
+          onClick={() => setEditando("nuevo")}
+        >
           + Nuevo artículo
         </button>
       </div>
@@ -235,14 +249,59 @@ export function CatalogoAbm({
           <table>
             <thead>
               <tr>
-                <ThOrdenable titulo="Código" columnaClave="codigo" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
-                <ThOrdenable titulo="Descripción" columnaClave="descripcion" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
-                <ThOrdenable titulo="Rubro" columnaClave="rubro" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
-                <ThOrdenable titulo="Costo" columnaClave="costo" claveActiva={claveOrden} direccion={direccion} alternar={alternar} className="num" />
-                <ThOrdenable titulo="Precio" columnaClave="precio" claveActiva={claveOrden} direccion={direccion} alternar={alternar} className="num" />
+                <ThOrdenable
+                  titulo="Código"
+                  columnaClave="codigo"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                />
+                <ThOrdenable
+                  titulo="Descripción"
+                  columnaClave="descripcion"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                />
+                <ThOrdenable
+                  titulo="Rubro"
+                  columnaClave="rubro"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                />
+                <ThOrdenable
+                  titulo="Costo"
+                  columnaClave="costo"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                  className="num"
+                />
+                <ThOrdenable
+                  titulo="Precio"
+                  columnaClave="precio"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                  className="num"
+                />
                 <th>IVA</th>
-                <ThOrdenable titulo="Utilidad" columnaClave="utilidad" claveActiva={claveOrden} direccion={direccion} alternar={alternar} className="num" />
-                <ThOrdenable titulo="Estado" columnaClave="estado" claveActiva={claveOrden} direccion={direccion} alternar={alternar} />
+                <ThOrdenable
+                  titulo="Utilidad"
+                  columnaClave="utilidad"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                  className="num"
+                />
+                <ThOrdenable
+                  titulo="Estado"
+                  columnaClave="estado"
+                  claveActiva={claveOrden}
+                  direccion={direccion}
+                  alternar={alternar}
+                />
                 <th />
               </tr>
             </thead>
@@ -288,11 +347,19 @@ export function CatalogoAbm({
                           Editar
                         </button>
                         {p.activo ? (
-                          <button type="button" className="linkbtn linkbtn--danger" onClick={() => void desactivar(p)}>
+                          <button
+                            type="button"
+                            className="linkbtn linkbtn--danger"
+                            onClick={() => void desactivar(p)}
+                          >
                             Desactivar
                           </button>
                         ) : (
-                          <button type="button" className="linkbtn" onClick={() => void reactivar(p)}>
+                          <button
+                            type="button"
+                            className="linkbtn"
+                            onClick={() => void reactivar(p)}
+                          >
                             Reactivar
                           </button>
                         )}
@@ -400,7 +467,10 @@ function ModalProducto({
       componentes: [...f.componentes, { componenteId: "", cantidad: "1" }],
     }));
   }
-  function cambiarComponente(indice: number, patch: Partial<{ componenteId: string; cantidad: string }>) {
+  function cambiarComponente(
+    indice: number,
+    patch: Partial<{ componenteId: string; cantidad: string }>,
+  ) {
     setForm((f) => ({
       ...f,
       componentes: f.componentes.map((c, i) => (i === indice ? { ...c, ...patch } : c)),
@@ -570,7 +640,12 @@ function ModalProducto({
           <button type="button" className="pill-btn" onClick={onCerrar} disabled={guardando}>
             Cancelar
           </button>
-          <button type="button" className="pill-btn pill-btn--primary" onClick={() => void guardar()} disabled={guardando}>
+          <button
+            type="button"
+            className="pill-btn pill-btn--primary"
+            onClick={() => void guardar()}
+            disabled={guardando}
+          >
             {guardando ? "Guardando…" : "Guardar"}
           </button>
         </div>

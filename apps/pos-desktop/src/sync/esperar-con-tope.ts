@@ -11,10 +11,7 @@
  * curso en la cola y el CAE se consigue igual, un rato después. Cancelarla
  * sería romper la garantía de siempre (la venta no depende de ARCA).
  */
-export async function esperarConTope<T>(
-  trabajo: Promise<T>,
-  topeMs: number,
-): Promise<T | null> {
+export async function esperarConTope<T>(trabajo: Promise<T>, topeMs: number): Promise<T | null> {
   let cortar: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([

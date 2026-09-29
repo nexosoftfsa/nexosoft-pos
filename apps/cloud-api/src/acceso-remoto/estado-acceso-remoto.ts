@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Contrato del archivo de estado que escribe
@@ -10,7 +10,7 @@ import { z } from 'zod';
  * pueda salir por esta API ni por accidente.
  */
 export const ARCHIVO_ESTADO_SCHEMA = z.object({
-  estado: z.enum(['activo', 'apagado']),
+  estado: z.enum(["activo", "apagado"]),
   url: z.string().url().nullable().optional(),
   mensaje: z.string().nullable().optional(),
   alcanzable: z.boolean().nullable().optional(),
@@ -18,7 +18,7 @@ export const ARCHIVO_ESTADO_SCHEMA = z.object({
 });
 
 /** Estados que ve el POS. `no-configurado` = nunca se dio de alta en esta PC. */
-export type EstadoAccesoRemoto = 'activo' | 'apagado' | 'no-configurado';
+export type EstadoAccesoRemoto = "activo" | "apagado" | "no-configurado";
 
 /**
  * Usuario cuya contraseña no aguanta estar publicada en internet (Fase 17.C).
@@ -56,7 +56,7 @@ export interface RespuestaAccesoRemoto extends AccesoRemoto {
 
 /** Lo que se responde cuando el acceso remoto nunca se configuró en esta PC. */
 export const NO_CONFIGURADO: AccesoRemoto = {
-  estado: 'no-configurado',
+  estado: "no-configurado",
   url: null,
   alcanzable: null,
   mensaje: null,
@@ -74,7 +74,7 @@ const BOM = /^\uFEFF/;
 export function parsearEstadoAccesoRemoto(texto: string): AccesoRemoto | null {
   let crudo: unknown;
   try {
-    crudo = JSON.parse(texto.replace(BOM, ''));
+    crudo = JSON.parse(texto.replace(BOM, ""));
   } catch {
     return null;
   }

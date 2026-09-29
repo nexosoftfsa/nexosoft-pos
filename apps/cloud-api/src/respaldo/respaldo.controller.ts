@@ -1,6 +1,6 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { MotorDeRespaldo } from './motor-de-respaldo';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { MotorDeRespaldo } from "./motor-de-respaldo";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 
 /**
  * Endpoints de respaldo. Sólo se exponen crear y listar.
@@ -10,7 +10,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
  * TODO(4.x): restringir a rol ADMIN cuando exista RolesGuard.
  */
 @UseGuards(JwtAuthGuard)
-@Controller('respaldo')
+@Controller("respaldo")
 export class RespaldoController {
   constructor(private readonly motor: MotorDeRespaldo) {}
 

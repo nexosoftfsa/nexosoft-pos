@@ -3,15 +3,15 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
-} from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import type { CrearCategoriaDto } from './dto/crear-categoria.dto';
-import type { CrearProductoDto } from './dto/crear-producto.dto';
-import type { ActualizarProductoDto } from './dto/actualizar-producto.dto';
-import type { ComboComponenteDto } from './dto/combo-componente.dto';
-import { mapearFilaProductoCruda, type FilaProductoCruda } from './importar-productos-lote';
-import { RevertirDryRun, type ResultadoFilaImportacion } from '../common/importacion-lote';
+} from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import type { CrearCategoriaDto } from "./dto/crear-categoria.dto";
+import type { CrearProductoDto } from "./dto/crear-producto.dto";
+import type { ActualizarProductoDto } from "./dto/actualizar-producto.dto";
+import type { ComboComponenteDto } from "./dto/combo-componente.dto";
+import { mapearFilaProductoCruda, type FilaProductoCruda } from "./importar-productos-lote";
+import { RevertirDryRun, type ResultadoFilaImportacion } from "../common/importacion-lote";
 
 type Tx = Prisma.TransactionClient;
 
@@ -33,7 +33,7 @@ export class CatalogoService {
 
   listarCategorias() {
     return this.prisma.categoria.findMany({
-      orderBy: { nombre: 'asc' },
+      orderBy: { nombre: "asc" },
     });
   }
 
@@ -58,7 +58,7 @@ export class CatalogoService {
     return this.prisma.producto.findMany({
       where: { sucursalId, ...(soloActivos ? { activo: true } : {}) },
       include: INCLUDE_PRODUCTO,
-      orderBy: { nombre: 'asc' },
+      orderBy: { nombre: "asc" },
     });
   }
 
@@ -86,7 +86,7 @@ export class CatalogoService {
     });
     if (existe) throw new ConflictException(`Ya existe un producto con código ${dto.codigo}`);
 
-    const esCombo = dto.tipo === 'COMBO';
+    const esCombo = dto.tipo === "COMBO";
     const componentes = esCombo ? await this.validarComponentes(sucursalId, dto.componentes) : [];
 
     return this.prisma.producto.create({
@@ -96,8 +96,8 @@ export class CatalogoService {
         descripcion: dto.descripcion ?? null,
         precioVenta: dto.precioVenta,
         precioCosto: dto.precioCosto,
-        tipoIva: dto.tipoIva ?? 'IVA_21',
-        tipo: esCombo ? 'COMBO' : 'SIMPLE',
+        tipoIva: dto.tipoIva ?? "IVA_21",
+        tipo: esCombo ? "COMBO" : "SIMPLE",
         requiereLote: dto.requiereLote ?? false,
         sucursalId,
         categoriaId: dto.categoriaId ?? null,
@@ -136,8 +136,8 @@ export class CatalogoService {
     }
 
     // Reemplazo del set de componentes: solo aplica a combos, en transacción.
-    if (actual.tipo !== 'COMBO') {
-      throw new BadRequestException('Solo un combo puede tener componentes.');
+    if (actual.tipo !== "COMBO") {
+      throw new BadRequestException("Solo un combo puede tener componentes.");
     }
     const recambio = await this.validarComponentes(sucursalId, dto.componentes, id);
     return this.prisma.$transaction(async (tx) => {
@@ -164,18 +164,18 @@ export class CatalogoService {
     comboId?: string,
   ): Promise<Array<{ componenteId: string; cantidad: string }>> {
     if (!componentes || componentes.length === 0) {
-      throw new BadRequestException('Un combo necesita al menos un componente.');
+      throw new BadRequestException("Un combo necesita al menos un componente.");
     }
     const ids = componentes.map((c) => c.componenteId);
     if (new Set(ids).size !== ids.length) {
-      throw new BadRequestException('El combo tiene componentes repetidos.');
+      throw new BadRequestException("El combo tiene componentes repetidos.");
     }
     if (comboId !== undefined && ids.includes(comboId)) {
-      throw new BadRequestException('Un combo no puede contenerse a sí mismo.');
+      throw new BadRequestException("Un combo no puede contenerse a sí mismo.");
     }
     for (const c of componentes) {
       if (Number(c.cantidad) <= 0) {
-        throw new BadRequestException('La cantidad de cada componente debe ser positiva.');
+        throw new BadRequestException("La cantidad de cada componente debe ser positiva.");
       }
     }
     const existentes = await this.prisma.producto.findMany({
@@ -186,8 +186,8 @@ export class CatalogoService {
     for (const id of ids) {
       const p = porId.get(id);
       if (!p) throw new BadRequestException(`El componente ${id} no existe en la sucursal.`);
-      if (p.tipo === 'COMBO') {
-        throw new BadRequestException('Un combo no puede incluir otro combo como componente.');
+      if (p.tipo === "COMBO") {
+        throw new BadRequestException("Un combo no puede incluir otro combo como componente.");
       }
     }
     return componentes.map((c) => ({ componenteId: c.componenteId, cantidad: c.cantidad }));
@@ -241,7 +241,7 @@ export class CatalogoService {
           if (existe) {
             resultados.push({
               fila: numeroFila,
-              resultado: 'omitida',
+              resultado: "omitida",
               mensaje: `Ya existe un producto con código ${articulo.codigo}`,
             });
             continue;
@@ -262,9 +262,9 @@ export class CatalogoService {
           if (articulo.stockInicial !== null) {
             await tx.movimientoStock.create({
               data: {
-                tipo: 'ENTRADA',
+                tipo: "ENTRADA",
                 cantidad: articulo.stockInicial,
-                motivo: 'Importación de catálogo',
+                motivo: "Importación de catálogo",
                 productoId: producto.id,
                 sucursalId,
               },
@@ -273,11 +273,17 @@ export class CatalogoService {
 
           resultados.push({
             fila: numeroFila,
-            resultado: 'creada',
-            ...(articulo.advertencias.length > 0 ? { advertencia: articulo.advertencias.join(' / ') } : {}),
+            resultado: "creada",
+            ...(articulo.advertencias.length > 0
+              ? { advertencia: articulo.advertencias.join(" / ") }
+              : {}),
           });
         } catch (error) {
-          resultados.push({ fila: numeroFila, resultado: 'error', mensaje: (error as Error).message });
+          resultados.push({
+            fila: numeroFila,
+            resultado: "error",
+            mensaje: (error as Error).message,
+          });
         }
       }
       return resultados;

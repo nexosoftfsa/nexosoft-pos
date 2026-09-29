@@ -46,8 +46,8 @@ Son dos caminos con exigencias distintas:
   porque no hay red es peor que un POS con el catálogo de ayer. Sigue siendo
   tolerante, pero ahora **registra** lo que pasó en vez de tragárselo.
 - **El pull del botón** lo pidió una persona. Si falla, esa persona se entera:
-  la píldora muestra *"Las ventas se subieron, pero el catálogo no bajó: …"* con
-  el motivo, y si sale bien, *"Catálogo al día (N productos)"*.
+  la píldora muestra _"Las ventas se subieron, pero el catálogo no bajó: …"_ con
+  el motivo, y si sale bien, _"Catálogo al día (N productos)"_.
 
 Que diga cuántos productos no es adorno: es la diferencia entre "no pasó nada"
 y "pasó y trajo esto".
@@ -84,7 +84,7 @@ fuera el arreglo.
 
 Un `catch` vacío con un comentario que explica por qué está vacío es, casi
 siempre, una decisión tomada mirando sólo el camino feliz. El comentario
-contesta "¿qué pasa si falla?" — *nada grave* — y nunca "¿cómo nos enteramos?".
+contesta "¿qué pasa si falla?" — _nada grave_ — y nunca "¿cómo nos enteramos?".
 
 La regla que queda: **un error que se traga se documenta o se registra, pero no
 las dos cosas menos**. Si de verdad no importa, no importa escribirlo en el log.

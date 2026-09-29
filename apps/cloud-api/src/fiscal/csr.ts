@@ -18,9 +18,9 @@
  * y se firma con node-forge, que es pure JS. Hacer las dos cosas con forge
  * tardaría varios segundos en una PC de comercio.
  */
-import { generateKeyPairSync } from 'node:crypto';
-import * as forge from 'node-forge';
-import { cuitEsValido, normalizarCuit } from '@nexosoft/domain';
+import { generateKeyPairSync } from "node:crypto";
+import * as forge from "node-forge";
+import { cuitEsValido, normalizarCuit } from "@nexosoft/domain";
 
 export interface DatosCsr {
   readonly cuit: string;
@@ -39,12 +39,12 @@ export interface CsrGenerado {
 export class ErrorCsr extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ErrorCsr';
+    this.name = "ErrorCsr";
   }
 }
 
 /** Alias por defecto si el comercio no elige uno. ARCA no acepta espacios acá. */
-export const ALIAS_POR_DEFECTO = 'nexosoft';
+export const ALIAS_POR_DEFECTO = "nexosoft";
 
 /**
  * Normaliza el alias: ARCA lo usa como CN y rechaza espacios y acentos.
@@ -52,13 +52,13 @@ export const ALIAS_POR_DEFECTO = 'nexosoft';
  */
 export function normalizarAlias(alias: string): string {
   const limpio = alias
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^A-Za-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^A-Za-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
     .slice(0, 40);
-  return limpio === '' ? ALIAS_POR_DEFECTO : limpio;
+  return limpio === "" ? ALIAS_POR_DEFECTO : limpio;
 }
 
 /** El subject exacto que espera ARCA, como string legible. */
@@ -76,21 +76,21 @@ export function generarCsr(datos: DatosCsr): CsrGenerado {
     );
   }
   const razonSocial = datos.razonSocial.trim();
-  if (razonSocial === '') {
-    throw new ErrorCsr('Falta la razón social del comercio. Completala en Configuración.');
+  if (razonSocial === "") {
+    throw new ErrorCsr("Falta la razón social del comercio. Completala en Configuración.");
   }
 
-  const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
-  const clavePrivadaPem = privateKey.export({ type: 'pkcs1', format: 'pem' }).toString();
+  const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const clavePrivadaPem = privateKey.export({ type: "pkcs1", format: "pem" }).toString();
 
   const claveForge = forge.pki.privateKeyFromPem(clavePrivadaPem);
   const csr = forge.pki.createCertificationRequest();
   csr.publicKey = forge.pki.setRsaPublicKey(claveForge.n, claveForge.e);
   csr.setSubject([
-    { shortName: 'C', value: 'AR' },
-    { shortName: 'O', value: razonSocial },
-    { shortName: 'CN', value: normalizarAlias(datos.alias) },
-    { name: 'serialNumber', value: `CUIT ${cuit}` },
+    { shortName: "C", value: "AR" },
+    { shortName: "O", value: razonSocial },
+    { shortName: "CN", value: normalizarAlias(datos.alias) },
+    { name: "serialNumber", value: `CUIT ${cuit}` },
   ]);
   csr.sign(claveForge, forge.md.sha256.create());
 
@@ -138,7 +138,7 @@ export function leerCertificado(certificadoPem: string, clavePrivadaPem: string)
     cert = forge.pki.certificateFromPem(certificadoPem);
   } catch {
     throw new ErrorCsr(
-      'Ese archivo no parece un certificado de ARCA. Tiene que ser el .crt que descargaste, en texto (empieza con BEGIN CERTIFICATE).',
+      "Ese archivo no parece un certificado de ARCA. Tiene que ser el .crt que descargaste, en texto (empieza con BEGIN CERTIFICATE).",
     );
   }
 
@@ -146,23 +146,23 @@ export function leerCertificado(certificadoPem: string, clavePrivadaPem: string)
   const publicaDelCert = cert.publicKey as forge.pki.rsa.PublicKey;
   if (publicaDelCert.n.toString(16) !== claveNuestra.n.toString(16)) {
     throw new ErrorCsr(
-      'Ese certificado no corresponde a la clave de esta PC. Puede ser de otro comercio, o de un pedido anterior. Generá el pedido de nuevo y subí el certificado que salga de ese.',
+      "Ese certificado no corresponde a la clave de esta PC. Puede ser de otro comercio, o de un pedido anterior. Generá el pedido de nuevo y subí el certificado que salga de ese.",
     );
   }
 
   const campo = (nombre: string): string | null => {
     const attr = cert.subject.attributes.find((a) => a.shortName === nombre || a.name === nombre);
-    return typeof attr?.value === 'string' ? attr.value : null;
+    return typeof attr?.value === "string" ? attr.value : null;
   };
-  const serial = campo('serialNumber');
+  const serial = campo("serialNumber");
 
   return {
     subject: cert.subject.attributes
       .map((a) => `${a.shortName ?? a.name}=${String(a.value)}`)
-      .join(', '),
+      .join(", "),
     emisor: cert.issuer.attributes
       .map((a) => `${a.shortName ?? a.name}=${String(a.value)}`)
-      .join(', '),
+      .join(", "),
     validoDesde: cert.validity.notBefore.toISOString(),
     validoHasta: cert.validity.notAfter.toISOString(),
     cuit: serial === null ? null : normalizarCuit(serial),

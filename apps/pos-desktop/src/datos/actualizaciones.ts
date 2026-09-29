@@ -77,7 +77,10 @@ export async function chequearYDescargarEnSilencio(): Promise<void> {
     await actualizacion.download((evento: DownloadEvent) => {
       if (evento.event === "Started") total = evento.data.contentLength ?? null;
       else if (evento.event === "Progress") descargados += evento.data.chunkLength;
-      fijarEstado({ fase: "descargando", progreso: { bytesDescargados: descargados, bytesTotales: total } });
+      fijarEstado({
+        fase: "descargando",
+        progreso: { bytesDescargados: descargados, bytesTotales: total },
+      });
     });
     actualizacionDescargada = actualizacion;
     fijarEstado({

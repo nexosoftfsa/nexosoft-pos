@@ -14,7 +14,7 @@ mismo reporte:
 El 16/9 se agregó el panel "Siguen intentando", para que una venta pendiente que
 ya falló mostrara su motivo. El 17/9 Sebastián probó y contestó:
 
-> "No aparece el botón *Ver motivo*. La leyenda sigue *2 ventas sin subir*."
+> "No aparece el botón _Ver motivo_. La leyenda sigue _2 ventas sin subir_."
 
 Ahí se vio. No es que no se mostrara el motivo: **esas operaciones no estaban
 fallando**. Estaban en `enviando`.
@@ -26,13 +26,13 @@ lo que dura esa llamada. Si el proceso muere en el medio —se cierra el POS, se
 corta la luz, se reinicia Windows— la operación queda ahí. Y ahí no la mira
 nadie:
 
-| Quién | Qué mira | ¿Ve una `enviando`? |
-|---|---|---|
-| `pendientes()` (el motor) | `estado = 'pendiente'` | no → **no se reintenta nunca** |
-| `reintentarFallidas()` (botón Reintentar) | `estado = 'fallida'` | no |
-| `descartarFallidas()` (botón Descartar) | `estado = 'fallida'` | no |
-| "ver motivo" | `intentos > 0` | no: nunca llegó a fallar |
-| el contador de la píldora | `pendiente` + `enviando` | **sí** |
+| Quién                                     | Qué mira                 | ¿Ve una `enviando`?            |
+| ----------------------------------------- | ------------------------ | ------------------------------ |
+| `pendientes()` (el motor)                 | `estado = 'pendiente'`   | no → **no se reintenta nunca** |
+| `reintentarFallidas()` (botón Reintentar) | `estado = 'fallida'`     | no                             |
+| `descartarFallidas()` (botón Descartar)   | `estado = 'fallida'`     | no                             |
+| "ver motivo"                              | `intentos > 0`           | no: nunca llegó a fallar       |
+| el contador de la píldora                 | `pendiente` + `enviando` | **sí**                         |
 
 El único que las cuenta es el único que no puede hacer nada con ellas. Por eso
 la píldora quedaba encendida para siempre, y por eso "sincronizar no hace nada":

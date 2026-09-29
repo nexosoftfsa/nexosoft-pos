@@ -50,18 +50,19 @@ Venta (local SQLite) ──> Cobro ──> Impresión de ticket
 
 Estados del comprobante:
 
-| Estado          | Significado                                              |
-| --------------- | ------------------------------------------------------- |
-| `BORRADOR`      | En edición, todavía no confirmado.                      |
-| `PENDIENTE_CAE` | Venta cerrada e impresa; falta autorización de ARCA.    |
-| `AUTORIZADA`    | ARCA otorgó CAE (con número y vencimiento).             |
-| `RECHAZADA`     | ARCA rechazó; requiere corrección/reintento.            |
+| Estado          | Significado                                          |
+| --------------- | ---------------------------------------------------- |
+| `BORRADOR`      | En edición, todavía no confirmado.                   |
+| `PENDIENTE_CAE` | Venta cerrada e impresa; falta autorización de ARCA. |
+| `AUTORIZADA`    | ARCA otorgó CAE (con número y vencimiento).          |
+| `RECHAZADA`     | ARCA rechazó; requiere corrección/reintento.         |
 
 ## 3. Modelo de dominio (conceptual)
 
 Entidades principales (nombres en español, ver CLAUDE.md):
 
 ### Catálogo y precios
+
 - **Articulo**: `codigoInterno`, `codigoBarras`, `descripcion`, `rubro`,
   `proveedorId`, `unidadDeMedida` (`unidad` | `fraccionado` | `peso`),
   `costoBruto`, `impuestosInternos`, `alicuotaIva`.
@@ -70,12 +71,14 @@ Entidades principales (nombres en español, ver CLAUDE.md):
 - **Combo** / **Promocion**: agrupaciones y reglas de descuento.
 
 ### Stock
+
 - **Deposito** / existencia por sucursal.
 - **MovimientoDeStock**: `compra` | `venta` | `ajuste`, con cantidad y motivo.
 - **Lote**: para fraccionados/vencimientos (`vencimiento`, `cantidad`).
 - **AlertaStockMinimo** (derivada de `stockMinimo`).
 
 ### Ventas y comprobantes
+
 - **Venta**: cabecera operativa (cajero, terminal, fecha) + ítems + pagos.
 - **Comprobante**: `FacturaA` | `FacturaB` | `FacturaC` | `NotaDeCredito` |
   `NotaDeDebito` | `Remito` | `Presupuesto`. Campos: `puntoDeVenta`, `numero`,
@@ -89,6 +92,7 @@ Entidades principales (nombres en español, ver CLAUDE.md):
   (`@nexosoft/pagos`, MercadoPago Point/QR — ADR-0010).
 
 ### Configuración del comercio (emisor)
+
 - **ConfiguracionFiscal**: `condicionIvaEmisor` (`ResponsableInscripto` |
   `Monotributo` | …), `cuit`, `puntoDeVenta`. Define qué comprobantes se emiten y
   si el IVA se discrimina. El tipo se resuelve con la función pura
@@ -96,16 +100,19 @@ Entidades principales (nombres en español, ver CLAUDE.md):
   Consumidor Final/Monotributo); Monotributo → C.
 
 ### Caja y tesorería
+
 - **SesionDeCaja** (turno): `apertura`, `cierre`, `cajero`, `montoInicial`.
 - **MovimientoDeCaja**: `ingreso` | `egreso` (pago a proveedor, extracción…).
 - **Arqueo**: conteo y `diferencia` (faltante/sobrante).
 
 ### Cuentas corrientes
+
 - **Cliente** / **Proveedor**: datos fiscales, `condicionIva`, `cuit`.
 - **CuentaCorriente**: `saldo`, `limiteCredito`, y **MovimientoCuentaCorriente**
   (deuda, cobro, pago).
 
 ### Seguridad y multi-sucursal
+
 - **Usuario**, **Rol** (`Administrador` | `Supervisor` | `Cajero`), **Permiso**
   (configurable).
 - **Sucursal**, **Terminal** (punto de venta físico). **MVP: una sola sucursal**
@@ -113,6 +120,7 @@ Entidades principales (nombres en español, ver CLAUDE.md):
 - **RegistroAuditoria**: quién, qué, cuándo, sobre qué entidad.
 
 ### Sincronización
+
 - **OperacionSync** (outbox): `operacionId`, `tipo`, `payload`, `estado`,
   `origen` (sucursal/terminal), `intentos`.
 

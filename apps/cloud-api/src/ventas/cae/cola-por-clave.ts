@@ -27,7 +27,10 @@ export class ColaPorClave {
     // El que venga después espera a que termine mi turno. `liberar` se llama
     // siempre (está en el `finally`), así que una tarea que falla libera la
     // fila en vez de dejarla trabada.
-    this.ultima.set(clave, previa.then(() => miTurno));
+    this.ultima.set(
+      clave,
+      previa.then(() => miTurno),
+    );
 
     await previa;
     try {

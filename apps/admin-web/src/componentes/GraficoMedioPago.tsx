@@ -14,14 +14,7 @@ export function GraficoMedioPago({ datos }: { datos: VentasPorMedioPago[] }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <PieChart>
-        <Pie
-          data={porciones}
-          dataKey="valor"
-          nameKey="nombre"
-          cx="50%"
-          cy="50%"
-          outerRadius={95}
-        >
+        <Pie data={porciones} dataKey="valor" nameKey="nombre" cx="50%" cy="50%" outerRadius={95}>
           {porciones.map((_, i) => (
             <Cell key={i} fill={COLORES[i % COLORES.length]} />
           ))}

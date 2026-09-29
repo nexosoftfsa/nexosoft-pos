@@ -15,10 +15,10 @@ Idempotencia garantizada por `intencionPagoId` (UUID generado por el POS).
 
 ## Implementaciones
 
-| Clase | Uso |
-|---|---|
-| `MockPasarelaDePago` | Desarrollo y tests sin red ni credenciales |
-| `MercadoPagoPoint` | Esqueleto — requiere SDK + credenciales reales |
+| Clase                | Uso                                            |
+| -------------------- | ---------------------------------------------- |
+| `MockPasarelaDePago` | Desarrollo y tests sin red ni credenciales     |
+| `MercadoPagoPoint`   | Esqueleto — requiere SDK + credenciales reales |
 
 ## Mock
 
@@ -28,7 +28,12 @@ import { MockPasarelaDePago } from "@nexosoft/pagos";
 const pasarela = new MockPasarelaDePago();
 pasarela.resultadoSimulado = "aprobado"; // o "rechazado" o "timeout"
 
-const intento = await pasarela.iniciarPago({ intencionPagoId: "uuid", monto, medio: "tarjeta_credito", descripcion: "Compra" });
+const intento = await pasarela.iniciarPago({
+  intencionPagoId: "uuid",
+  monto,
+  medio: "tarjeta_credito",
+  descripcion: "Compra",
+});
 const estado = await pasarela.consultarEstado(intento.intencionPagoId);
 // estado.estado === "aprobado"
 ```

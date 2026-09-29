@@ -1,8 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { SchedulerRegistry } from '@nestjs/schedule';
-import { CronJob } from 'cron';
-import { MotorDeRespaldo } from './motor-de-respaldo';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { SchedulerRegistry } from "@nestjs/schedule";
+import { CronJob } from "cron";
+import { MotorDeRespaldo } from "./motor-de-respaldo";
 
 /**
  * Programa respaldos automáticos según `RESPALDO_CRON` (expresión cron).
@@ -20,9 +20,9 @@ export class RespaldoSchedulerService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    const expresion = this.config.get<string>('RESPALDO_CRON');
+    const expresion = this.config.get<string>("RESPALDO_CRON");
     if (!expresion) {
-      this.logger.log('Respaldo automático desactivado (sin RESPALDO_CRON).');
+      this.logger.log("Respaldo automático desactivado (sin RESPALDO_CRON).");
       return;
     }
 
@@ -30,7 +30,7 @@ export class RespaldoSchedulerService implements OnModuleInit {
       void this.ejecutar();
     });
 
-    this.scheduler.addCronJob('respaldo-automatico', job as never);
+    this.scheduler.addCronJob("respaldo-automatico", job as never);
     job.start();
     this.logger.log(`Respaldo automático programado: ${expresion}`);
   }

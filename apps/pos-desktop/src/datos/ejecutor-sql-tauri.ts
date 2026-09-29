@@ -27,7 +27,10 @@ export const RUTA_SQLITE_DEFECTO = "sqlite:nexosoft.db";
  * (`@tauri-apps/plugin-sql`) lo satisface estructuralmente; en tests se usa un doble.
  */
 export interface BaseDatosSql {
-  execute(query: string, bindValues?: unknown[]): Promise<{ rowsAffected: number; lastInsertId?: number }>;
+  execute(
+    query: string,
+    bindValues?: unknown[],
+  ): Promise<{ rowsAffected: number; lastInsertId?: number }>;
   select<T>(query: string, bindValues?: unknown[]): Promise<T>;
   close(): Promise<boolean>;
 }
@@ -115,10 +118,7 @@ export class EjecutorSqlTauri implements EjecutorSql {
     return this.encolar(() => this.directo.ejecutar(sql, params));
   }
 
-  consultar<T extends Fila = Fila>(
-    sql: string,
-    params: readonly ValorSql[] = [],
-  ): Promise<T[]> {
+  consultar<T extends Fila = Fila>(sql: string, params: readonly ValorSql[] = []): Promise<T[]> {
     return this.encolar(() => this.directo.consultar<T>(sql, params));
   }
 

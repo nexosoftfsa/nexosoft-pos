@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import type { Licencia, ProveedorLicencias } from '@nexosoft/licencias';
-import { verificarToken } from './verificar-firma';
+import { Injectable, Logger } from "@nestjs/common";
+import type { Licencia, ProveedorLicencias } from "@nexosoft/licencias";
+import { verificarToken } from "./verificar-firma";
 
 /** Cuánto se espera al Worker antes de darlo por no disponible. */
 const TIMEOUT_MS = 8_000;
 
-export const URL_LICENCIAS_DEFECTO = 'https://licencias.nexosoft.com.ar';
+export const URL_LICENCIAS_DEFECTO = "https://licencias.nexosoft.com.ar";
 
 export interface LicenciaObtenida {
   readonly licencia: Licencia;
@@ -40,19 +40,19 @@ export class LicenciasHttp implements ProveedorLicencias {
 
   /** Igual que `obtener`, pero devuelve también el token crudo para persistirlo. */
   async obtenerConToken(comercioId: string): Promise<LicenciaObtenida | null> {
-    if (this.clavePublicaBase64 === '') {
+    if (this.clavePublicaBase64 === "") {
       // Sin clave pública configurada no hay forma de confiar en nada de lo
       // que responda el Worker. Se comporta como "no hay licencia", que deja
       // operar: nunca como un bloqueo.
-      this.log.warn('Sin LICENCIAS_CLAVE_PUBLICA configurada: no se valida la suscripción.');
+      this.log.warn("Sin LICENCIAS_CLAVE_PUBLICA configurada: no se valida la suscripción.");
       return null;
     }
 
     let respuesta: Response;
     try {
       respuesta = await fetch(`${this.url}/licencia`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ comercioId, version: this.versionInstalada }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
@@ -73,11 +73,11 @@ export class LicenciasHttp implements ProveedorLicencias {
     } catch {
       return null;
     }
-    if (typeof token !== 'string' || token === '') return null;
+    if (typeof token !== "string" || token === "") return null;
 
     const licencia = verificarToken(token, this.clavePublicaBase64);
     if (licencia === null) {
-      this.log.error('El servicio de licencias devolvió un token que no pasa la verificación.');
+      this.log.error("El servicio de licencias devolvió un token que no pasa la verificación.");
       return null;
     }
     if (licencia.comercioId !== comercioId) {

@@ -8,10 +8,10 @@ import {
   IsBoolean,
   ValidateNested,
   MaxLength,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { TipoIva, TipoProducto } from '@prisma/client';
-import { ComboComponenteDto } from './combo-componente.dto';
+} from "class-validator";
+import { Type } from "class-transformer";
+import { TipoIva, TipoProducto } from "@prisma/client";
+import { ComboComponenteDto } from "./combo-componente.dto";
 
 export class CrearProductoDto {
   @IsString()

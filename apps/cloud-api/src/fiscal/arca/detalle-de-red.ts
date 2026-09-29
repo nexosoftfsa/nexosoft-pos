@@ -31,9 +31,9 @@ interface ErrorConCausa {
 }
 
 function unaLinea(e: ErrorConCausa): string {
-  const codigo = typeof e.code === 'string' ? e.code : '';
-  const mensaje = typeof e.message === 'string' ? e.message : '';
-  return [codigo, mensaje].filter((s) => s !== '').join(' ');
+  const codigo = typeof e.code === "string" ? e.code : "";
+  const mensaje = typeof e.message === "string" ? e.message : "";
+  return [codigo, mensaje].filter((s) => s !== "").join(" ");
 }
 
 /**
@@ -47,19 +47,19 @@ export function detalleDeRed(error: unknown): string {
   for (let i = 0; i < PROFUNDIDAD_MAX && actual !== null && actual !== undefined; i++) {
     const e = actual as ErrorConCausa;
     const linea = unaLinea(e);
-    if (linea !== '' && !partes.includes(linea)) partes.push(linea);
+    if (linea !== "" && !partes.includes(linea)) partes.push(linea);
 
     // Con "happy eyeballs" (IPv4 + IPv6 en paralelo) Node junta los dos fallos
     // en un AggregateError; el interesante suele ser el de IPv6.
     if (Array.isArray(e.errors)) {
       for (const sub of e.errors.slice(0, 3)) {
         const l = unaLinea(sub as ErrorConCausa);
-        if (l !== '' && !partes.includes(l)) partes.push(l);
+        if (l !== "" && !partes.includes(l)) partes.push(l);
       }
     }
 
     actual = e.cause;
   }
 
-  return partes.length > 0 ? partes.join(' — ') : String(error);
+  return partes.length > 0 ? partes.join(" — ") : String(error);
 }

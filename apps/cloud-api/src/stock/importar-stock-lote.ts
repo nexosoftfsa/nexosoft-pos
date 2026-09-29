@@ -7,15 +7,15 @@
  */
 
 export const COLUMNAS_IMPORTAR_STOCK = {
-  codigo: 'Código',
-  cantidad: 'Cantidad a cargar',
-  fechaVencimiento: 'Fecha de vencimiento',
-  motivo: 'Motivo',
+  codigo: "Código",
+  cantidad: "Cantidad a cargar",
+  fechaVencimiento: "Fecha de vencimiento",
+  motivo: "Motivo",
 } as const;
 
 export type FilaStockCruda = Record<string, string>;
 
-const MOTIVO_DEFECTO = 'Importación de stock';
+const MOTIVO_DEFECTO = "Importación de stock";
 
 export interface CargaStockAImportar {
   readonly codigo: string;
@@ -28,11 +28,11 @@ export interface CargaStockAImportar {
 /** Mapea una fila cruda a una carga de stock. Lanza si falta el código o la cantidad no es un número positivo. */
 export function mapearFilaStockCruda(cruda: FilaStockCruda): CargaStockAImportar {
   const col = COLUMNAS_IMPORTAR_STOCK;
-  const codigo = (cruda[col.codigo] ?? '').trim();
-  if (codigo === '') {
-    throw new Error('Fila sin código: no se puede importar.');
+  const codigo = (cruda[col.codigo] ?? "").trim();
+  if (codigo === "") {
+    throw new Error("Fila sin código: no se puede importar.");
   }
-  const cantidadTexto = (cruda[col.cantidad] ?? '').trim();
+  const cantidadTexto = (cruda[col.cantidad] ?? "").trim();
   const cantidad = Number(cantidadTexto);
   if (!Number.isFinite(cantidad) || cantidad <= 0) {
     throw new Error(`Cantidad inválida para el código ${codigo}: "${cantidadTexto}"`);
@@ -42,7 +42,7 @@ export function mapearFilaStockCruda(cruda: FilaStockCruda): CargaStockAImportar
   return {
     codigo,
     cantidad: cantidadTexto,
-    fechaVencimiento: fechaTexto && fechaTexto !== '' ? fechaTexto : null,
-    motivo: motivoTexto && motivoTexto !== '' ? motivoTexto : MOTIVO_DEFECTO,
+    fechaVencimiento: fechaTexto && fechaTexto !== "" ? fechaTexto : null,
+    motivo: motivoTexto && motivoTexto !== "" ? motivoTexto : MOTIVO_DEFECTO,
   };
 }

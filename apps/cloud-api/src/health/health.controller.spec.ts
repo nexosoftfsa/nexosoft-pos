@@ -1,30 +1,30 @@
-import { describe, it, expect, vi } from 'vitest';
-import { HealthController } from './health.controller';
+import { describe, it, expect, vi } from "vitest";
+import { HealthController } from "./health.controller";
 
 const mockPrisma = {
   $queryRaw: vi.fn(),
 };
 
-describe('HealthController', () => {
+describe("HealthController", () => {
   const ctrl = new HealthController(mockPrisma as never);
 
-  it('devuelve status ok cuando la DB responde', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
+  it("devuelve status ok cuando la DB responde", async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     const result = await ctrl.check();
-    expect(result.status).toBe('ok');
-    expect(result.db).toBe('ok');
+    expect(result.status).toBe("ok");
+    expect(result.db).toBe("ok");
   });
 
-  it('devuelve status degraded cuando la DB falla', async () => {
-    mockPrisma.$queryRaw.mockRejectedValue(new Error('connection refused'));
+  it("devuelve status degraded cuando la DB falla", async () => {
+    mockPrisma.$queryRaw.mockRejectedValue(new Error("connection refused"));
     const result = await ctrl.check();
-    expect(result.status).toBe('degraded');
-    expect(result.db).toBe('error');
+    expect(result.status).toBe("degraded");
+    expect(result.db).toBe("error");
   });
 
-  it('incluye la version (dev si no hay archivo VERSION, como en tests)', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
+  it("incluye la version (dev si no hay archivo VERSION, como en tests)", async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     const result = await ctrl.check();
-    expect(result.version).toBe('dev');
+    expect(result.version).toBe("dev");
   });
 });

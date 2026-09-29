@@ -56,7 +56,7 @@ comercio no hay dominio, ni certificado, ni credenciales de Cloudflare.
    `cloudflared --config <ruta> tunnel run`: arranca sola al prender la PC y
    se reinicia sola si se cae, igual que las tareas del `cloud-api` y de
    PostgreSQL de esta misma instalación. Se prefirió a `cloudflared service
-   install` para poder apuntar al `config.yml` con una **ruta explícita**, en
+install` para poder apuntar al `config.yml` con una **ruta explícita**, en
    vez de depender de dónde busca `cloudflared` su configuración cuando corre
    como SYSTEM. No hay supervisor propio nuestro: la tarea ejecuta
    `cloudflared` directamente.
@@ -95,6 +95,7 @@ caracteres.
 ## Consecuencias
 
 ### Positivas
+
 - La dirección es **fija y memorizable**: el dueño la guarda en favoritos una
   vez y la comparte con su contador. Era el defecto que hundía al túnel
   efímero.
@@ -107,7 +108,7 @@ caracteres.
 - **Ni siquiera nosotros necesitamos Zero Trust**, así que no hay que
   cargarle una tarjeta de crédito a Cloudflare para levantar esto.
 - El alta de un comercio es **un comando** (`generar-codigo-acceso-remoto.ps1
-  -Subdominio lagus`), no una secuencia de clics en un dashboard: es
+-Subdominio lagus`), no una secuencia de clics en un dashboard: es
   repetible, se puede documentar exacto y más adelante se automatiza.
 - Sin supervisor propio: la tarea programada ejecuta `cloudflared` directo.
   Menos código nuestro corriendo como SYSTEM.
@@ -116,8 +117,9 @@ caracteres.
   panel de gestión de clientes.
 
 ### Negativas / costos
+
 - **Somos responsables de la disponibilidad del dominio.** Si `nexosoft.com.ar`
-  vence o se rompe el DNS, se cae el acceso remoto de *todos* los comercios a
+  vence o se rompe el DNS, se cae el acceso remoto de _todos_ los comercios a
   la vez. Antes cada uno dependía de su propio dominio. Mitigación operativa:
   renovación automática del dominio y monitoreo, fuera del alcance de esta
   fase.
@@ -130,7 +132,7 @@ caracteres.
   filtra, hay que revocarlo desde Cloudflare.
 - Las credenciales del túnel viven en la PC del comercio (lo requiere
   `cloudflared`): quien tenga administrador de esa PC las puede leer. Alcance
-  real: levantar *ese* túnel, que apunta a *ese* servidor — no dan acceso al
+  real: levantar _ese_ túnel, que apunta a _ese_ servidor — no dan acceso al
   dominio ni a los otros comercios. Se revocan borrando el túnel
   (`cloudflared tunnel delete`).
 - Sin el dashboard de Zero Trust no hay una pantalla con el estado de todos

@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  formatearMoneda,
-  formatearCantidad,
-  fechaCorta,
-  etiquetaMedioPago,
-} from "./formato";
+import { formatearMoneda, formatearCantidad, fechaCorta, etiquetaMedioPago } from "./formato";
 
 describe("formatearMoneda", () => {
   it("formatea un importe string como pesos argentinos", () => {

@@ -169,7 +169,7 @@ async function agregarColumnasNuevas(ejecutor: EjecutorSql): Promise<void> {
       await ejecutor.ejecutar(sentencia);
     } catch (e) {
       const mensaje = e instanceof Error ? e.message : String(e);
-      if (!mensaje.toLowerCase().includes('duplicate column')) throw e;
+      if (!mensaje.toLowerCase().includes("duplicate column")) throw e;
     }
   }
 }

@@ -7,10 +7,10 @@ import {
   IsArray,
   ValidateNested,
   MaxLength,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { TipoIva } from '@prisma/client';
-import { ComboComponenteDto } from './combo-componente.dto';
+} from "class-validator";
+import { Type } from "class-transformer";
+import { TipoIva } from "@prisma/client";
+import { ComboComponenteDto } from "./combo-componente.dto";
 
 export class ActualizarProductoDto {
   @IsString()

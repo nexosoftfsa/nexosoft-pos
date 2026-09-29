@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
 import {
   aFechaArca,
@@ -11,84 +11,90 @@ import {
   leerRespuestaCae,
   leerRespuestaConsulta,
   requiereComprobanteAsociado,
-} from './wsfev1';
+} from "./wsfev1";
 
-const TICKET = { token: 'TOK', sign: 'SIG', expiracion: new Date(Date.now() + 3600_000) };
+const TICKET = { token: "TOK", sign: "SIG", expiracion: new Date(Date.now() + 3600_000) };
 
 function respuesta(xml: string): Response {
   return { ok: true, status: 200, text: async () => xml } as Response;
 }
 
 function cliente(fetchImpl: typeof fetch) {
-  return new ClienteWsfev1({ entorno: 'homologacion', cuit: '20356780079', fetchImpl });
+  return new ClienteWsfev1({ entorno: "homologacion", cuit: "20356780079", fetchImpl });
 }
 
-describe('aFechaArca', () => {
-  it('usa yyyymmdd, que es lo que pide WSFEv1', () => {
-    expect(aFechaArca(new Date(2026, 7, 27))).toBe('20260827');
-    expect(aFechaArca(new Date(2026, 0, 5))).toBe('20260105');
+describe("aFechaArca", () => {
+  it("usa yyyymmdd, que es lo que pide WSFEv1", () => {
+    expect(aFechaArca(new Date(2026, 7, 27))).toBe("20260827");
+    expect(aFechaArca(new Date(2026, 0, 5))).toBe("20260105");
   });
 });
 
-describe('esComprobanteC', () => {
-  it('reconoce factura, nota de débito y nota de crédito C', () => {
+describe("esComprobanteC", () => {
+  it("reconoce factura, nota de débito y nota de crédito C", () => {
     expect(esComprobanteC(11)).toBe(true);
     expect(esComprobanteC(12)).toBe(true);
     expect(esComprobanteC(13)).toBe(true);
   });
 
-  it('A y B todavía no', () => {
+  it("A y B todavía no", () => {
     expect(esComprobanteC(1)).toBe(false);
     expect(esComprobanteC(6)).toBe(false);
   });
 });
 
-describe('ultimoAutorizado', () => {
-  it('pregunta por punto de venta y tipo, y devuelve el número', async () => {
+describe("ultimoAutorizado", () => {
+  it("pregunta por punto de venta y tipo, y devuelve el número", async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(respuesta('<FECompUltimoAutorizadoResult><CbteNro>41</CbteNro></FECompUltimoAutorizadoResult>'));
+      .mockResolvedValue(
+        respuesta(
+          "<FECompUltimoAutorizadoResult><CbteNro>41</CbteNro></FECompUltimoAutorizadoResult>",
+        ),
+      );
 
     const n = await cliente(fetchMock as never).ultimoAutorizado(TICKET, 1, 11);
 
     expect(n).toBe(41);
     const [url, op] = fetchMock.mock.calls[0]!;
-    expect(String(url)).toContain('wswhomo.afip.gov.ar');
+    expect(String(url)).toContain("wswhomo.afip.gov.ar");
     const headers = (op as { headers: Record<string, string> }).headers;
-    expect(headers['SOAPAction']).toContain('FECompUltimoAutorizado');
+    expect(headers["SOAPAction"]).toContain("FECompUltimoAutorizado");
     const body = (op as { body: string }).body;
-    expect(body).toContain('<PtoVta>1</PtoVta>');
-    expect(body).toContain('<CbteTipo>11</CbteTipo>');
-    expect(body).toContain('<Token>TOK</Token>');
-    expect(body).toContain('<Cuit>20356780079</Cuit>');
+    expect(body).toContain("<PtoVta>1</PtoVta>");
+    expect(body).toContain("<CbteTipo>11</CbteTipo>");
+    expect(body).toContain("<Token>TOK</Token>");
+    expect(body).toContain("<Cuit>20356780079</Cuit>");
   });
 
-  it('un error de ARCA no se toma como número', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      respuesta('<Errors><Err><Code>600</Code><Msg>Token invalido</Msg></Err></Errors>'),
-    );
+  it("un error de ARCA no se toma como número", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        respuesta("<Errors><Err><Code>600</Code><Msg>Token invalido</Msg></Err></Errors>"),
+      );
     await expect(cliente(fetchMock as never).ultimoAutorizado(TICKET, 1, 11)).rejects.toThrow(
       /Token invalido/,
     );
   });
 });
 
-describe('solicitarCae', () => {
+describe("solicitarCae", () => {
   const OK =
-    '<FECAESolicitarResult><FeDetResp><FECAEDetResponse>' +
-    '<CbteDesde>42</CbteDesde><Resultado>A</Resultado>' +
-    '<CAE>75123456789012</CAE><CAEFchVto>20260906</CAEFchVto>' +
-    '</FECAEDetResponse></FeDetResp></FECAESolicitarResult>';
+    "<FECAESolicitarResult><FeDetResp><FECAEDetResponse>" +
+    "<CbteDesde>42</CbteDesde><Resultado>A</Resultado>" +
+    "<CAE>75123456789012</CAE><CAEFchVto>20260906</CAEFchVto>" +
+    "</FECAEDetResponse></FeDetResp></FECAESolicitarResult>";
 
   const DATOS = {
     puntoDeVenta: 1,
     codigoComprobante: 11,
     numero: 42,
-    total: '1500.00',
+    total: "1500.00",
     fecha: new Date(2026, 7, 27),
-    neto: '1500.00',
-    iva: '0.00',
-    exento: '0.00',
+    neto: "1500.00",
+    iva: "0.00",
+    exento: "0.00",
     renglonesIva: [],
   };
 
@@ -96,76 +102,78 @@ describe('solicitarCae', () => {
   const FACTURA_B = {
     ...DATOS,
     codigoComprobante: 6,
-    neto: '1239.67',
-    iva: '260.33',
-    exento: '0.00',
-    renglonesIva: [{ codigoArca: 5, base: '1239.67', importe: '260.33' }],
+    neto: "1239.67",
+    iva: "260.33",
+    exento: "0.00",
+    renglonesIva: [{ codigoArca: 5, base: "1239.67", importe: "260.33" }],
   };
 
-  it('devuelve el CAE y su vencimiento', async () => {
+  it("devuelve el CAE y su vencimiento", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
 
     const r = await cliente(fetchMock as never).solicitarCae(TICKET, DATOS);
 
-    expect(r.cae).toBe('75123456789012');
+    expect(r.cae).toBe("75123456789012");
     expect(r.caeFechaVto.getFullYear()).toBe(2026);
     expect(r.caeFechaVto.getMonth()).toBe(8); // septiembre
     expect(r.numero).toBe(42);
   });
 
-  it('manda el número que proponemos: ARCA valida la correlatividad', async () => {
+  it("manda el número que proponemos: ARCA valida la correlatividad", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await cliente(fetchMock as never).solicitarCae(TICKET, DATOS);
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
-    expect(body).toContain('<CbteDesde>42</CbteDesde>');
-    expect(body).toContain('<CbteHasta>42</CbteHasta>');
-    expect(body).toContain('<CbteFch>20260827</CbteFch>');
+    expect(body).toContain("<CbteDesde>42</CbteDesde>");
+    expect(body).toContain("<CbteHasta>42</CbteHasta>");
+    expect(body).toContain("<CbteFch>20260827</CbteFch>");
   });
 
-  it('en un comprobante C no manda IVA discriminado', async () => {
+  it("en un comprobante C no manda IVA discriminado", async () => {
     // Mandar un desglose inventado seria declarar mal ante ARCA.
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await cliente(fetchMock as never).solicitarCae(TICKET, DATOS);
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
-    expect(body).toContain('<ImpTotal>1500.00</ImpTotal>');
-    expect(body).toContain('<ImpNeto>1500.00</ImpNeto>');
-    expect(body).toContain('<ImpIVA>0</ImpIVA>');
-    expect(body).not.toContain('<Iva>');
+    expect(body).toContain("<ImpTotal>1500.00</ImpTotal>");
+    expect(body).toContain("<ImpNeto>1500.00</ImpNeto>");
+    expect(body).toContain("<ImpIVA>0</ImpIVA>");
+    expect(body).not.toContain("<Iva>");
   });
 
-  it('una Factura B manda el detalle por alícuota', async () => {
+  it("una Factura B manda el detalle por alícuota", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await cliente(fetchMock as never).solicitarCae(TICKET, FACTURA_B);
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
-    expect(body).toContain('<ImpNeto>1239.67</ImpNeto>');
-    expect(body).toContain('<ImpIVA>260.33</ImpIVA>');
-    expect(body).toContain('<Iva><AlicIva><Id>5</Id><BaseImp>1239.67</BaseImp><Importe>260.33</Importe></AlicIva></Iva>');
+    expect(body).toContain("<ImpNeto>1239.67</ImpNeto>");
+    expect(body).toContain("<ImpIVA>260.33</ImpIVA>");
+    expect(body).toContain(
+      "<Iva><AlicIva><Id>5</Id><BaseImp>1239.67</BaseImp><Importe>260.33</Importe></AlicIva></Iva>",
+    );
   });
 
-  it('varias alícuotas van como renglones separados', async () => {
+  it("varias alícuotas van como renglones separados", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await cliente(fetchMock as never).solicitarCae(TICKET, {
       ...FACTURA_B,
       renglonesIva: [
-        { codigoArca: 4, base: '100.00', importe: '10.50' },
-        { codigoArca: 5, base: '200.00', importe: '42.00' },
+        { codigoArca: 4, base: "100.00", importe: "10.50" },
+        { codigoArca: 5, base: "200.00", importe: "42.00" },
       ],
     });
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
     expect((body.match(/<AlicIva>/g) ?? []).length).toBe(2);
-    expect(body).toContain('<Id>4</Id>');
-    expect(body).toContain('<Id>5</Id>');
+    expect(body).toContain("<Id>4</Id>");
+    expect(body).toContain("<Id>5</Id>");
   });
 
-  it('las operaciones exentas van en ImpOpEx', async () => {
+  it("las operaciones exentas van en ImpOpEx", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
-    await cliente(fetchMock as never).solicitarCae(TICKET, { ...FACTURA_B, exento: '500.00' });
+    await cliente(fetchMock as never).solicitarCae(TICKET, { ...FACTURA_B, exento: "500.00" });
     expect((fetchMock.mock.calls[0]![1] as { body: string }).body).toContain(
-      '<ImpOpEx>500.00</ImpOpEx>',
+      "<ImpOpEx>500.00</ImpOpEx>",
     );
   });
 
-  it('una Factura A sin CUIT del cliente se corta antes de llamar a ARCA', async () => {
+  it("una Factura A sin CUIT del cliente se corta antes de llamar a ARCA", async () => {
     // ARCA la rechazaria igual; mejor decir por que.
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await expect(
@@ -174,49 +182,50 @@ describe('solicitarCae', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('una Factura A con CUIT del cliente sí sale', async () => {
+  it("una Factura A con CUIT del cliente sí sale", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await cliente(fetchMock as never).solicitarCae(TICKET, {
       ...FACTURA_B,
       codigoComprobante: 1,
       tipoDocReceptor: 80,
-      nroDocReceptor: '30712345671',
+      nroDocReceptor: "30712345671",
     });
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
-    expect(body).toContain('<DocTipo>80</DocTipo>');
-    expect(body).toContain('<DocNro>30712345671</DocNro>');
+    expect(body).toContain("<DocTipo>80</DocTipo>");
+    expect(body).toContain("<DocNro>30712345671</DocNro>");
   });
 
-  it('sin receptor asume consumidor final', async () => {
+  it("sin receptor asume consumidor final", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await cliente(fetchMock as never).solicitarCae(TICKET, DATOS);
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
-    expect(body).toContain('<DocTipo>99</DocTipo>');
-    expect(body).toContain('<DocNro>0</DocNro>');
+    expect(body).toContain("<DocTipo>99</DocTipo>");
+    expect(body).toContain("<DocNro>0</DocNro>");
     // La RG 5616/2024 la volvio obligatoria: sin ella el comprobante rebota.
-    expect(body).toContain('<CondicionIVAReceptorId>5</CondicionIVAReceptorId>');
+    expect(body).toContain("<CondicionIVAReceptorId>5</CondicionIVAReceptorId>");
   });
 
-  it('manda la condicion del receptor que le pasan', async () => {
+  it("manda la condicion del receptor que le pasan", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respuesta(OK));
     await cliente(fetchMock as never).solicitarCae(TICKET, {
       ...FACTURA_B,
       codigoComprobante: 1,
       tipoDocReceptor: 80,
-      nroDocReceptor: '30712345671',
+      nroDocReceptor: "30712345671",
       condicionIvaReceptor: 1,
     });
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
-    expect(body).toContain('<CondicionIVAReceptorId>1</CondicionIVAReceptorId>');
+    expect(body).toContain("<CondicionIVAReceptorId>1</CondicionIVAReceptorId>");
     // El XSD de WSFEv1 es una secuencia: va despues de MonCotiz y antes de Iva.
-    expect(body.indexOf('<CondicionIVAReceptorId>')).toBeGreaterThan(body.indexOf('<MonCotiz>'));
-    expect(body.indexOf('<CondicionIVAReceptorId>')).toBeLessThan(body.indexOf('<Iva>'));
+    expect(body.indexOf("<CondicionIVAReceptorId>")).toBeGreaterThan(body.indexOf("<MonCotiz>"));
+    expect(body.indexOf("<CondicionIVAReceptorId>")).toBeLessThan(body.indexOf("<Iva>"));
   });
 });
 
-describe('leerRespuestaCae', () => {
-  it('un rechazo con Errors no es transitorio', () => {
-    const xml = '<Errors><Err><Code>10016</Code><Msg>Numero de comprobante invalido</Msg></Err></Errors>';
+describe("leerRespuestaCae", () => {
+  it("un rechazo con Errors no es transitorio", () => {
+    const xml =
+      "<Errors><Err><Code>10016</Code><Msg>Numero de comprobante invalido</Msg></Err></Errors>";
     const e = (() => {
       try {
         leerRespuestaCae(xml);
@@ -227,61 +236,63 @@ describe('leerRespuestaCae', () => {
     })();
     expect(e).toBeInstanceOf(ErrorWsfe);
     expect(e?.transitorio).toBe(false);
-    expect(e?.codigo).toBe('10016');
+    expect(e?.codigo).toBe("10016");
   });
 
-  it('Resultado R es rechazo, con las observaciones adentro', () => {
+  it("Resultado R es rechazo, con las observaciones adentro", () => {
     const xml =
-      '<Resultado>R</Resultado><Observaciones><Obs><Code>10013</Code><Msg>Fecha fuera de rango</Msg></Obs></Observaciones>';
+      "<Resultado>R</Resultado><Observaciones><Obs><Code>10013</Code><Msg>Fecha fuera de rango</Msg></Obs></Observaciones>";
     expect(() => leerRespuestaCae(xml)).toThrow(/Fecha fuera de rango/);
   });
 
-  it('aprobado con observaciones devuelve el CAE y las conserva', () => {
+  it("aprobado con observaciones devuelve el CAE y las conserva", () => {
     const xml =
-      '<Resultado>A</Resultado><CbteDesde>7</CbteDesde><CAE>111</CAE><CAEFchVto>20260906</CAEFchVto>' +
-      '<Observaciones><Obs><Code>10071</Code><Msg>Dato informado no coincide</Msg></Obs></Observaciones>';
+      "<Resultado>A</Resultado><CbteDesde>7</CbteDesde><CAE>111</CAE><CAEFchVto>20260906</CAEFchVto>" +
+      "<Observaciones><Obs><Code>10071</Code><Msg>Dato informado no coincide</Msg></Obs></Observaciones>";
     const r = leerRespuestaCae(xml);
-    expect(r.cae).toBe('111');
-    expect(r.observaciones[0]).toContain('10071');
+    expect(r.cae).toBe("111");
+    expect(r.observaciones[0]).toContain("10071");
   });
 
-  it('sin CAE y sin error explicito, se marca transitorio', () => {
-    expect(() => leerRespuestaCae('<Resultado>A</Resultado>')).toThrow(ErrorWsfe);
+  it("sin CAE y sin error explicito, se marca transitorio", () => {
+    expect(() => leerRespuestaCae("<Resultado>A</Resultado>")).toThrow(ErrorWsfe);
   });
 });
 
-describe('requiereComprobanteAsociado', () => {
-  it('lo exige en notas de credito y de debito de las tres letras', () => {
+describe("requiereComprobanteAsociado", () => {
+  it("lo exige en notas de credito y de debito de las tres letras", () => {
     for (const codigo of [2, 3, 7, 8, 12, 13]) {
       expect(requiereComprobanteAsociado(codigo)).toBe(true);
     }
   });
 
-  it('una factura no lleva asociado', () => {
+  it("una factura no lleva asociado", () => {
     for (const codigo of [1, 6, 11]) {
       expect(requiereComprobanteAsociado(codigo)).toBe(false);
     }
   });
 });
 
-describe('CbtesAsoc', () => {
+describe("CbtesAsoc", () => {
   const NOTA_CREDITO_B = {
     puntoDeVenta: 4,
     codigoComprobante: 8,
     numero: 12,
-    total: '100.00',
+    total: "100.00",
     fecha: new Date(2026, 7, 28),
-    neto: '82.64',
-    iva: '17.36',
-    exento: '0.00',
-    renglonesIva: [{ codigoArca: 5, base: '82.64', importe: '17.36' }],
+    neto: "82.64",
+    iva: "17.36",
+    exento: "0.00",
+    renglonesIva: [{ codigoArca: 5, base: "82.64", importe: "17.36" }],
   };
 
-  it('manda el comprobante que corrige, en el orden que pide el XSD', async () => {
+  it("manda el comprobante que corrige, en el orden que pide el XSD", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(
-        respuesta('<Resultado>A</Resultado><CbteDesde>12</CbteDesde><CAE>7</CAE><CAEFchVto>20260907</CAEFchVto>'),
+        respuesta(
+          "<Resultado>A</Resultado><CbteDesde>12</CbteDesde><CAE>7</CAE><CAEFchVto>20260907</CAEFchVto>",
+        ),
       );
 
     await cliente(fetchMock as never).solicitarCae(TICKET, {
@@ -290,13 +301,15 @@ describe('CbtesAsoc', () => {
     });
 
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
-    expect(body).toContain('<CbtesAsoc><CbteAsoc><Tipo>6</Tipo><PtoVta>4</PtoVta><Nro>9</Nro></CbteAsoc></CbtesAsoc>');
+    expect(body).toContain(
+      "<CbtesAsoc><CbteAsoc><Tipo>6</Tipo><PtoVta>4</PtoVta><Nro>9</Nro></CbteAsoc></CbtesAsoc>",
+    );
     // El XSD es una secuencia: CondicionIVAReceptorId -> CbtesAsoc -> Iva.
-    expect(body.indexOf('<CondicionIVAReceptorId>')).toBeLessThan(body.indexOf('<CbtesAsoc>'));
-    expect(body.indexOf('<CbtesAsoc>')).toBeLessThan(body.indexOf('<Iva>'));
+    expect(body.indexOf("<CondicionIVAReceptorId>")).toBeLessThan(body.indexOf("<CbtesAsoc>"));
+    expect(body.indexOf("<CbtesAsoc>")).toBeLessThan(body.indexOf("<Iva>"));
   });
 
-  it('una nota de credito sin el original no se manda: ARCA la rechazaria', async () => {
+  it("una nota de credito sin el original no se manda: ARCA la rechazaria", async () => {
     const fetchMock = vi.fn();
 
     await expect(
@@ -307,11 +320,13 @@ describe('CbtesAsoc', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('una factura no lleva el bloque', async () => {
+  it("una factura no lleva el bloque", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(
-        respuesta('<Resultado>A</Resultado><CbteDesde>1</CbteDesde><CAE>7</CAE><CAEFchVto>20260907</CAEFchVto>'),
+        respuesta(
+          "<Resultado>A</Resultado><CbteDesde>1</CbteDesde><CAE>7</CAE><CAEFchVto>20260907</CAEFchVto>",
+        ),
       );
 
     await cliente(fetchMock as never).solicitarCae(TICKET, {
@@ -319,53 +334,57 @@ describe('CbtesAsoc', () => {
       codigoComprobante: 6,
     });
 
-    expect((fetchMock.mock.calls[0]![1] as { body: string }).body).not.toContain('<CbtesAsoc>');
+    expect((fetchMock.mock.calls[0]![1] as { body: string }).body).not.toContain("<CbtesAsoc>");
   });
 });
 
-describe('consultarComprobante', () => {
-  it('devuelve el CAE leyendo CodAutorizacion y FchVto', async () => {
+describe("consultarComprobante", () => {
+  it("devuelve el CAE leyendo CodAutorizacion y FchVto", async () => {
     // Ojo: en la consulta los campos NO se llaman como en FECAESolicitar.
     const fetchMock = vi
       .fn()
       .mockResolvedValue(
         respuesta(
-          '<ResultGet><CbteDesde>42</CbteDesde><CodAutorizacion>75200312345678</CodAutorizacion><FchVto>20260907</FchVto></ResultGet>',
+          "<ResultGet><CbteDesde>42</CbteDesde><CodAutorizacion>75200312345678</CodAutorizacion><FchVto>20260907</FchVto></ResultGet>",
         ),
       );
 
     const r = await cliente(fetchMock as never).consultarComprobante(TICKET, 4, 6, 42);
 
-    expect(r?.cae).toBe('75200312345678');
+    expect(r?.cae).toBe("75200312345678");
     expect(r?.numero).toBe(42);
     expect(r?.caeFechaVto).toEqual(new Date(2026, 8, 7));
     const body = (fetchMock.mock.calls[0]![1] as { body: string }).body;
-    expect(body).toContain('<CbteTipo>6</CbteTipo>');
-    expect(body).toContain('<CbteNro>42</CbteNro>');
-    expect(body).toContain('<PtoVta>4</PtoVta>');
+    expect(body).toContain("<CbteTipo>6</CbteTipo>");
+    expect(body).toContain("<CbteNro>42</CbteNro>");
+    expect(body).toContain("<PtoVta>4</PtoVta>");
   });
 
-  it('el 602 de ARCA significa que no existe, no que fallo la consulta', () => {
+  it("el 602 de ARCA significa que no existe, no que fallo la consulta", () => {
     const xml =
-      '<Errors><Err><Code>602</Code><Msg>No existen datos en nuestros registros</Msg></Err></Errors>';
+      "<Errors><Err><Code>602</Code><Msg>No existen datos en nuestros registros</Msg></Err></Errors>";
     expect(leerRespuestaConsulta(xml)).toBeNull();
   });
 
-  it('un comprobante sin CAE es, para el que pregunta, como si no existiera', () => {
-    expect(leerRespuestaConsulta('<ResultGet><CbteDesde>42</CbteDesde></ResultGet>')).toBeNull();
+  it("un comprobante sin CAE es, para el que pregunta, como si no existiera", () => {
+    expect(leerRespuestaConsulta("<ResultGet><CbteDesde>42</CbteDesde></ResultGet>")).toBeNull();
   });
 
-  it('otro error de ARCA si es un error', () => {
-    const xml = '<Errors><Err><Code>600</Code><Msg>Token invalido</Msg></Err></Errors>';
+  it("otro error de ARCA si es un error", () => {
+    const xml = "<Errors><Err><Code>600</Code><Msg>Token invalido</Msg></Err></Errors>";
     expect(() => leerRespuestaConsulta(xml)).toThrow(ErrorWsfe);
   });
 });
 
-describe('timeout', () => {
-  it('manda un AbortSignal para no quedarse colgado esperando a ARCA', async () => {
+describe("timeout", () => {
+  it("manda un AbortSignal para no quedarse colgado esperando a ARCA", async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(respuesta('<FECompUltimoAutorizadoResult><CbteNro>1</CbteNro></FECompUltimoAutorizadoResult>'));
+      .mockResolvedValue(
+        respuesta(
+          "<FECompUltimoAutorizadoResult><CbteNro>1</CbteNro></FECompUltimoAutorizadoResult>",
+        ),
+      );
 
     await cliente(fetchMock as never).ultimoAutorizado(TICKET, 1, 6);
 
@@ -373,9 +392,9 @@ describe('timeout', () => {
     expect(opciones.signal).toBeInstanceOf(AbortSignal);
   });
 
-  it('un corte por tiempo es transitorio: la venta queda pendiente, no rechazada', async () => {
-    const timeout = Object.assign(new Error('The operation was aborted'), {
-      name: 'TimeoutError',
+  it("un corte por tiempo es transitorio: la venta queda pendiente, no rechazada", async () => {
+    const timeout = Object.assign(new Error("The operation was aborted"), {
+      name: "TimeoutError",
     });
     const fetchMock = vi.fn().mockRejectedValue(timeout);
 
@@ -389,16 +408,16 @@ describe('timeout', () => {
   });
 });
 
-describe('leerErrores / leerObservaciones', () => {
-  it('lee varios errores', () => {
+describe("leerErrores / leerObservaciones", () => {
+  it("lee varios errores", () => {
     const xml =
-      '<Errors><Err><Code>1</Code><Msg>uno</Msg></Err><Err><Code>2</Code><Msg>dos</Msg></Err></Errors>';
+      "<Errors><Err><Code>1</Code><Msg>uno</Msg></Err><Err><Code>2</Code><Msg>dos</Msg></Err></Errors>";
     expect(leerErrores(xml)).toHaveLength(2);
-    expect(leerErrores(xml)[1]?.mensaje).toBe('dos');
+    expect(leerErrores(xml)[1]?.mensaje).toBe("dos");
   });
 
-  it('sin bloque devuelve vacío', () => {
-    expect(leerErrores('<ok/>')).toEqual([]);
-    expect(leerObservaciones('<ok/>')).toEqual([]);
+  it("sin bloque devuelve vacío", () => {
+    expect(leerErrores("<ok/>")).toEqual([]);
+    expect(leerObservaciones("<ok/>")).toEqual([]);
   });
 });

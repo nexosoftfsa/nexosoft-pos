@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  decodificarToken,
-  tokenExpirado,
-  tieneAccesoAReportes,
-} from "./token";
+import { decodificarToken, tokenExpirado, tieneAccesoAReportes } from "./token";
 
 function b64url(obj: unknown): string {
   return Buffer.from(JSON.stringify(obj)).toString("base64url");

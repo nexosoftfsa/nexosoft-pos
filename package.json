@@ -13,8 +13,8 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,css,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,css,json,md,yml,yaml}\"",
     "clean": "turbo run clean"
   },
   "devDependencies": {

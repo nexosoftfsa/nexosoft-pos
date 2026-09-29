@@ -96,6 +96,6 @@ Tres incidentes seguidos con la misma raíz, y cada vez se arregló el camino
 puntual: el intervalo que se apagaba mal, el Enter que reentraba, el carrito que
 se leía viejo. Ninguna de las tres veces se preguntó **cuál es la regla**.
 
-La regla era de una línea: *no se arranca una venta si hay una en curso*. Lo que
+La regla era de una línea: _no se arranca una venta si hay una en curso_. Lo que
 costó fue que "en curso" tenía tres definiciones distintas, una por cada guarda,
 y ninguna era la buena.
