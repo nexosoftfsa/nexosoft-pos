@@ -176,3 +176,52 @@ existía y nadie lo veía**. `volcarCatalogo` lanzaba, el botón se lo tragaba, 
 desde afuera "falló" y "no pasó nada" se ven igual. Recién cuando ADR-0082 hizo
 hablar al botón, el problema se resolvió en una línea. La lección no es sobre
 el `NOT NULL`: es que un error que no se muestra cuesta más que el error.
+
+---
+
+## Apéndice — 29/9/2026: la Factura A de puros exentos
+
+Verificado en campo: el catálogo bajó ("Catálogo al día, 27 productos"), el
+exento entró, y la Factura A con un producto exento y uno gravado salió bien y
+**idéntica a su duplicado**. Lo que apareció al probarlo fue otro caso, y es el
+mismo error de razonamiento por tercera vez.
+
+Una Factura A de **sólo** productos exentos salía así:
+
+```
+Precios sin IVA
+Arroz Blanco Largo Fino 1kg
+1 x $ 1.450,00        $ 1.450,00
+--------------------------------
+TOTAL          $ 1.450,00
+```
+
+Sin "Subtotal neto" y sin el renglón "Exento". El que la recibe no tiene cómo
+saber que la operación era exenta: lee un comprobante A sin IVA discriminado y
+sin explicación.
+
+La causa es `subtotalNeto()`, que filtraba los renglones gravados y devolvía
+`null` cuando no quedaba ninguno. Los tres renderers gobiernan **todo** el
+bloque de totales con ese `null` —el subtotal y los renglones del desglose—,
+así que desaparecía entero.
+
+`null` estaba significando dos cosas distintas: *"este comprobante no
+discrimina"* (una B, o una A vieja sin desglose guardado) y *"no hay nada
+gravado"*. La segunda no es ausencia de dato: **es cero**. Ahora `subtotalNeto`
+devuelve `null` sólo cuando no hay desglose, y cero cuando lo hay y todo es
+exento.
+
+Es la tercera vez con la misma confusión: la B de puros exentos perdía el
+bloque de Transparencia Fiscal (apéndice de ADR-0079), el exento no aparecía en
+el duplicado (ADR-0083), y ahora esto. **Y el test lo fijaba al revés** — yo
+mismo escribí `expect(subtotalNeto(...)).toBeNull()` para este caso. Un test
+que documenta el error no protege de nada; lo hace durar.
+
+La pregunta que faltó las tres veces es la misma: *¿corresponde mostrarlo?*, no
+*¿hay algo que sumar?*
+
+También de esta ronda: al cancelar una pregunta, el foco no volvía al buscador
+y la caja quedaba sin recibir el teclado. Lo devuelve `Dialogos.tsx` —que anota
+dónde estaba antes de preguntar— **antes** de resolver la promesa, para que el
+que preguntó pueda mandarlo a otro lado y gane su decisión. La caja lo manda
+siempre al buscador, incluso cuando se preguntó desde el botón.

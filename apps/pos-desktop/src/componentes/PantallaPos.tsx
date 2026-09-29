@@ -545,8 +545,12 @@ export function PantallaPos({
     // webview este botón falló dos rondas seguidas: el 22/9/2026 vaciaba el
     // carrito SIN preguntar, y el 26/9 dejó de hacer nada — *"aprieto y no
     // sale nada"*.
-    if (!(await preguntarSiNo(aviso))) return;
-    limpiarParaLaProxima();
+    const cancelar = await preguntarSiNo(aviso);
+    if (cancelar) limpiarParaLaProxima();
+    // El foco vuelve al buscador se haya cancelado o no. El diálogo ya lo
+    // devuelve a donde estaba, pero "donde estaba" puede ser el botón
+    // "Cancelar venta (F4)", y ahí el lector escribiría sobre un botón. Después
+    // de esta pregunta la caja tiene que quedar lista para escanear, siempre.
     refocarBuscador();
   }
 

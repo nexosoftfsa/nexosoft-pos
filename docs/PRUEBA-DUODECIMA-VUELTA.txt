@@ -1,0 +1,135 @@
+===========================================================================
+  NEXOSOFT - DUODECIMA VUELTA
+  Para: Sebastian
+  Tiempo: 10 minutos. Solo POS, el servidor queda como esta.
+===========================================================================
+
+EL EXENTO ENTRO. CUATRO VUELTAS.
+---------------------------------
+"Catalogo al dia (27 productos)". Eso cierra lo que venia trabado desde la
+septima, y la Factura A mixta te salio bien y con el duplicado identico.
+Gracias por comparar los PDF una por una: sin eso no se encontraba.
+
+
+LO DEL PUNTO 2.3: TENIAS RAZON A MEDIAS, Y LA MITAD QUE TENIAS ERA UN BUG
+---------------------------------------------------------------------------
+Me dijiste "no veo que digan Exento". Miré los dos tickets que mandaste y
+son dos casos distintos:
+
+LA FACTURA B (ticket 2-6055): esta BIEN que no diga "Exento", y no lo va a
+decir nunca. Una factura B no discrimina impuestos: el cliente ve el precio
+final y listo. Lo que te dice que ese producto es exento es el bloque de
+abajo, "IVA contenido $ 0,00". Si el arroz hubiera estado al 21%, ahi
+diria $ 251,65. Ese renglon ES la prueba de que el exento entro bien.
+Ahi me explique mal yo en el instructivo.
+
+LA FACTURA A (ticket 2-32): esa SI estaba mal, y bien visto. Salia asi:
+
+    Arroz Blanco Largo Fino 1kg
+    1 x $ 1.450,00       $ 1.450,00
+    --------------------------------
+    TOTAL         $ 1.450,00
+
+Sin "Subtotal neto" y sin el renglon "Exento". O sea: una factura A donde
+no se discrimina nada y no se aclara por que. El que la recibe no tiene
+como saber que la operacion era exenta.
+
+El motivo: el codigo se preguntaba "¿hay algo gravado que sumar?" en vez de
+"¿corresponde mostrar el desglose?". Si todo es exento no hay nada gravado,
+asi que se saltaba el bloque ENTERO, incluido el renglon del exento.
+
+Es la tercera vez que cometo la misma confusion (paso con la B de puros
+exentos y con el duplicado), y esta vez peor: el test que yo mismo escribi
+fijaba el comportamiento equivocado. O sea que lo tenia documentado como si
+estuviera bien. Ya esta corregido y con el test dado vuelta.
+
+Ahora una A de puros exentos sale asi:
+
+    Subtotal neto      $ 0,00
+    Exento         $ 1.450,00
+    TOTAL          $ 1.450,00
+
+
+Y LO DEL FOCO
+---------------
+"Si aprieto ESC el cursor no se posiciona en la barra de escaneo". Cierto.
+El cartel se llevaba el foco y no lo devolvia. Ahora vuelve solo, y en la
+pantalla de venta vuelve SIEMPRE al buscador, hayas dicho que si o que no,
+y tambien si apretaste el boton de abajo en vez de F4.
+
+
+===========================================================================
+  PASOS
+===========================================================================
+
+PASO 1 - ACTUALIZAR SOLO EL POS
+---------------------------------
+El servidor queda en 0.21.0, no lo toques.
+
+El POS tiene que quedar en 0.1.72.
+
+    POS: ______________
+
+
+PASO 2 - LA FACTURA A DE PUROS EXENTOS
+----------------------------------------
+2.1 Elegí Factura A con Distribuidora Sur SRL.
+2.2 Carga SOLO el ARROZ (o cualquier producto exento). Nada mas.
+2.3 Cobra, emiti e imprimi el ticket chico.
+
+    Tiene que decir, arriba del TOTAL:
+
+    [ ] Subtotal neto   $ 0,00
+    [ ] Exento      $ 1.450,00
+
+2.4 Imprimi tambien el A4 de esa misma factura. Lo mismo.
+
+2.5 Anda a Comprobantes y saca el DUPLICADO del A4. Tiene que decir
+    exactamente lo mismo.
+
+    [ ] Identicos
+
+Mandame los tres archivos.
+
+
+PASO 3 - QUE LA MIXTA SIGA BIEN
+---------------------------------
+3.1 Factura A con el ARROZ (exento) y el AGUA (21%), como la vez pasada.
+3.2 Que siga diciendo:
+
+    Subtotal neto   $ 8.264,46
+    Exento          $ 1.450,00
+    IVA 21%         $ 1.735,54
+    TOTAL          $ 11.450,00
+
+    [ ] Igual que la vuelta pasada
+
+
+PASO 4 - EL FOCO
+------------------
+4.1 Carga 2 o 3 productos.
+4.2 Apreta F4 y despues ESC para NO cancelar.
+4.3 Sin tocar el mouse, escanea o escribi un codigo.
+
+    [ ] Lo toma el buscador (no hubo que llevar el cursor con el mouse)
+
+4.4 Ahora apreta el boton "Cancelar venta (F4)" de abajo, con el mouse.
+    Deci que NO, y sin tocar el mouse escribi de nuevo.
+
+    [ ] Tambien lo toma el buscador
+
+4.5 Probá lo mismo con F8 (cambiar cantidad): cancela con ESC y fijate que
+    el cursor vuelva solo.
+
+
+PASO 5 - QUE NO SE HAYA ROTO NADA
+-----------------------------------
+5.1 Una Factura B normal en efectivo, con vuelto. Que traiga el bloque de
+    Transparencia Fiscal.
+5.2 Las ventas suben y tienen CAE.
+
+===========================================================================
+
+Si el paso 2 sale bien, el exento queda cerrado del todo: entra al
+catalogo, se declara bien a ARCA, y se imprime bien en los cuatro casos
+(A sola, A mixta, B, y los duplicados de todas).

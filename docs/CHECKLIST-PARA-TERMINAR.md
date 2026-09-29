@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-28 · Publicado: POS **0.1.71** · Servidor **0.21.0**
+Actualizado: 2026-09-29 · Publicado: POS **0.1.72** · Servidor **0.21.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,7 +15,40 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Undécima vuelta — POS 0.1.71 + Servidor 0.21.0
+## 1 · Duodécima vuelta — POS 0.1.72 + Servidor 0.21.0
+
+### Lo que la undécima vuelta (29/9) dejó cerrado
+
+- **EL EXENTO ENTRÓ.** *"Catálogo al día (27 productos)"*. Cuatro vueltas.
+- **La Factura A mixta sale bien y su duplicado es idéntico.** Seba:
+  *"Idénticos ambos"*. Subtotal neto 8.264,46 + Exento 1.450,00 + IVA 1.735,54
+  = 11.450,00, y los renglones suman 9.714,46.
+- **El ticket chico original y su duplicado también coinciden.**
+- **F4 pregunta**, el separador de miles anda (*"Perfecto!"*), las
+  confirmaciones de gestión preguntan, y el F12 ya no está.
+
+### Lo que la undécima vuelta destapó
+
+- [ ] **Correr `docs/PRUEBA-DUODECIMA-VUELTA.txt`.** 10 minutos, sólo POS.
+
+- [x] **La Factura A de PUROS exentos salía sin el bloque de totales.** Ni
+      "Subtotal neto" ni el renglón "Exento": sólo los renglones y el TOTAL. El
+      que la recibe no tenía cómo saber que la operación era exenta.
+      *`subtotalNeto()` devolvía `null` cuando no quedaba ningún renglón
+      gravado, y ese `null` gobierna el bloque entero en los tres renderers.
+      Tercera vez con la misma confusión —"no hay nada que sumar" tratado como
+      "no se sabe"— y **el test lo fijaba al revés** (apéndice de ADR-0084).*
+
+- [x] **Al cancelar una pregunta, el foco no volvía al buscador.** Había que
+      llevarlo con el mouse, en una pantalla que se opera con el teclado.
+      *Lo devuelve `Dialogos.tsx`, antes de resolver la promesa, y la caja lo
+      manda siempre al buscador.*
+
+- [ ] **El duplicado no muestra el vuelto.** Sigue pendiente: el servidor no lo
+      guarda. Columna nueva + payload + DTO.
+
+- [ ] **"Microsoft Print to PDF" desde el POS.** Bajado de prioridad por Seba;
+      se mira con las pruebas de térmica.
 
 ### Lo que la décima vuelta (26/9) dejó cerrado
 

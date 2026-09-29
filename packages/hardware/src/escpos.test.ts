@@ -437,6 +437,37 @@ describe("construirEscPos", () => {
   });
 
   /**
+   * Una Factura A de PUROS exentos salía con los renglones y el TOTAL, y nada
+   * más: sin "Subtotal neto" y sin el renglón "Exento". El que la recibe no
+   * tenía cómo saber que la operación era exenta. Lo vio Sebastián el
+   * 29/9/2026 facturando un solo producto exento (ADR-0084).
+   */
+  it("una Factura A de puros exentos igual muestra el bloque, con neto en cero", () => {
+    const t = texto(
+      construirEscPos(
+        ticket({
+          tipoComprobante: "Factura A",
+          esFiscal: true,
+          subtotalesIva: [
+            {
+              etiqueta: "Exento",
+              base: Money.desde("1450.00"),
+              iva: Money.cero(),
+              esExento: true,
+            },
+          ],
+          total: Money.desde("1450.00"),
+        }),
+      ),
+    );
+    expect(t).toContain("Subtotal neto");
+    expect(t).toContain("$ 0,00");
+    // De un exento importa la BASE, no su IVA: mostrar "$ 0,00" ahí no diría nada.
+    expect(t).toContain("Exento");
+    expect(t).toContain("$ 1.450,00");
+  });
+
+  /**
    * La térmica los imprimía sin mirar la letra, y el A4 sólo en la A: el mismo
    * comprobante salía distinto según por dónde se imprimiera. Lo que lleva una
    * B es el bloque de transparencia fiscal, no el desglose por alícuota.

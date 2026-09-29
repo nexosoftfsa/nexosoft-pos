@@ -143,17 +143,41 @@ describe("subtotalNeto", () => {
     expect(neto?.aDecimalString(2)).toBe("1000.00");
   });
 
-  it("una Factura A con SÓLO exento no tiene subtotal neto que mostrar", () => {
-    expect(
-      subtotalNeto(
-        base({
-          tipoComprobante: "Factura A",
-          subtotalesIva: [
-            { etiqueta: "Exento", base: Money.desde("500.00"), iva: Money.cero(), esExento: true },
-          ],
-        }),
-      ),
-    ).toBeNull();
+  /**
+   * Éste estaba fijado AL REVÉS, y el test equivocado es lo que dejó pasar el
+   * error: una A de puros exentos tiene neto gravado CERO, no "no se sabe".
+   * Devolver `null` hacía desaparecer el bloque entero de totales, así que el
+   * comprobante salía con los renglones y el TOTAL y sin decir por ningún lado
+   * que la operación era exenta. Lo vio Sebastián el 29/9/2026.
+   *
+   * Es la misma confusión que el apéndice de ADR-0079, tercera vez: preguntar
+   * "¿hay algo que sumar?" en lugar de "¿corresponde mostrarlo?".
+   */
+  it("una Factura A con SÓLO exento tiene subtotal neto CERO, no null", () => {
+    const neto = subtotalNeto(
+      base({
+        tipoComprobante: "Factura A",
+        subtotalesIva: [
+          { etiqueta: "Exento", base: Money.desde("500.00"), iva: Money.cero(), esExento: true },
+        ],
+      }),
+    );
+    expect(neto).not.toBeNull();
+    expect(neto?.aDecimalString(2)).toBe("0.00");
+  });
+
+  /** Y con varios exentos y ningún gravado, lo mismo. */
+  it("varios exentos y ninguna alícuota siguen dando cero", () => {
+    const neto = subtotalNeto(
+      base({
+        tipoComprobante: "Factura A",
+        subtotalesIva: [
+          { etiqueta: "Exento", base: Money.desde("500.00"), iva: Money.cero(), esExento: true },
+          { etiqueta: "Exento", base: Money.desde("120.00"), iva: Money.cero(), esExento: true },
+        ],
+      }),
+    );
+    expect(neto?.aDecimalString(2)).toBe("0.00");
   });
 });
 

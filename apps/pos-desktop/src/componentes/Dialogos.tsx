@@ -22,6 +22,16 @@ export function Dialogos() {
   const [texto, setTexto] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
   const cancelarRef = useRef<HTMLButtonElement | null>(null);
+  /**
+   * Dónde estaba el foco antes de preguntar, para devolverlo al cerrar.
+   *
+   * Sin esto, cancelar un F4 dejaba el foco en el botón que se acababa de
+   * desmontar: la caja quedaba sin recibir el teclado y había que volver al
+   * buscador con el mouse, en una pantalla que se opera entera con el teclado.
+   * Lo marcó Sebastián el 29/9/2026. Se resuelve acá y no en cada llamador
+   * porque son doce los que preguntan.
+   */
+  const focoPrevioRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     registrarDialogos(
@@ -36,6 +46,11 @@ export function Dialogos() {
 
   useEffect(() => {
     if (actual === null) return;
+    // Se anota ANTES de mover el foco: montar el diálogo no se lo saca a nadie,
+    // así que acá `activeElement` todavía es quien lo tenía.
+    const previo = document.activeElement;
+    focoPrevioRef.current = previo instanceof HTMLElement ? previo : null;
+
     if (actual.pedido.tipo === "texto") {
       inputRef.current?.focus();
       inputRef.current?.select();
@@ -50,7 +65,14 @@ export function Dialogos() {
   const esTexto = pedido.tipo === "texto";
 
   function cerrar(respuesta: boolean | string | null) {
+    const volverA = focoPrevioRef.current;
+    focoPrevioRef.current = null;
     setActual(null);
+    // El foco se devuelve ANTES de resolver la promesa, a propósito: el que
+    // preguntó puede querer mandarlo a otro lado —la caja siempre lo manda al
+    // buscador— y lo último que se haga tiene que ser lo que gana. Devolverlo
+    // después, en un `requestAnimationFrame`, pisaba esa decisión.
+    if (volverA !== null && volverA.isConnected) volverA.focus();
     responder(respuesta);
   }
 

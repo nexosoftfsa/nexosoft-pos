@@ -225,11 +225,26 @@ export function importeImpreso(datos: DatosTicket, linea: LineaTicket): Money {
  */
 export function subtotalNeto(datos: DatosTicket): Money | null {
   if (letraFiscal(datos) !== "A") return null;
+  // Sin desglose no se sabe: es un comprobante viejo, de antes de que se
+  // guardara, y se reimprime como salió.
+  const [primerRenglon] = datos.subtotalesIva;
+  if (primerRenglon === undefined) return null;
+
   // Lo exento NO es neto gravado: va aparte, en su propio renglón. Sumarlo acá
   // daría un "Subtotal neto" que no coincide con el `ImpNeto` declarado a ARCA.
   const gravados = datos.subtotalesIva.filter((s) => s.esExento !== true);
   const [primero, ...resto] = gravados;
-  if (primero === undefined) return null;
+
+  // Una Factura A de PUROS exentos tiene neto gravado CERO, que no es lo mismo
+  // que "no se sabe" (apéndice de ADR-0079). Devolver `null` acá hacía
+  // desaparecer el bloque entero de totales: el comprobante salía con los
+  // renglones y el TOTAL, sin "Subtotal neto" ni "Exento" por ningún lado. Lo
+  // vio Sebastián el 29/9/2026 con una A de sólo arroz.
+  //
+  // El cero sale del IVA de un renglón exento, que es cero por definición:
+  // `packages/hardware` no construye `Money` (ADR-0018, los adaptadores son
+  // planos y sólo importan el tipo).
+  if (primero === undefined) return primerRenglon.iva;
   return resto.reduce((a, s) => a.sumar(s.base), primero.base);
 }
 
