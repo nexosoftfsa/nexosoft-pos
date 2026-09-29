@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { ALICUOTAS_IVA, desglosarIvaIncluido, desgloseSinDiscriminar, Money } from '@nexosoft/domain';
 
-import { ajustarAlTotal, alicuotaDeTipoIva } from './iva-de-producto';
+import {
+  ajustarAlTotal,
+  alicuotaDeTipoIva,
+  alicuotaImpresa,
+  etiquetaAlicuota,
+} from './iva-de-producto';
 
 describe('alicuotaDeTipoIva', () => {
   it('traduce las alícuotas que usa el catálogo', () => {
@@ -18,6 +23,39 @@ describe('alicuotaDeTipoIva', () => {
 
   it('un producto sin tipo de IVA cae en la alícuota general', () => {
     expect(alicuotaDeTipoIva(undefined)).toEqual(ALICUOTAS_IVA.VEINTIUNO);
+  });
+});
+
+/**
+ * Lo que mandó el POS es lo que se imprimió en el papel, y es lo que se le
+ * declara a ARCA (ADR-0084). El 26/9/2026 la misma venta salió impresa con
+ * "IVA 0%" y declarada como exenta, porque cada lado miró su propio catálogo.
+ */
+describe('alicuotaImpresa', () => {
+  it('lee el porcentaje que imprimió el POS', () => {
+    expect(alicuotaImpresa('21')).toEqual(ALICUOTAS_IVA.VEINTIUNO);
+    expect(alicuotaImpresa('10.5')).toEqual(ALICUOTAS_IVA.DIEZ_CON_CINCO);
+    expect(alicuotaImpresa('0')).toEqual(ALICUOTAS_IVA.CERO);
+  });
+
+  it('"EXENTO" es exento, y no la alícuota del cero', () => {
+    expect(alicuotaImpresa('EXENTO')).toBeNull();
+    expect(alicuotaImpresa('EXENTO')).not.toEqual(alicuotaImpresa('0'));
+  });
+
+  /** Sin dato o con un dato que no se entiende, manda el catálogo. */
+  it('devuelve undefined cuando no hay nada que creerle', () => {
+    expect(alicuotaImpresa(undefined)).toBeUndefined();
+    expect(alicuotaImpresa('cualquier cosa')).toBeUndefined();
+    expect(alicuotaImpresa('13')).toBeUndefined();
+  });
+});
+
+describe('etiquetaAlicuota', () => {
+  it('distingue el exento del cero por ciento', () => {
+    expect(etiquetaAlicuota(null)).toBe('EXENTO');
+    expect(etiquetaAlicuota(ALICUOTAS_IVA.CERO)).toBe('0');
+    expect(etiquetaAlicuota(ALICUOTAS_IVA.VEINTIUNO)).toBe('21');
   });
 });
 

@@ -44,6 +44,48 @@ describe("construirOperacionVenta", () => {
     expect(payload.items[0]?.cantidad).toBe("3"); // cantidad como string
   });
 
+  /**
+   * El payload se rearma campo por campo, así que un dato nuevo en el ítem se
+   * cae en silencio si nadie lo agrega acá. Éstos son los dos que hacen que el
+   * duplicado diga lo mismo que el original y que ARCA reciba lo que se
+   * imprimió (ADR-0083 y ADR-0084).
+   */
+  it("lleva el neto y la alícuota con la que se imprimió cada renglón", () => {
+    const op = construirOperacionVenta({
+      terminalId: "caja-1",
+      medioPago: "EFECTIVO",
+      items: [
+        { productoId: "arroz", cantidad: 1, precioUnitario: "1450.00", alicuotaIva: "EXENTO" },
+        {
+          productoId: "agua",
+          cantidad: 1,
+          precioUnitario: "10000.00",
+          neto: "8264.46",
+          alicuotaIva: "21",
+        },
+      ],
+    });
+
+    const items = (op.payload as { items: Array<Record<string, unknown>> }).items;
+    // "EXENTO" y no "0": ante ARCA el exento va a ImpOpEx y el 0% lleva renglón.
+    expect(items[0]?.alicuotaIva).toBe("EXENTO");
+    expect(items[0]).not.toHaveProperty("neto");
+    expect(items[1]?.alicuotaIva).toBe("21");
+    expect(items[1]?.neto).toBe("8264.46");
+  });
+
+  /** Una venta vieja releída de la base no los trae, y no se inventan. */
+  it("sin esos datos, no manda las claves", () => {
+    const op = construirOperacionVenta({
+      terminalId: "caja-1",
+      medioPago: "EFECTIVO",
+      items: [{ productoId: "p1", cantidad: 1, precioUnitario: "10.00" }],
+    });
+    const items = (op.payload as { items: Array<Record<string, unknown>> }).items;
+    expect(items[0]).not.toHaveProperty("alicuotaIva");
+    expect(items[0]).not.toHaveProperty("neto");
+  });
+
   it("manda la fecha de la venta, que es la que salió impresa en el ticket", () => {
     const vendida = new Date("2026-09-02T14:00:00.000Z");
     const op = construirOperacionVenta({

@@ -485,6 +485,15 @@ body {
   font-weight: 800;
   color: var(--acento);
 }
+/* El tilde de "Venta registrada": verde y más grande que el título. Es lo
+   único que dice que la venta ya está hecha. */
+.asistente-tilde {
+  margin-left: 10px;
+  font-size: 30px;
+  line-height: 1;
+  color: #22c55e;
+  vertical-align: -4px;
+}
 .asistente-balance {
   font-size: 28px;
   font-weight: 900;
@@ -858,6 +867,63 @@ body {
   border-radius: 14px;
   padding: 22px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+/* Diálogo propio de confirmación (ver `componentes/Dialogos.tsx` y
+   `dialogos.ts`): el del webview de Tauri no se puede usar. Va por encima de
+   todo, incluido el asistente de cobro, porque puede preguntar sobre lo que
+   hay debajo. */
+.overlay-dialogo {
+  z-index: 100;
+}
+.dialogo {
+  background: #fff;
+  width: 460px;
+  max-width: 100%;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+.dialogo-mensaje {
+  /* El mensaje trae saltos de línea a propósito: separa qué se pierde de la
+     pregunta. Sin `pre-wrap` sale todo en un párrafo corrido. */
+  white-space: pre-wrap;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--texto);
+}
+.dialogo-campo {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 12px;
+  font-size: 18px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+}
+.dialogo-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.dialogo-acciones button {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dialogo-acciones button.primario {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
+.dialogo-acciones kbd {
+  margin-left: 6px;
+  opacity: 0.65;
+  font-size: 11px;
 }
 .ticket-titulo {
   font-size: 20px;

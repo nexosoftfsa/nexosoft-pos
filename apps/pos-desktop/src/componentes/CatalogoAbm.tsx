@@ -29,6 +29,7 @@ import {
   type FormProducto,
 } from "./catalogo-form";
 import { ThOrdenable, useOrdenTabla, type ValorColumna } from "./usar-orden-tabla";
+import { preguntarSiNo } from "../dialogos";
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorCatalogoAdmin) return e.message;
@@ -126,7 +127,7 @@ export function CatalogoAbm({
   );
 
   async function desactivar(p: ProductoAdmin) {
-    if (!window.confirm(`¿Desactivar "${p.nombre}"? No se borra: deja de venderse y se puede reactivar.`)) {
+    if (!(await preguntarSiNo(`¿Desactivar "${p.nombre}"? No se borra: deja de venderse y se puede reactivar.`))) {
       return;
     }
     try {

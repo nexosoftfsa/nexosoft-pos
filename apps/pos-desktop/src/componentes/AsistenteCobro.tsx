@@ -13,7 +13,7 @@ import { useEffect, useRef, type RefObject } from "react";
 import { recargoQueCorresponde } from "@nexosoft/domain";
 import type { FormaDePago, Money } from "@nexosoft/domain";
 
-import { pesos } from "../formato";
+import { digitosHasta, formatearImporteTecleado, pesos, posicionTrasDigitos } from "../formato";
 import type { ClienteVenta, PagoUi } from "./PantallaPos";
 import type { Tarjeta, TasaCuota } from "../sync/cliente-medios-pago";
 import { OPCIONES_IMPRESION, type PasoAsistente } from "./asistente-cobro-helpers";
@@ -82,7 +82,17 @@ export function AsistenteCobro({
     <div className="overlay">
       <div className="asistente-cobro">
         <div className="asistente-header">
-          <h2>{tituloDePaso(paso)}</h2>
+          <h2>
+            {tituloDePaso(paso)}
+            {/* El tilde va aparte del título para poder pintarlo: verde y más
+                grande, como lo pidió Sebastián. Es la única señal de que la
+                venta YA quedó registrada, y tiene que leerse de lejos. */}
+            {paso === "imprimir" && (
+              <span className="asistente-tilde" aria-hidden>
+                ✓
+              </span>
+            )}
+          </h2>
           {/* Mientras se cobra importa lo que falta; una vez cubierto el
               total, mostrar "$ 0,00" no dice nada — ahí va el total vendido. */}
           <div className="asistente-balance">
@@ -168,7 +178,30 @@ export function AsistenteCobro({
                   inputMode="decimal"
                   className="asistente-monto"
                   value={montoPago}
-                  onChange={(e) => onCambiarMonto(e.target.value)}
+                  onKeyDown={(e) => {
+                    // El punto es el decimal para el que lo teclea; los puntos
+                    // de miles los pone el formateador. Se lo traduce a coma
+                    // para que no se pierda contra `formatearImporteTecleado`,
+                    // que descarta los puntos.
+                    if (e.key !== ".") return;
+                    e.preventDefault();
+                    const campo = e.currentTarget;
+                    const desde = campo.selectionStart ?? montoPago.length;
+                    const hasta = campo.selectionEnd ?? desde;
+                    onCambiarMonto(`${montoPago.slice(0, desde)},${montoPago.slice(hasta)}`);
+                  }}
+                  onChange={(e) => {
+                    const campo = e.currentTarget;
+                    const crudo = e.target.value;
+                    // Los puntos que se agregan corren el texto: el cursor se
+                    // reubica contando DÍGITOS, no caracteres. Si no, tipear en
+                    // el medio de un importe lo manda al final.
+                    const digitos = digitosHasta(crudo, campo.selectionStart ?? crudo.length);
+                    const formateado = formatearImporteTecleado(crudo);
+                    onCambiarMonto(formateado);
+                    const pos = posicionTrasDigitos(formateado, digitos);
+                    requestAnimationFrame(() => campo.setSelectionRange(pos, pos));
+                  }}
                 />
                 {recargoVivo && montoBaseVivo && (
                   <span className="muted">
@@ -294,7 +327,7 @@ function tituloDePaso(paso: Exclude<PasoAsistente, "cerrado">): string {
       // de poder volverse atrás, y el cajero tiene que poder reconocerlo de un
       // vistazo. Lo pidió Sebastián, y tiene razón: la pregunta que viene abajo
       // ya habla del comprobante, así que el título estaba de más.
-      return "Venta registrada ✓";
+      return "Venta registrada";
     case "monto":
       return "Confirmar Monto";
   }

@@ -28,6 +28,7 @@ import {
   type EntornoArca,
   type EstadoCertificado,
 } from "../sync/cliente-fiscal-http";
+import { preguntarSiNo } from "../dialogos";
 
 const AYUDA_HOMOLOGACION = "https://wsass-homo.afip.gob.ar/wsass/portal/main.aspx";
 const AYUDA_PRODUCCION = "https://serviciosweb.afip.gob.ar/clavefiscal/adminrel/agregarCertificado.aspx";
@@ -113,9 +114,9 @@ export function CertificadoArca({
   async function generar(forzar: boolean) {
     if (
       forzar &&
-      !window.confirm(
+      !(await preguntarSiNo(
         "Si generás un pedido nuevo, el certificado que ARCA haya emitido para el anterior deja de servir y hay que hacer el trámite otra vez. ¿Seguís?",
-      )
+      ))
     ) {
       return;
     }
@@ -183,7 +184,7 @@ export function CertificadoArca({
     const previo = faltaEnDestino
       ? `OJO: todavía no hay cargado un certificado de ${entorno === "produccion" ? "producción" : "homologación"}, y el del otro entorno no sirve — ARCA los rechaza cruzados. Si cambiás ahora, el comercio no va a poder facturar hasta que lo cargues.\n\n`
       : "";
-    if (!window.confirm(previo + advertencia)) return;
+    if (!(await preguntarSiNo(previo + advertencia))) return;
 
     setTrabajando(true);
     setError(null);

@@ -24,6 +24,7 @@ import {
   validarTarjeta,
   type FormTarjeta,
 } from "./medios-pago-helpers";
+import { preguntarSiNo } from "../dialogos";
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorMediosPago) return e.message;
@@ -68,7 +69,7 @@ export function MediosDePago({ cliente: api }: { cliente: ClienteMediosPago }) {
   const filtradas = filtrarTarjetas(tarjetas, busqueda);
 
   async function desactivar(t: Tarjeta) {
-    if (!window.confirm(`¿Desactivar "${t.banco}${t.marca ? ` — ${t.marca}` : ""}"? Se puede reactivar luego.`)) return;
+    if (!(await preguntarSiNo(`¿Desactivar "${t.banco}${t.marca ? ` — ${t.marca}` : ""}"? Se puede reactivar luego.`))) return;
     try {
       await api.desactivar(t.id);
       await cargar();

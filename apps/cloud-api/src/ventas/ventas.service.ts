@@ -40,7 +40,7 @@ import {
   motivoRafaga,
   VENTANA_RAFAGA_MS,
 } from './rafaga-de-ventas';
-import { DesgloseDeVentaService } from './cae/desglose-de-venta.service';
+import { DesgloseDeVentaService, type LineaDeVenta } from './cae/desglose-de-venta.service';
 import { LIBRO_DE_VENTAS, type LibroDeVentas } from './libro/libro-de-ventas';
 import type { CrearVentaDto } from './dto/crear-venta.dto';
 import type { EmitirNotaDebitoDto } from './dto/emitir-nota-debito.dto';
@@ -477,12 +477,20 @@ export class VentasService {
 
     // Recalcular totales con Decimal (no confiamos en montos del cliente).
     let subtotal = new Decimal(0);
+    // Las líneas para el desglose van aparte de las que se guardan: llevan la
+    // alícuota que imprimió el POS, que no es una columna de `items_venta`.
+    const lineasDesglose: LineaDeVenta[] = [];
     const itemsData = dto.items.map((it) => {
       const cantidad = new Decimal(it.cantidad);
       const precioUnitario = new Decimal(it.precioUnitario);
       const descuento = new Decimal(it.descuento ?? '0');
       const subItem = cantidad.mul(precioUnitario).sub(descuento);
       subtotal = subtotal.add(subItem);
+      lineasDesglose.push({
+        productoId: it.productoId,
+        subtotal: subItem,
+        ...(it.alicuotaIva !== undefined ? { alicuotaIva: it.alicuotaIva } : {}),
+      });
       return {
         cantidad,
         precioUnitario,
@@ -538,7 +546,7 @@ export class VentasService {
           : new Decimal(0);
 
     // Autorización fiscal. Nunca corta la venta: ver `pedirCae`.
-    const desglose = await this.desgloses.deLineas(itemsData, tipoComprobante, total);
+    const desglose = await this.desgloses.deLineas(lineasDesglose, tipoComprobante, total);
     const receptor = await this.desgloses.receptorDe(dto.clienteId ?? null);
     const fiscal = await this.pedirCae(
       tipoComprobante,

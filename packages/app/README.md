@@ -54,6 +54,7 @@ el SQL una vez y **testearlo sin Tauri**, los repositorios dependen de un puerto
 | ------------------------------- | -------------------------------------------------------------------------- |
 | `sqlite/ejecutor-sql.ts`        | `EjecutorSql` (`ejecutar` / `consultar`) — el contrato de acceso a SQLite. |
 | `sqlite/esquema.ts`             | Esquema ejecutable + `crearEsquema(ejecutor)`.                             |
+| `sqlite/migraciones.ts`         | Lo que `CREATE TABLE IF NOT EXISTS` no puede: cambiar una columna que ya existe, recreando la tabla (ADR-0084). |
 | `sqlite/mapeo.ts`               | Conversión fila ↔ dominio (centavos ↔ `Money`, texto ↔ `Cantidad`, etc.).  |
 | `sqlite/repositorios-sqlite.ts` | Repositorios SQLite + `crearRepositoriosSqlite(ejecutor)`.                 |
 

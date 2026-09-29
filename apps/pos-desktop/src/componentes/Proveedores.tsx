@@ -23,6 +23,7 @@ import {
   validarProveedor,
   type FormProveedor,
 } from "./proveedores-helpers";
+import { preguntarSiNo } from "../dialogos";
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorProveedores) return e.message;
@@ -58,7 +59,7 @@ export function Proveedores({ cliente: api }: { cliente: ClienteProveedores }) {
   const filtrados = filtrarProveedores(proveedores, busqueda);
 
   async function desactivar(p: Proveedor) {
-    if (!window.confirm(`¿Desactivar a "${p.nombre}"? Se puede reactivar luego.`)) return;
+    if (!(await preguntarSiNo(`¿Desactivar a "${p.nombre}"? Se puede reactivar luego.`))) return;
     try {
       await api.desactivar(p.id);
       await cargar();

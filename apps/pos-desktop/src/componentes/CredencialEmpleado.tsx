@@ -14,6 +14,7 @@ import {
 } from "../sync/cliente-credenciales-http";
 import { ComprobanteCredencial } from "./ComprobanteCredencial";
 import { useImpresionCredencial } from "./usar-impresion-credencial";
+import { preguntarSiNo } from "../dialogos";
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorCredenciales) return e.message;
@@ -91,7 +92,7 @@ export function CredencialEmpleado({
   }
 
   async function revocar() {
-    if (!window.confirm(`¿Seguro que querés revocar la credencial de "${usuario.nombreDisplay}"? Ya no va a poder loguearse escaneándola.`)) {
+    if (!(await preguntarSiNo(`¿Seguro que querés revocar la credencial de "${usuario.nombreDisplay}"? Ya no va a poder loguearse escaneándola.`))) {
       return;
     }
     setProcesando(true);

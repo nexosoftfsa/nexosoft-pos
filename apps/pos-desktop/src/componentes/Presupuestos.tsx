@@ -22,6 +22,7 @@ import {
   normalizarImporte,
   validarLinea,
 } from "./presupuestos-helpers";
+import { preguntarSiNo } from "../dialogos";
 
 export interface ProductoPresup {
   readonly id: string;
@@ -83,7 +84,7 @@ export function Presupuestos({
 
   async function accion(p: Presupuesto, tipo: "convertir" | "anular") {
     const verbo = tipo === "anular" ? "anular" : "convertir en venta";
-    if (!window.confirm(`¿Querés ${verbo} el presupuesto N° ${p.numero}?`)) return;
+    if (!(await preguntarSiNo(`¿Querés ${verbo} el presupuesto N° ${p.numero}?`))) return;
     setError(null);
     setAviso(null);
     try {

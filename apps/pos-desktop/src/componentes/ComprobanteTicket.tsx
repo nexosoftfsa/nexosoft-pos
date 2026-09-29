@@ -26,6 +26,7 @@ import {
 } from "@nexosoft/hardware";
 import type { DatosImpresion } from "./qr-fiscal-datos";
 import { pesos } from "../formato";
+import { HojaImpresa } from "./HojaImpresa";
 import { QrFiscal } from "./QrFiscal";
 
 function cantidadFormateada(c: Cantidad): string {
@@ -42,6 +43,8 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
   const transparencia = transparenciaFiscal(datos);
 
   return (
+    // Portal a <body>, igual que el A4: ver `HojaImpresa` y ADR-0084.
+    <HojaImpresa>
     <div className="hoja-ticket">
       {datos.logoDataUrl !== undefined && (
         <img src={datos.logoDataUrl} alt="Logo" className="ticket-print-logo" />
@@ -194,5 +197,6 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
 
       {esFiscal && <QrFiscal qr={datos.qr} tamanio={110} />}
     </div>
+    </HojaImpresa>
   );
 }

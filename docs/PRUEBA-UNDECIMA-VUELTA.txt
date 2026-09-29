@@ -1,0 +1,195 @@
+===========================================================================
+  NEXOSOFT - UNDECIMA VUELTA
+  Para: Sebastian
+  Tiempo: 15 minutos
+===========================================================================
+
+LO ENCONTRASTE. EL EXENTO ERA LA BASE DE DATOS.
+------------------------------------------------
+Te debia esto hace tres vueltas, y lo destrabo el boton que te hice tocar:
+
+    NOT NULL constraint failed: articulo.alicuota_iva
+
+Traducido: la tabla de articulos de TU base se creo diciendo "la alicuota
+de IVA no puede estar vacia". Y desde el 16 de septiembre, un producto
+exento se guarda justamente asi, vacio — porque exento NO es lo mismo que
+IVA 0% y no se pueden confundir.
+
+Entonces la base rechazaba el arroz. Y aca esta lo que no se veia: el
+catalogo se baja TODO JUNTO, en una sola operacion. Si un producto la hace
+fallar, se cancela la operacion entera. No fallaba el exento: NO ENTRABA
+NADA. Por eso durante tres vueltas viste "el catalogo no se actualiza" y no
+"el exento no anda". Eran el mismo problema disfrazado.
+
+Una instalacion nueva no lo tiene (la tabla ya se crea bien). La tuya viene
+de antes, y esas tablas no se corrigen solas. Esta version las corrige al
+arrancar, sin que tengas que hacer nada.
+
+
+Y AL COMPARAR EL ORIGINAL CON EL DUPLICADO APARECIO ALGO PEOR
+--------------------------------------------------------------
+Vos pusiste: "EL DETALLE DEL IMPUESTO DIFIERE DEL ORIGINAL". Tenias razon, y
+es mas grave de lo que parecia.
+
+    Original (el papel)        Duplicado (desde Comprobantes)
+    Subtotal neto  9.714,46    Subtotal neto  8.264,46
+    IVA 0%             0,00    IVA 21%        1.735,54
+    IVA 21%        1.735,54    Exento         1.450,00
+
+Misma venta, mismo CAE. El duplicado estaba BIEN. El original —el papel que
+se lleva el cliente— estaba MAL.
+
+El motivo: el POS imprimia con su catalogo (el viejo, el que no podia
+actualizarse) y el servidor le declaraba a ARCA con el suyo (el nuevo). Uno
+decia IVA 0% y el otro decia exento, y nadie se podia enterar.
+
+Cambie de quien manda: ahora el POS le dice al servidor con que alicuota
+IMPRIMIO cada renglon, y el servidor declara ESA. El papel que tiene el
+cliente en la mano es el comprobante; lo que se declara tiene que ser eso y
+no una version recalculada despues.
+
+
+LO OTRO QUE PEDISTE
+--------------------
+- F4 NO HACIA NADA. Segunda vuelta seguida con ese boton roto, y por dos
+  motivos distintos. Deje de pelearme con el cartel que trae Tauri y le hice
+  uno propio a la app: Enter acepta, Esc cancela, y el foco arranca en
+  "Cancelar" para que un Enter distraido no borre la venta.
+  De paso: habia DIEZ botones mas con el mismo problema (desactivar un
+  producto, anular un comprobante, revocar una credencial...). Todos
+  ejecutaban sin preguntar. Nadie lo habia notado.
+
+- EL SEPARADOR DE MILES AL TIPEAR. Ya esta: escribis 20000 y se va
+  acomodando solo a 20.000 mientras tipeas, como una calculadora. Y si
+  tocas el punto del teclado numerico te pone la coma de los centavos.
+
+- EL TILDE VERDE Y MAS GRANDE. Hecho.
+
+- SAQUE EL F12. Lo pediste dos veces, tenias razon. El camino normal
+  (Enter con el buscador vacio) ya te propone el importe exacto, asi que no
+  hacia falta un atajo aparte que ademas se portaba distinto segun el
+  momento en que lo apretabas.
+
+- LOS DUPLICADOS SALIAN CON OTRA LETRA. Tambien lo marcaste. Las hojas de
+  impresion tomaban prestado el estilo de la pantalla desde la que se
+  imprimian, y Comprobantes usa otro. Ahora salen siempre igual, de donde
+  sea que las imprimas.
+
+
+===========================================================================
+  PASOS
+===========================================================================
+
+PASO 1 - ACTUALIZAR LAS DOS COSAS
+-----------------------------------
+Hay version nueva de servidor Y de POS. Esta vez el servidor NO trae
+migracion de base.
+
+1.1 Primero el SERVIDOR. Abri el panel, Configuracion, y actualiza a la
+    version 0.21.0. Esperá a que reinicie.
+
+1.2 Despues el POS. Deberia avisarte solo; si no, Configuracion > Instalar
+    y reiniciar. Tiene que quedar en 0.1.71.
+
+Anota que versiones te quedaron:
+
+    POS: ______________     Servidor: ______________
+
+
+PASO 2 - EL EXENTO (ESTE ES EL IMPORTANTE)
+--------------------------------------------
+2.1 En el panel, fijate que el ARROZ siga figurando como Exento.
+
+2.2 En el POS, aprieta el boton "Sincronizar" (arriba a la derecha).
+
+    Que dice ahora? ____________________________________________
+
+    Tiene que decir "Catalogo al dia (N productos)" en verde.
+    Si vuelve a salir un error, copialo tal cual y mandamelo.
+
+2.3 Carga el ARROZ en el carrito. En la columna IVA de la pantalla, o en el
+    ticket, tiene que decir Exento (NO "IVA 0%").
+
+    [ ] Dice exento
+    [ ] Sigue diciendo 0%  <- si pasa esto, pasame el error del paso 2.2
+
+
+PASO 3 - F4, QUE AHORA SI TIENE QUE PREGUNTAR
+-----------------------------------------------
+3.1 Carga 2 o 3 productos.
+3.2 Apreta F4.
+
+    [ ] Aparece un cartel preguntando si querés cancelar la venta
+    [ ] Sigue sin pasar nada  <- avisame
+
+3.3 Apreta Esc. El cartel se cierra y el carrito QUEDA como estaba.
+3.4 Apreta F4 de nuevo y esta vez Enter. Ahi si se vacia.
+
+3.5 Lo mismo con el boton "Cancelar venta (F4)" de abajo: tiene que
+    preguntar igual.
+
+
+PASO 4 - EL SEPARADOR DE MILES
+--------------------------------
+4.1 Carga un producto y apreta Enter para cobrar. Elegí Efectivo.
+4.2 En el campo del monto, borra lo que hay y escribi 20000 con el teclado.
+
+    Que ves mientras escribis? ____________________________
+
+    Tiene que ir mostrando: 2 / 20 / 200 / 2.000 / 20.000
+
+4.3 Ahora borra y escribi 2000 y apreta Enter. Que se cobre $ 2.000 y no
+    $ 20.000 ni $ 2.
+
+
+PASO 5 - LA FACTURA A, ORIGINAL Y DUPLICADO IGUALES
+-----------------------------------------------------
+5.1 Elegí Factura A con el cliente Distribuidora Sur SRL.
+5.2 Carga el ARROZ (exento) y el AGUA (21%).
+5.3 Cobra y emiti. Imprimi el A4 y guardalo.
+
+5.4 Anda a Comprobantes, busca esa misma factura e imprimi el A4 (el
+    DUPLICADO). Guardalo tambien.
+
+5.5 Poné los dos PDF uno al lado del otro.
+
+    [ ] Los totales dicen EXACTAMENTE lo mismo (incluido el renglon Exento)
+    [ ] Los encabezados de la tabla se ven iguales (misma letra, mismo tamaño)
+    [ ] Los renglones se ven iguales
+
+    Si algo difiere, decime QUE.
+
+5.6 Hace lo mismo con el ticket chico: uno original y uno duplicado.
+
+Mandame los cuatro archivos.
+
+
+PASO 6 - QUE NO SE HAYA ROTO NADA
+-----------------------------------
+6.1 Una Factura B normal a consumidor final, en efectivo, con vuelto.
+    Que traiga el bloque de Transparencia Fiscal y el vuelto.
+
+6.2 Anda a Catalogo y desactiva un producto cualquiera.
+
+    [ ] Pregunta antes  <- esto antes NO preguntaba
+
+    Deci que NO. El producto tiene que quedar activo.
+
+6.3 Fijate que el F12 ya no este en la lista de atajos de arriba.
+
+
+PASO 7 - LO DE SIEMPRE
+------------------------
+    [ ] Las ventas subieron (dice "Sincronizado")
+    [ ] Todas tienen CAE
+    [ ] Los numeros de comprobante siguen la serie, sin saltos
+
+===========================================================================
+
+Lo de "Microsoft Print to PDF" lo dejo para cuando probemos la termica,
+como dijiste. Mi sospecha es que el POS esconde la hoja antes de que ese
+driver termine de armar el archivo. Si te vuelve a molestar avisame y lo
+adelanto.
+
+Gracias por comparar el original con el duplicado. Sin eso, la factura A
+seguia saliendo mal y ninguno de los dos se enteraba.

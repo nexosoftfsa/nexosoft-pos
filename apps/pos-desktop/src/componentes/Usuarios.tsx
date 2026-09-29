@@ -19,6 +19,7 @@ import {
 } from "../sync/cliente-usuarios-http";
 import type { ClienteCredenciales } from "../sync/cliente-credenciales-http";
 import { CredencialEmpleado } from "./CredencialEmpleado";
+import { preguntarSiNo } from "../dialogos";
 
 const ROLES: ReadonlyArray<{ valor: RolUsuario; etiqueta: string }> = [
   { valor: "ADMIN", etiqueta: "Administrador" },
@@ -111,7 +112,7 @@ export function Usuarios({
 
   async function alternarActivo(u: UsuarioRemoto) {
     const accion = u.activo ? "desactivar" : "reactivar";
-    if (!window.confirm(`¿Seguro que querés ${accion} a "${u.nombreDisplay}"?`)) return;
+    if (!(await preguntarSiNo(`¿Seguro que querés ${accion} a "${u.nombreDisplay}"?`))) return;
     setError(null);
     try {
       await api.actualizar(u.id, { activo: !u.activo });

@@ -13,6 +13,7 @@ import {
   type Remito,
 } from "../sync/cliente-remitos";
 import { normalizarCantidad, validarLineaRemito } from "./remitos-helpers";
+import { preguntarSiNo } from "../dialogos";
 
 export interface ProductoRemito {
   readonly id: string;
@@ -59,7 +60,7 @@ export function Remitos({
   }, [cargar]);
 
   async function anular(r: Remito) {
-    if (!window.confirm(`¿Anular el remito N° ${r.numero}?`)) return;
+    if (!(await preguntarSiNo(`¿Anular el remito N° ${r.numero}?`))) return;
     try {
       await cliente.anular(r.id);
       await cargar();

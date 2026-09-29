@@ -7,6 +7,7 @@
  * foreign_keys = ON`) es responsabilidad del adaptador al abrir la conexión.
  */
 import type { EjecutorSql } from "./ejecutor-sql.js";
+import { migrarAlicuotaIvaNullable } from "./migraciones.js";
 
 export const SENTENCIAS_ESQUEMA: readonly string[] = [
   `CREATE TABLE IF NOT EXISTS comercio_config (
@@ -31,7 +32,7 @@ export const SENTENCIAS_ESQUEMA: readonly string[] = [
     proveedor_id TEXT,
     unidad_de_medida TEXT NOT NULL CHECK (unidad_de_medida IN ('unidad','fraccionado','peso')),
     costo_neto_cent INTEGER NOT NULL CHECK (costo_neto_cent >= 0),
-    alicuota_iva TEXT NOT NULL,
+    alicuota_iva TEXT,
     activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),
     mostrar_en_grilla_rapida INTEGER NOT NULL DEFAULT 0 CHECK (mostrar_en_grilla_rapida IN (0,1))
   )`,
@@ -108,7 +109,7 @@ export const SENTENCIAS_ESQUEMA: readonly string[] = [
     descripcion TEXT NOT NULL,
     cantidad TEXT NOT NULL,
     precio_unitario_cent INTEGER NOT NULL,
-    alicuota_iva TEXT NOT NULL,
+    alicuota_iva TEXT,
     descuento_porcentaje TEXT,
     importe_cent INTEGER NOT NULL,
     costo_neto_cent INTEGER
@@ -133,6 +134,9 @@ export async function crearEsquema(ejecutor: EjecutorSql): Promise<void> {
     await ejecutor.ejecutar(sentencia);
   }
   await agregarColumnasNuevas(ejecutor);
+  // Va DESPUÉS de las columnas nuevas: recrea tablas copiando columna por
+  // columna, y las que agrega el paso anterior tienen que existir.
+  await migrarAlicuotaIvaNullable(ejecutor);
 }
 
 /**

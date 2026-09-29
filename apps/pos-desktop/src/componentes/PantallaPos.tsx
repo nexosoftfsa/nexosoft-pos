@@ -21,7 +21,7 @@ import type { ComprobanteResuelto } from "@nexosoft/sync";
 
 import type { EntornoPos, ProductoCatalogo } from "../datos/bootstrap";
 import { estaEnTauri } from "../datos/ejecutor-sql-tauri";
-import { pedirTexto, preguntarSiNo } from "../dialogos";
+import { hayDialogoAbierto, pedirTexto, preguntarSiNo } from "../dialogos";
 import { ErrorImpresoraVirtual } from "../datos/impresora-escpos";
 import { etiquetaComprobante, importeParaEditar, importeTecleado, pesos } from "../formato";
 import { construirOperacionVenta, mapearMedioPago, resumenMedioPago } from "../sync/mapeo";
@@ -227,7 +227,6 @@ export function PantallaPos({
   const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState<string>("");
   const [imprimiendo, setImprimiendo] = useState(false);
   const [pagoElectronico, setPagoElectronico] = useState<IntentoPago | null>(null);
-  const [cobroRapidoPendiente, setCobroRapidoPendiente] = useState(false);
   const [pasoAsistente, setPasoAsistente] = useState<PasoAsistente>("cerrado");
   const [cursorAsistente, setCursorAsistente] = useState(0);
   const [avanceAsistentePendiente, setAvanceAsistentePendiente] = useState(false);
@@ -542,9 +541,10 @@ export function PantallaPos({
       `Cancelar esta venta y vaciar la caja.\n\n` +
       `Se descartan ${cuantos} producto${cuantos === 1 ? "" : "s"} y los pagos cargados. ` +
       `No se emite ningún comprobante ni se registra nada.\n\n¿Cancelar la venta?`;
-    // `await`: dentro de Tauri `window.confirm` devuelve una promesa, y sin
-    // esperarla el `if` la daba por verdadera y vaciaba el carrito sin haber
-    // preguntado nada. Lo vio Sebastián el 22/9/2026.
+    // La pregunta la dibuja la app (ver `dialogos.ts`). Con el diálogo del
+    // webview este botón falló dos rondas seguidas: el 22/9/2026 vaciaba el
+    // carrito SIN preguntar, y el 26/9 dejó de hacer nada — *"aprieto y no
+    // sale nada"*.
     if (!(await preguntarSiNo(aviso))) return;
     limpiarParaLaProxima();
     refocarBuscador();
@@ -556,59 +556,23 @@ export function PantallaPos({
     if (ultimo) quitar(ultimo.producto.articulo.id);
   }
 
-  /**
-   * Atajo F12 ("cobro rápido"): carga el saldo exacto en efectivo y deja la
-   * venta **a un Enter de confirmarse**, en el resumen del asistente.
+  /*
+   * ACÁ VIVÍA EL F12 ("cobro rápido"), y se sacó el 26/9/2026 a pedido de
+   * Sebastián, que lo pidió dos rondas seguidas:
    *
-   * Antes confirmaba la venta él solo, y eso estaba mal por tres motivos que
-   * encontró Sebastián el 22/9/2026: disparaba la venta sin preguntar el medio
-   * de pago —*"si se aprieta ese botón de manera accidental ya te genera la
-   * venta en un medio de pago que quizás no era"*—, no dejaba ver el vuelto, y
-   * dejaba abierto el panel de post-venta, del que había que salir apretando
-   * TAB cinco veces.
+   *  - 22/9: emitía la venta él solo — *"si se aprieta ese botón de manera
+   *    accidental ya te genera la venta en un medio de pago que quizás no
+   *    era"*—, no dejaba ver el vuelto y dejaba abierto el panel de post-venta.
+   *  - 26/9: ya corregido para frenar en el resumen, lo probó de nuevo y lo que
+   *    contestó fue un cartel rojo ("el cobro rápido es para efectivo"), porque
+   *    el atajo exigía tener Efectivo elegido de antemano. *"Insisto, creo que
+   *    debemos quitarlo para evitar confusiones."*
    *
-   * Propuso sacarlo. Se conserva porque el atajo sirve —el cliente paga justo,
-   * que es la mitad de las ventas de un mostrador— pero deja de emitir solo.
-   * F12 + Enter es igual de rápido y no hay forma de facturar sin querer.
+   * El camino normal —Enter con el buscador vacío abre el asistente, que ya
+   * propone el saldo exacto (`montoBaseParaSaldoExacto`)— hace lo mismo sin un
+   * atajo aparte que se comporte distinto según en qué estado se lo apriete. Si
+   * algún comercio lo pide, se retoma desde ahí.
    */
-  function cobroRapido() {
-    if (!preview || carrito.length === 0) return;
-    if (faltaParaFacturar !== null) {
-      setError(faltaParaFacturar);
-      return;
-    }
-    if (preview.cobro.cancelada) {
-      irAlResumen();
-      return;
-    }
-    if (formaPago !== FormaDePago.Efectivo) {
-      setError("El cobro rápido (F12) es para efectivo. Elegí Efectivo o agregá el pago a mano.");
-      return;
-    }
-    pagoExacto();
-    setCobroRapidoPendiente(true);
-  }
-
-  /** Abre el asistente directamente en el resumen, listo para confirmar. */
-  function irAlResumen() {
-    aperturaAsistenteRef.current = performance.now();
-    pasoAsistenteRef.current = "resumen";
-    setPasoAsistente("resumen");
-    setCursorAsistente(0);
-    setHistorialAsistente([]);
-    buscadorRef.current?.blur();
-  }
-
-  // Lleva el cobro rápido al resumen apenas el preview confirma que ya está
-  // cancelada (el pago recién agregado por pagoExacto() se refleja async, vía
-  // el useEffect de arriba que recalcula `preview`).
-  useEffect(() => {
-    if (cobroRapidoPendiente && preview?.cobro.cancelada) {
-      setCobroRapidoPendiente(false);
-      irAlResumen();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cobroRapidoPendiente, preview]);
 
   function agregarPago() {
     try {
@@ -759,8 +723,7 @@ export function PantallaPos({
   // Avanza el asistente tras agregar un pago (paso "monto" → Enter). La
   // validación del cobro es async (recalcula `preview` vía el useEffect de
   // arriba), así que este effect espera a que `preview.cobro.pagado`
-  // refleje el pago recién agregado antes de decidir el próximo paso —
-  // mismo patrón que `cobroRapidoPendiente` más arriba.
+  // refleje el pago recién agregado antes de decidir el próximo paso.
   useEffect(() => {
     if (!avanceAsistentePendiente) return;
     if (error) {
@@ -795,6 +758,8 @@ export function PantallaPos({
       // `aperturaAsistenteRef`): sin esto se comía el paso "Seleccionar
       // Medio" y saltaba directo a "Confirmar Monto" con Efectivo.
       if (e.timeStamp <= aperturaAsistenteRef.current) return;
+      // Con una pregunta abierta encima, el Enter y el Escape son de ella.
+      if (hayDialogoAbierto()) return;
 
       if (e.key === "Escape") {
         e.preventDefault();
@@ -929,7 +894,7 @@ export function PantallaPos({
   useEffect(() => {
     if (ultimaVenta === null) return;
     function alTeclear(e: KeyboardEvent) {
-      if (e.key !== "Escape") return;
+      if (e.key !== "Escape" || hayDialogoAbierto()) return;
       e.preventDefault();
       setUltimaVenta(null);
       setError(null);
@@ -1002,29 +967,6 @@ export function PantallaPos({
       monto: montoBase,
       ...(tarjetaActual ? { tarjetaConfigId: tarjetaActual.id, cuotas: Number(cuotasSeleccionadas) } : {}),
     };
-  }
-
-  function pagoExacto() {
-    if (!preview) return;
-    const saldo = preview.cobro.saldoPendiente;
-    if (!saldo.esPositivo()) return;
-    if (tarjetaActual && tasaActual && recargoActual > 0) {
-      // saldo = base + base×tasa% → base = saldo / (1 + tasa/100)
-      const base = saldo.dividirPor(1 + recargoActual / 100).redondear(2);
-      const recargoAplicado = saldo.restar(base);
-      setPagos((prev) => [
-        ...prev,
-        {
-          forma: formaPago,
-          monto: saldo,
-          tarjetaConfigId: tarjetaActual.id,
-          cuotas: tasaActual.cantidadCuotas,
-          recargoAplicado,
-        },
-      ]);
-    } else {
-      setPagos((prev) => [...prev, { forma: formaPago, monto: saldo }]);
-    }
   }
 
   function quitarPago(indice: number) {
@@ -1233,6 +1175,13 @@ export function PantallaPos({
           // renglones que el original, sin recalcular nada con la alícuota que
           // el producto tenga el día de la reimpresión.
           const neto = venta.resultado.lineas[i]?.neto;
+          // La alícuota con la que se IMPRIMIÓ el renglón. El servidor declara
+          // ésta y no la de su propio catálogo: si los dos no coinciden, el
+          // papel que se llevó el cliente y el comprobante que tiene ARCA
+          // dicen cosas distintas de la misma venta (ADR-0084). "EXENTO" va
+          // escrito porque un "0" sería la alícuota del cero por ciento, que
+          // ante ARCA es otra cosa.
+          const alicuota = c.producto.articulo.alicuotaIva;
           return {
             productoId: c.producto.articulo.id,
             cantidad: c.cantidad,
@@ -1240,6 +1189,7 @@ export function PantallaPos({
             ...(desc.esPositivo() ? { descuento: desc.aDecimalString(2) } : {}),
             costoUnitario: c.producto.articulo.costoNeto.aDecimalString(2),
             ...(neto !== undefined ? { neto: neto.aDecimalString(2) } : {}),
+            alicuotaIva: alicuota === null ? "EXENTO" : String(alicuota.porcentaje),
           };
         });
         // Pago combinado: viaja el desglose (un pago por medio) y el resumen.
@@ -1512,7 +1462,7 @@ export function PantallaPos({
                 );
                 return;
               }
-              // Supr/F8/F12 no interfieren con la edición normal del texto de
+              // Supr/F8/F4 no interfieren con la edición normal del texto de
               // búsqueda salvo Supr, que solo actúa con el campo vacío (si no,
               // "borrar" mientras se escribe un nombre eliminaría el carrito).
               if (e.key === "Delete" && busquedaProducto.trim() === "") {
@@ -1521,9 +1471,6 @@ export function PantallaPos({
               } else if (e.key === "F8") {
                 e.preventDefault();
                 void cambiarCantidadUltimoItem();
-              } else if (e.key === "F12") {
-                e.preventDefault();
-                cobroRapido();
               } else if (e.key === "F4") {
                 e.preventDefault();
                 void cancelarVenta();
@@ -1542,9 +1489,6 @@ export function PantallaPos({
             </span>
             <span>
               <kbd>F4</kbd> cancela la venta
-            </span>
-            <span>
-              <kbd>F12</kbd> cobro exacto en efectivo
             </span>
           </div>
           {faltaParaFacturar !== null && <div className="error">{faltaParaFacturar}</div>}

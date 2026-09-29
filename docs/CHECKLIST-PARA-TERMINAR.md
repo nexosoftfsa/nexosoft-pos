@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-24 · Publicado: POS **0.1.70** · Servidor **0.20.0**
+Actualizado: 2026-09-28 · Publicado: POS **0.1.71** · Servidor **0.21.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,64 +15,71 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Décima vuelta — POS 0.1.70 + Servidor 0.20.0
+## 1 · Undécima vuelta — POS 0.1.71 + Servidor 0.21.0
 
-### Lo que la novena vuelta (22/9) dejó cerrado
+### Lo que la décima vuelta (26/9) dejó cerrado
 
-- **Los pagos ya no sobreviven a un cambio de carrito** (ADR-0081). Era lo más
-  grave de la octava.
-- **Se puede corregir el medio de pago** sin perder el carrito: Esc deshace el
-  último pago y vuelve a elegir.
-- **El cartel de cobro quedó claro.** Seba: *"SI, SUPER"*.
-- **El lector sigue andando después de elegir cliente o receptor.**
-- **La reimpresión de una B de puros exentos lleva el bloque** de transparencia
-  fiscal, con IVA Contenido $ 0,00 (corrección en ADR-0079).
+- **La Factura A imprime los renglones sin IVA** y la suma cierra sola.
+  Verificado por Seba: 1.450,00 + 8.264,46 = 9.714,46 (ADR-0083).
+- **La Transparencia Fiscal anda en la B.** IVA Contenido $ 286,36 sobre un
+  aceite de $ 1.650 al 21%.
+- **El tilde de "Venta registrada" quedó claro.** Seba: *"Perfecto!"*.
+- **Los pagos, el medio de pago y el lector** siguen bien desde la novena.
 
-### Lo que la novena vuelta destapó
+### Lo que la décima vuelta destapó
 
-- [ ] **Correr `docs/PRUEBA-DECIMA-VUELTA.txt`.** 15 minutos.
+- [ ] **Correr `docs/PRUEBA-UNDECIMA-VUELTA.txt`.** 15 minutos.
 
-- [ ] **EL EXENTO: TERCERA VUELTA SIN PODER PROBARSE.** El botón estaba, Seba
-      lo tocó, y el catálogo siguió viejo. Revisé la cadena entera —el endpoint
-      devuelve `tipoIva`, el mapeo manda `EXENTO` a `null`, el `UPSERT` escribe
-      `NULL`, la lectura distingue `NULL` de `"0"`— y está bien de punta a
-      punta. **Sigo sin saber por qué.**
-      *Lo que se arregló en 0.1.69 no es el exento: es no poder ver qué pasa.
-      El botón ahora dice "Catálogo al día (N productos)" o el motivo del
-      fallo, y la descarga salió de adentro de la transacción SQLite
-      (ADR-0082). La próxima vuelta lo resuelve en una, no en tres.*
+- [x] **EL EXENTO: RESUELTO A LA CUARTA.** El botón Sincronizar de 0.1.69
+      finalmente lo dijo: `NOT NULL constraint failed: articulo.alicuota_iva`.
+      La columna se creó `NOT NULL` y desde el 16/9 el código escribe `NULL`
+      para los exentos. Como el volcado corre en una sola transacción, el
+      primer exento hacía `ROLLBACK` de todo: **no fallaba el exento, no
+      entraba nada**. De ahí que se viera como "el catálogo no baja".
+      *Migración de SQLite que recrea las dos tablas, condicional y con las FK
+      chequeadas (ADR-0084). Una base nueva nunca lo tuvo; la de Seba sí.*
 
-- [ ] **F4 y "Descartar" no preguntaban nada.** Dentro de Tauri
-      `window.confirm` devuelve una **promesa**, y el código la daba por un sí:
-      F4 vaciaba la caja sin preguntar, y el botón Descartar —que saca
-      operaciones de la cola para siempre— tampoco preguntaba. Eso último no lo
-      vio nadie porque nunca se usó.
-      *Se arregla esperando la respuesta. Va con test de los dos entornos.*
+- [ ] **Confirmar en campo que el catálogo ya baja.** Es el paso 2 de la
+      prueba, y es el que cierra tres vueltas de pruebas perdidas.
 
-- [ ] **Confirmar que la Factura A imprima los renglones SIN IVA.** La norma
-      pide precios unitarios netos de impuestos y el precio neto de la línea
-      como cantidad × unitario neto. Salía con el precio final por renglón y el
-      IVA recién al pie, así que los renglones no ataban con los totales
-      (ADR-0083). *Toca el servidor: hay migración.*
-      *La suma de los renglones tiene que dar el subtotal neto, y neto + IVA el
-      total. En el ejemplo de Seba: 8.264,46 + 1.450,00 + 1.735,54 = 11.450,00.*
+- [x] **El papel y ARCA decían cosas distintas.** Lo destapó comparar el
+      original y el duplicado de la MISMA Factura A: el original imprimió
+      "IVA 0%" sobre el arroz y el duplicado "Exento". El POS imprimía con su
+      catálogo y el servidor declaraba con el suyo.
+      *Ahora el POS manda la alícuota que imprimió y el servidor declara ésa
+      (ADR-0084). El catálogo del servidor queda de respaldo, y si difieren
+      queda un warning en el log.*
 
-- [ ] **Confirmar que F12 ya no emita solo.** Seba proponía sacarlo: disparaba
-      la venta sin preguntar el medio de pago, sin dejar ver el vuelto, y dejaba
-      un panel del que había que salir con TAB cinco veces. Se conserva pero
-      deja de emitir: ahora carga el efectivo exacto y frena en el resumen, a un
-      Enter de confirmar. *Y Esc cierra el panel de post-venta.*
+- [ ] **Confirmar que el duplicado salga igual que el original.** No sólo los
+      números: encabezados, tipografía e interlineado. Las hojas se
+      renderizaban adentro de la pantalla que las imprimía y heredaban su CSS
+      —`.gestion th { text-transform: uppercase }`—, así que Comprobantes
+      imprimía distinto que la caja. *Ahora van por un portal a `<body>`.*
 
-- [ ] **Verificar que la reimpresión de una A discrimine IVA.** Salió bien el
-      6/9, el 8/9 y el 9/9. Se cierra junto con el exento: los dos papeles
-      tienen que decir lo mismo. *Falta también que el duplicado muestre el
-      renglón "Exento", que se agregó en 0.1.69.*
+- [x] **F4 no hacía nada.** Segunda ronda seguida con el mismo botón roto: el
+      22/9 vaciaba la caja sin preguntar, el 26/9 no hacía absolutamente nada.
+      *El diálogo del webview de Tauri no se puede usar; ahora lo dibuja la app.
+      De paso se arreglaron los **diez** `window.confirm` de los módulos de
+      gestión, que venían ejecutándose sin preguntar.*
+
+- [x] **Separador de miles al tipear el importe.** Seba puso $ 20.000 donde
+      quería $ 2.000. *El campo agrupa los miles a medida que entran los
+      dígitos, con el cursor en su lugar.*
+
+- [x] **Se sacó el atajo F12.** Lo pidió dos rondas seguidas.
 
 - [ ] **El duplicado no muestra el vuelto.** El servidor no lo guarda, así que
       la reimpresión lo pone en cero. El original sí lo muestra, y difieren.
       *Arreglarlo es una columna nueva en la venta, el payload de sync y el
       DTO. No es grave —el vuelto no es un dato fiscal— pero el papel tiene que
       decir lo mismo las dos veces.*
+
+- [ ] **"Microsoft Print to PDF" dejó de funcionar** desde el POS (no desde
+      otros programas). La pantalla de impresión aparece, se elige, y el
+      archivo no se guarda ni avisa nada. Con "Guardar como PDF" anda.
+      *Seba lo bajó de prioridad: se mira junto con las pruebas de térmica.
+      Sospecha: el `afterprint` limpia la hoja antes de que ese driver termine
+      de generar el archivo.*
 
 ---
 

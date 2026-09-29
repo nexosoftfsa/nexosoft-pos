@@ -35,6 +35,7 @@ import {
 } from "./comprobantes-helpers";
 import { useImpresionA4 } from "./usar-impresion-a4";
 import { useImpresionTicket } from "./usar-impresion-ticket";
+import { preguntarSiNo } from "../dialogos";
 
 function mensajeError(e: unknown): string {
   if (e instanceof ErrorVentas) return e.message;
@@ -203,9 +204,9 @@ export function Comprobantes({
       ? "Se emitirá una Nota de Crédito."
       : "No es un comprobante fiscal: se anula directo, sin Nota de Crédito.";
     if (
-      !window.confirm(
+      !(await preguntarSiNo(
         `¿Anular ${etiquetaTipoComprobante(c.tipoComprobante)} ${numeroComprobante(c.numeroComprobante)}? ${consecuencia}`,
-      )
+      ))
     ) {
       return;
     }

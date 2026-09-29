@@ -1,4 +1,32 @@
-import { ALICUOTAS_IVA, Money, type AlicuotaIva, type DesgloseIva } from '@nexosoft/domain';
+import {
+  ALICUOTAS_IVA,
+  alicuotaPorPorcentaje,
+  Money,
+  type AlicuotaIva,
+  type DesgloseIva,
+} from '@nexosoft/domain';
+
+/** Lo que manda el POS por una línea exenta. Un "0" sería otra cosa. */
+export const ALICUOTA_EXENTA = 'EXENTO';
+
+/**
+ * La alícuota que el POS **imprimió** en esa línea, como viene en el payload:
+ * `"EXENTO"` o el porcentaje en texto (`"21"`, `"10.5"`).
+ *
+ * `undefined` si no se entiende o si no vino — ahí manda el producto del
+ * servidor, como antes.
+ */
+export function alicuotaImpresa(valor: string | undefined): AlicuotaIva | null | undefined {
+  if (valor === undefined) return undefined;
+  const v = valor.trim();
+  if (v.toUpperCase() === ALICUOTA_EXENTA) return null;
+  return alicuotaPorPorcentaje(Number(v));
+}
+
+/** Para comparar lo impreso con lo que dice el catálogo del servidor. */
+export function etiquetaAlicuota(a: AlicuotaIva | null): string {
+  return a === null ? ALICUOTA_EXENTA : String(a.porcentaje);
+}
 
 /**
  * Traduce el `tipoIva` que guarda el producto a la alícuota del dominio, que

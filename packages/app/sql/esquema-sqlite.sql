@@ -33,7 +33,10 @@ CREATE TABLE IF NOT EXISTS articulo (
   proveedor_id     TEXT,
   unidad_de_medida TEXT NOT NULL CHECK (unidad_de_medida IN ('unidad','fraccionado','peso')),
   costo_neto_cent  INTEGER NOT NULL CHECK (costo_neto_cent >= 0),
-  alicuota_iva     TEXT NOT NULL,            -- porcentaje como texto ('21','10.5')
+  -- Porcentaje como texto ('21','10.5'). NULL es EXENTO, que NO es la alícuota
+  -- del 0% (ADR-0076): por eso la columna admite NULL. Las instalaciones
+  -- anteriores al 26/9/2026 la tienen NOT NULL y las arregla `migraciones.ts`.
+  alicuota_iva     TEXT,
   activo           INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),
   -- Fase 17: flag local, nunca viaja por la sincronización con cloud-api.
   mostrar_en_grilla_rapida INTEGER NOT NULL DEFAULT 0 CHECK (mostrar_en_grilla_rapida IN (0,1))
@@ -129,7 +132,7 @@ CREATE TABLE IF NOT EXISTS item_venta (
   descripcion         TEXT NOT NULL,
   cantidad            TEXT NOT NULL,
   precio_unitario_cent INTEGER NOT NULL,
-  alicuota_iva        TEXT NOT NULL,
+  alicuota_iva        TEXT,               -- NULL es EXENTO, igual que en `articulo`
   descuento_porcentaje TEXT,
   importe_cent        INTEGER NOT NULL,
   costo_neto_cent     INTEGER            -- snapshot del costo al momento de la venta (ADR-0048), nullable

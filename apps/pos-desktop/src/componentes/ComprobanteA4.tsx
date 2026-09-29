@@ -25,6 +25,7 @@ import {
   transparenciaFiscal,
 } from "@nexosoft/hardware";
 import { pesos } from "../formato";
+import { HojaImpresa } from "./HojaImpresa";
 import type { DatosImpresion } from "./qr-fiscal-datos";
 import { QrFiscal } from "./QrFiscal";
 
@@ -43,6 +44,10 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
   const sinIva = lineasSinIva(datos);
 
   return (
+    // Portal a <body>: si la hoja se renderiza adentro de la pantalla que la
+    // manda a imprimir, hereda su CSS y el duplicado sale distinto al original
+    // (ADR-0084).
+    <HojaImpresa>
     <div className="hoja-a4">
       <header className="a4-header">
         <div className="a4-emisor">
@@ -222,5 +227,6 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
         </div>
       </footer>
     </div>
+    </HojaImpresa>
   );
 }

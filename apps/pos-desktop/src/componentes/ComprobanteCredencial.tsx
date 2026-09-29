@@ -8,6 +8,7 @@
 import { useEffect, useRef } from "react";
 import JsBarcode from "jsbarcode";
 
+import { HojaImpresa } from "./HojaImpresa";
 import { LOGO_NEXOSOFT_DATA_URL } from "./logo-nexosoft";
 import type { DatosCredencial } from "./usar-impresion-credencial";
 
@@ -31,6 +32,8 @@ export function ComprobanteCredencial({ datos }: { datos: DatosCredencial }) {
   }, [datos.payloadBarcode]);
 
   return (
+    // Portal a <body>, igual que el A4 y el ticket: ver `HojaImpresa`.
+    <HojaImpresa>
     <div className="hoja-credencial">
       {datos.fotoDataUrl !== undefined ? (
         <img src={datos.fotoDataUrl} alt="Foto" className="credencial-foto" />
@@ -51,5 +54,6 @@ export function ComprobanteCredencial({ datos }: { datos: DatosCredencial }) {
         <svg ref={svgRef} className="credencial-barcode" />
       </div>
     </div>
+    </HojaImpresa>
   );
 }

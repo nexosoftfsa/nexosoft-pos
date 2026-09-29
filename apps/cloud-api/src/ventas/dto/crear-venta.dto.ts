@@ -51,6 +51,22 @@ export class ItemVentaDto {
   @IsNumberString()
   @IsOptional()
   neto?: string;
+
+  /**
+   * La alícuota de IVA con la que el POS **imprimió** esta línea: `"EXENTO"` o
+   * el porcentaje en texto (`"21"`, `"10.5"`).
+   *
+   * Es lo que se le declara a ARCA. No es desconfianza al revés: el papel que
+   * se llevó el cliente es el comprobante, y recalcularlo acá con el catálogo
+   * de hoy puede dar otra cosa — el 26/9/2026 dio otra cosa, y la misma venta
+   * salió impresa con IVA 0% y declarada como exenta (ADR-0084).
+   *
+   * Opcional: las ventas emitidas antes del 26/9/2026 no lo traen, y ésas se
+   * siguen desglosando con el producto del servidor.
+   */
+  @IsString()
+  @IsOptional()
+  alicuotaIva?: string;
 }
 
 /** Un pago de la venta (pago combinado: varios medios en una misma venta). */

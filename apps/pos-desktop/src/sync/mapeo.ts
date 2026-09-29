@@ -45,6 +45,15 @@ export interface ItemVentaSync {
    * alícuota en el medio.
    */
   readonly neto?: string;
+  /**
+   * La alícuota con la que se IMPRIMIÓ la línea: `"EXENTO"` o el porcentaje en
+   * texto (`"21"`, `"10.5"`).
+   *
+   * Es la que el servidor le declara a ARCA. Sin esto, el servidor desglosaba
+   * con SU catálogo, y cuando el de la terminal estaba atrasado la misma venta
+   * salía impresa con una alícuota y declarada con otra (ADR-0084).
+   */
+  readonly alicuotaIva?: string;
 }
 
 /** Un pago de la venta (pago combinado). */
@@ -106,6 +115,7 @@ export function construirOperacionVenta(args: {
           : {}),
         ...(i.costoUnitario !== undefined ? { costoUnitario: i.costoUnitario } : {}),
         ...(i.neto !== undefined ? { neto: i.neto } : {}),
+        ...(i.alicuotaIva !== undefined ? { alicuotaIva: i.alicuotaIva } : {}),
       })),
       ...(args.pagos !== undefined && args.pagos.length > 0
         ? {

@@ -28,6 +28,7 @@ import {
   validarCliente,
   type FormCliente,
 } from "./ctacte-helpers";
+import { preguntarSiNo } from "../dialogos";
 
 function mensaje(e: unknown): string {
   if (e instanceof ErrorCtaCte) return e.message;
@@ -87,7 +88,7 @@ export function CuentasCorrientes({ cliente: api }: { cliente: ClienteCtaCte }) 
   }, [clientes, busqueda]);
 
   async function desactivar(c: ClienteConSaldo) {
-    if (!window.confirm(`¿Desactivar a "${c.nombre}"? Se puede reactivar luego.`)) return;
+    if (!(await preguntarSiNo(`¿Desactivar a "${c.nombre}"? Se puede reactivar luego.`))) return;
     try {
       await api.desactivar(c.id);
       await cargar();
