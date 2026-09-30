@@ -1300,6 +1300,7 @@ export function PantallaPos({
   async function datosDeLaVenta(
     venta: VentaConfirmada,
     pagosDeLaVenta?: readonly PagoUi[],
+    leyenda: "ORIGINAL" | "DUPLICADO" = "ORIGINAL",
   ): Promise<DatosTicket> {
     const foto = impresionRef.current;
     let delServidor: ComprobanteResuelto | null = null;
@@ -1316,6 +1317,7 @@ export function PantallaPos({
       tarjetas,
       delServidor,
       foto.receptor,
+      leyenda,
     );
   }
 
@@ -1357,14 +1359,16 @@ export function PantallaPos({
     const pendiente = ventaAsistente;
     cerrarAsistente();
     if (pendiente === null || accion === "ninguna") return;
-    if (accion === "ticket") {
+    if (accion === "ticket" || accion === "ambos") {
       await imprimirTicket(pendiente.venta, pendiente.pagos);
-      return;
     }
-    // A4 de la venta recién hecha: sale como ORIGINAL. El de Comprobantes es
-    // una reimpresión y sale DUPLICADO, así que este es el único A4 original
-    // que existe.
-    await imprimirA4(await datosDeLaVenta(pendiente.venta, pendiente.pagos));
+    if (accion === "ticket") return;
+    // El A4 de la venta recién hecha sale ORIGINAL; el de Comprobantes es una
+    // reimpresión y sale DUPLICADO, así que éste es el único A4 original que
+    // existe. Pero si ya salió el ticket, el original se lo llevó el cliente y
+    // este A4 es la copia del emisor: DUPLICADO (ver `OPCIONES_IMPRESION`).
+    const leyenda = accion === "ambos" ? "DUPLICADO" : "ORIGINAL";
+    await imprimirA4(await datosDeLaVenta(pendiente.venta, pendiente.pagos, leyenda));
   }
 
   async function autorizarCae() {
@@ -1965,6 +1969,11 @@ export function construirDatosTicket(
   delServidor: ComprobanteResuelto | null = null,
   /** Cliente identificado en la venta, para armar el bloque del receptor en A/B. */
   clienteReceptor?: ClienteVenta,
+  /**
+   * ORIGINAL salvo que este papel sea el SEGUNDO de la misma venta: el
+   * original es uno solo, el que se lleva el cliente (ver `OPCIONES_IMPRESION`).
+   */
+  leyenda: "ORIGINAL" | "DUPLICADO" = "ORIGINAL",
 ): DatosTicket {
   const tipo = delServidor?.tipoComprobante ?? venta.tipoComprobante;
   const cae = delServidor?.cae ?? venta.cae;
@@ -2037,9 +2046,10 @@ export function construirDatosTicket(
     ...(cae != null ? { cae } : {}),
     ...(vencimiento != null ? { vencimientoCae: vencimiento } : {}),
     ...(receptor !== undefined ? { receptor } : {}),
-    // La venta recién emitida siempre es ORIGINAL. La reimpresión desde
-    // Comprobantes pone "DUPLICADO" (ver Comprobantes.tsx).
-    ...(tipo !== TipoComprobante.TicketNoFiscal ? { leyenda: "ORIGINAL" as const } : {}),
+    // La venta recién emitida es ORIGINAL, salvo el segundo papel de la misma
+    // venta. La reimpresión desde Comprobantes pone "DUPLICADO" (ver
+    // Comprobantes.tsx).
+    ...(tipo !== TipoComprobante.TicketNoFiscal ? { leyenda } : {}),
     // Sin esto NO se dibuja el QR fiscal, aunque el CAE esté: `QrFiscal` exige
     // las dos cosas, porque el código de comprobante es parte de lo que ARCA
     // codifica adentro. Faltaba sólo acá —la reimpresión desde Comprobantes sí

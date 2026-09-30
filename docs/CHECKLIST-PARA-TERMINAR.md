@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-29 · Publicado: POS **0.1.72** · Servidor **0.21.0**
+Actualizado: 2026-09-30 · Publicado: POS **0.1.73** · Servidor **0.21.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,7 +15,40 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Duodécima vuelta — POS 0.1.72 + Servidor 0.21.0
+## 1 · Decimotercera vuelta — POS 0.1.73 + Servidor 0.21.0
+
+> **EL CIRCUITO DE ARCA ESTÁ CERRADO.** Después de un mes: emisión con CAE y QR,
+> Factura A y B, notas de crédito y débito, exentos, Transparencia Fiscal,
+> original y duplicado idénticos, y la venta sin internet. Lo verificado en
+> campo está en la lista de la derecha del artifact. Lo único que falta del
+> circuito fiscal **no depende de nosotros**: un CUIT de Responsable Inscripto
+> para probarlo en producción y no en homologación.
+
+### Lo que la duodécima vuelta (30/9) dejó cerrado
+
+- **EL EXENTO, DE PUNTA A PUNTA.** La A de puros exentos sale con "Subtotal neto
+  $ 0,00" y "Exento $ 1.450,00" en los cuatro casos: ticket chico, A4, original
+  y duplicado. Cuatro vueltas.
+- **El foco vuelve solo al buscador** al cancelar una pregunta. Seba: _"Perfecto"_.
+- Sin regresiones: la B con Transparencia Fiscal, las ventas suben y tienen CAE.
+
+### Lo que la duodécima vuelta destapó
+
+- [ ] **Correr `docs/PRUEBA-DECIMOTERCERA-VUELTA.txt`.** 5 minutos, sólo POS.
+
+- [x] **El bloque de Transparencia Fiscal estaba del lado equivocado.** La
+      RG 5614/2024 no sólo fija qué datos lleva el comprobante sino **dónde**:
+      el inciso g) los pone "en el espacio inferior **izquierdo**". Nuestro A4
+      lo imprimía abajo a la derecha. _Salió del relevamiento para el contador,
+      no de una prueba de campo: los tres datos estaban y en el orden correcto,
+      así que desde afuera se veía bien._
+
+- [x] **Elegido un formato, no había forma de sacar el otro.** Seba: _"si quiero
+      imprimir también en A4 debo ir a Comprobantes y traer el duplicado
+      solamente"_ — para darnos las dos versiones tuvo que volver a vender.
+      _Hay una opción "Los dos": el ticket sale ORIGINAL y el A4 DUPLICADO, que
+      es lo que corresponde — el original es uno solo, el que se lleva el
+      cliente._
 
 ### Lo que la undécima vuelta (29/9) dejó cerrado
 

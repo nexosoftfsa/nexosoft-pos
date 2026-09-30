@@ -1,0 +1,103 @@
+===========================================================================
+  NEXOSOFT - DECIMOTERCERA VUELTA
+  Para: Sebastian
+  Tiempo: 5 minutos. Solo POS, el servidor queda en 0.21.0.
+===========================================================================
+
+EL CIRCUITO DE ARCA ESTA CERRADO
+----------------------------------
+El exento sale bien en los cuatro casos: ticket chico, A4, original y
+duplicado. Con eso se termina lo que veniamos arrastrando desde la septima
+vuelta, hace un mes.
+
+Lo unico que falta del circuito fiscal no depende de nosotros: un CUIT de
+Responsable Inscripto para probarlo en produccion y no en homologacion.
+
+Esta vuelta son dos cosas chicas y ninguna es un error tuyo.
+
+
+1) TE HAGO CASO CON LO DE IMPRIMIR LOS DOS
+--------------------------------------------
+Dijiste que una vez elegido el ticket ya no podias sacar el A4, y que para
+darme los dos archivos tuviste que volver a vender. Tenias razon, y era una
+limitacion de verdad: un comercio que le da el ticket al cliente y se guarda
+el A4 no podia.
+
+Ahora en "¿Imprimir el comprobante?" hay una opcion mas: "Los dos (ticket +
+A4 duplicado)".
+
+Ojo con una cosa, porque es a proposito: el A4 de esa opcion sale marcado
+DUPLICADO, no ORIGINAL. El original es UNO SOLO, el que se lleva el cliente;
+el segundo papel es la copia del comercio, y eso es exactamente lo que
+significa "duplicado". Dos hojas de la misma factura diciendo las dos
+"ORIGINAL" es justo lo que esa leyenda existe para evitar.
+
+Si lo que queres es el A4 para el cliente, elegis "Si, en A4" como siempre
+y sale ORIGINAL.
+
+
+2) UN ERROR QUE ENCONTRE YO LEYENDO LA NORMA
+----------------------------------------------
+Este no salio de tus pruebas: salio de revisar la letra chica de la
+RG 5614/2024 para armarle la consulta al contador.
+
+La norma no solo dice QUE datos lleva el comprobante, tambien dice DONDE: el
+bloque de Transparencia Fiscal va "en el espacio inferior IZQUIERDO".
+Nosotros lo imprimiamos abajo a la DERECHA.
+
+Los tres datos estaban y en el orden correcto, asi que desde afuera se veia
+bien. Por eso no lo agarro ninguna de las doce vueltas de pruebas. Ya esta
+movido.
+
+
+===========================================================================
+  PASOS
+===========================================================================
+
+PASO 1 - ACTUALIZAR SOLO EL POS
+---------------------------------
+El servidor queda en 0.21.0, no lo toques.
+
+    POS: ______________     (tiene que decir 0.1.73)
+
+
+PASO 2 - EL BLOQUE DE TRANSPARENCIA, AHORA A LA IZQUIERDA
+-----------------------------------------------------------
+2.1 Una Factura B a consumidor final, con el aceite (21%), en efectivo.
+2.2 Imprimi el A4.
+
+    [ ] El recuadro "Regimen de Transparencia Fiscal al Consumidor" quedo
+        abajo a la IZQUIERDA (antes estaba a la derecha)
+    [ ] Adentro siguen estando: IVA Contenido, Otros Impuestos Nacionales
+        Indirectos, y la aclaracion de abajo
+
+Mandame el A4.
+
+
+PASO 3 - IMPRIMIR LOS DOS
+---------------------------
+3.1 Una Factura A con Distribuidora Sur SRL, el arroz y el agua.
+3.2 Al llegar a "¿Imprimir el comprobante?", elegi "Los dos".
+
+    [ ] Salen los dos: primero el ticket chico, despues el A4
+    [ ] El ticket chico dice ORIGINAL
+    [ ] El A4 dice DUPLICADO
+
+Mandame los dos archivos.
+
+3.3 Ahora hace otra venta igual y elegi "Si, en A4" sola.
+
+    [ ] Ese A4 dice ORIGINAL
+
+
+PASO 4 - QUE NO SE HAYA ROTO NADA
+-----------------------------------
+    [ ] El exento sigue saliendo bien (Subtotal neto 0,00 / Exento)
+    [ ] F4 pregunta y el cursor vuelve solo al buscador
+    [ ] Las ventas suben y tienen CAE
+
+===========================================================================
+
+Si esto sale bien, de ARCA no queda nada nuestro por hacer. Lo que sigue es
+otra cosa: el bloqueo por falta de pago, que nunca se probo, y el hardware
+cuando consigas la termica.

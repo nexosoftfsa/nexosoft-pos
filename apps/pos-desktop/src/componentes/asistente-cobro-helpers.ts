@@ -28,7 +28,7 @@ export function moverCursor(cursor: number, delta: number, longitud: number): nu
 }
 
 /** Qué hacer al cerrar la venta, en el último paso del asistente. */
-export type AccionImpresion = "ticket" | "a4" | "ninguna";
+export type AccionImpresion = "ticket" | "a4" | "ambos" | "ninguna";
 
 /**
  * Las opciones del paso "¿imprimir?", en orden. El cursor indexa acá.
@@ -41,6 +41,17 @@ export type AccionImpresion = "ticket" | "a4" | "ninguna";
  * de post-venta, al que este camino no llega: cerrando la venta por el
  * asistente —o sea, siempre— **no había forma de sacar el A4 ORIGINAL**. El
  * único A4 posible era una reimpresión, que sale marcada DUPLICADO.
+ *
+ * "Los dos" se agregó el 30/9/2026, y lo pidió Sebastián: elegido un formato
+ * ya no había forma de sacar el otro, y para tener el ticket del cliente y el
+ * A4 del archivo había que volver a vender. *"Si quiero imprimir también en A4
+ * debo ir a Comprobantes y traer el duplicado solamente."*
+ *
+ * Ahí el ticket sale ORIGINAL y el A4 DUPLICADO, y es lo que corresponde: el
+ * original es **uno solo** —el que se lleva el cliente— y el segundo papel es
+ * la copia del emisor. Dos hojas del mismo comprobante diciendo las dos
+ * "ORIGINAL" es justamente lo que la leyenda existe para evitar. Quien quiera
+ * el A4 para el cliente elige "Sí, en A4" y sale ORIGINAL, como siempre.
  */
 export const OPCIONES_IMPRESION: ReadonlyArray<{
   readonly etiqueta: string;
@@ -48,6 +59,7 @@ export const OPCIONES_IMPRESION: ReadonlyArray<{
 }> = [
   { etiqueta: "Sí, imprimir", accion: "ticket" },
   { etiqueta: "Sí, en A4", accion: "a4" },
+  { etiqueta: "Los dos (ticket + A4 duplicado)", accion: "ambos" },
   { etiqueta: "No, gracias", accion: "ninguna" },
 ];
 

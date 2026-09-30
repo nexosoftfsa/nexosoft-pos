@@ -1322,10 +1322,16 @@ body {
 /* Régimen de Transparencia Fiscal al Consumidor (Ley 27.743). Encuadrado a
    propósito: es un bloque informativo para el comprador, no parte de los
    totales, y confundirlo con el total del comprobante sería peor que no
-   imprimirlo. Mismo ancho que los pagos, del otro lado. */
+   imprimirlo.
+
+   VA A LA IZQUIERDA porque lo dice la norma. La RG 5614/2024 no sólo fija qué
+   datos lleva el comprobante sino DÓNDE: el inciso g) del apartado
+   "UBICACIÓN DE LOS DATOS EN EL COMPROBANTE" los pone "en el espacio inferior
+   izquierdo", con el título, debajo "IVA Contenido" y debajo "Otros Impuestos
+   Nacionales Indirectos". Salía a la derecha, debajo de los totales: los tres
+   datos estaban y en el orden correcto, pero en el lugar equivocado. */
 .a4-transparencia {
   margin-top: 1rem;
-  margin-left: auto;
   width: 45%;
   border: 1px solid #999;
   padding: 0.5rem 0.6rem;

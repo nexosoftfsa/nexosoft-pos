@@ -220,6 +220,12 @@ que documenta el error no protege de nada; lo hace durar.
 La pregunta que faltó las tres veces es la misma: _¿corresponde mostrarlo?_, no
 _¿hay algo que sumar?_
 
+**Cerrado en campo el 30/9/2026.** La A de puros exentos sale con "Subtotal
+neto $ 0,00" y "Exento $ 1.450,00" en los cuatro casos: ticket chico, A4,
+original y duplicado. Con eso el exento queda cerrado de punta a punta — entra
+al catálogo, se declara bien a ARCA y se imprime bien — después de cuatro
+vueltas.
+
 También de esta ronda: al cancelar una pregunta, el foco no volvía al buscador
 y la caja quedaba sin recibir el teclado. Lo devuelve `Dialogos.tsx` —que anota
 dónde estaba antes de preguntar— **antes** de resolver la promesa, para que el
