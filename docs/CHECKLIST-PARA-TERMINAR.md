@@ -273,7 +273,20 @@ pueden usarnos legalmente. Era la duda más cara de todas.
       **Nunca se probó.** Hay que ver que durante el bloqueo sigan andando
       **cerrar la caja, Reportes y Comprobantes**: un comercio bloqueado tiene
       que poder cerrar el día y sacar sus números, aunque no pueda vender.
+      El código está entero y desplegado (ADR-0056 y ADR-0067): el panel escala
+      solo por fecha, el bloqueo sigue siendo manual, y desde el 3/9 hay
+      **planes Básica / Plus / Premium**, así que la misma corrida tiene que
+      verificar que cambiar el plan llegue al POS y aparezcan los candados.
       _Bloquea: cobrar la suscripción. Es el modelo de negocio._
+
+- [ ] **Actualizar `docs/PRUEBA-SUSCRIPCION-SOCIO.txt` antes de esa prueba.**
+      Pide POS 0.1.30 y Servidor 0.9.2 cuando hoy van 0.1.73 y 0.21.0, y no
+      menciona los planes. Media hora.
+
+- [ ] **Ponerle a cada comercio del panel el plan que de verdad tiene.** La
+      migración del 3/9 los dejó a todos en **Premium** — el lado seguro, para
+      no quitarle módulos a nadie, pero no es lo que corresponde. Dos minutos
+      en `admin.nexosoft.com.ar`.
 
 ---
 
@@ -322,8 +335,16 @@ Implementado y con tests, nunca visto sobre el fierro.
       el servidor es por sucursal y nadie va a mirar cincuenta tableros.
       _Un certificado de ARCA dura 2 años: con 50 clientes son 50 bombas de
       tiempo silenciosas._
+- [ ] **El panel de clientes no tiene segundo factor.** ADR-0056 §1 lo pedía
+      para las acciones peligrosas y quedó sin hacer. Hoy lo protegen el token
+      largo, la confirmación y el tope de **tres bloqueos por día** —con el
+      token robado no se puede voltear toda la cartera de una sentada— pero es
+      el sistema más sensible que tenemos.
+
 - [ ] **Licencias: la parte legal.** Lo técnico está hecho. Falta el contrato y
-      el límite por sucursal.
+      el límite por sucursal. **También falta cerrar los precios de los planes**:
+      quedaron en USD 50/75/100 (ADR-0067), y como viven en el panel por
+      comercio, cambiarlos no cuesta nada.
 - [ ] **Multisucursal.** Postergado a propósito; el rumbo ya está elegido.
 
 ---
@@ -356,21 +377,14 @@ Implementado y con tests, nunca visto sobre el fierro.
 
 ---
 
-## 9 · De otras fases
-
-- [ ] **`scripts/release/generar-codigo-cliente.ps1` rompe la suite**: tiene
-      acentos y está guardado sin BOM, así que Windows PowerShell 5.1 lo lee mal.
-      Es de la **fase 19** (panel de clientes), no de ésta. El test que lo agarra
-      existe porque eso ya nos rompió una vez.
-
----
-
 ## Preguntas abiertas
 
 1. **¿De dónde sacamos un CUIT de Responsable Inscripto?** Sin eso, la A y la B
    quedan verificadas sólo en homologación.
-2. **¿LAGUS vende por peso?** Define si la balanza entra o no.
-3. **¿Qué lector usa LAGUS**, HID o serial?
-4. **¿Cuándo consigue LAGUS la térmica?** Traba tres puntos de hardware.
-5. **¿"Terminar" es dejarlo listo para LAGUS, o para vendérselo a un comercio
+2. **¿Qué precios les ponemos a los planes?** Quedaron en USD 50/75/100. Se
+   cambian en el panel, sin tocar código.
+3. **¿LAGUS vende por peso?** Define si la balanza entra o no.
+4. **¿Qué lector usa LAGUS**, HID o serial?
+5. **¿Cuándo consigue LAGUS la térmica?** Traba tres puntos de hardware.
+6. **¿"Terminar" es dejarlo listo para LAGUS, o para vendérselo a un comercio
    que no conocemos?** Son dos varas distintas y cambian la mitad de esta lista.
