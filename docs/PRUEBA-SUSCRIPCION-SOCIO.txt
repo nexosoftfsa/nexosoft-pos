@@ -1,30 +1,45 @@
-﻿===============================================================================
-NEXOSOFT - PRUEBA DEL SISTEMA DE AVISOS Y BLOQUEO POR FALTA DE PAGO
+===============================================================================
+NEXOSOFT - PRUEBA DE PLANES, AVISOS Y BLOQUEO POR FALTA DE PAGO
 Para: Sebastian - PC de prueba
+Version de esta prueba: POS 0.1.73 - Servidor 0.21.0
 ===============================================================================
 
-Seba: esta prueba es para verificar el mecanismo nuevo de suscripcion mensual
-ANTES de usarlo con un cliente real.
+Seba: esta es la unica parte del sistema que nunca probamos. Es la que decide
+si podemos COBRAR la suscripcion, asi que es la mas importante que queda.
 
 Vas a necesitar estar en contacto con Rodrigo mientras la haces (telefono o
-WhatsApp): el maneja el panel desde su compu y vos mirás que pasa en la tuya.
+WhatsApp): el maneja el panel desde su compu y vos miras que pasa en la tuya.
 
-Tiempo: unos 30 minutos.
+Tiempo: unos 40 minutos.
 
 
 -------------------------------------------------------------------------------
-QUE VAMOS A PROBAR (para que sepas que estas haciendo)
+QUE VAMOS A PROBAR (leelo una vez, son dos cosas distintas)
 -------------------------------------------------------------------------------
 
-NexoSoft se vende como suscripcion mensual. El sistema nuevo tiene tres
-escalones, que Rodrigo maneja desde un panel:
+1) LOS PLANES. NexoSoft se vende en tres:
 
-  1. RECORDATORIO  - avisa que se acerca la fecha de pago
-  2. ADVERTENCIA   - vencio el plazo, avisa que se va a bloquear
-  3. BLOQUEO       - no se puede vender hasta que pague
+      BASICA   - vender, facturar, caja, catalogo y stock
+      PLUS     - ademas cuentas corrientes, presupuestos, remitos,
+                 proveedores, medios de pago, etiquetas y reportes
+      PREMIUM  - ademas el Asistente IA, el acceso remoto y el respaldo
 
-Tu PC va a hacer de "comercio de prueba" un rato. Al final lo sacamos y tu PC
-queda como estaba: sin ningun control de suscripcion.
+   Lo que no entra en el plan NO se esconde: se ve en el menu, en gris y con
+   un candado que dice a que plan pertenece. Es a proposito, para que el
+   comercio sepa que existe.
+
+2) LOS AVISOS Y EL BLOQUEO, en tres escalones:
+
+      RECORDATORIO - se acerca la fecha de pago (franja azul)
+      ADVERTENCIA  - vencio el plazo (franja naranja), todavia se vende
+      BLOQUEO      - no se puede vender hasta que pague
+
+   Los dos primeros salen SOLOS de la fecha de pago. El bloqueo no: lo aprieta
+   Rodrigo a mano. Es a proposito, para que un error de fechas no deje a nadie
+   sin vender.
+
+Tu PC va a hacer de "comercio de prueba" un rato. Al final lo sacamos y queda
+como estaba: sin ningun control de suscripcion.
 
 Nada de esto toca tus datos, tus ventas ni tu configuracion.
 
@@ -49,16 +64,16 @@ Abri NexoSoft y anda a:
 
     Configuracion  ->  Actualizaciones  ->  "Buscar actualizaciones"
 
-Si ofrece una version nueva, instalala. El POS se va a reiniciar solo.
+Si ofrece una version nueva, instalala. El POS se reinicia solo.
 
 Cuando termine, volve a Configuracion y fijate que diga:
 
-    POS: 0.1.30      (o un numero mas alto)
+    POS: 0.1.73      (o un numero mas alto)
 
 
 PASO 1.2 - Actualizar el servidor
 ---------------------------------
-En la MISMA pantalla de Configuracion, mas abajo, boton:
+En la MISMA pantalla, mas abajo, el boton:
 
     "Actualizar servidor"
 
@@ -68,11 +83,12 @@ No cierres nada hasta que termine.
 
 Cuando termine, cerra y volve a abrir la Configuracion. Tiene que decir:
 
-    Servidor: 0.9.2     (o un numero mas alto)
+    Servidor: 0.21.0     (o un numero mas alto)
 
-    [ ] Anotá lo que dice: POS ________   Servidor ________
+    [ ] Anota lo que dice:  POS ________   Servidor ________
 
-Si dice "no responde", espera un minuto y volve a abrir Configuracion.
+IMPORTANTE: si el servidor no llego a 0.21.0, el plan puede no aplicarse y la
+Parte 2 no va a mostrar ningun candado. No sigas: avisale a Rodrigo.
 
 
 PASO 1.3 - Conectar tu PC al comercio de prueba
@@ -89,29 +105,21 @@ Tiene que terminar diciendo:
 
 Si dice otra cosa, PARA ACA y avisale a Rodrigo.
 
-SI DICE `no se reconoce como nombre de un cmdlet`: a tu PC le falta ese
-archivo. Desde la version 0.9.2 del servidor se instala solo, asi que primero
-fijate que el PASO 1.2 haya llegado a 0.9.2 o mas nuevo. Si aun asi falta,
-pediselo a Rodrigo y guardalo en C:\NexoSoft-Servidor\scripts\
 
+-------------------------------------------------------------------------------
+COMO FUNCIONA LA ESPERA (leelo una vez y despues no pensas mas en esto)
+-------------------------------------------------------------------------------
 
-===============================================================================
-PARTE 2 - LA PRUEBA
-===============================================================================
-
-COMO FUNCIONA (leelo una vez y despues no pensas mas en esto)
-------------------------------------------------------------
-Tu PC le pregunta a NexoSoft por el estado de la suscripcion cada 5 minutos,
-y el POS se actualiza solo cada 1 minuto. Asi que despues de cada cambio que
-haga Rodrigo:
+Tu PC le pregunta a NexoSoft por el estado cada 5 minutos, y el POS se
+actualiza solo cada 1 minuto. Asi que despues de cada cambio que haga Rodrigo:
 
         ESPERA UNOS MINUTOS Y MIRA LA PANTALLA. SE ACTUALIZA SOLO.
 
 No tenes que reiniciar ni cerrar nada. Como mucho tarda 6 minutos; por lo
 general son 2 o 3.
 
-Si sos impaciente y querés que sea inmediato, podes forzarlo con esto en
-PowerShell COMO ADMINISTRADOR (opcional, no hace falta):
+Si queres que sea inmediato, podes forzarlo con esto en PowerShell COMO
+ADMINISTRADOR (opcional, no hace falta):
 
         Stop-ScheduledTask -TaskName "NexoSoft cloud-api"
         Start-ScheduledTask -TaskName "NexoSoft cloud-api"
@@ -119,33 +127,123 @@ PowerShell COMO ADMINISTRADOR (opcional, no hace falta):
 y despues de 20 segundos cerrar y reabrir el POS.
 
 
-PASO 2.1 - Todo normal
+===============================================================================
+PARTE 2 - LOS PLANES
+===============================================================================
+
+PASO 2.1 - Plan BASICA
 ----------------------
-Deci: "Rodrigo, poneme en ACTIVA"
+Deci: "Rodrigo, poneme en BASICA"
+Espera unos minutos y mira el MENU DE LA IZQUIERDA del POS.
+
+    QUE TENES QUE VER: estos ocho siguen normales, sin candado, y se abren:
+
+    [ ] Inicio
+    [ ] Punto de Venta
+    [ ] Caja y Tesoreria
+    [ ] Comprobantes
+    [ ] Catalogo y Precios
+    [ ] Stock e Inventario
+    [ ] Usuarios
+    [ ] Configuracion
+
+    Y estos SIETE aparecen en gris, con un candado que dice "Plus":
+
+    [ ] Presupuestos
+    [ ] Remitos
+    [ ] Cuentas Corrientes
+    [ ] Etiquetas de gondola
+    [ ] Proveedores
+    [ ] Medios de pago
+    [ ] Reportes y Estadisticas
+
+    Y este aparece con un candado que dice "Premium":
+
+    [ ] Asistente IA
+
+    OJO: tienen que SEGUIR VISIBLES en el menu. Si alguno desaparecio, esta
+    mal y hay que anotarlo.
+
+
+PASO 2.2 - Entrar a uno con candado
+-----------------------------------
+Hace clic en "Reportes y Estadisticas" (el del candado).
+
+    QUE TENES QUE VER: una pantalla con un candado que dice
+    "Disponible en el plan Plus", y mas abajo "Tu plan actual es Basica".
+
+    [ ] Aparece esa pantalla
+    [ ] Dice bien el plan que tenes (Basica)
+
+
+PASO 2.3 - Vender con plan BASICA
+---------------------------------
+Hace UNA VENTA de prueba.
+
+    QUE TENES QUE VER: se vende con total normalidad. El plan chico no
+    impide vender; solo saca modulos de gestion.
+
+    [ ] Se puede vender igual
+
+
+PASO 2.4 - Subir a PLUS
+-----------------------
+Deci: "poneme en PLUS"
+Espera unos minutos.
+
+    QUE TENES QUE VER: los siete candados "Plus" desaparecieron y esos
+    modulos abren normal. El Asistente IA SIGUE con candado "Premium".
+
+    [ ] Reportes abre y muestra datos
+    [ ] Cuentas Corrientes abre
+    [ ] El Asistente IA sigue con candado
+
+
+PASO 2.5 - Subir a PREMIUM
+--------------------------
+Deci: "poneme en PREMIUM"
+Espera unos minutos.
+
+    QUE TENES QUE VER: no queda ningun candado en el menu.
+
+    [ ] No hay ningun candado
+
+
+===============================================================================
+PARTE 3 - LOS AVISOS Y EL BLOQUEO
+===============================================================================
+
+Quedate en PREMIUM para esta parte, asi los candados no confunden.
+
+PASO 3.1 - Todo normal
+----------------------
+Deci: "poneme la fecha de pago para dentro de un mes"
 Espera unos minutos.
 
     QUE TENES QUE VER: nada raro. El POS normal, sin avisos.
-    Proba hacer una venta de prueba: tiene que dejarte.
 
     [ ] Sin avisos, se puede vender
 
 
-PASO 2.2 - Recordatorio
------------------------
-Deci: "poneme en RECORDATORIO"
-Espera unos minutos mirando la pantalla.
+PASO 3.2 - Recordatorio (sale SOLO de la fecha)
+-----------------------------------------------
+Deci: "poneme la fecha de pago para dentro de 3 dias"
+Espera unos minutos.
 
     QUE TENES QUE VER: una FRANJA AZUL arriba de todo, con la fecha de pago.
     Se sigue vendiendo normal.
+
+    IMPORTANTE: Rodrigo NO toco ningun estado, solo la fecha. El aviso salio
+    solo. Eso es lo que estamos probando.
 
     [ ] Aparece la franja azul
     [ ] Se puede vender igual
     Que decia la franja: _________________________________________
 
 
-PASO 2.3 - Advertencia
-----------------------
-Deci: "poneme en ADVERTENCIA"
+PASO 3.3 - Advertencia (tambien sale sola)
+------------------------------------------
+Deci: "poneme la fecha de pago para ayer"
 Espera unos minutos.
 
     QUE TENES QUE VER: una FRANJA NARANJA arriba, avisando que se va a
@@ -156,9 +254,9 @@ Espera unos minutos.
     [ ] Se puede vender igual
 
 
-PASO 2.4 - Bloqueo   <<< EL PASO MAS IMPORTANTE
------------------------------------------------
-Deci: "bloqueame"
+PASO 3.4 - Bloqueo   <<< EL PASO MAS IMPORTANTE DE ESTA PARTE
+-------------------------------------------------------------
+Deci: "bloqueame"  (Rodrigo lo fija a mano; el sistema nunca bloquea solo)
 Espera unos minutos.
 
     QUE TENES QUE VER: al entrar a Punto de Venta, una pantalla con un
@@ -181,59 +279,23 @@ Espera unos minutos.
     _____________________________________________________________
 
 
-PASO 2.5 - Desbloqueo (simula que el cliente pago)
---------------------------------------------------
-Deci: "desbloqueame"
+PASO 3.5 - El cliente pago
+--------------------------
+Deci: "pone que pague"  (Rodrigo aprieta el boton "Pago" del panel)
 Espera unos minutos.
 
     QUE TENES QUE VER: todo vuelve a la normalidad. Sin franjas, sin
-    candado, se vende normal.
+    candado de bloqueo, se vende normal.
+
+    Ese boton hace dos cosas de una: corre la fecha del proximo pago un mes
+    y levanta el bloqueo. Por eso no tiene que quedar ninguna franja.
 
     [ ] Volvio todo a la normalidad
+    [ ] No quedo NINGUNA franja arriba
 
 
 ===============================================================================
-PARTE 2 BIS - QUE LAS VENTAS LLEGUEN A REPORTES (aprovechando que estas ahi)
-===============================================================================
-
-Esto no tiene nada que ver con la suscripcion. Es otra cosa que quedo
-pendiente de verificar: en un cliente pasaba que faltaban ventas en el panel
-de Reportes, porque quedaban trabadas en la cola de sincronizacion y nadie se
-enteraba. Ahora el POS lo muestra, pero hay que confirmarlo en una PC de
-verdad.
-
-Con el comercio en ACTIVA (o sea, sin bloqueo):
-
-  a) Hace UNA VENTA de prueba, con cualquier producto.
-
-  b) Mira el INDICADOR DE SINCRONIZACION, arriba a la derecha.
-     Tiene que decir "Sincronizado".
-
-     [ ] Dice "Sincronizado"
-
-  c) Si en vez de eso dice algo como "2 con error", TOCALO: se abre un
-     detalle con el motivo exacto que devolvio el servidor.
-
-     [ ] Habia errores?   [ ] No    [ ] Si
-     Si habia, copia el mensaje TAL CUAL y mandaselo a Rodrigo:
-     _____________________________________________________________
-     _____________________________________________________________
-     _____________________________________________________________
-
-  d) Anda a Reportes y fijate que la venta que acabas de hacer APAREZCA.
-
-     [ ] La venta aparece en Reportes
-
-  e) Repeti con una segunda venta, para estar seguros.
-
-     [ ] La segunda venta tambien aparece
-
-Si las ventas aparecen y no hay errores, esto quedo resuelto.
-Si falta alguna, el mensaje del punto (c) es exactamente lo que necesitamos.
-
-
-===============================================================================
-PARTE 3 - LA PRUEBA MAS IMPORTANTE DE TODAS
+PARTE 4 - LA PRUEBA MAS IMPORTANTE DE TODAS
 ===============================================================================
 
 Esta es la que de verdad hay que verificar. Todo lo anterior ya lo probamos
@@ -243,21 +305,21 @@ QUE ESTAMOS VERIFICANDO: que quedarse sin internet NO bloquee al comercio.
 Si esto falla, un problema de red podria dejar sin vender a TODOS los
 clientes al mismo tiempo. Por eso importa tanto.
 
-  3.1  Pedile a Rodrigo que te deje en ACTIVA.
-       Espera unos minutos y confirma que se puede vender.
+  4.1  Pedile a Rodrigo que te deje al dia (fecha de pago para dentro de un
+       mes). Espera unos minutos y confirma que se puede vender.
 
        [ ] Se vende normal
 
-  3.2  DESCONECTA INTERNET en tu PC.
+  4.2  DESCONECTA INTERNET en tu PC.
        Desenchufa el cable de red, o apaga el WiFi.
        Asegurate de que no haya internet de verdad (proba abrir una pagina).
 
        [ ] Internet desconectado, confirmado
 
-  3.3  Con internet desconectado, espera unos minutos.
-       (Si querés apurarlo, usá el comando opcional de la Parte 2.)
+  4.3  Con internet desconectado, espera unos minutos.
+       (Si queres apurarlo, usa el comando opcional de la Parte 1.)
 
-  3.4  PROBA VENDER.
+  4.4  PROBA VENDER.
 
        LO QUE TIENE QUE PASAR: se vende con total normalidad.
        Puede aparecer un aviso de que no se pudo validar la suscripcion.
@@ -269,13 +331,20 @@ clientes al mismo tiempo. Por eso importa tanto.
        SI NO TE DEJA VENDER: para todo y avisale a Rodrigo YA.
        Eso seria un problema grave y no se puede usar con clientes asi.
 
-  3.5  Volve a conectar internet.
+  4.5  Mira el menu de la izquierda, todavia sin internet.
+
+       LO QUE TIENE QUE PASAR: los modulos siguen como estaban, sin candados
+       nuevos. El plan tambien tiene que aguantar el corte.
+
+       [ ] El menu quedo igual, sin candados nuevos
+
+  4.6  Volve a conectar internet.
 
        [ ] Internet de vuelta
 
 
 ===============================================================================
-PARTE 4 - DEJAR TU PC COMO ESTABA
+PARTE 5 - DEJAR TU PC COMO ESTABA
 ===============================================================================
 
 No te saltees esto, o tu PC queda atada a un comercio de prueba.
@@ -291,19 +360,26 @@ Tiene que decir:
 
     [ ] Listo, PC desvinculada
 
-Despues cerra y volve a abrir el POS: no tiene que quedar ningun aviso.
+Despues cerra y volve a abrir el POS: no tiene que quedar ningun aviso ni
+ningun candado.
 
-    [ ] El POS quedo limpio, sin franjas ni bloqueos
+    [ ] El POS quedo limpio, sin franjas, sin candados y sin bloqueos
 
 
 ===============================================================================
 SI ALGO NO FUNCIONA
 ===============================================================================
 
-* "El POS no muestra ningun aviso, en ningun paso"
-  -> Fijate en Configuracion que el servidor sea 0.9.2 o mas nuevo.
+* "No aparece ningun candado, en ningun plan"
+  -> Fijate en Configuracion que el servidor sea 0.21.0 o mas nuevo. Un
+     servidor viejo ignora el plan y deja todo habilitado.
   -> Fijate que el paso 1.3 haya terminado con "Servidor arriba".
   -> Espera al menos 6 minutos: el sistema se actualiza solo.
+
+* "El POS no muestra ninguna franja, en ningun paso"
+  -> Lo mismo de arriba. Y confirmale a Rodrigo que el comercio "socio" este
+     en automatico y no con un estado fijado a mano: si esta fijado, la fecha
+     no manda.
 
 * "El servidor no responde"
   -> En PowerShell como administrador:
@@ -327,9 +403,8 @@ PARA CONTARLE A RODRIGO CUANDO TERMINES
 ===============================================================================
 
   1. Los numeros de version que anotaste en el paso 1.2
-  2. Si aparecieron las franjas azul y naranja
-  3. Si las ventas de la Parte 2 BIS aparecieron en Reportes (y el mensaje
-     de error, si hubo)
+  2. Si los candados aparecieron y desaparecieron con cada plan
+  3. Si las franjas azul y naranja salieron SOLAS al mover la fecha
   4. Sobre todo: si en el bloqueo pudiste cerrar la caja y ver los reportes
   5. Y lo mas importante: SI PUDISTE VENDER SIN INTERNET
   6. Cualquier cosa que te haya resultado confusa o mal explicada en el POS
