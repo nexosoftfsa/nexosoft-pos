@@ -30,7 +30,7 @@ param(
     # Plan contratado (ADR-0067). Es OBLIGATORIO a proposito: si tuviera un
     # valor por defecto, un alta apurada dejaria al comercio en un plan que
     # nadie eligio, y nos enterariamos el dia que reclame una funcion que
-    # pago. Mismo criterio que hizo juntar la suscripcion y el tunel acá.
+    # pago. Mismo criterio que hizo juntar la suscripcion y el tunel aca.
     [Parameter(Mandatory = $true)][ValidateSet("BASICA", "PLUS", "PREMIUM")][string]$Plan,
     # Lo acordado por mes. Se registra en el panel, no se cobra solo.
     # Importe en texto decimal, nunca con coma: 50, 85, 62000.50
