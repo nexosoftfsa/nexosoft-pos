@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-09-30 · Publicado: POS **0.1.73** · Servidor **0.21.0**
+Actualizado: 2026-10-01 · Publicado: POS **0.1.73** · Servidor **0.21.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -15,14 +15,36 @@ depende sólo de nosotros.
 
 ---
 
-## 1 · Decimotercera vuelta — POS 0.1.73 + Servidor 0.21.0
+## 1 · Lo que sigue — POS 0.1.73 + Servidor 0.21.0
 
-> **EL CIRCUITO DE ARCA ESTÁ CERRADO.** Después de un mes: emisión con CAE y QR,
-> Factura A y B, notas de crédito y débito, exentos, Transparencia Fiscal,
-> original y duplicado idénticos, y la venta sin internet. Lo verificado en
-> campo está en la lista de la derecha del artifact. Lo único que falta del
-> circuito fiscal **no depende de nosotros**: un CUIT de Responsable Inscripto
+> **EL CIRCUITO DE ARCA ESTÁ CERRADO Y VERIFICADO EN CAMPO** (1/10/2026, trece
+> vueltas, un mes). Emisión con CAE y QR, Factura A y B, notas de crédito y
+> débito, exentos, Transparencia Fiscal en su lugar, original y duplicado
+> idénticos, y la venta sin internet. **No queda nada nuestro por hacer.** Lo
+> único que falta **no depende de nosotros**: un CUIT de Responsable Inscripto
 > para probarlo en producción y no en homologación.
+>
+> Lo siguiente en la lista ya es otra cosa: el **bloqueo por falta de pago**,
+> que nunca se probó y es lo que traba cobrar la suscripción, y el **hardware**
+> cuando haya térmica.
+
+### Lo que la decimotercera vuelta (1/10) dejó cerrado
+
+- **El bloque de Transparencia Fiscal, al pie izquierdo**, como pide la
+  RG 5614/2024. Verificado en el A4 de una Factura B.
+- **Se pueden imprimir los dos formatos de la misma venta**: ticket ORIGINAL +
+  A4 DUPLICADO, con el mismo CAE y el mismo número. Y el A4 solo sigue saliendo
+  ORIGINAL.
+- **Sin regresiones**: el exento, F4 y el foco, las ventas suben con CAE.
+
+**Una falsa alarma que vale anotar.** Seba reportó que "los comprobantes tipo A
+siguen con el recuadro de transparencia fiscal abajo a la derecha". Lo que está
+viendo es el bloque de **totales** (Subtotal neto / Exento / IVA / TOTAL), que
+va a la derecha y así corresponde. **La Factura A no lleva recuadro de
+transparencia**, y es a propósito (`transparenciaFiscal()` sólo para la letra
+B). Pero si no es obvio para quien prueba el sistema todos los días, tampoco lo
+va a ser para un inspector: quedó agregado como cuarta pregunta en
+`docs/CONSULTA-AL-CONTADOR.md`.
 
 ### Lo que la duodécima vuelta (30/9) dejó cerrado
 

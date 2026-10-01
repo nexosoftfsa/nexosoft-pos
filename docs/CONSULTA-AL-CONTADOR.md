@@ -4,13 +4,13 @@ Relevamiento del 29/9/2026, verificado contra el texto de las normas (no de
 memoria). Las fuentes están al final.
 
 **Para qué es esto.** NexoSoft factura electrónicamente contra ARCA (WSFEv1)
-para comercios minoristas. Hay tres cosas que el sistema **ya hace de una
+para comercios minoristas. Hay cuatro cosas que el sistema **ya hace de una
 manera** y que conviene que estén respaldadas por escrito, porque la norma no
 las resuelve o porque la decisión no es técnica. Ninguna impide operar hoy.
 
 ---
 
-## Las tres preguntas
+## Las cuatro preguntas
 
 ### 1. Impuestos internos: ¿$ 0,00, o hay que estimarlos?
 
@@ -107,6 +107,30 @@ interpretación de un programador, no de un contador.
 >
 > Si va en el ticket, es un cambio chico. Si va en la exhibición, es del comercio
 > y no nuestro — aunque podríamos generar las etiquetas de góndola con el dato.
+
+---
+
+### 4. ¿La Factura A lleva el bloque de Transparencia Fiscal?
+
+**Qué hace el sistema hoy:** el bloque va **sólo en la Factura B** (y en las
+notas de crédito y débito B). La A no lo lleva.
+
+**Por qué:** el artículo 99 de la Ley 27.743 habla de ventas **a consumidores
+finales**, y una Factura A se emite a un responsable inscripto, que además ya
+recibe el IVA discriminado renglón por renglón. El resumen del régimen lo
+plantea igual: los clientes alcanzados son "Consumidor Final, Monotributista y
+Exentos", que son justamente a quienes se les emite una B.
+
+**La duda** es que la RG 5614/2024 ubicó el requisito dentro del apartado
+"Datos que deben contener los comprobantes clase **A, B, C o E**" de la
+RG 1415. Leído al pie de la letra, ese apartado incluye la A.
+
+Lo levantó Sebastián probando: miró una Factura A, no encontró el recuadro y
+nos avisó. Si no es obvio para quien está probando el sistema todos los días,
+tampoco lo va a ser para un inspector.
+
+> **La pregunta:** ¿confirma que la Factura A **no** lleva el bloque? Si
+> correspondiera ponerlo, es un cambio de una línea.
 
 ---
 
