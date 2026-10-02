@@ -22,7 +22,9 @@ export {
   montoDelSubtotal,
   numeroEsProvisional,
   numeroFiscalFormateado,
+  fechaCorta,
   referenciaInterna,
+  renglonesDelEmisor,
   subtotalNeto,
   transparenciaFiscal,
 } from "./impresora.js";

@@ -125,6 +125,34 @@ export function esAnulable(c: Comprobante): boolean {
  * condición del receptor por venta — `subtotalesIva` queda vacío (el total ya
  * incluye el IVA, solo no se puede discriminar en la reimpresión).
  */
+/**
+ * Lo que identifica al EMISOR en el encabezado, más allá de la razón social, el
+ * CUIT y la condición de IVA: el logo y los tres datos que pide la RG 1415.
+ *
+ * Se arma en un solo lugar porque lo necesitan los DOS que construyen un
+ * ticket —la venta nueva y la reimpresión—, y si uno se olvidara, el original y
+ * el duplicado volverían a salir distintos. Ya nos costó una ronda de pruebas
+ * (ADR-0084).
+ *
+ * Cada campo se omite si no está cargado: `exactOptionalPropertyTypes` no
+ * admite pasar `undefined` explícito, y de paso el renderer no tiene que
+ * distinguir "vacío" de "ausente".
+ */
+export function cabeceraDelEmisor(
+  config: ConfiguracionComercio,
+): Pick<DatosTicket, "logoDataUrl" | "domicilioComercial" | "ingresosBrutos" | "inicioActividades"> {
+  return {
+    ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
+    ...(config.domicilioComercial !== undefined
+      ? { domicilioComercial: config.domicilioComercial }
+      : {}),
+    ...(config.ingresosBrutos !== undefined ? { ingresosBrutos: config.ingresosBrutos } : {}),
+    ...(config.inicioActividades !== undefined
+      ? { inicioActividades: config.inicioActividades }
+      : {}),
+  };
+}
+
 export function datosTicketDeComprobante(
   c: Comprobante,
   config: ConfiguracionComercio,
@@ -147,7 +175,7 @@ export function datosTicketDeComprobante(
     cuit: config.cuit,
     condicionIvaEmisor: etiquetaCondicionIva(config.condicionIvaEmisor),
     puntoDeVenta: config.puntoDeVenta,
-    ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
+    ...cabeceraDelEmisor(config),
     tipoComprobante: etiquetaTipoComprobante(c.tipoComprobante),
     // Puede ser null: un comprobante que todavía espera el CAE no tiene número
     // de la serie fiscal, y el correlativo interno vive en la terminal que hizo

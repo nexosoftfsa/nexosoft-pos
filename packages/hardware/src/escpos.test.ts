@@ -133,6 +133,40 @@ describe("construirEscPos", () => {
     expect(t).toContain("TOTAL");
   });
 
+  describe("datos del emisor que pide la RG 1415", () => {
+    it("imprime domicilio, Ingresos Brutos e inicio de actividades", () => {
+      const t = texto(
+        construirEscPos(
+          ticket({
+            domicilioComercial: "Av. Siempreviva 742",
+            ingresosBrutos: "901-123456-7",
+            inicioActividades: "2019-03-15",
+          }),
+        ),
+      );
+      expect(t).toContain("Av. Siempreviva 742");
+      expect(t).toContain("Ingresos Brutos: 901-123456-7");
+      // En 58mm el renglón del inicio de actividades no entra en una línea y
+      // `envolver` lo parte en dos. Se verifica que esté entero, no que esté
+      // junto: cómo se reparte en el papel lo decide el ancho del rollo.
+      expect(t).toContain("Inicio de actividades");
+      expect(t).toContain("15/03/2019");
+    });
+
+    it("van arriba del punto de venta, con el resto del emisor", () => {
+      const t = texto(construirEscPos(ticket({ domicilioComercial: "Mitre 100" })));
+      expect(t.indexOf("Mitre 100")).toBeGreaterThan(t.indexOf("CUIT"));
+      expect(t.indexOf("Mitre 100")).toBeLessThan(t.indexOf("PV "));
+    });
+
+    it("sin cargar, el ticket sale igual que antes", () => {
+      const t = texto(construirEscPos(ticket()));
+      expect(t).toContain("CUIT 00-0000000-0");
+      expect(t).not.toContain("Ingresos Brutos");
+      expect(t).not.toContain("Inicio de actividades");
+    });
+  });
+
   /**
    * Pasó en producción: una venta sin internet imprimió "Factura C
    * 0002-00000033" y el comprobante registrado fue el 0002-00000004.

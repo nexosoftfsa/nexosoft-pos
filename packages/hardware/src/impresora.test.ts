@@ -10,6 +10,7 @@ import { Cantidad, Money } from "@nexosoft/domain";
 
 import type { DatosTicket } from "./impresora.js";
 import {
+  fechaCorta,
   importeImpreso,
   letraFiscal,
   lineasSinIva,
@@ -18,6 +19,7 @@ import {
   precioUnitarioImpreso,
   numeroEsProvisional,
   referenciaInterna,
+  renglonesDelEmisor,
   subtotalNeto,
   transparenciaFiscal,
 } from "./impresora.js";
@@ -392,6 +394,60 @@ describe("transparenciaFiscal", () => {
  * hay ningún número: el fiscal lo asigna ARCA y el correlativo interno lo lleva
  * la terminal que hizo la venta, no el servidor (ADR-0072).
  */
+describe("renglonesDelEmisor (RG 1415)", () => {
+  it("arma los tres renglones del encabezado, en orden", () => {
+    expect(
+      renglonesDelEmisor(
+        base({
+          domicilioComercial: "Av. Siempreviva 742",
+          ingresosBrutos: "901-123456-7",
+          inicioActividades: "2019-03-15",
+        }),
+      ),
+    ).toEqual([
+      "Av. Siempreviva 742",
+      "Ingresos Brutos: 901-123456-7",
+      "Inicio de actividades: 15/03/2019",
+    ]);
+  });
+
+  it("omite el que falta, en vez de imprimir un renglón vacío", () => {
+    expect(renglonesDelEmisor(base({ domicilioComercial: "Mitre 100" }))).toEqual(["Mitre 100"]);
+  });
+
+  it("una instalación vieja, sin ninguno cargado, no agrega nada", () => {
+    // Un comprobante incompleto se arregla en Configuración; frenar la caja de
+    // un comercio que ya venía andando sería peor.
+    expect(renglonesDelEmisor(base())).toEqual([]);
+  });
+
+  it("el espacio en blanco no cuenta como dato", () => {
+    expect(renglonesDelEmisor(base({ domicilioComercial: "   ", ingresosBrutos: "" }))).toEqual([]);
+  });
+
+  it("acepta «Exento» donde va el número de Ingresos Brutos", () => {
+    expect(renglonesDelEmisor(base({ ingresosBrutos: "Exento" }))).toEqual([
+      "Ingresos Brutos: Exento",
+    ]);
+  });
+});
+
+describe("fechaCorta", () => {
+  it("pasa la fecha ISO a formato argentino", () => {
+    expect(fechaCorta("2019-03-15")).toBe("15/03/2019");
+  });
+
+  it("no se corre un día por la zona horaria", () => {
+    // Con `new Date("2026-01-01")` y una zona al oeste de Greenwich, esto
+    // daría 31/12/2025.
+    expect(fechaCorta("2026-01-01")).toBe("01/01/2026");
+  });
+
+  it("si no entiende la fecha la deja como vino", () => {
+    expect(fechaCorta("cuando sea")).toBe("cuando sea");
+  });
+});
+
 describe("referenciaInterna", () => {
   it("con número interno lo imprime, con nombre propio", () => {
     expect(referenciaInterna(base({ numero: 33 }))).toBe("Referencia interna 00000033");

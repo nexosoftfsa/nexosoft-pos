@@ -27,4 +27,21 @@ export interface ConfiguracionComercio {
   /** Logo del comercio como data URL (ej. `data:image/png;base64,...`), para el
    *  login, la barra lateral y los comprobantes impresos. Opcional. */
   readonly logoDataUrl?: string;
+
+  // ─── Datos del emisor que exige la RG 1415 en el encabezado ──────────────
+  //
+  // Son para IMPRIMIR, no para ARCA: el servidor no los necesita para pedir el
+  // CAE —ARCA ya los tiene del padrón— así que viven sólo del lado del POS.
+  //
+  // Opcionales porque las instalaciones anteriores a la Fase 20 no los tienen
+  // cargados. Un comprobante sin ellos está mal emitido, pero frenar la caja de
+  // un comercio que ya estaba andando sería peor: se imprime lo que haya y la
+  // pantalla de Configuración los pide.
+
+  /** Domicilio comercial del emisor. */
+  readonly domicilioComercial?: string;
+  /** Número de inscripción en Ingresos Brutos, o "Exento". */
+  readonly ingresosBrutos?: string;
+  /** Fecha de inicio de actividades, ISO `YYYY-MM-DD`. */
+  readonly inicioActividades?: string;
 }

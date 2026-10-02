@@ -21,6 +21,7 @@ import {
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
+  renglonesDelEmisor,
   subtotalNeto,
   transparenciaFiscal,
 } from "@nexosoft/hardware";
@@ -52,6 +53,13 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
         <div className="ticket-print-centro">{datos.razonSocial}</div>
         <div className="ticket-print-centro">CUIT {datos.cuit}</div>
         <div className="ticket-print-centro">{datos.condicionIvaEmisor}</div>
+        {/* Domicilio, Ingresos Brutos e inicio de actividades (RG 1415). Mismo
+          texto que la térmica y que el A4: sale todo de `renglonesDelEmisor`. */}
+        {renglonesDelEmisor(datos).map((renglon) => (
+          <div key={renglon} className="ticket-print-centro">
+            {renglon}
+          </div>
+        ))}
         <div className="ticket-print-centro">PV {String(datos.puntoDeVenta).padStart(4, "0")}</div>
 
         <div className="ticket-print-sep" />

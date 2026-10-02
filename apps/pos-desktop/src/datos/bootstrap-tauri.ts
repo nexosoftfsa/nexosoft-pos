@@ -89,6 +89,22 @@ interface FilaConfig extends Fila {
   permitir_stock_negativo: number;
   emite_comprobantes_fiscales: number;
   logo_base64: string | null;
+  domicilio_comercial: string | null;
+  ingresos_brutos: string | null;
+  inicio_actividades: string | null;
+}
+
+/**
+ * Texto util, o `undefined`.
+ *
+ * Una columna recien agregada por `ALTER TABLE` llega en `null`, y un campo que
+ * el comercio dejo vacio llega como cadena vacia. Las dos cosas significan lo
+ * mismo —no hay dato— y ninguna tiene que terminar como un renglon en blanco
+ * en el encabezado del comprobante.
+ */
+function textoONada(valor: string | null): string | undefined {
+  const limpio = (valor ?? "").trim();
+  return limpio === "" ? undefined : limpio;
 }
 
 /** Guarda (alta/actualización) la configuración del comercio (fila única id=1). */
@@ -100,14 +116,17 @@ export async function guardarConfig(
     `INSERT INTO comercio_config
        (id, cuit, razon_social, condicion_iva_emisor, punto_de_venta,
         deposito_por_defecto, lista_predeterminada, precios_incluyen_iva, permitir_stock_negativo,
-        emite_comprobantes_fiscales, logo_base64)
-     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        emite_comprobantes_fiscales, logo_base64,
+        domicilio_comercial, ingresos_brutos, inicio_actividades)
+     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        cuit=excluded.cuit, razon_social=excluded.razon_social,
        condicion_iva_emisor=excluded.condicion_iva_emisor, punto_de_venta=excluded.punto_de_venta,
        deposito_por_defecto=excluded.deposito_por_defecto, lista_predeterminada=excluded.lista_predeterminada,
        precios_incluyen_iva=excluded.precios_incluyen_iva, permitir_stock_negativo=excluded.permitir_stock_negativo,
-       emite_comprobantes_fiscales=excluded.emite_comprobantes_fiscales, logo_base64=excluded.logo_base64`,
+       emite_comprobantes_fiscales=excluded.emite_comprobantes_fiscales, logo_base64=excluded.logo_base64,
+       domicilio_comercial=excluded.domicilio_comercial, ingresos_brutos=excluded.ingresos_brutos,
+       inicio_actividades=excluded.inicio_actividades`,
     [
       config.cuit,
       config.razonSocial,
@@ -119,6 +138,9 @@ export async function guardarConfig(
       config.permitirStockNegativo ? 1 : 0,
       config.emiteComprobantesFiscales === false ? 0 : 1,
       config.logoDataUrl ?? null,
+      config.domicilioComercial ?? null,
+      config.ingresosBrutos ?? null,
+      config.inicioActividades ?? null,
     ],
   );
 }
@@ -141,6 +163,17 @@ export async function leerConfig(ejecutor: EjecutorSql): Promise<ConfiguracionCo
     permitirStockNegativo: f.permitir_stock_negativo === 1,
     emiteComprobantesFiscales: f.emite_comprobantes_fiscales === 1,
     ...(f.logo_base64 !== null ? { logoDataUrl: f.logo_base64 } : {}),
+    // Las tres pueden faltar: una base anterior a la Fase 20 recién las gana
+    // con el ALTER TABLE, vacías, hasta que alguien entre a Configuración.
+    ...(textoONada(f.domicilio_comercial) !== undefined
+      ? { domicilioComercial: textoONada(f.domicilio_comercial) as string }
+      : {}),
+    ...(textoONada(f.ingresos_brutos) !== undefined
+      ? { ingresosBrutos: textoONada(f.ingresos_brutos) as string }
+      : {}),
+    ...(textoONada(f.inicio_actividades) !== undefined
+      ? { inicioActividades: textoONada(f.inicio_actividades) as string }
+      : {}),
   };
 }
 

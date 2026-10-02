@@ -21,6 +21,7 @@ import {
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
+  renglonesDelEmisor,
   subtotalNeto,
   transparenciaFiscal,
 } from "@nexosoft/hardware";
@@ -57,6 +58,13 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
             <div className="a4-razon-social">{datos.razonSocial}</div>
             <div>CUIT {datos.cuit}</div>
             <div>{datos.condicionIvaEmisor}</div>
+            {/* Domicilio comercial, Ingresos Brutos e inicio de actividades:
+              los pide la RG 1415 y hasta la Fase 20 no se imprimían. El orden
+              y el texto salen de `renglonesDelEmisor`, el mismo que usa la
+              térmica, para que las dos impresiones no puedan discrepar. */}
+            {renglonesDelEmisor(datos).map((renglon) => (
+              <div key={renglon}>{renglon}</div>
+            ))}
             <div>Punto de venta {String(datos.puntoDeVenta).padStart(4, "0")}</div>
           </div>
           <div className="a4-comprobante">

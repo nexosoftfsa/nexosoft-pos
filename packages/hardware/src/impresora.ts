@@ -333,12 +333,58 @@ export function fechaHoraTicket(f: Date): string {
   return `${p(f.getDate())}/${p(f.getMonth() + 1)}/${f.getFullYear()} ${p(f.getHours())}:${p(f.getMinutes())}`;
 }
 
+/**
+ * `2026-01-05` → `05/01/2026`. Sin `Date`: una fecha sin hora interpretada
+ * como instante se corre un día según la zona horaria.
+ */
+export function fechaCorta(iso: string): string {
+  const [anio, mes, dia] = iso.slice(0, 10).split("-");
+  if (anio === undefined || mes === undefined || dia === undefined) return iso;
+  return `${dia}/${mes}/${anio}`;
+}
+
+/**
+ * Los renglones del encabezado que identifican al EMISOR, más allá de la razón
+ * social y el CUIT: domicilio comercial, Ingresos Brutos e inicio de
+ * actividades (RG 1415, Fase 20).
+ *
+ * Vive acá y no en cada renderer para que el A4 y la térmica no puedan
+ * discrepar — es el mismo problema que ya nos costó una ronda de pruebas
+ * cuando el original y el duplicado salían distintos (ADR-0084).
+ *
+ * Omite el que falte: una instalación anterior a la Fase 20 todavía puede no
+ * tenerlos cargados, y un renglón vacío en el papel es peor que ninguno.
+ */
+export function renglonesDelEmisor(datos: DatosTicket): readonly string[] {
+  const renglones: string[] = [];
+  const domicilio = (datos.domicilioComercial ?? "").trim();
+  const iibb = (datos.ingresosBrutos ?? "").trim();
+  const inicio = (datos.inicioActividades ?? "").trim();
+  if (domicilio !== "") renglones.push(domicilio);
+  if (iibb !== "") renglones.push(`Ingresos Brutos: ${iibb}`);
+  if (inicio !== "") renglones.push(`Inicio de actividades: ${fechaCorta(inicio)}`);
+  return renglones;
+}
+
 export interface DatosTicket {
   // Cabecera del comercio
   readonly razonSocial: string;
   readonly cuit: string;
   readonly condicionIvaEmisor: string;
   readonly puntoDeVenta: number;
+  /**
+   * Domicilio comercial, Ingresos Brutos e inicio de actividades: los tres
+   * datos del emisor que la RG 1415 pide en el encabezado de cualquier
+   * comprobante, y que hasta la Fase 20 no se imprimían.
+   *
+   * Opcionales porque una instalación vieja todavía puede no tenerlos
+   * cargados. Cada renglón se omite si falta: un comprobante incompleto es un
+   * problema para resolver en Configuración, no una razón para no imprimir.
+   */
+  readonly domicilioComercial?: string;
+  readonly ingresosBrutos?: string;
+  /** ISO `YYYY-MM-DD`. Se imprime en formato argentino. */
+  readonly inicioActividades?: string;
   /**
    * Logo del comercio como data URL. Se usa en la impresión A4 (HTML) y en la
    * térmica (se rasteriza a monocromo y va como imagen ESC/POS).

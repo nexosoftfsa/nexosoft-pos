@@ -73,6 +73,45 @@ describe("bootstrap-tauri — siembra", () => {
     expect(releida.emiteComprobantesFiscales).toBe(false);
   });
 
+  describe("datos del emisor que pide la RG 1415 (Fase 20)", () => {
+    it("guardarConfig los persiste y leerConfig los devuelve", async () => {
+      const { ejecutor } = await montar();
+      const actual = await leerConfig(ejecutor);
+
+      await guardarConfig(ejecutor, {
+        ...actual,
+        domicilioComercial: "Av. Siempreviva 742",
+        ingresosBrutos: "901-123456-7",
+        inicioActividades: "2019-03-15",
+      });
+
+      const releida = await leerConfig(ejecutor);
+      expect(releida.domicilioComercial).toBe("Av. Siempreviva 742");
+      expect(releida.ingresosBrutos).toBe("901-123456-7");
+      expect(releida.inicioActividades).toBe("2019-03-15");
+    });
+
+    it("una base recién sembrada no los tiene, y eso no rompe nada", async () => {
+      // Es el caso de toda instalación anterior a la Fase 20: la columna
+      // aparece con el ALTER TABLE, vacía, hasta que alguien entre a
+      // Configuración.
+      const { ejecutor } = await montar();
+      const config = await leerConfig(ejecutor);
+
+      expect(config.domicilioComercial).toBeUndefined();
+      expect(config.ingresosBrutos).toBeUndefined();
+      expect(config.inicioActividades).toBeUndefined();
+    });
+
+    it("un campo vaciado vuelve a ser ausente, no una cadena vacía", async () => {
+      const { ejecutor } = await montar();
+      const actual = await leerConfig(ejecutor);
+      await guardarConfig(ejecutor, { ...actual, domicilioComercial: "   " });
+
+      expect((await leerConfig(ejecutor)).domicilioComercial).toBeUndefined();
+    });
+  });
+
   it("es idempotente: sembrar de nuevo no duplica artículos", async () => {
     const { ejecutor, repos } = await montar();
     await sembrarSiVacio(ejecutor, repos); // segunda corrida

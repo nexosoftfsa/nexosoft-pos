@@ -21,7 +21,10 @@ export const SENTENCIAS_ESQUEMA: readonly string[] = [
     precios_incluyen_iva INTEGER NOT NULL DEFAULT 1 CHECK (precios_incluyen_iva IN (0,1)),
     permitir_stock_negativo INTEGER NOT NULL DEFAULT 0 CHECK (permitir_stock_negativo IN (0,1)),
     emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1)),
-    logo_base64 TEXT
+    logo_base64 TEXT,
+    domicilio_comercial TEXT,
+    ingresos_brutos TEXT,
+    inicio_actividades TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS articulo (
     id TEXT PRIMARY KEY,
@@ -153,6 +156,10 @@ async function agregarColumnasNuevas(ejecutor: EjecutorSql): Promise<void> {
     `ALTER TABLE comercio_config ADD COLUMN permitir_stock_negativo INTEGER NOT NULL DEFAULT 0 CHECK (permitir_stock_negativo IN (0,1))`,
     `ALTER TABLE comercio_config ADD COLUMN emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1))`,
     `ALTER TABLE comercio_config ADD COLUMN logo_base64 TEXT`,
+    // Datos del emisor que pide la RG 1415 en el encabezado (Fase 20).
+    `ALTER TABLE comercio_config ADD COLUMN domicilio_comercial TEXT`,
+    `ALTER TABLE comercio_config ADD COLUMN ingresos_brutos TEXT`,
+    `ALTER TABLE comercio_config ADD COLUMN inicio_actividades TEXT`,
     `ALTER TABLE item_venta ADD COLUMN costo_neto_cent INTEGER`,
     `ALTER TABLE articulo ADD COLUMN mostrar_en_grilla_rapida INTEGER NOT NULL DEFAULT 0 CHECK (mostrar_en_grilla_rapida IN (0,1))`,
     // Enlace con la cola de sync, para poder volcarle a la venta local lo que

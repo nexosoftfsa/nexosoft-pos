@@ -498,6 +498,13 @@ function AppTauri() {
           puntoDeVenta: config.puntoDeVenta,
           emiteComprobantesFiscales: config.emiteComprobantesFiscales ?? true,
           permitirStockNegativo: config.permitirStockNegativo,
+          ...(config.domicilioComercial !== undefined
+            ? { domicilioComercial: config.domicilioComercial }
+            : {}),
+          ...(config.ingresosBrutos !== undefined ? { ingresosBrutos: config.ingresosBrutos } : {}),
+          ...(config.inicioActividades !== undefined
+            ? { inicioActividades: config.inicioActividades }
+            : {}),
           ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
         });
         setFase("config");
@@ -512,15 +519,31 @@ function AppTauri() {
     async (v: ValoresConfig) => {
       const ejecutor = ejecutorRef.current;
       if (ejecutor === null) return;
-      const { logoDataUrl: _logoActual, ...actualSinLogo } = await leerConfig(ejecutor);
+      // Se descartan también los tres datos del emisor, por el mismo motivo que
+      // el logo: si el usuario vació uno, lo que manda es lo que vino del
+      // formulario, no lo que había guardado.
+      const {
+        logoDataUrl: _logoActual,
+        domicilioComercial: _domicilioActual,
+        ingresosBrutos: _iibbActual,
+        inicioActividades: _inicioActual,
+        ...actualSinOpcionales
+      } = await leerConfig(ejecutor);
       await guardarConfig(ejecutor, {
-        ...actualSinLogo,
+        ...actualSinOpcionales,
         razonSocial: v.razonSocial,
         cuit: v.cuit,
         condicionIvaEmisor: v.condicionIvaEmisor,
         puntoDeVenta: v.puntoDeVenta,
         emiteComprobantesFiscales: v.emiteComprobantesFiscales,
         permitirStockNegativo: v.permitirStockNegativo,
+        ...(v.domicilioComercial !== undefined
+          ? { domicilioComercial: v.domicilioComercial }
+          : {}),
+        ...(v.ingresosBrutos !== undefined ? { ingresosBrutos: v.ingresosBrutos } : {}),
+        ...(v.inicioActividades !== undefined
+          ? { inicioActividades: v.inicioActividades }
+          : {}),
         // Sin spread de `undefined`: si el usuario sacó el logo, se omite la
         // clave (guardarConfig la persiste como NULL) en vez de asignarla a
         // `undefined`, que `exactOptionalPropertyTypes` no permite.

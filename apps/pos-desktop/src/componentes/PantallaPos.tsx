@@ -42,6 +42,7 @@ import {
 } from "./asistente-cobro-helpers";
 import { ComprobanteA4 } from "./ComprobanteA4";
 import { ComprobanteTicket } from "./ComprobanteTicket";
+import { cabeceraDelEmisor } from "./comprobantes-helpers";
 import {
   buscarProductoPorCodigo,
   cambiarCantidadCarrito,
@@ -1999,7 +2000,7 @@ export function construirDatosTicket(
     cuit: config.cuit,
     condicionIvaEmisor: etiquetaCondicionIva(config.condicionIvaEmisor),
     puntoDeVenta: config.puntoDeVenta,
-    ...(config.logoDataUrl !== undefined ? { logoDataUrl: config.logoDataUrl } : {}),
+    ...cabeceraDelEmisor(config),
     tipoComprobante: etiquetaComprobante(tipo as TipoComprobante),
     numero: delServidor?.numeroComprobante ?? venta.numero,
     // Si el número salió del servidor es el definitivo; si es el correlativo

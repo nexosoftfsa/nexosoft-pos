@@ -24,6 +24,7 @@ import {
   numeroEsProvisional,
   numeroFiscalFormateado,
   referenciaInterna,
+  renglonesDelEmisor,
   subtotalNeto,
   transparenciaFiscal,
   type DatosTicket,
@@ -297,6 +298,8 @@ export function construirEscPos(
   b.comando(NEGRITA_ON).linea(datos.razonSocial).comando(NEGRITA_OFF);
   b.linea(`CUIT ${datos.cuit}`);
   b.linea(datos.condicionIvaEmisor);
+  // Domicilio, Ingresos Brutos e inicio de actividades (RG 1415).
+  for (const renglon of renglonesDelEmisor(datos)) b.linea(renglon);
   b.linea(`PV ${String(datos.puntoDeVenta).padStart(4, "0")}`);
   b.linea();
 

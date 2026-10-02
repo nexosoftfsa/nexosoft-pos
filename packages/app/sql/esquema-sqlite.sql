@@ -20,7 +20,13 @@ CREATE TABLE IF NOT EXISTS comercio_config (
   precios_incluyen_iva  INTEGER NOT NULL DEFAULT 1 CHECK (precios_incluyen_iva IN (0,1)),
   permitir_stock_negativo INTEGER NOT NULL DEFAULT 0 CHECK (permitir_stock_negativo IN (0,1)),
   emite_comprobantes_fiscales INTEGER NOT NULL DEFAULT 1 CHECK (emite_comprobantes_fiscales IN (0,1)),
-  logo_base64           TEXT
+  logo_base64           TEXT,
+  -- Datos del emisor que la RG 1415 exige en el encabezado del comprobante y
+  -- que hasta la Fase 20 no se guardaban en ningun lado. Nullables porque las
+  -- instalaciones que ya existen no los tienen cargados todavia.
+  domicilio_comercial   TEXT,
+  ingresos_brutos       TEXT,
+  inicio_actividades    TEXT
 );
 
 -- Catálogo --------------------------------------------------------------------

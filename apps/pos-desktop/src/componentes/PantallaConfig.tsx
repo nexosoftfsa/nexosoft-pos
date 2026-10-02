@@ -14,6 +14,11 @@ export interface ValoresConfig {
   readonly cuit: string;
   readonly condicionIvaEmisor: CondicionIva;
   readonly puntoDeVenta: number;
+  /** Datos del emisor que la RG 1415 exige en el encabezado del comprobante. */
+  readonly domicilioComercial?: string;
+  readonly ingresosBrutos?: string;
+  /** ISO `YYYY-MM-DD`: es lo que devuelve un `<input type="date">`. */
+  readonly inicioActividades?: string;
   /** Fase 10.1: si el comercio ya está de alta en ARCA y emite Factura A/B/C. */
   readonly emiteComprobantesFiscales: boolean;
   /** Si se permite vender sin stock suficiente (queda en negativo, ADR-0015). */
@@ -64,6 +69,9 @@ export function PantallaConfig({
   const [servidorUrl, setServidorUrl] = useState(valores.servidorUrl);
   const [razonSocial, setRazonSocial] = useState(valores.razonSocial);
   const [cuit, setCuit] = useState(valores.cuit);
+  const [domicilio, setDomicilio] = useState(valores.domicilioComercial ?? "");
+  const [iibb, setIibb] = useState(valores.ingresosBrutos ?? "");
+  const [inicioActividades, setInicioActividades] = useState(valores.inicioActividades ?? "");
   const [condicion, setCondicion] = useState<CondicionIva>(valores.condicionIvaEmisor);
   const [puntoDeVenta, setPuntoDeVenta] = useState(String(valores.puntoDeVenta));
   const [emiteFiscal, setEmiteFiscal] = useState(valores.emiteComprobantesFiscales);
@@ -110,6 +118,11 @@ export function PantallaConfig({
         puntoDeVenta: pv,
         emiteComprobantesFiscales: emiteFiscal,
         permitirStockNegativo: stockNegativo,
+        // Lo que quedó vacío no se guarda: un renglón en blanco en el
+        // encabezado del comprobante es peor que no tenerlo.
+        ...(domicilio.trim() !== "" ? { domicilioComercial: domicilio.trim() } : {}),
+        ...(iibb.trim() !== "" ? { ingresosBrutos: iibb.trim() } : {}),
+        ...(inicioActividades !== "" ? { inicioActividades } : {}),
         ...(logoDataUrl !== undefined ? { logoDataUrl } : {}),
       });
     } catch (err) {
@@ -158,6 +171,39 @@ export function PantallaConfig({
                 className="input"
                 value={cuit}
                 onChange={(e) => setCuit(e.target.value)}
+              />
+            </div>
+            {/* Los tres que pide la RG 1415 en el encabezado del comprobante.
+              Van acá, con la razón social y el CUIT, porque son lo mismo:
+              quién emite. */}
+            <div className="field">
+              <label htmlFor="cfg-domicilio">Domicilio comercial</label>
+              <input
+                id="cfg-domicilio"
+                className="input"
+                value={domicilio}
+                placeholder="Av. Siempreviva 742, Formosa"
+                onChange={(e) => setDomicilio(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="cfg-iibb">Ingresos Brutos</label>
+              <input
+                id="cfg-iibb"
+                className="input"
+                value={iibb}
+                placeholder="Nº de inscripción, o Exento"
+                onChange={(e) => setIibb(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="cfg-inicio">Inicio de actividades</label>
+              <input
+                id="cfg-inicio"
+                className="input"
+                type="date"
+                value={inicioActividades}
+                onChange={(e) => setInicioActividades(e.target.value)}
               />
             </div>
             <div className="field">
