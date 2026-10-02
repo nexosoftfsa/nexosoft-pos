@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-10-01 · Publicado: POS **0.1.73** · Servidor **0.21.0**
+Actualizado: 2026-10-02 · Publicado: POS **0.1.73** · Servidor **0.21.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -269,6 +269,15 @@ pueden usarnos legalmente. Era la duda más cara de todas.
 
 ## 4 · Pruebas de campo pendientes
 
+- [ ] **Cargar los datos del emisor y mirar un comprobante impreso.** Desde el
+      2/10 el encabezado lleva **domicilio comercial, Ingresos Brutos e inicio
+      de actividades**, que la RG 1415 exige y no teníamos (ADR-0085). Hay que
+      cargarlos en Configuración → Comercio y después imprimir una Factura B:
+      tienen que salir en el A4 **y** en el ticket chico, iguales.
+      _Las instalaciones que ya existen arrancan con esos campos vacíos: no hay
+      forma de adivinar el domicilio ni el número de IIBB. Hasta que alguien
+      los cargue, el comprobante sigue saliendo sin ellos._
+
 - [ ] **Bloqueo por falta de pago.** `docs/PRUEBA-SUSCRIPCION-SOCIO.txt`.
       **Nunca se probó.** Hay que ver que durante el bloqueo sigan andando
       **cerrar la caja, Reportes y Comprobantes**: un comercio bloqueado tiene
@@ -314,7 +323,10 @@ Implementado y con tests, nunca visto sobre el fierro.
       de ARCA, el antivirus, el certificado y las Facturas A/B.
       Tiene que decir, además, que el certificado es **por entorno**: si el alta
       se prueba en homologación y después pasa a producción, son dos trámites
-      con el mismo `.csr` (ADR-0071).
+      con el mismo `.csr` (ADR-0071). Y que en el alta hay que **pedirle al
+      comercio su domicilio comercial, su número de Ingresos Brutos y su fecha
+      de inicio de actividades**: sin eso el comprobante sale incompleto
+      (ADR-0085), y son datos que no podemos sacar de ningún lado.
       _Bloquea: que instale alguien que no seamos nosotros. O sea, bloquea vender._
 
 - [ ] **Instalación en Program Files en vez de AppData.** Frenado por riesgo de
@@ -356,6 +368,13 @@ Implementado y con tests, nunca visto sobre el fierro.
       Falta decidir si al superarlo se **bloquea** o se **avisa**.
       _Recomendación: avisar. Frenar una venta por un tema formal, con el cliente
       adelante, es peor que emitirla y corregirla._
+- [ ] **No se pueden facturar servicios.** El `Concepto` que se le manda a ARCA
+      va fijo en **1 (Productos)**. Facturar un servicio pide `Concepto` 2 o 3
+      más el período facturado (`FchServDesde`/`Hasta`) y el vencimiento de
+      pago, y el comprobante tiene que mostrarlos.
+      _No bloquea a un comercio minorista. Sí a cualquiera que venda horas,
+      abonos o mantenimiento._
+
 - [ ] **Elegir la alícuota de una Nota de Débito.** Hoy va siempre al 21% en A y
       B. Si hace falta elegirla, el concepto tendría que venir con su tasa.
 - [ ] **Nota de Crédito parcial.** Hoy anular es por el total. Devolver un solo
