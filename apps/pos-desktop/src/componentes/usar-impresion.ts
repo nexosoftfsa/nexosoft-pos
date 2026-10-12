@@ -6,20 +6,42 @@
  * Cada consumidor usa su propia clase en `<body>` para no pisarse entre sí
  * (ver `estilos.css`, reglas `body.modo-impresion-*`).
  *
- * El cleanup (sacar la clase, limpiar `datos`) se hace en el evento
- * `afterprint`, NO justo después de `window.print()`: `window.print()` NO
- * está garantizado que bloquee hasta que se cierre el diálogo — es el
- * comportamiento habitual en la mayoría de los navegadores, pero MDN lo marca
- * explícitamente como no estandarizado. Con impresoras/drivers reales
- * (WebView2 en la PC del cliente) puede devolver el control antes de que el
- * SO termine de armar el diálogo/vista previa; si el cleanup corre ahí, el
- * contenido a imprimir ya está oculto (`visibility:hidden`) cuando se genera
- * la vista previa real, y lo único que queda visible son restos sueltos del
- * layout — sintomáticamente "un par de letras y una línea" en vez del
- * comprobante. `afterprint` sí está garantizado por el estándar.
+ * ## Cuándo se limpia, y por qué tardó dos intentos en quedar bien
+ *
+ * El cleanup (sacar la clase, limpiar `datos`) **no** se hace justo después de
+ * `window.print()`: no está garantizado que bloquee hasta que se cierre el
+ * diálogo — es lo habitual en la mayoría de los navegadores, pero MDN lo marca
+ * explícitamente como no estandarizado. Con drivers reales (WebView2 en la PC
+ * del cliente) devuelve el control antes de que el SO termine de armar la
+ * vista previa, y si el cleanup corre ahí el contenido ya está oculto cuando
+ * se genera: salían "un par de letras y una línea" en vez del comprobante.
+ *
+ * Se movió entonces a `afterprint`, que sí es estándar. **Y seguía siendo
+ * demasiado temprano.** `afterprint` se dispara cuando se cierra la vista
+ * previa, no cuando el trabajo de impresión terminó: entre una cosa y la otra
+ * está todo el guardado del PDF o el spool a la impresora, que siguen leyendo
+ * el documento. Al limpiar ahí le sacábamos el DOM de abajo al motor mientras
+ * lo usaba. El 12/10/2026, exportando una reimpresión a PDF, eso terminó en un
+ * **"Microsoft Edge WebView2 no responde"** con el "Guardar como" colgado.
+ *
+ * Ahora la limpieza queda **pendiente** y corre en el primero de dos momentos,
+ * los dos posteriores al trabajo con certeza:
+ *
+ * 1. Al empezar la impresión siguiente — si hay otra, la anterior terminó.
+ * 2. Pasado un rato largo desde `afterprint`, como higiene, para que una
+ *    instalación que imprime una sola vez no quede en modo impresión.
+ *
+ * Dejarla montada mientras tanto no se ve: las hojas están `display:none` en
+ * pantalla y sólo aparecen bajo `@media print`.
  */
 import { useCallback, useState } from "react";
 import { flushSync } from "react-dom";
+
+import {
+  arrancarPlazoDeGracia,
+  dejarLimpiezaPendiente,
+  saldarLimpieza,
+} from "./limpieza-de-impresion";
 
 /**
  * Fija el tamaño de página midiendo lo que se va a imprimir. Hace falta para
@@ -91,6 +113,10 @@ export function useImpresion<T>(
 
   const imprimir = useCallback(
     (d: T) => {
+      // Que haya una impresión nueva es la única señal confiable de que la
+      // anterior terminó: recién acá se puede desarmar lo que quedó montado.
+      saldarLimpieza();
+
       flushSync(() => setDatos(d));
       document.body.classList.add(claseBody);
       // Después del flushSync el nodo ya está en el DOM con los datos reales,
@@ -98,12 +124,22 @@ export function useImpresion<T>(
       if (pagina) ajustarAltoDePagina(pagina);
 
       function limpiar() {
+        window.removeEventListener("afterprint", alCerrarLaVistaPrevia);
         document.body.classList.remove(claseBody);
         quitarPaginaAMedida();
         setDatos(null);
-        window.removeEventListener("afterprint", limpiar);
       }
-      window.addEventListener("afterprint", limpiar);
+
+      // Cerrar la vista previa NO quiere decir que el trabajo terminó: falta
+      // guardar el PDF o mandarlo a la cola, y para eso se sigue leyendo este
+      // documento. Lo único que se hace acá es arrancar el plazo de gracia.
+      function alCerrarLaVistaPrevia() {
+        window.removeEventListener("afterprint", alCerrarLaVistaPrevia);
+        arrancarPlazoDeGracia();
+      }
+
+      dejarLimpiezaPendiente(limpiar);
+      window.addEventListener("afterprint", alCerrarLaVistaPrevia);
 
       window.print();
     },

@@ -1,6 +1,6 @@
 # Checklist para terminar
 
-Actualizado: 2026-10-02 · Publicado: POS **0.1.73** · Servidor **0.21.0**
+Actualizado: 2026-10-12 · Publicado: POS **0.1.73** · Servidor **0.21.0**
 
 Todo lo que queda por probar y por afinar, con qué bloquea cada cosa.
 
@@ -162,12 +162,21 @@ va a ser para un inspector: quedó agregado como cuarta pregunta en
       DTO. No es grave —el vuelto no es un dato fiscal— pero el papel tiene que
       decir lo mismo las dos veces._
 
-- [ ] **"Microsoft Print to PDF" dejó de funcionar** desde el POS (no desde
-      otros programas). La pantalla de impresión aparece, se elige, y el
-      archivo no se guarda ni avisa nada. Con "Guardar como PDF" anda.
-      _Seba lo bajó de prioridad: se mira junto con las pruebas de térmica.
-      Sospecha: el `afterprint` limpia la hoja antes de que ese driver termine
-      de generar el archivo._
+- [x] ~~**"Microsoft Print to PDF" dejó de funcionar** desde el POS.~~ Escaló:
+      el 12/10 reimprimir o exportar a PDF **colgó la aplicación entera**
+      ("Microsoft Edge WebView2 no responde", tres veces en veinte minutos, con
+      ticket y con A4). La sospecha anotada era la correcta y estaba a medio
+      camino: `afterprint` se dispara al **cerrar la vista previa**, no al
+      terminar el trabajo, así que desmontábamos el documento mientras el motor
+      todavía lo leía. _Corregido en ADR-0086: la limpieza queda pendiente hasta
+      la impresión siguiente._
+
+- [ ] **Confirmar en campo que la exportación a PDF ya no cuelga.** Es la
+      verificación del arreglo de arriba, y tiene una segunda parte que **no
+      depende de nosotros**: el diálogo mostraba "Estamos trabajando en ello…"
+      sobre la carpeta Descargas, que en esa PC está bajo OneDrive. Hay que
+      probar **guardando en el Escritorio o en `C:\temp`**: si ahí anda y en
+      Descargas no, el resto es Windows sincronizando, no el POS.
 
 ---
 
