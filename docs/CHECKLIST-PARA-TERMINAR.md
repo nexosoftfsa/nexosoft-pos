@@ -278,11 +278,22 @@ pueden usarnos legalmente. Era la duda más cara de todas.
 
 ## 4 · Pruebas de campo pendientes
 
+- [ ] **Corregir el arroz en el catálogo.** El contador vio que salía exento y
+      eso le arma mal la DDJJ de IVA al comercio. **No es un bug**: el
+      formulario ofrece Exento, un producto nuevo nace en 21% y el mapeo manda
+      lo desconocido a 21%. El arroz está cargado mal en Catálogo y se arregla
+      en dos clics (ADR-0087 §5).
+
 - [ ] **Cargar los datos del emisor y mirar un comprobante impreso.** Desde el
       2/10 el encabezado lleva **domicilio comercial, Ingresos Brutos e inicio
       de actividades**, que la RG 1415 exige y no teníamos (ADR-0085). Hay que
       cargarlos en Configuración → Comercio y después imprimir una Factura B:
-      tienen que salir en el A4 **y** en el ticket chico, iguales.
+      tienen que salir en el A4 **y** en el ticket chico, iguales. En la misma
+      corrida entran los otros tres que marcó el contador y ya están hechos
+      (ADR-0087): el **código `CODIGO N° 06`** debajo del tipo, el
+      **vencimiento del CAE en el ticket chico** —lo tenían el A4 y la térmica,
+      faltaba sólo ahí— y la leyenda **"Otros Impuestos Nacionales
+      Indirectos"** textual, que antes decía "Imp. internos".
       _Las instalaciones que ya existen arrancan con esos campos vacíos: no hay
       forma de adivinar el domicilio ni el número de IIBB. Hasta que alguien
       los cargue, el comprobante sigue saliendo sin ellos._

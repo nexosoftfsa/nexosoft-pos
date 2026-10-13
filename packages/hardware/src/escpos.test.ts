@@ -145,12 +145,25 @@ describe("construirEscPos", () => {
         ),
       );
       expect(t).toContain("Av. Siempreviva 742");
-      expect(t).toContain("Ingresos Brutos: 901-123456-7");
-      // En 58mm el renglón del inicio de actividades no entra en una línea y
-      // `envolver` lo parte en dos. Se verifica que esté entero, no que esté
-      // junto: cómo se reparte en el papel lo decide el ancho del rollo.
-      expect(t).toContain("Inicio de actividades");
-      expect(t).toContain("15/03/2019");
+      // En el rollo las etiquetas van cortas para que el dato entre en el mismo
+      // renglón: es lo que hace el ticket real que mandó el contador.
+      expect(t).toContain("IB: 901-123456-7");
+      expect(t).toContain("Inicio Act.: 15/03/2019");
+    });
+
+    it("en 58mm, ningún renglón del encabezado se parte", () => {
+      const lineas = texto(
+        construirEscPos(
+          ticket({
+            domicilioComercial: "Av. Siempreviva 742",
+            ingresosBrutos: "901-123456-7",
+            inicioActividades: "2019-03-15",
+          }),
+        ),
+      ).split("\n");
+
+      expect(lineas.some((l) => l.trim() === "IB: 901-123456-7")).toBe(true);
+      expect(lineas.some((l) => l.trim() === "Inicio Act.: 15/03/2019")).toBe(true);
     });
 
     it("van arriba del punto de venta, con el resto del emisor", () => {
@@ -537,7 +550,11 @@ describe("construirEscPos", () => {
       expect(t).toContain("Ley 27.743");
       expect(t).toContain("IVA contenido");
       expect(t).toContain("$ 433,88");
-      expect(t).toContain("Imp. internos");
+      // El nombre que fija la norma, textual. Hasta el 12/10/2026 decía
+      // "Imp. internos" y el contador lo marcó: la Ley 27.743 fija el TEXTO.
+      expect(t).toContain("Otros Impuestos");
+      expect(t).toContain("Nacionales Indirectos");
+      expect(t).not.toContain("Imp. internos");
       expect(t).toContain("$ 0,00");
       expect(t).toContain("nivel nacional");
     });
@@ -554,11 +571,13 @@ describe("construirEscPos", () => {
           }),
         ),
       ).split("\n");
-      // El importe grande es el que aprieta: "Imp. internos" tiene que seguir
-      // entrando entero, sin que `filaIzquierdaDerecha` le coma letras.
+      // El importe grande es el que aprieta: el nombre tiene que seguir
+      // entrando entero, sin que `filaIzquierdaDerecha` le coma letras. Por eso
+      // va partido, con el importe sobre el último renglón.
       expect(lineas.every((l) => l.length <= 32)).toBe(true);
       expect(lineas.some((l) => l.startsWith("IVA contenido"))).toBe(true);
-      expect(lineas.some((l) => l.startsWith("Imp. internos"))).toBe(true);
+      expect(lineas.some((l) => l.trim() === "Otros Impuestos")).toBe(true);
+      expect(lineas.some((l) => l.startsWith("Nacionales Indirectos"))).toBe(true);
     });
 
     it("la Factura A no lo lleva: va a un responsable inscripto", () => {

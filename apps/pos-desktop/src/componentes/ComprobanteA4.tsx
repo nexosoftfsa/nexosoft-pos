@@ -20,6 +20,8 @@ import {
   montoDelSubtotal,
   numeroEsProvisional,
   numeroFiscalFormateado,
+  codigoDeComprobanteImpreso,
+  ETIQUETA_OTROS_IMPUESTOS,
   referenciaInterna,
   renglonesDelEmisor,
   subtotalNeto,
@@ -77,6 +79,10 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
               </div>
             )}
             <div className="a4-tipo">{datos.tipoComprobante}</div>
+            {/* El código de ARCA debajo de la letra (01 la A, 06 la B…). */}
+            {codigoDeComprobanteImpreso(datos) !== null && (
+              <div>{codigoDeComprobanteImpreso(datos)}</div>
+            )}
             <div>
               {provisional ? referenciaInterna(datos) : `N° ${numeroFiscalFormateado(datos)}`}
             </div>
@@ -204,7 +210,7 @@ export function ComprobanteA4({ datos }: { datos: DatosImpresion }) {
               <span>{pesos(transparencia.ivaContenido)}</span>
             </div>
             <div className="a4-fila-total">
-              <span>Otros Impuestos Nacionales Indirectos</span>
+              <span>{ETIQUETA_OTROS_IMPUESTOS}</span>
               <span>{pesos(transparencia.otrosImpuestosNacionales)}</span>
             </div>
             <div className="a4-nota">{ACLARACION_IMPUESTOS_NACIONALES}</div>

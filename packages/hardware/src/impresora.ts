@@ -355,16 +355,59 @@ export function fechaCorta(iso: string): string {
  * Omite el que falte: una instalación anterior a la Fase 20 todavía puede no
  * tenerlos cargados, y un renglón vacío en el papel es peor que ninguno.
  */
-export function renglonesDelEmisor(datos: DatosTicket): readonly string[] {
+export function renglonesDelEmisor(
+  datos: DatosTicket,
+  opciones: { readonly compacto?: boolean } = {},
+): readonly string[] {
+  // En 58mm, "Ingresos Brutos:" y "Inicio de actividades:" se comen el renglón
+  // y el dato cae al siguiente. Un ticket real de un comercio de Formosa
+  // (12/10/2026) resuelve lo mismo con `IB:` e `Inicio Act.:`, que entran.
+  const etiquetaIibb = opciones.compacto ? "IB:" : "Ingresos Brutos:";
+  const etiquetaInicio = opciones.compacto ? "Inicio Act.:" : "Inicio de actividades:";
+
   const renglones: string[] = [];
   const domicilio = (datos.domicilioComercial ?? "").trim();
   const iibb = (datos.ingresosBrutos ?? "").trim();
   const inicio = (datos.inicioActividades ?? "").trim();
   if (domicilio !== "") renglones.push(domicilio);
-  if (iibb !== "") renglones.push(`Ingresos Brutos: ${iibb}`);
-  if (inicio !== "") renglones.push(`Inicio de actividades: ${fechaCorta(inicio)}`);
+  if (iibb !== "") renglones.push(`${etiquetaIibb} ${iibb}`);
+  if (inicio !== "") renglones.push(`${etiquetaInicio} ${fechaCorta(inicio)}`);
   return renglones;
 }
+
+/**
+ * El código numérico del tipo de comprobante ante ARCA, rotulado como lo pide
+ * el contador y como lo imprimen los comprobantes que ya cumplen: `CODIGO N° 06`
+ * debajo de la letra (01 Factura A, 06 Factura B, 11 Factura C…).
+ *
+ * `null` cuando no corresponde: un ticket interno no tiene código de ARCA, y
+ * poner uno inventado sería peor que no poner ninguno.
+ */
+export function codigoDeComprobanteImpreso(datos: DatosTicket): string | null {
+  if (datos.esFiscal === false) return null;
+  if (typeof datos.codigoComprobanteArca !== "number") return null;
+  return `CODIGO N° ${String(datos.codigoComprobanteArca).padStart(2, "0")}`;
+}
+
+/**
+ * El nombre que la Ley 27.743 le da al renglón, textual.
+ *
+ * Hasta el 12/10/2026 el papel angosto decía "Imp. internos": el nombre
+ * completo no entra en 32 columnas y se eligió el del único impuesto que le
+ * aplica a un comercio. El contador lo marcó —la norma fija el texto, no el
+ * concepto— y el ticket de referencia que mandó muestra la salida correcta:
+ * el nombre partido en dos renglones, con el importe en el último.
+ */
+export const ETIQUETA_OTROS_IMPUESTOS = "Otros Impuestos Nacionales Indirectos";
+
+/**
+ * El mismo nombre, partido para un rollo angosto. El importe va a la derecha
+ * del ÚLTIMO renglón; los anteriores van solos.
+ */
+export const OTROS_IMPUESTOS_ANGOSTO: readonly string[] = [
+  "Otros Impuestos",
+  "Nacionales Indirectos",
+];
 
 export interface DatosTicket {
   // Cabecera del comercio

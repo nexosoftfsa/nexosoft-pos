@@ -23,6 +23,9 @@ import {
   montoDelSubtotal,
   numeroEsProvisional,
   numeroFiscalFormateado,
+  codigoDeComprobanteImpreso,
+  ETIQUETA_OTROS_IMPUESTOS,
+  OTROS_IMPUESTOS_ANGOSTO,
   referenciaInterna,
   renglonesDelEmisor,
   subtotalNeto,
@@ -298,13 +301,17 @@ export function construirEscPos(
   b.comando(NEGRITA_ON).linea(datos.razonSocial).comando(NEGRITA_OFF);
   b.linea(`CUIT ${datos.cuit}`);
   b.linea(datos.condicionIvaEmisor);
-  // Domicilio, Ingresos Brutos e inicio de actividades (RG 1415).
-  for (const renglon of renglonesDelEmisor(datos)) b.linea(renglon);
+  // Domicilio, Ingresos Brutos e inicio de actividades (RG 1415), con las
+  // etiquetas cortas que entran en el rollo.
+  for (const renglon of renglonesDelEmisor(datos, { compacto: true })) b.linea(renglon);
   b.linea(`PV ${String(datos.puntoDeVenta).padStart(4, "0")}`);
   b.linea();
 
   // --- Comprobante ---
   b.comando(NEGRITA_ON).linea(datos.tipoComprobante).comando(NEGRITA_OFF);
+  // El codigo de ARCA debajo del tipo, como en los comprobantes que ya cumplen.
+  const codigo = codigoDeComprobanteImpreso(datos);
+  if (codigo !== null) b.linea(codigo);
   // Sin CAE el número todavía no es el de ARCA y va a cambiar: se imprime la
   // referencia interna, no un número fiscal que después no coincide.
   const provisional = numeroEsProvisional(datos);
@@ -413,13 +420,15 @@ export function construirEscPos(
     b.lineaCruda(
       filaIzquierdaDerecha("IVA contenido", pesos(transparencia.ivaContenido), columnas),
     );
-    // "Otros Impuestos Nacionales Indirectos" no entra en 32 columnas ni
-    // abreviado, asi que en papel angosto va el nombre del unico que le aplica
-    // a un comercio — el mismo que imprimen los tickets de supermercado. En el
-    // A4, donde hay lugar, va el nombre completo que usa la norma.
+    // El nombre que fija la norma, textual. No entra en 32 columnas, asi que
+    // va partido: los renglones de arriba solos y el importe a la derecha del
+    // ultimo. Antes decia "Imp. internos" y el contador lo marco el 12/10/2026
+    // — la norma fija el TEXTO, no el concepto.
+    const partes = OTROS_IMPUESTOS_ANGOSTO;
+    for (const parte of partes.slice(0, -1)) b.linea(parte);
     b.lineaCruda(
       filaIzquierdaDerecha(
-        "Imp. internos",
+        partes[partes.length - 1] ?? ETIQUETA_OTROS_IMPUESTOS,
         pesos(transparencia.otrosImpuestosNacionales),
         columnas,
       ),

@@ -10,6 +10,7 @@ import { Cantidad, Money } from "@nexosoft/domain";
 
 import type { DatosTicket } from "./impresora.js";
 import {
+  codigoDeComprobanteImpreso,
   fechaCorta,
   importeImpreso,
   letraFiscal,
@@ -429,6 +430,53 @@ describe("renglonesDelEmisor (RG 1415)", () => {
     expect(renglonesDelEmisor(base({ ingresosBrutos: "Exento" }))).toEqual([
       "Ingresos Brutos: Exento",
     ]);
+  });
+});
+
+describe("renglonesDelEmisor, en papel angosto", () => {
+  const conDatos = () =>
+    base({
+      domicilioComercial: "Av. Siempreviva 742",
+      ingresosBrutos: "901-123456-7",
+      inicioActividades: "2019-03-15",
+    });
+
+  it("usa etiquetas cortas, como el ticket real del comercio de referencia", () => {
+    expect(renglonesDelEmisor(conDatos(), { compacto: true })).toEqual([
+      "Av. Siempreviva 742",
+      "IB: 901-123456-7",
+      "Inicio Act.: 15/03/2019",
+    ]);
+  });
+
+  it("ninguna entra en más de 32 columnas con un dato de largo normal", () => {
+    for (const renglon of renglonesDelEmisor(conDatos(), { compacto: true })) {
+      expect(renglon.length, renglon).toBeLessThanOrEqual(32);
+    }
+  });
+
+  it("en el A4 van los nombres completos", () => {
+    expect(renglonesDelEmisor(conDatos())).toEqual([
+      "Av. Siempreviva 742",
+      "Ingresos Brutos: 901-123456-7",
+      "Inicio de actividades: 15/03/2019",
+    ]);
+  });
+});
+
+describe("codigoDeComprobanteImpreso", () => {
+  it("rotula el código de ARCA con dos dígitos", () => {
+    expect(codigoDeComprobanteImpreso(base({ codigoComprobanteArca: 6 }))).toBe("CODIGO N° 06");
+    expect(codigoDeComprobanteImpreso(base({ codigoComprobanteArca: 1 }))).toBe("CODIGO N° 01");
+  });
+
+  it("no inventa uno cuando no lo hay", () => {
+    expect(codigoDeComprobanteImpreso(base())).toBeNull();
+  });
+
+  it("un comprobante no fiscal no lleva código", () => {
+    // Un ticket interno no existe para ARCA: ponerle un código sería mentir.
+    expect(codigoDeComprobanteImpreso(base({ esFiscal: false, codigoComprobanteArca: 6 }))).toBeNull();
   });
 });
 

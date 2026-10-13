@@ -20,6 +20,8 @@ import {
   montoDelSubtotal,
   numeroEsProvisional,
   numeroFiscalFormateado,
+  codigoDeComprobanteImpreso,
+  OTROS_IMPUESTOS_ANGOSTO,
   referenciaInterna,
   renglonesDelEmisor,
   subtotalNeto,
@@ -55,7 +57,7 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
         <div className="ticket-print-centro">{datos.condicionIvaEmisor}</div>
         {/* Domicilio, Ingresos Brutos e inicio de actividades (RG 1415). Mismo
           texto que la térmica y que el A4: sale todo de `renglonesDelEmisor`. */}
-        {renglonesDelEmisor(datos).map((renglon) => (
+        {renglonesDelEmisor(datos, { compacto: true }).map((renglon) => (
           <div key={renglon} className="ticket-print-centro">
             {renglon}
           </div>
@@ -65,6 +67,9 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
         <div className="ticket-print-sep" />
 
         <div className="ticket-print-centro ticket-print-tipo">{datos.tipoComprobante}</div>
+        {codigoDeComprobanteImpreso(datos) !== null && (
+          <div className="ticket-print-centro">{codigoDeComprobanteImpreso(datos)}</div>
+        )}
         <div className="ticket-print-centro">
           {provisional ? referenciaInterna(datos) : `N° ${numeroFiscalFormateado(datos)}`}
         </div>
@@ -174,12 +179,18 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
               <span>IVA contenido</span>
               <span>{pesos(transparencia.ivaContenido)}</span>
             </div>
-            {/* "Imp. internos", como en la térmica y como en los tickets de
-              supermercado: el nombre completo de la norma no entra en un rollo
-              de 58mm. Con el largo, la fila partía el importe al medio y salía
-              el "$" en un renglón y "0,00" en el otro. */}
+            {/* El nombre que fija la norma, textual, partido para el ancho del
+              rollo: los renglones de arriba solos y el importe a la derecha del
+              último. Antes decía "Imp. internos" — el concepto era el correcto
+              pero la Ley 27.743 fija el TEXTO (observado por el contador el
+              12/10/2026). */}
+            {OTROS_IMPUESTOS_ANGOSTO.slice(0, -1).map((parte) => (
+              <div key={parte} className="ticket-print-linea">
+                {parte}
+              </div>
+            ))}
             <div className="ticket-print-fila">
-              <span>Imp. internos</span>
+              <span>{OTROS_IMPUESTOS_ANGOSTO[OTROS_IMPUESTOS_ANGOSTO.length - 1]}</span>
               <span>{pesos(transparencia.otrosImpuestosNacionales)}</span>
             </div>
             <div className="ticket-print-nota">{ACLARACION_IMPUESTOS_NACIONALES}</div>
@@ -195,6 +206,14 @@ export function ComprobanteTicket({ datos }: { datos: DatosImpresion }) {
               : "Pendiente de autorización de ARCA"
             : "Documento interno, sin validez fiscal"}
         </div>
+        {/* El vencimiento del CAE lo tenían el A4 y la térmica, y faltaba sólo
+          acá — que es justo el formato que vio el contador. Cuarta vez que los
+          tres renderers no dicen lo mismo. */}
+        {esFiscal && datos.cae && datos.vencimientoCae && (
+          <div className="ticket-print-centro">
+            Vto. {datos.vencimientoCae.toLocaleDateString("es-AR")}
+          </div>
+        )}
         {provisional && (
           <div className="ticket-print-centro ticket-print-aviso">
             {leyendaNumeroProvisional(datos)}
