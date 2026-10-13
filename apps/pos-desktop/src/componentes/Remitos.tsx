@@ -14,6 +14,7 @@ import {
 } from "../sync/cliente-remitos";
 import { normalizarCantidad, validarLineaRemito } from "./remitos-helpers";
 import { preguntarSiNo } from "../dialogos";
+import { imprimirPaginaActual } from "./usar-impresion";
 
 export interface ProductoRemito {
   readonly id: string;
@@ -378,7 +379,7 @@ function ModalVer({ remito, onCerrar }: { remito: Remito; onCerrar: () => void }
           <div className="ticket-numero">{remito.observaciones}</div>
         )}
         <div className="ticket-acciones">
-          <button onClick={() => window.print()}>Imprimir</button>
+          <button onClick={imprimirPaginaActual}>Imprimir</button>
           <button className="primario" onClick={onCerrar}>
             Cerrar
           </button>

@@ -23,6 +23,7 @@ import {
   validarLinea,
 } from "./presupuestos-helpers";
 import { preguntarSiNo } from "../dialogos";
+import { imprimirPaginaActual } from "./usar-impresion";
 
 export interface ProductoPresup {
   readonly id: string;
@@ -501,7 +502,7 @@ function ModalVer({ presupuesto, onCerrar }: { presupuesto: Presupuesto; onCerra
           <span>{fecha(fechaVencimiento(presupuesto.creadoEn, presupuesto.validezDias))}</span>
         </div>
         <div className="ticket-acciones">
-          <button onClick={() => window.print()}>Imprimir</button>
+          <button onClick={imprimirPaginaActual}>Imprimir</button>
           <button className="primario" onClick={onCerrar}>
             Cerrar
           </button>

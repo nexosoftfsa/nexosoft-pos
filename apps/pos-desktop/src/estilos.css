@@ -1153,6 +1153,16 @@ body {
     left: 0;
     top: 0;
     width: 100%;
+    /* El margen de la hoja lo pone ella y no la @page: `usar-impresion-a4.ts`
+       inyecta una @page con margen cero para que Chromium no escriba la
+       fecha, el título y la URL en el margen del PDF. `clone` repite el
+       padding en cada página, así una venta larga no deja la segunda pegada
+       al borde. Si la @page no se inyectara, queda el margen global de 15mm
+       MÁS este: más aire, nunca menos. */
+    padding: 15mm;
+    box-sizing: border-box;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   /* Ticket chico (vista previa del formato rollo térmico) — mismo patrón que .hoja-a4. */

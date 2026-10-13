@@ -102,9 +102,49 @@ function quitarPaginaAMedida(): void {
   document.getElementById(ID_ESTILO_PAGINA)?.remove();
 }
 
+/**
+ * Inyecta una regla `@page` tal cual, para el documento que se va a imprimir.
+ * Usa el mismo estilo (y el mismo `id`) que la página a medida, así que se
+ * limpia con la misma función y las dos no pueden convivir.
+ */
+function inyectarReglaDePagina(regla: string): void {
+  let estilo = document.getElementById(ID_ESTILO_PAGINA) as HTMLStyleElement | null;
+  if (!estilo) {
+    estilo = document.createElement("style");
+    estilo.id = ID_ESTILO_PAGINA;
+    document.head.appendChild(estilo);
+  }
+  estilo.textContent = regla;
+}
+
+/**
+ * Imprime la pantalla tal como está, para los módulos que no tienen una hoja
+ * propia (Presupuestos, Remitos).
+ *
+ * Saldar antes la limpieza pendiente es lo que evita que hereden el margen
+ * cero de un A4 impreso un rato antes: esa regla `@page` queda puesta hasta la
+ * impresión siguiente o hasta que venza el plazo de gracia, y estas pantallas
+ * quedarían con el contenido pegado al borde de la hoja.
+ */
+export function imprimirPaginaActual(): void {
+  saldarLimpieza();
+  window.print();
+}
+
 export function useImpresion<T>(
   claseBody: string,
   pagina?: PaginaAMedida,
+  /**
+   * Regla `@page` propia de este documento. La usa el A4 para poner el margen
+   * en cero: con el margen global de 15mm, Chromium escribe ahí la fecha de
+   * impresión, el título de la ventana y `tauri.localhost`, que terminaban en
+   * el PDF de un comprobante fiscal. La hoja se hace cargo de su propio
+   * margen con `padding` (ver `.hoja-a4` en `estilos.css`).
+   *
+   * Va por documento y no en el `@page` global porque ese lo comparten
+   * Presupuestos y Remitos, que imprimen directo y conservan su margen.
+   */
+  reglaDePagina?: string,
 ): {
   readonly datos: T | null;
   readonly imprimir: (datos: T) => void;
@@ -122,6 +162,7 @@ export function useImpresion<T>(
       // Después del flushSync el nodo ya está en el DOM con los datos reales,
       // así que recién acá se puede medir su alto.
       if (pagina) ajustarAltoDePagina(pagina);
+      else if (reglaDePagina !== undefined) inyectarReglaDePagina(reglaDePagina);
 
       function limpiar() {
         window.removeEventListener("afterprint", alCerrarLaVistaPrevia);
@@ -143,7 +184,7 @@ export function useImpresion<T>(
 
       window.print();
     },
-    [claseBody, pagina],
+    [claseBody, pagina, reglaDePagina],
   );
 
   return { datos, imprimir };

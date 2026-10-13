@@ -83,6 +83,28 @@ desde Catálogo y Precios en dos clics. No se cambió nada de código por este
 punto, y conviene que quede dicho: era razonable sospechar un default, y no lo
 es.
 
+### 6. El PDF no lleva la fecha de impresión ni `tauri.localhost`
+
+No lo marcó el contador: salió de mirar el PDF exportado desde el POS. Arriba
+salían la **fecha de impresión** y el título de la ventana, y abajo
+**`tauri.localhost`** con el número de página. Los escribe Chromium en el
+margen de la página cuando éste es el global de 15mm. En un comprobante fiscal
+molesta por dos motivos: la fecha de impresión puede confundirse con la del
+comprobante, y una URL interna no tiene por qué figurar.
+
+El arreglo pone el margen del A4 en cero **sólo para ese documento** (se inyecta
+al imprimir, en `usar-impresion-a4.ts`) y la hoja se da su propio margen con
+`padding`. No se tocó la `@page` global porque la comparten Presupuestos y
+Remitos, que imprimen directo y dependen de ese margen: por eso ahora llaman a
+`imprimirPaginaActual()`, que salda antes la limpieza pendiente y evita que
+hereden el margen cero de un A4 impreso un rato antes.
+
+El riesgo era una venta larga: con margen cero y `padding` común, la segunda
+página arrancaba pegada al borde. `box-decoration-break: clone` repite el
+`padding` en cada página. **Se verificó antes de aplicarlo** renderizando con
+Edge un documento de 60 renglones, con y sin `position: absolute` (que es como
+está la hoja real): sin encabezados ni pie, y con margen en las dos páginas.
+
 ## Consecuencias
 
 ### Positivas

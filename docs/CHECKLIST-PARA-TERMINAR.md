@@ -171,6 +171,21 @@ va a ser para un inspector: quedó agregado como cuarta pregunta en
       todavía lo leía. _Corregido en ADR-0086: la limpieza queda pendiente hasta
       la impresión siguiente._
 
+- [ ] **El cuelgue al exportar a PDF es de la PC de Seba, no del POS.** Probado
+      el 12/10 en la PC de Rodri con **el mismo POS 0.1.73** y WebView2
+      154.0.4258.62: exporta bien, y el código no cambió entre el 1/10 —cuando
+      Seba exportó sin problemas— y el 12/10. Falta que Seba pase la **versión
+      y la fecha de instalación de su "Microsoft Edge WebView2 Runtime"** y
+      que lo **repare** (Configuración de Windows → Aplicaciones → Modificar →
+      Reparar). Si no alcanza, reinstalarlo con el instalador Evergreen
+      Standalone. Plan B, sólo si hace falta: generar el PDF con
+      `PrintToPdfStream` en vez de `window.print()`.
+
+- [x] ~~**El PDF salía con la fecha de impresión y `tauri.localhost`.**~~ Los
+      escribía Chromium en el margen de 15mm. El A4 ahora imprime con margen
+      cero y la hoja se pone su propio margen (ADR-0087 §6), verificado con un
+      documento de 60 renglones. Falta verlo en un PDF real de Seba.
+
 - [ ] **Confirmar en campo que la exportación a PDF ya no cuelga.** Es la
       verificación del arreglo de arriba, y tiene una segunda parte que **no
       depende de nosotros**: el diálogo mostraba "Estamos trabajando en ello…"
