@@ -323,9 +323,24 @@ pueden usarnos legalmente. Era la duda más cara de todas.
       verificar que cambiar el plan llegue al POS y aparezcan los candados.
       _Bloquea: cobrar la suscripción. Es el modelo de negocio._
 
-- [ ] **Actualizar `docs/PRUEBA-SUSCRIPCION-SOCIO.txt` antes de esa prueba.**
-      Pide POS 0.1.30 y Servidor 0.9.2 cuando hoy van 0.1.73 y 0.21.0, y no
-      menciona los planes. Media hora.
+- [ ] **Probar el panel web de reportes desde afuera del local.**
+      `docs/PRUEBA-PANEL-WEB-SOCIO.txt`. **Nunca se activó para ningún
+      comercio**: `cloudflared tunnel list` no devuelve ningún túnel. Es el
+      acceso remoto de ADR-0055 y ADR-0057, y es parte de lo que se vende en
+      Premium. Lo que hay que ver: que el panel cargue por
+      `https://socio.nexosoft.com.ar` desde un celular con datos móviles, que
+      desde afuera sea **de sólo lectura** (`/usuarios` y `/clientes` tienen que
+      dar 403), que dentro del local todo siga igual, y que el túnel se levante
+      solo al reiniciar y al volver internet.
+      _Antes de mandárselo, Rodrigo tiene que generar el código con
+      `generar-codigo-cliente.ps1 -ComercioId socio -Nombre "PC del socio"
+      -Plan PREMIUM -ConAccesoRemoto`. Eso crea el túnel y el DNS en la cuenta
+      de Cloudflare. El código lleva las credenciales del túnel: se manda sólo a
+      Seba y no va escrito en el instructivo._
+
+- [x] ~~**Actualizar `docs/PRUEBA-SUSCRIPCION-SOCIO.txt` antes de esa prueba.**~~
+      Reescrito el 2/10 para 0.1.73 / 0.21.0, con la parte de planes y la
+      prueba de que las franjas salen solas al mover la fecha de pago.
 
 - [ ] **Ponerle a cada comercio del panel el plan que de verdad tiene.** La
       migración del 3/9 los dejó a todos en **Premium** — el lado seguro, para

@@ -1,0 +1,408 @@
+===============================================================================
+NEXOSOFT - PRUEBA DEL PANEL WEB DE REPORTES, DESDE AFUERA DEL LOCAL
+Para: Sebastian - PC de prueba
+Version de esta prueba: POS 0.1.75 - Servidor 0.21.0
+===============================================================================
+
+Seba: esta prueba es la ultima parte del sistema que nunca vimos andar de
+verdad. Es el panel de reportes que el dueno de un comercio abre desde el
+celular, estando en su casa, para ver como le fue el dia. Es una de las cosas
+que mas le gusta a los clientes y es parte de lo que se vende en el plan
+Premium.
+
+Nunca se activo para ningun comercio: vamos a ser los primeros. Si algo falla,
+es exactamente lo que queremos descubrir hoy y no con un cliente.
+
+Vas a necesitar estar en contacto con Rodrigo (telefono o WhatsApp). Antes de
+empezar, EL te manda por separado un CODIGO largo. Sin ese codigo no se puede
+empezar.
+
+Tiempo: unos 40 minutos.
+
+
+-------------------------------------------------------------------------------
+QUE VAMOS A PROBAR (leelo una vez)
+-------------------------------------------------------------------------------
+
+1) Que el panel se vea DESDE AFUERA, con el celular y los datos moviles, en
+   una direccion fija: https://socio.nexosoft.com.ar
+
+2) Que desde afuera sea SOLO LECTURA. El panel muestra reportes y nada mas:
+   no se puede cambiar un precio, ni dar de alta un usuario, ni tocar una
+   venta. Es una decision de seguridad: si alguien le roba la contrasena a un
+   dueno, lo unico que puede hacer es MIRAR.
+
+3) Que dentro del local, el panel y el POS sigan funcionando igual que
+   siempre. Nada de esto les tiene que cambiar.
+
+4) Que se recupere solo: sin internet, o despues de reiniciar la PC.
+
+
+-------------------------------------------------------------------------------
+LO QUE NECESITAS
+-------------------------------------------------------------------------------
+
+  [ ] El CODIGO que te manda Rodrigo (largo, de unos 350 caracteres)
+  [ ] La PC donde esta el SERVIDOR (la misma donde corre el POS)
+  [ ] Internet en esa PC
+  [ ] Un CELULAR con datos moviles (no WiFi, ver paso 2.1)
+  [ ] Un usuario ADMIN o SUPERVISOR del POS, con su contrasena
+  [ ] Rodrigo del otro lado del telefono
+
+CUIDADO CON EL CODIGO: es de este comercio y tiene adentro las credenciales
+de su tunel. No lo publiques, no le saques captura para mandarlo a otro lado y
+no lo pegues en ningun otro lugar que no sea la pantalla del POS que se indica
+abajo.
+
+
+===============================================================================
+PARTE 1 - PREPARAR (una sola vez)
+===============================================================================
+
+PASO 1.1 - Actualizar el POS
+----------------------------
+Abri NexoSoft y anda a:
+
+    Configuracion  ->  Actualizaciones  ->  "Buscar actualizaciones"
+
+Si ofrece una version nueva, instalala. El POS se reinicia solo.
+Cuando termine, volve a Configuracion y fijate que diga:
+
+    POS: 0.1.75      (o un numero mas alto)
+    Servidor: 0.21.0 (o un numero mas alto)
+
+    [ ] Anota lo que dice:  POS ________   Servidor ________
+
+Si el servidor dice una version mas vieja que 0.21.0, usa el boton
+"Actualizar servidor" de la misma pantalla (Windows pide permiso de
+administrador y tarda unos minutos).
+
+
+PASO 1.2 - Revisar las contrasenas ANTES de publicar
+----------------------------------------------------
+Esto es importante. Una vez que el panel este en internet, la contrasena es
+lo unico que separa a un desconocido de los datos del comercio.
+
+Anda a Configuracion y mira la tarjeta "Acceso remoto al panel".
+
+  - Si NO aparece ningun aviso: segui al paso 1.3.
+  - Si aparece un cartel que dice "Antes de publicar el panel, conviene
+    reforzar estas contrasenas", con una lista de usuarios: es el sistema
+    avisando que alguno tiene una contrasena floja.
+
+    [ ] Aparecio el aviso?   [ ] No   [ ] Si
+    Que usuarios nombraba: ____________________________________________
+
+    Se cambian en Usuarios, con el boton "Contrasena" de cada fila. Con 12
+    caracteres o mas, y que no tenga el nombre del comercio, alcanza. El
+    cartel se actualiza solo apenas la cambias.
+
+    [ ] El cartel desaparecio despues de cambiarla
+
+La contrasena del usuario con el que vas a entrar al panel tiene que ser
+una de las buenas.
+
+
+PASO 1.3 - Activar el acceso remoto con el codigo
+-------------------------------------------------
+En la misma tarjeta "Acceso remoto al panel" aparece un campo que dice
+"Codigo de activacion".
+
+  1. Pega ahi el codigo que te mando Rodrigo.
+  2. Debajo del campo tiene que aparecer:
+
+         Va a quedar en https://socio.nexosoft.com.ar
+
+     [ ] Dice socio.nexosoft.com.ar  (si dice otra cosa, PARA y avisale)
+
+  3. Apreta "Activar".
+  4. Windows te pide permiso de administrador: dale que si.
+  5. Espera uno o dos minutos. No cierres nada.
+
+QUE TIENE QUE PASAR: la tarjeta cambia y muestra la direccion
+https://socio.nexosoft.com.ar con un codigo QR al lado, y debajo dice:
+
+         "Se esta viendo bien desde afuera."
+
+    [ ] Aparecio la direccion con el QR
+    [ ] Dice "Se esta viendo bien desde afuera"
+
+Si en cambio dice "Ahora mismo no responde desde afuera", espera tres minutos
+y mira de nuevo (la direccion nueva tarda un rato en conocerse). Si sigue
+igual, mira "SI ALGO NO FUNCIONA" al final.
+
+OJO, UN AVISO: ese codigo, ademas del panel, ata esta PC a la suscripcion del
+comercio "socio", igual que en la prueba de suscripcion. No tiene que
+cambiarte nada: el comercio esta al dia. Si aparece alguna franja arriba del
+POS, anotala y avisale a Rodrigo.
+
+
+===============================================================================
+PARTE 2 - EL PANEL, DESDE AFUERA
+===============================================================================
+
+PASO 2.1 - Salir de la red del local
+------------------------------------
+Agarra el celular y APAGA EL WIFI. Tienen que ser datos moviles. Si el celular
+esta en el WiFi del local, la prueba no sirve: estas probando "desde adentro".
+
+    [ ] Celular con datos moviles, WiFi apagado
+
+
+PASO 2.2 - Abrir el panel
+-------------------------
+En el celular abri la direccion. Dos formas:
+
+  a) Escanear con la camara el codigo QR que aparece en la pantalla del POS.
+  b) Escribir: https://socio.nexosoft.com.ar
+
+QUE TENES QUE VER: la pantalla de ingreso del panel, con el campo de usuario,
+el de contrasena y el boton "Ingresar".
+
+    [ ] Carga la pantalla de ingreso
+    [ ] El candado del navegador dice que la conexion es segura
+
+
+PASO 2.3 - Entrar
+-----------------
+Entra con tu usuario ADMIN o SUPERVISOR y su contrasena (los mismos del POS).
+
+    [ ] Entro
+
+  - Si entras con un usuario CAJERO, el panel dice que no tiene permisos para
+    verlo. Eso esta BIEN: es a proposito. Si queres, probalo.
+
+    [ ] Un cajero NO puede ver el panel
+
+
+PASO 2.4 - Recorrer el panel
+----------------------------
+El menu tiene cuatro secciones. Recorrelas una por una:
+
+    [ ] Resumen    - carga y muestra numeros
+    [ ] Ventas     - carga y muestra las ventas
+    [ ] Productos  - carga
+    [ ] Stock      - carga
+
+Ahora comproba que los numeros sean los de verdad. En la PC, abri en el POS
+Reportes y Estadisticas, y compara UNA cifra con la del panel del celular
+(por ejemplo el total vendido del dia):
+
+    En el POS:    __________      En el panel:    __________
+    [ ] Coinciden
+
+
+PASO 2.5 - Descargas
+--------------------
+En la seccion Ventas del panel hay dos botones:
+
+    "Exportar CSV"
+    "Descargar libro de ventas (Excel)"
+
+Probalos desde el celular.
+
+    [ ] Exportar CSV descarga un archivo
+    [ ] El libro de ventas (Excel) se descarga y se abre
+
+
+PASO 2.6 - Que se vea bien en el celular
+----------------------------------------
+    [ ] Nada se corta ni se sale de la pantalla
+    [ ] El menu se abre y se cierra (en el celular es un cajon)
+    [ ] Se lee comodo
+    Cualquier cosa que te haya resultado fea o incomoda:
+    _____________________________________________________________
+
+
+===============================================================================
+PARTE 3 - QUE DE VERDAD SEA SOLO LECTURA   <<< LA PRUEBA DE SEGURIDAD
+===============================================================================
+
+Esta parte es la que mas importa. Se hace en el navegador del celular, con
+los datos moviles todavia, escribiendo direcciones a mano en la barra. Son
+pruebas de solo lectura: no rompen nada.
+
+PASO 3.1 - Lo que SI tiene que contestar
+----------------------------------------
+Escribi esta direccion:
+
+    https://socio.nexosoft.com.ar/api/v1/health
+
+QUE TENES QUE VER: una respuesta corta en texto, que arranca con
+{"status":"ok","db":"ok","version":"0.21.0" ... (el numero de version es el
+de tu servidor).
+
+    [ ] Contesta bien
+
+
+PASO 3.2 - Lo que NO tiene que contestar
+----------------------------------------
+Estando con la sesion abierta en el panel, proba estas dos direcciones, una
+por una:
+
+    https://socio.nexosoft.com.ar/api/v1/usuarios
+    https://socio.nexosoft.com.ar/api/v1/clientes
+
+QUE TENES QUE VER en las dos: un ERROR 403 ("Forbidden", prohibido). Y NO la
+lista de usuarios ni la de clientes.
+
+El servidor rechaza todo lo que el panel no necesita, sin siquiera mirar quien
+sos. Aunque estes logueado como ADMIN.
+
+    [ ] /usuarios  -> 403, no muestra nada
+    [ ] /clientes  -> 403, no muestra nada
+
+    SI ALGUNA DE LAS DOS MUESTRA DATOS: PARA TODO y avisale a Rodrigo YA.
+    Quiere decir que desde internet se esta viendo algo que no se debe, y hay
+    que apagar el acceso remoto (paso 6.1) hasta resolverlo.
+
+
+PASO 3.3 - Adentro del local, todo igual
+----------------------------------------
+Volve a la PC. Abri en el navegador de la PC:
+
+    http://localhost:3000
+
+QUE TENES QUE VER: el panel, y podes entrar igual que desde el celular.
+
+    [ ] El panel funciona desde adentro del local
+    [ ] El POS sigue vendiendo con total normalidad
+        (hace una venta de prueba)
+
+
+===============================================================================
+PARTE 4 - QUE SE RECUPERE SOLO
+===============================================================================
+
+El tunel es una tarea de Windows que arranca sola. Hay que comprobar que de
+verdad se levanta sin que nadie la toque.
+
+PASO 4.1 - Reiniciar la PC
+--------------------------
+Reinicia la PC. Cuando vuelva a encender:
+
+  1. NO abras nada ni toques el POS.
+  2. Espera tres minutos.
+  3. Desde el celular (datos moviles), abri el panel.
+
+QUE TENES QUE VER: el panel carga. El tunel arranco solo.
+
+    [ ] Despues de reiniciar, el panel carga desde afuera sin tocar nada
+
+
+PASO 4.2 - Cortar internet
+--------------------------
+  1. Desconecta internet de la PC (cable o WiFi), sin apagarla.
+  2. Espera dos minutos.
+  3. Desde el celular: el panel NO tiene que cargar. Es lo esperado, la PC
+     no esta en internet.
+  4. En el POS: se sigue vendiendo con normalidad (el POS no depende de
+     internet).
+  5. Volve a conectar internet.
+  6. Espera hasta CINCO minutos y proba de nuevo el panel desde el celular.
+
+QUE TENES QUE VER: el panel vuelve solo, sin que hagas nada.
+
+    [ ] Sin internet el POS sigue vendiendo
+    [ ] Al volver internet, el panel vuelve solo
+    Cuanto tardo en volver: __________ minutos
+
+
+===============================================================================
+PARTE 5 - PARA RODRIGO (anota esto y mandaselo)
+===============================================================================
+
+Cuando entraste al panel desde el celular en el paso 2.3, el servidor dejo
+anotado ese ingreso con la hora y la direccion de internet desde donde
+entraste. Rodrigo lo va a buscar para confirmar que queda registrado.
+
+  Hora exacta en que entraste desde el celular: ____________________
+  Usuario con el que entraste:                  ____________________
+
+
+===============================================================================
+PARTE 6 - DEJAR TU PC COMO ESTABA
+===============================================================================
+
+Si Rodrigo te pide seguir probando, dejalo activo y saltea esta parte. Si no:
+
+PASO 6.1 - Apagar el acceso remoto
+----------------------------------
+En el POS: Configuracion -> tarjeta "Acceso remoto al panel" -> boton
+"Desactivar acceso remoto". Windows pide permiso de administrador.
+
+Despues, desde el celular, proba abrir https://socio.nexosoft.com.ar : ya no
+tiene que cargar.
+
+    [ ] Desactivado, el panel ya no se ve desde afuera
+
+
+PASO 6.2 - Desatar la suscripcion
+---------------------------------
+El codigo tambien ato la suscripcion, y "Desactivar" no la desata. En
+PowerShell COMO ADMINISTRADOR:
+
+    C:\NexoSoft-Servidor\scripts\configurar-suscripcion.ps1 -Quitar
+
+Tiene que decir:
+
+    Suscripcion desvinculada de esta PC. El sistema opera sin control.
+    Servidor arriba.
+
+    [ ] Listo, PC desvinculada
+
+
+===============================================================================
+SI ALGO NO FUNCIONA
+===============================================================================
+
+* Apretas "Activar" y da error.
+  -> Copia el mensaje TAL CUAL y mandaselo a Rodrigo.
+  -> Si dice que no encuentra cloudflared: el sistema lo descarga solo, pero
+     necesita internet en la PC. Revisa que tenga y proba de nuevo.
+  -> El detalle esta en:  C:\ProgramData\NexoSoft\logs\acceso-remoto.log
+
+* Dice "Ahora mismo no responde desde afuera".
+  -> Espera tres minutos y mira de nuevo: la direccion nueva tarda en
+     conocerse.
+  -> Revisa que la PC tenga internet.
+  -> Mira si el tunel esta corriendo. PowerShell como administrador:
+         Get-ScheduledTask -TaskName "NexoSoft Acceso Remoto"
+     Tiene que decir "Running". Si dice "Ready" o "Disabled":
+         Start-ScheduledTask -TaskName "NexoSoft Acceso Remoto"
+
+* Desde el celular aparece una pagina de Cloudflare con un error (1033, 1016
+  o parecido).
+  -> Es que la direccion existe pero el tunel de la PC no esta corriendo.
+     Es lo mismo de arriba: la tarea no esta andando.
+
+* El panel carga pero no te deja entrar.
+  -> Revisa que sea un usuario ADMIN o SUPERVISOR. Un CAJERO no puede.
+  -> Si te equivocaste varias veces seguidas, la cuenta se bloquea un rato
+     (es una proteccion). Espera unos minutos y proba de nuevo.
+
+* El panel carga, entras, y las secciones salen vacias o con error.
+  -> Anota que seccion y que dice, y mandaselo a Rodrigo. Si desde
+     http://localhost:3000 (adentro de la PC) funciona y desde afuera no,
+     es justo lo que vinimos a buscar.
+
+* Si algo se rompe feo, los registros estan en:
+        C:\ProgramData\NexoSoft\logs\
+  Mandale esa carpeta a Rodrigo.
+
+
+===============================================================================
+PARA CONTARLE A RODRIGO CUANDO TERMINES
+===============================================================================
+
+  1. Los numeros de version que anotaste en el paso 1.1
+  2. Si aparecio el aviso de contrasenas flojas y a quien nombraba
+  3. Si el POS dijo "Se esta viendo bien desde afuera"
+  4. Si el panel cargo desde el celular, y si los numeros coincidian
+  5. Sobre todo la Parte 3: que /usuarios y /clientes dieran 403
+  6. Si el panel volvio solo despues de reiniciar y despues del corte
+  7. La hora exacta de tu ingreso desde el celular (Parte 5)
+  8. Cualquier cosa que te haya resultado confusa o fea de usar
+
+Gracias!
+===============================================================================
